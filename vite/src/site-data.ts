@@ -373,6 +373,17 @@ export function resolveActiveVersionHref(site: HolocronSiteData, pageHref: strin
   if (!pageHref || versionItems.length === 0) return undefined
   const match = versionItems.find((v) => v.pageHrefs.includes(pageHref))
   if (match) return match.href
+  // Fallback: hidden pages are stripped from the visible nav tree, so their
+  // hrefs won't appear in pageHrefs. Match by shared path prefix instead —
+  // if a version's pages all live under `/v1/...`, a hidden `/v1/hidden-page`
+  // should still resolve to that version.
+  const prefixMatch = versionItems.find((v) =>
+    v.pageHrefs.some((h) => {
+      const prefix = h.substring(0, h.lastIndexOf('/') + 1)
+      return prefix.length > 1 && pageHref.startsWith(prefix)
+    }),
+  )
+  if (prefixMatch) return prefixMatch.href
   const defaultVersion = site.switchers.versions.find((v) => v.default)
   if (defaultVersion) {
     const item = versionItems.find((vi) => vi.label === defaultVersion.version)
