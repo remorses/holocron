@@ -327,6 +327,24 @@ sidebarTitle: Auth Providers
 below the title and in search engine snippets. Write a single sentence that
 summarizes the page content. Longer descriptions get truncated with an ellipsis.
 
+## Page titles (MUST follow)
+
+Holocron renders the browser `<title>` as `{page title} — {site name}`. Bad
+titles make every tab and Google result look broken.
+
+- **Never set a page title identical to the site name.** `Playwriter — Playwriter` is redundant.
+- **Every title MUST be descriptive, not a generic label.** `Introduction — Acme` says nothing. Write what the page is about: `Authentication and API keys`, `Deploy to Cloudflare Workers`.
+- **`index.mdx` MUST use `sidebarTitle: Home`** and a real SEO title describing the product.
+- **Every title MUST be unique across the site.**
+- Use `sidebarTitle` when the descriptive title is too long for the 230px sidebar.
+
+```mdx
+---
+title: Open-source browser automation for AI agents
+sidebarTitle: Home
+---
+```
+
 ## Custom entry (mounting docs inside a Spiceflow app)
 
 When the site mounts Holocron inside an existing **Spiceflow** app (the `entry`
