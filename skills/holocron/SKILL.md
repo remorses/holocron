@@ -329,21 +329,33 @@ summarizes the page content. Longer descriptions get truncated with an ellipsis.
 
 ## Page titles (MUST follow)
 
-Holocron renders the browser `<title>` as `{page title} — {site name}`. Bad
-titles make every tab and Google result look broken.
+Holocron renders the browser `<title>` as `{page title} — {site name}`. Two
+frontmatter fields control what appears where:
 
-- **Never set a page title identical to the site name.** `Playwriter — Playwriter` is redundant.
-- **Every title MUST be descriptive, not a generic label.** `Introduction — Acme` says nothing. Write what the page is about: `Authentication and API keys`, `Deploy to Cloudflare Workers`.
-- **`index.mdx` MUST use `sidebarTitle: Home`** and a real SEO title describing the product.
-- **Every title MUST be unique across the site.**
-- Use `sidebarTitle` when the descriptive title is too long for the 230px sidebar.
+- **`title`** — browser tab, Google results, OG image, page heading. Write for SEO.
+- **`sidebarTitle`** — sidebar navigation only. Write for scannability (short label).
+
+**Always set both.** `title` is the full descriptive phrase; `sidebarTitle` is
+the short sidebar label. Without `sidebarTitle`, the full title shows in the
+sidebar and often wraps or looks verbose.
 
 ```mdx
 ---
 title: Open-source browser automation for AI agents
 sidebarTitle: Home
+description: Automate any browser with a simple TypeScript API.
 ---
 ```
+
+Browser tab: `Open-source browser automation for AI agents — Playwriter`
+Sidebar: `Home`
+
+**Rules:**
+
+- **Never set `title` identical to the site name.** `Playwriter — Playwriter` is redundant.
+- **Every `title` MUST be descriptive, not a generic label.** `Introduction`, `Getting Started`, `Overview` say nothing in a browser tab. Write what the page covers.
+- **Every `title` MUST be unique across the site.**
+- **`index.mdx` MUST use `sidebarTitle: Home`** (or `Overview`) and a descriptive `title`.
 
 ## Custom entry (mounting docs inside a Spiceflow app)
 
@@ -434,6 +446,12 @@ headings). If the aside is taller than the section text, extra whitespace appear
 below the main content to accommodate the aside height. Keep aside callouts
 short, and only place them in sections that have at least a few paragraphs of
 body text.
+
+## Moving or renaming a page
+
+When moving or renaming a page, **always add a redirect** from the old slug to
+the new one so existing links and bookmarks don't break. Update internal links
+in other pages and the slug in `docs.json` navigation to match.
 
 ## New pages and navigation
 
