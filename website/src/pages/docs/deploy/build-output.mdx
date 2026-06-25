@@ -34,3 +34,26 @@ The `holocron deploy` CLI builds to `dist/.holocron/` before upload. It uploads 
 ## Self-contained output
 
 The production output is self-contained. Navigation, frontmatter, image metadata, and cache data are prepared at build time. Page requests still parse and render the MDX source at runtime through React Server Components.
+
+## Build errors
+
+Production builds **fail** when content errors are detected. Holocron processes every page first, logs all errors to the terminal, then fails the build with a summary. This ensures you see every issue at once instead of fixing them one at a time.
+
+The build fails on:
+
+- **MDX parse errors** — syntax errors in your MDX files
+- **MDX component errors** — unknown component names, invalid props
+- **Broken internal links** — links pointing to pages that don't exist (see [Broken Link Detection](/docs/create/broken-links))
+- **Broken asset references** — images or media files that can't be found on disk
+
+In **dev mode**, these are shown as warnings without stopping the server, so you can iterate freely.
+
+### Skipping build errors
+
+If you need to deploy despite content errors, set the `HOLOCRON_SKIP_BUILD_ERRORS` environment variable:
+
+```bash
+HOLOCRON_SKIP_BUILD_ERRORS=true npx vite build
+```
+
+Pages with errors are excluded from the build output. They return a 404 instead of rendering broken content.

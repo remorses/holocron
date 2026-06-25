@@ -136,6 +136,12 @@ export type SyncResult = {
   runtimeTabNames: Set<string>
   parsedCount: number
   cachedCount: number
+  /** Number of pages with any MDX error (parse or render). */
+  mdxContentErrorCount: number
+  /** Number of broken internal links across all pages. */
+  brokenLinkCount: number
+  /** Number of broken local asset references across all pages. */
+  brokenAssetCount: number
 }
 
 /**
@@ -610,6 +616,9 @@ export async function syncNavigation({
     navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports,
     importedImageDepPaths: [...allImportedImageDepPaths], providerWatchPaths,
     runtimeTabNames, parsedCount, cachedCount,
+    mdxContentErrorCount: mdxContentErrors.size,
+    brokenLinkCount: brokenLinkStats.brokenLinkCount,
+    brokenAssetCount: brokenAssetStats.brokenAssetCount,
   }
 }
 

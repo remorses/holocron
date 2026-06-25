@@ -105,6 +105,12 @@ Link validation runs as part of the **sync phase**, which processes all MDX file
 
 The sync phase first parses every page and collects all internal links, then validates them against the fully built navigation tree. This means links are checked after all pages (including OpenAPI-generated ones) are registered.
 
+## Build failures
+
+In production builds, broken links **fail the build** after all errors have been logged. This prevents deploying docs with dead links.
+
+To deploy anyway, set `HOLOCRON_SKIP_BUILD_ERRORS=true`. See [Build Output](/docs/deploy/build-output#build-errors) for details.
+
 ## Caching
 
 Link data is cached alongside other page metadata in `dist/holocron-mdx.json`. When an MDX file hasn't changed between builds, its links are restored from cache without re-parsing. Validation still runs on every sync, just the link extraction step is skipped for unchanged files.

@@ -524,14 +524,38 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         publicDir: publicDirPath,
         projectRoot: root,
         distDir: distDirPath,
-        logParseErrors: !isBuild,
+        logParseErrors: true,
         deferProviders: false,
         customProviders,
       })
 
-      if (isBuild) {
-        const firstParseError = Object.values(syncResult.mdxParseErrors)[0]
-        if (firstParseError) throw new Error(firstParseError.message)
+      // In production builds, fail after ALL errors have been logged so
+      // the user sees every issue at once instead of fixing them one by one.
+      // Set HOLOCRON_SKIP_BUILD_ERRORS=true to bypass and deploy anyway.
+      const skipBuildErrors = process.env.HOLOCRON_SKIP_BUILD_ERRORS === 'true'
+      if (isBuild && !skipBuildErrors) {
+        const errors: string[] = []
+        const parseErrorCount = Object.keys(syncResult.mdxParseErrors).length
+        if (parseErrorCount > 0) {
+          errors.push(`${parseErrorCount} page${parseErrorCount === 1 ? '' : 's'} with MDX parse errors`)
+        }
+        const renderErrorCount = syncResult.mdxContentErrorCount - parseErrorCount
+        if (renderErrorCount > 0) {
+          errors.push(`${renderErrorCount} page${renderErrorCount === 1 ? '' : 's'} with MDX component errors`)
+        }
+        if (syncResult.brokenLinkCount > 0) {
+          errors.push(`${syncResult.brokenLinkCount} broken internal link${syncResult.brokenLinkCount === 1 ? '' : 's'}`)
+        }
+        if (syncResult.brokenAssetCount > 0) {
+          errors.push(`${syncResult.brokenAssetCount} broken asset reference${syncResult.brokenAssetCount === 1 ? '' : 's'}`)
+        }
+        if (errors.length > 0) {
+          throw new Error(
+            `Build failed due to content errors:\n` +
+            errors.map((e) => `  - ${e}`).join('\n') + '\n\n' +
+            `All errors are listed above. Fix them or set HOLOCRON_SKIP_BUILD_ERRORS=true to bypass.`,
+          )
+        }
       }
 
       logger.info(
