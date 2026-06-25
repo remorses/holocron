@@ -546,6 +546,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         if (syncResult.brokenLinkCount > 0) {
           errors.push(`${syncResult.brokenLinkCount} broken internal link${syncResult.brokenLinkCount === 1 ? '' : 's'}`)
         }
+        if (syncResult.brokenRedirectCount > 0) {
+          errors.push(`${syncResult.brokenRedirectCount} redirect${syncResult.brokenRedirectCount === 1 ? '' : 's'} with invalid destination${syncResult.brokenRedirectCount === 1 ? '' : 's'}`)
+        }
         if (syncResult.brokenAssetCount > 0) {
           errors.push(`${syncResult.brokenAssetCount} broken asset reference${syncResult.brokenAssetCount === 1 ? '' : 's'}`)
         }

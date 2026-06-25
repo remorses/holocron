@@ -1743,6 +1743,150 @@ Link to [old page](/old-page) and [missing](/truly-missing).
     expect(warnings.some((w) => w.includes('/truly-missing'))).toBe(true)
   })
 
+  test('warns when redirect destination points to non-existent page', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+        redirects: [
+          { source: '/old-page', destination: '/index' },
+          { source: '/typo-redirect', destination: '/does-not-exist' },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+Home page.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, '')
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken redirect destination')).map(stripAnsi)
+    // /index exists → /old-page redirect should NOT warn
+    expect(warnings.some((w) => w.includes('/old-page'))).toBe(false)
+    // /does-not-exist doesn't exist → /typo-redirect redirect SHOULD warn
+    expect(warnings.some((w) => w.includes('/typo-redirect') && w.includes('/does-not-exist'))).toBe(true)
+    expect(warnings).toHaveLength(1)
+  })
+
+  test('skips redirect destination validation for dynamic destinations', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+        redirects: [
+          { source: '/users/:id', destination: '/u/:id' },
+          { source: '/blog/*', destination: '/posts/:splat' },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+Home page.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken redirect destination'))
+    // Dynamic destinations can't be statically validated → no warnings
+    expect(warnings).toHaveLength(0)
+  })
+
+  test('does not warn when redirect destination matches a dynamic redirect source', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+        redirects: [
+          { source: '/users/:id', destination: '/u/:id' },
+          { source: '/legacy-user', destination: '/users/42' },
+        ],
+      },
+      {
+        index: `---
+title: Home
+---
+
+Home page.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken redirect destination'))
+    // /users/42 matches /users/:id redirect source → no warning
+    expect(warnings).toHaveLength(0)
+  })
+
+  test('redirect destination covered by knownPaths does not warn', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+        redirects: [
+          { source: '/old-api', destination: '/api/v2/users' },
+        ],
+        knownPaths: ['/api/*'],
+      },
+      {
+        index: `---
+title: Home
+---
+
+Home page.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken redirect destination'))
+    // /api/v2/users matches knownPaths /api/* → no warning
+    expect(warnings).toHaveLength(0)
+  })
+
   test('does not warn for links using the /index form of a page', async () => {
     const project = tracked(createProject(
       {

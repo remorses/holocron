@@ -35,6 +35,7 @@ import { changelogProvider } from './changelog/provider.ts'
 import { mcpProvider } from './mcp/provider.ts'
 import type { CustomTabProvider } from './runtime-provider.ts'
 import { colors, formatHolocronError, formatHolocronWarning, logger, logMdxError, HolocronMdxParseError } from './logger.ts'
+import { redirectSourceMatches } from './redirects.ts'
 import { parseFrontmatterObject } from './frontmatter.ts'
 import { MdastToJsx, type SafeMdxError } from 'safe-mdx'
 import { extractImports, type EagerModules } from 'safe-mdx/parse'
@@ -140,6 +141,8 @@ export type SyncResult = {
   mdxContentErrorCount: number
   /** Number of broken internal links across all pages. */
   brokenLinkCount: number
+  /** Number of redirects with destinations pointing to non-existent pages. */
+  brokenRedirectCount: number
   /** Number of broken local asset references across all pages. */
   brokenAssetCount: number
 }
@@ -597,6 +600,13 @@ export async function syncNavigation({
       `Fix them or add paths to ${colors.cyan('knownPaths')} in docs.json. See ${colors.cyan('https://holocron.so/docs/create/broken-links')}`,
     ))
   }
+  if (brokenLinkStats.brokenRedirectCount > 0) {
+    logger.warn('')
+    logger.warn(formatHolocronWarning(
+      `found ${colors.yellow(String(brokenLinkStats.brokenRedirectCount))} redirect${brokenLinkStats.brokenRedirectCount === 1 ? '' : 's'} with invalid destination${brokenLinkStats.brokenRedirectCount === 1 ? '' : 's'}. ` +
+      `Fix the destination paths in ${colors.cyan('redirects')} in docs.json.`,
+    ))
+  }
   if (brokenAssetStats.brokenAssetCount > 0) {
     logger.warn('')
     logger.warn(formatHolocronWarning(
@@ -618,6 +628,7 @@ export async function syncNavigation({
     runtimeTabNames, parsedCount, cachedCount,
     mdxContentErrorCount: mdxContentErrors.size,
     brokenLinkCount: brokenLinkStats.brokenLinkCount,
+    brokenRedirectCount: brokenLinkStats.brokenRedirectCount,
     brokenAssetCount: brokenAssetStats.brokenAssetCount,
   }
 }
@@ -1073,7 +1084,7 @@ function validateInternalLinks({
   pageInternalLinks: Record<string, InternalLink[]>
   redirects: HolocronConfig['redirects']
   knownPaths: string[]
-}): { brokenLinkCount: number; affectedPageCount: number } {
+}): { brokenLinkCount: number; brokenRedirectCount: number; affectedPageCount: number } {
   const pageIndex = buildPageIndex(navigation)
   // Build a set of all known hrefs (pages + redirect sources)
   const knownHrefs = new Set<string>()
@@ -1127,7 +1138,29 @@ function validateInternalLinks({
     }
   }
 
-  return { brokenLinkCount, affectedPageCount: pagesWithBrokenLinks.size }
+  // Validate redirect destinations — warn if a static destination doesn't
+  // resolve to a known page, knownPaths entry, or another redirect source pattern.
+  let brokenRedirectCount = 0
+  for (const rule of redirects) {
+    const dest = rule.destination.replace(/[?#].*$/, '').replace(/\/+$/, '') || '/'
+    // Skip dynamic destinations (contain :param or * placeholders)
+    if (dest.includes(':') || dest.includes('*')) continue
+    // Skip external URLs (absolute and protocol-relative)
+    if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(dest) || dest.startsWith('//')) continue
+    if (knownHrefs.has(dest)) continue
+    if (knownPathPrefixes.some((prefix) => dest.startsWith(prefix))) continue
+    // Check if destination matches a dynamic redirect source pattern (e.g.
+    // /users/42 matches /users/:id). This covers redirect chains where a
+    // concrete destination is caught by a parameterized redirect source.
+    if (redirects.some((candidate) => redirectSourceMatches(candidate.source, dest))) continue
+
+    brokenRedirectCount++
+    logger.warn(formatHolocronWarning(
+      `broken redirect destination: ${colors.cyan(rule.source)} → ${colors.yellow(dest)} (no matching page found)`,
+    ))
+  }
+
+  return { brokenLinkCount, brokenRedirectCount, affectedPageCount: pagesWithBrokenLinks.size }
 }
 
 /**
