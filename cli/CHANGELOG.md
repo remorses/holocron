@@ -1,3 +1,11 @@
+## 0.19.0
+
+1. **New `holocron diagrams fix` command** — detects and fixes misaligned Unicode box-drawing characters in markdown files. The top border (`┌─┐`) is the source of truth for box width; content lines and bottom borders are adjusted to match. Supports light (`┌┐└┘─│`), heavy (`┏┓┗┛━┃`), double (`╔╗╚╝═║`), and rounded (`╭╮╯╰`) character sets. Column-level splice ensures side-by-side and nested boxes on shared rows don't clobber each other.
+
+   ```bash
+   holocron diagrams fix docs/**/*.md
+   ```
+
 ## 0.18.0
 
 1. **Custom domain support** — point your own domain (e.g. `docs.mycompany.com`) at your Holocron-deployed docs site. Cloudflare SSL for SaaS handles certificate provisioning automatically. Custom domains require a Pro subscription.

@@ -1,5 +1,63 @@
 # @holocron.so/vite
 
+## 0.22.0
+
+1. **Runtime provider system for custom tab content** — tabs in `docs.json` can now reference a provider file that generates navigation groups and MDX pages at request time. The provider result is cached with configurable TTL and promise coalescing prevents thundering herd on concurrent requests.
+
+   ```json
+   {
+     "tab": "Blog",
+     "provider": "./providers/blog.ts",
+     "base": "blog"
+   }
+   ```
+
+   The provider file default-exports a `CustomTabProvider` object:
+
+   ```ts
+   import type { CustomTabProvider } from '@holocron.so/vite'
+
+   const provider: CustomTabProvider = {
+     name: 'my-blog',
+     static: false,
+     ttlMs: 60_000,
+
+     async generate({ tab }) {
+       const articles = await fetchArticles()
+       return {
+         groups: [{ group: 'Posts', pages: articles.map(a => `blog/${a.slug}`) }],
+         mdxContent: Object.fromEntries(
+           articles.map(a => [`blog/${a.slug}`, `---\ntitle: "${a.title}"\n---\n\n${a.body}`])
+         ),
+       }
+     },
+   }
+
+   export default provider
+   ```
+
+   Sidebar titles are extracted from MDX frontmatter so runtime pages show real article titles instead of slug-derived fallbacks. Set `static: true` on the tab to run the provider at build time instead (same pipeline as OpenAPI/changelog providers).
+
+2. **Strict production builds** — production builds now fail when content errors are detected. MDX parse errors, unknown component names, broken internal links, broken asset references, and unresolved icon refs all cause the build to fail after every error has been logged. All errors are collected and displayed first, so you see every issue at once instead of fixing them one by one. Set `HOLOCRON_SKIP_BUILD_ERRORS=true` to bypass and deploy anyway.
+
+3. **`/llms-full.txt` route** — every site now serves `/llms-full.txt` alongside `/llms.txt`. The full-content endpoint concatenates all documentation pages into a single markdown response in docs.json navigation order, separated by frontmatter blocks (title, url, description).
+
+4. **`iconColor` support** — icons in page frontmatter, tabs, groups, anchors, navbar links, dropdowns, and products now accept an `iconColor` field. Named colors (`green`, `blue`, `red`, `purple`, `orange`, `yellow`, `pink`) resolve to CSS variables that adapt to dark mode. Sidebar page icons with `iconColor` are desaturated 30% by default and go to full saturation on hover/active.
+
+5. **Site links in sitemap.xml and llms.txt** — external links from the navbar, tab bar, sidebar anchors, and footer are now included in `sitemap.xml` (as XML comments) and `llms.txt` (as a `## Links` section). AI agents and crawlers get the same external links that humans see in the UI.
+
+6. **Redirect destination validation** — redirect destinations in `docs.json` are now validated at build time. Typos in destination paths are caught alongside broken internal links. Dynamic destinations (`:param`, `*`) and external URLs are skipped. Destinations that match a dynamic redirect source pattern (e.g. `/users/42` matching `/users/:id`) are valid.
+
+7. **Schema validation warnings at startup** — `docs.json` is validated against the schema at build/dev startup. Unknown or invalid fields produce warnings so misconfigurations are caught early.
+
+8. **Fix heading hash links** — headings with special characters like `+` no longer produce mismatched IDs between the DOM and navigation/TOC links. All heading ID generation now uses `github-slugger` directly.
+
+9. **Fix footer not reaching viewport bottom** — the section grid no longer creates an extra gap on short pages that pushed the footer below the fold.
+
+10. **Fix version selector not resolving hidden pages** — hidden pages now correctly resolve to their owning version in the version dropdown.
+
+11. **Visual refinements** — frame background pattern opacity reduced for subtler effect, lucide icon stroke-width increased for better legibility at small sizes, footer link font size reduced from 14px to 12px.
+
 ## 0.21.0
 
 1. **Standalone ChatWidget with shadow DOM isolation** — the AI chat component is now available as a drop-in widget via `@holocron.so/vite/chat`. It renders inside a shadow DOM host so styles don't leak in or out. Supports a `theme` prop (`'light'` | `'dark'` | `'auto'`), a zustand-based `useChatWidget()` hook for programmatic control, and works outside of holocron sites as a standalone component.
