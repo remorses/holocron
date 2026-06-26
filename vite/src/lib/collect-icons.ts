@@ -159,6 +159,7 @@ export function iconToRefs(
     return stringIconToRefs(icon, options)
   }
   const library = icon.library ?? options.defaultLibrary
+  if (!isIconLibrary(library)) return []
   if (!icon.name) return []
   return [buildIconRef({
     library,
