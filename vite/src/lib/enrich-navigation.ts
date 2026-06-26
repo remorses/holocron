@@ -26,7 +26,7 @@ import {
 } from '../navigation.ts'
 import { formatHolocronWarning, logger } from './logger.ts'
 
-const SUPPORTED_ICON_LIBRARIES = new Set(['lucide', 'fontawesome', 'tabler'])
+const SUPPORTED_ICON_LIBRARIES = new Set(['lucide', 'fontawesome'])
 
 export type EnrichedNavigationData = {
   navigation: Navigation
@@ -47,7 +47,7 @@ function serializeIcon({
   const library = icon.library ?? defaultLibrary
   if (!SUPPORTED_ICON_LIBRARIES.has(library)) {
     logger.warn(formatHolocronWarning(
-      `icon library "${library}" is not supported yet (supported: lucide, fontawesome, tabler). ` +
+      `icon library "${library}" is not supported (supported: lucide, fontawesome). ` +
       `Icon "${icon.name}"${context ? ` in ${context}` : ''} will be ignored.`,
     ))
     return undefined

@@ -51,7 +51,7 @@ const iconObjectSchema = z.object({
     .optional()
     .describe('The Font Awesome icon style variant'),
   library: z
-    .enum(['fontawesome', 'lucide', 'tabler'])
+    .enum(['fontawesome', 'lucide'])
     .optional()
     .describe('The icon library to resolve the icon name from'),
 })
@@ -1034,7 +1034,7 @@ export const fontsSchema = z
 export const iconsSchema = z
   .object({
     library: z
-      .enum(['fontawesome', 'lucide', 'tabler'])
+      .enum(['fontawesome', 'lucide'])
       .optional()
       .describe('Project-wide icon library used for plain icon strings'),
   })

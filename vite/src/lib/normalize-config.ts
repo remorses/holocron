@@ -25,7 +25,7 @@ import type {
 /** Libraries we can actually resolve at build time. Object icons with
  *  unsupported libraries are stripped at normalize time so they fall
  *  through to the label fallback instead of silently rendering nothing. */
-const SUPPORTED_ICON_LIBRARIES = new Set(['lucide', 'fontawesome', 'tabler'])
+const SUPPORTED_ICON_LIBRARIES = new Set(['lucide', 'fontawesome'])
 type IconLibrary = HolocronConfig['icons']['library']
 
 // Real Mintlify docs.json files often use config asset paths like
@@ -94,7 +94,7 @@ function sanitizeIcon({
   const library = icon.library ?? defaultLibrary
   if (!SUPPORTED_ICON_LIBRARIES.has(library)) {
     logger.warn(formatHolocronWarning(
-      `icon library "${library}" is not supported yet (supported: lucide, fontawesome, tabler). ` +
+      `icon library "${library}" is not supported (supported: lucide, fontawesome). ` +
       `Icon "${icon.name}" in ${context} will be ignored.`,
     ))
     return undefined
@@ -143,7 +143,7 @@ export function normalize(raw: Record<string, unknown>): HolocronConfig {
 
 function normalizeIcons(raw: unknown): HolocronConfig['icons'] {
   const obj = raw && typeof raw === 'object' ? raw as Record<string, unknown> : {}
-  const library = obj.library === 'lucide' || obj.library === 'tabler' || obj.library === 'fontawesome'
+  const library = obj.library === 'lucide' || obj.library === 'fontawesome'
     ? obj.library
     : 'fontawesome'
   return { library }

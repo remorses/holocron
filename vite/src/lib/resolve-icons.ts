@@ -80,7 +80,7 @@ function resolveFontAwesome(name: string, style?: string): IconAtlasEntry | null
 
 function parseIconRef(ref: IconRef): { library: IconLibrary; name: string; style?: string } | null {
   const parts = ref.split(':')
-  if (parts.length === 2 && (parts[0] === 'lucide' || parts[0] === 'tabler') && parts[1]) {
+  if (parts.length === 2 && parts[0] === 'lucide' && parts[1]) {
     return { library: parts[0], name: parts[1] }
   }
   if (parts.length === 2 && parts[0] === 'fontawesome' && parts[1]) {

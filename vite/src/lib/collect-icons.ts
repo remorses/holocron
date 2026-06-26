@@ -6,7 +6,7 @@
  * strings like `lucide:rocket` or `fontawesome:brands:discord` bypass it.
  */
 
-import type { ConfigIcon, HolocronConfig } from '../config.ts'
+import type { ConfigIcon, ConfigNavGroup, ConfigNavTab, HolocronConfig } from '../config.ts'
 import type { Navigation, NavGroup } from '../navigation.ts'
 import { isNavGroup, isNavPage } from '../navigation.ts'
 
@@ -64,29 +64,7 @@ const TYPE_ICONS_BY_LIBRARY: Record<IconLibrary, Record<string, string>> = {
     button: 'link',
     link: 'link',
   },
-  tabler: {
-    github: 'brand-github',
-    slack: 'brand-slack',
-    discord: 'brand-discord',
-    twitter: 'brand-twitter',
-    'x-twitter': 'brand-x',
-    x: 'brand-x',
-    linkedin: 'brand-linkedin',
-    youtube: 'brand-youtube',
-    facebook: 'brand-facebook',
-    instagram: 'brand-instagram',
-    website: 'world',
-    'earth-americas': 'world',
-    'hacker-news': 'brand-ycombinator',
-    medium: 'brand-medium',
-    telegram: 'brand-telegram',
-    bluesky: 'brand-bluesky',
-    threads: 'brand-threads',
-    reddit: 'brand-reddit',
-    podcast: 'rss',
-    button: 'external-link',
-    link: 'external-link',
-  },
+
 }
 
 export function getDefaultTypeIcon(type: string, library: IconLibrary): string | undefined {
@@ -127,7 +105,7 @@ function buildIconRef({ library, name, style }: { library: IconLibrary; name: st
 }
 
 function isIconLibrary(value: string): value is IconLibrary {
-  return value === 'lucide' || value === 'fontawesome' || value === 'tabler'
+  return value === 'lucide' || value === 'fontawesome'
 }
 
 function parseExplicitIconRef(icon: string): IconRef | undefined {
@@ -214,6 +192,26 @@ export function isUrl(str: string): boolean {
   )
 }
 
+/** Walk config-level groups (ConfigNavGroup) for version/dropdown inner navigation.
+ *  ConfigNavGroup pages are `string | ConfigNavGroup` — strings are slugs (no icon),
+ *  nested groups have their own icon + pages. */
+function walkConfigGroups(groups: ConfigNavGroup[], out: IconRef[], defaultLibrary: IconLibrary): void {
+  for (const group of groups) {
+    out.push(...iconToRefs(group.icon, { defaultLibrary }))
+    for (const entry of group.pages) {
+      if (typeof entry === 'string') continue
+      walkConfigGroups([entry], out, defaultLibrary)
+    }
+  }
+}
+
+function walkConfigTabs(tabs: ConfigNavTab[], out: IconRef[], defaultLibrary: IconLibrary): void {
+  for (const tab of tabs) {
+    out.push(...iconToRefs(tab.icon, { defaultLibrary }))
+    walkConfigGroups(tab.groups, out, defaultLibrary)
+  }
+}
+
 function walkGroups(groups: NavGroup[], out: IconRef[], defaultLibrary: IconLibrary): void {
   for (const group of groups) {
     out.push(...iconToRefs(group.icon, { defaultLibrary }))
@@ -257,6 +255,19 @@ export function collectIconRefs({
 
   for (const dropdown of config.navigation.dropdowns) {
     refs.push(...iconToRefs(dropdown.icon, { defaultLibrary }))
+    if (dropdown.navigation) {
+      walkConfigTabs(dropdown.navigation.tabs, refs, defaultLibrary)
+      for (const anchor of dropdown.navigation.anchors) {
+        refs.push(...iconToRefs(anchor.icon, { defaultLibrary }))
+      }
+    }
+  }
+
+  for (const version of config.navigation.versions) {
+    walkConfigTabs(version.navigation.tabs, refs, defaultLibrary)
+    for (const anchor of version.navigation.anchors) {
+      refs.push(...iconToRefs(anchor.icon, { defaultLibrary }))
+    }
   }
 
   for (const platform of Object.keys(config.footer.socials)) {

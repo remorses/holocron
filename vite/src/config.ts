@@ -145,7 +145,7 @@ export type HolocronConfig = {
   logo: { light: string; dark?: string; href?: string; text?: string }
   favicon: { light: string; dark: string }
   colors: z.output<typeof colorsSchema> & { _hasUserColors: boolean }
-  icons: z.output<typeof iconsSchema> & { library: 'fontawesome' | 'lucide' | 'tabler' }
+  icons: z.output<typeof iconsSchema> & { library: 'fontawesome' | 'lucide' }
   appearance: { default: 'system' | 'light' | 'dark'; strict: boolean }
   fonts?: {
     family?: string

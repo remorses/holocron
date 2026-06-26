@@ -434,8 +434,7 @@
           "type": "string",
           "enum": [
             "fontawesome",
-            "lucide",
-            "tabler"
+            "lucide"
           ]
         }
       },
@@ -1108,8 +1107,7 @@
               "type": "string",
               "enum": [
                 "fontawesome",
-                "lucide",
-                "tabler"
+                "lucide"
               ]
             }
           },
