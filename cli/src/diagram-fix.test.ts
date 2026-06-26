@@ -16,6 +16,9 @@ import {
   validateDiagramsInText,
   stringDisplayWidth,
   charDisplayWidth,
+  isAmbiguousWidth,
+  replaceAmbiguousChars,
+  findUnreplaceableAmbiguous,
 } from './diagram-fix.ts'
 
 // ─────────────────────────────────────────────────────────────
@@ -361,20 +364,20 @@ describe('fixDiagramLines — real-world diagrams', () => {
       "┌─────────────────────────────────────────────────────────────────────────┐
       │  1. Build once                                                          │
       │     npx vite build                                                      │
-      │     ► produces dist/ with stable chunks + template data                 │
+      │     > produces dist/ with stable chunks + template data                 │
       └────────────────────────────────────┬────────────────────────────────────┘
                                            │
                ┌───────────────────────────┼───────────────────────────┐
-               ▼                           ▼                           ▼
+               v                           v                           v
       ┌─────────────────┐     ┌─────────────────┐         ┌─────────────────┐
       │  Tenant A       │     │  Tenant B       │         │  Tenant C       │
       │                 │     │                 │         │                 │
       │  generateData() │     │  generateData() │         │  generateData() │
-      │  ► data.js      │     │  ► data.js      │         │  ► data.js      │
-      │  ► page chunks  │     │  ► page chunks  │         │  ► page chunks  │
+      │  > data.js      │     │  > data.js      │         │  > data.js      │
+      │  > page chunks  │     │  > page chunks  │         │  > page chunks  │
       └────────┬────────┘     └────────┬────────┘         └────────┬────────┘
                │                       │                           │
-               ▼                       ▼                           ▼
+               v                       v                           v
       ┌─────────────────────────────────────────────────────────────────────────┐
       │  Deploy (content-addressable)                                           │
       │  Shared stable chunk uploaded once. Only data.js + pages per tenant.    │
@@ -446,7 +449,7 @@ describe('fixDiagramLines — real-world diagrams', () => {
                                          │
                              Framer Agent creates components
                                          │
-                                         ▼
+                                         v
       ┌──────────────────────────────────────────────────────────────────────────────┐
       │  Components panel                                                            │
       │  ┌──────────────────────┐  ┌──────────────────────┐  ┌────────────────────┐  │
@@ -459,7 +462,7 @@ describe('fixDiagramLines — real-world diagrams', () => {
                                          │
                               React Export Plugin (select Section components)
                                          │
-                                         ▼
+                                         v
       ┌──────────────────────────────────────────────────────────────────────────────┐
       │  npx unframer {projectId} --outDir ./src/framer                              │
       │                                                                              │
@@ -475,7 +478,7 @@ describe('fixDiagramLines — real-world diagrams', () => {
                                          │
                                 Assemble in your React app
                                          │
-                                         ▼
+                                         v
       ┌──────────────────────────────────────────────────────────────────────────────┐
       │                     Deployed on Vercel / Cloudflare / Netlify                │ 
       └──────────────────────────────────────────────────────────────────────────────┘"
@@ -526,30 +529,30 @@ describe('fixDiagramLines — complex scenarios', () => {
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌───────────────────────────────────────┐
       │  1. Parse config                      │  
-      │     ► reads docs.json                 │
-      │     ► validates schema                │  
+      │     > reads docs.json                 │
+      │     > validates schema                │  
       └───────────────────┬───────────────────┘
                           │
-                          ▼
+                          v
       ┌───────────────────────────────────────┐
       │  2. Sync navigation tree              │  
-      │     ► walks MDX pages                 │
-      │     ► computes git SHAs               │
-      │     ► enriches metadata               │  
+      │     > walks MDX pages                 │
+      │     > computes git SHAs               │
+      │     > enriches metadata               │  
       └───────────────────┬───────────────────┘
                           │
-                          ▼
+                          v
       ┌───────────────────────────────────────┐
       │  3. Process MDX                       │
-      │     ► remark plugins                  │
-      │     ► section splitting               │  
+      │     > remark plugins                  │
+      │     > section splitting               │  
       └───────────────────┬───────────────────┘
                           │
-                          ▼
+                          v
       ┌───────────────────────────────────────┐
       │  4. Render pages                      │  
-      │     ► safe-mdx                        │
-      │     ► editorial components            │  
+      │     > safe-mdx                        │
+      │     > editorial components            │  
       └───────────────────────────────────────┘"
     `)
   })
@@ -670,8 +673,8 @@ describe('fixDiagramLines — complex scenarios', () => {
       │  │   └── utils.ts                       │
       │  └── index.ts                           │   
       │                                         │ 
-      │  ► Build output: dist/                  │   
-      │  ▼ Deploy target: Cloudflare            │
+      │  > Build output: dist/                  │   
+      │  v Deploy target: Cloudflare            │
       └─────────────────────────────────────────┘"
     `)
   })
@@ -704,13 +707,13 @@ describe('fixDiagramLines — complex scenarios', () => {
       │  Input Handler   │  
       └────────┬─────────┘
                │
-               ▼
+               v
       ┌──────────────────┐
       │  Validator       │
       └────────┬─────────┘
                │
           ┌────┴────┐
-          ▼         ▼
+          v         v
       ┌────────┐ ┌────────┐
       │ Pass   │ │ Fail   │
       │ handler│ │ handler│  
@@ -764,8 +767,8 @@ describe('fixDiagramLines — complex scenarios', () => {
       "╭──────────────────────────────╮
       │  Deployment Pipeline         │  
       │                              │
-      │  ► lint ► test ► build       │
-      │  ► deploy ► verify           │  
+      │  > lint > test > build       │
+      │  > deploy > verify           │  
       ╰──────────────────────────────╯"
     `)
   })
@@ -843,7 +846,7 @@ describe('fixDiagramLines — complex scenarios', () => {
       │  Client    │   
       └──────┬─────┘
              │
-             ▼
+             v
       ┌────────────┐
       │  Server    │
       └────────────┘
@@ -915,7 +918,7 @@ describe('fixDiagramLines — complex scenarios', () => {
                │
 
                │
-               ▼
+               v
       ┌──────────────────┐
       │  Step 2: Process │
       └────────┬─────────┘
@@ -923,7 +926,7 @@ describe('fixDiagramLines — complex scenarios', () => {
 
 
                │
-               ▼
+               v
       ┌──────────────────┐
       │  Step 3: Done    │  
       └──────────────────┘"
@@ -991,7 +994,7 @@ describe('fixDiagramLines — complex scenarios', () => {
       │  Source    │ 
       └──────┬─────┘
          some debug text covering the connector line
-             ▼
+             v
       ┌────────────┐
       │  Target    │ 
       └────────────┘"
@@ -1018,7 +1021,7 @@ describe('fixDiagramLines — complex scenarios', () => {
       │  Step A    │ 
       └──────┬─────┘
              │ this label extends past the box
-             ▼
+             v
       ┌────────────┐
       │  Step B    │
       └────────────┘"
@@ -1314,9 +1317,9 @@ describe('edge cases', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌────────────────────┐
-      │ ► step one         │  
-      │ ► step two         │ 
-      │ ▼ result           │ 
+      │ > step one         │  
+      │ > step two         │ 
+      │ v result           │ 
       └────────────────────┘"
     `)
   })
@@ -1467,5 +1470,197 @@ describe('edge cases', () => {
       │ └── types.ts     │  
       └──────────────────┘"
     `)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────
+// Ambiguous-width character detection and replacement
+// ─────────────────────────────────────────────────────────────
+
+describe('isAmbiguousWidth', () => {
+  test('filled triangles (category A) are ambiguous', () => {
+    expect(isAmbiguousWidth('▶')).toBe(true)  // U+25B6
+    expect(isAmbiguousWidth('◀')).toBe(true)  // U+25C0
+    expect(isAmbiguousWidth('▲')).toBe(true)  // U+25B2
+    expect(isAmbiguousWidth('▼')).toBe(true)  // U+25BC
+  })
+
+  test('small triangles and pointers (category N) are NOT ambiguous', () => {
+    // These are replaced for portability but are not technically Ambiguous
+    expect(isAmbiguousWidth('►')).toBe(false) // U+25BA
+    expect(isAmbiguousWidth('◄')).toBe(false) // U+25C4
+    expect(isAmbiguousWidth('▸')).toBe(false) // U+25B8
+    expect(isAmbiguousWidth('◂')).toBe(false) // U+25C2
+    expect(isAmbiguousWidth('▴')).toBe(false) // U+25B4
+    expect(isAmbiguousWidth('▾')).toBe(false) // U+25BE
+  })
+
+  test('stars and circles are ambiguous', () => {
+    expect(isAmbiguousWidth('★')).toBe(true)
+    expect(isAmbiguousWidth('☆')).toBe(true)
+    expect(isAmbiguousWidth('●')).toBe(true)
+    expect(isAmbiguousWidth('○')).toBe(true)
+  })
+
+  test('standard arrows are NOT ambiguous (render 1 cell on all platforms)', () => {
+    expect(isAmbiguousWidth('→')).toBe(false)
+    expect(isAmbiguousWidth('←')).toBe(false)
+    expect(isAmbiguousWidth('↑')).toBe(false)
+    expect(isAmbiguousWidth('↓')).toBe(false)
+  })
+
+  test('block elements are ambiguous', () => {
+    expect(isAmbiguousWidth('▀')).toBe(true) // UPPER HALF BLOCK
+    expect(isAmbiguousWidth('▌')).toBe(true) // LEFT HALF BLOCK
+  })
+
+  test('ASCII chars are not ambiguous', () => {
+    expect(isAmbiguousWidth('a')).toBe(false)
+    expect(isAmbiguousWidth('>')).toBe(false)
+    expect(isAmbiguousWidth('<')).toBe(false)
+    expect(isAmbiguousWidth(' ')).toBe(false)
+  })
+
+  test('box-drawing chars are not ambiguous', () => {
+    expect(isAmbiguousWidth('┌')).toBe(false)
+    expect(isAmbiguousWidth('─')).toBe(false)
+    expect(isAmbiguousWidth('│')).toBe(false)
+    expect(isAmbiguousWidth('┘')).toBe(false)
+  })
+})
+
+describe('replaceAmbiguousChars', () => {
+  test('replaces filled triangles with ASCII', () => {
+    const { result, replacements } = replaceAmbiguousChars('──▶ text ◀──')
+    expect(result).toBe('──> text <──')
+    expect(replacements).toHaveLength(2)
+    expect(replacements[0]).toEqual({ col: 2, from: '▶', to: '>' })
+    expect(replacements[1]).toEqual({ col: 9, from: '◀', to: '<' })
+  })
+
+  test('replaces all arrow variants', () => {
+    const { result } = replaceAmbiguousChars('▶◀▲▼►◄▸◂▴▾')
+    expect(result).toBe('><^v><><^v')
+  })
+
+  test('replaces shapes', () => {
+    const { result } = replaceAmbiguousChars('★☆●○◆◇■□')
+    expect(result).toBe('***o*o##')
+  })
+
+  test('leaves ASCII and box-drawing unchanged', () => {
+    const { result, replacements } = replaceAmbiguousChars('┌──── hello ────┐')
+    expect(result).toBe('┌──── hello ────┐')
+    expect(replacements).toHaveLength(0)
+  })
+
+  test('handles empty string', () => {
+    const { result, replacements } = replaceAmbiguousChars('')
+    expect(result).toBe('')
+    expect(replacements).toHaveLength(0)
+  })
+})
+
+describe('findUnreplaceableAmbiguous', () => {
+  test('finds ambiguous chars without replacement', () => {
+    // ◎ (U+25CE, BULLSEYE) is Ambiguous per Unicode 15.1 and has no auto-replacement
+    const found = findUnreplaceableAmbiguous('A ◎ B')
+    expect(found.length).toBe(1)
+    expect(found[0]!.char).toBe('◎')
+    expect(found[0]!.codepoint).toBe('U+25CE')
+  })
+
+  test('ignores chars that have auto-replacements', () => {
+    const found = findUnreplaceableAmbiguous('──▶ text ◀──')
+    expect(found).toHaveLength(0)
+  })
+
+  test('returns empty for safe ASCII', () => {
+    const found = findUnreplaceableAmbiguous('hello world > <')
+    expect(found).toHaveLength(0)
+  })
+})
+
+describe('fixDiagramLines — ambiguous char replacement', () => {
+  test('replaces ambiguous arrows in diagram with boxes', () => {
+    const input = [
+      '┌──────────┐',
+      '│ server   │──▶ output',
+      '└──────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌──────────┐
+      │ server   │──> output
+      └──────────┘"
+    `)
+  })
+
+  test('replaces ambiguous arrows in the user example diagram', () => {
+    const input = dedent`
+      ┌──────────────────┐      ┌──────────────────────────────────────────────────┐
+      │ #web-app ────────┼──────┼──▶ /code/web-app   ──▶ OpenCode session (thread) │
+      │ #api ────────────┼──────┼──▶ /code/api       ──▶ OpenCode session (thread) │
+      │ #docs ───────────┼──────┼──▶ /code/docs      ──▶ OpenCode session (thread) │
+      └──────────────────┘      └──────────────────────────────────────────────────┘
+    `.split('\n')
+
+    const fixed = fixDiagramLines(input)
+    // All ▶ should be replaced with >
+    expect(fixed.join('\n')).not.toContain('▶')
+    expect(fixed.join('\n')).toContain('──>')
+  })
+
+  test('replaces ambiguous arrows outside boxes', () => {
+    const input = [
+      '  input ──▶ process ──▶ output',
+      '  feedback ◀── monitor',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    expect(fixed[0]).toBe('  input ──> process ──> output')
+    expect(fixed[1]).toBe('  feedback <── monitor')
+  })
+})
+
+describe('validateDiagram — ambiguous char warnings', () => {
+  test('warns about unreplaceable ambiguous chars', () => {
+    const diagram = dedent`
+      ┌──────────┐
+      │ A ◎ B    │
+      └──────────┘
+    `
+    const issues = validateDiagram(diagram)
+    const ambiguousIssues = issues.filter((i) => i.message.includes('Ambiguous-width'))
+    expect(ambiguousIssues.length).toBe(1)
+    expect(ambiguousIssues[0]!.message).toContain('◎')
+    expect(ambiguousIssues[0]!.message).toContain('U+25CE')
+  })
+
+  test('warns about replaceable ambiguous chars (--check catches them)', () => {
+    const diagram = dedent`
+      ┌──────────┐
+      │ A ▶ B    │
+      └──────────┘
+    `
+    const issues = validateDiagram(diagram)
+    const replaceableIssues = issues.filter((i) => i.message.includes('should be replaced'))
+    expect(replaceableIssues.length).toBe(1)
+    expect(replaceableIssues[0]!.message).toContain('▶')
+    expect(replaceableIssues[0]!.message).toContain('>')
+  })
+
+  test('no warnings for clean ASCII diagrams', () => {
+    const diagram = dedent`
+      ┌──────────┐
+      │ A > B    │
+      └──────────┘
+    `
+    const issues = validateDiagram(diagram)
+    const ambiguousIssues = issues.filter((i) =>
+      i.message.includes('Ambiguous-width') || i.message.includes('should be replaced'),
+    )
+    expect(ambiguousIssues).toHaveLength(0)
   })
 })

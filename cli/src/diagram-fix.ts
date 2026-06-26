@@ -19,6 +19,86 @@ import { logger, colors as c } from './logger.ts'
 // Display width — East Asian Width lookup
 // ─────────────────────────────────────────────────────────────
 
+// Characters that render as 2 cells on many Windows monospaced fonts (Consolas,
+// Lucida Console, etc.) but 1 cell on macOS/Linux, breaking diagram alignment.
+//
+// Two categories of replacements:
+// 1. Unicode Ambiguous (category A in EastAsianWidth.txt) — genuinely ambiguous
+// 2. Portability normalization — not Ambiguous per spec, but commonly confused
+//    with similar-looking Ambiguous chars and safer as ASCII in diagrams
+//
+// Safe replacements use only ASCII characters.
+
+const AMBIGUOUS_REPLACEMENTS: Record<string, string> = {
+  // Unicode Ambiguous (category A) — these genuinely render as 2 cells on Windows
+  '▶': '>', // BLACK RIGHT-POINTING TRIANGLE (U+25B6, A)
+  '◀': '<', // BLACK LEFT-POINTING TRIANGLE (U+25C0, A)
+  '▲': '^', // BLACK UP-POINTING TRIANGLE (U+25B2, A)
+  '▼': 'v', // BLACK DOWN-POINTING TRIANGLE (U+25BC, A)
+  '★': '*', // BLACK STAR (U+2605, A)
+  '☆': '*', // WHITE STAR (U+2606, A)
+  '●': '*', // BLACK CIRCLE (U+25CF, A)
+  '○': 'o', // WHITE CIRCLE (U+25CB, A)
+  '◆': '*', // BLACK DIAMOND (U+25C6, A)
+  '◇': 'o', // WHITE DIAMOND (U+25C7, A)
+  '■': '#', // BLACK SQUARE (U+25A0, A)
+  '□': '#', // WHITE SQUARE (U+25A1, A)
+
+  // Portability normalization — these are Neutral (N) per Unicode spec but are
+  // visually similar to Ambiguous chars and look better as ASCII in diagrams.
+  // Not flagged by isAmbiguousWidth(), only replaced by replaceAmbiguousChars().
+  '►': '>', // BLACK RIGHT-POINTING POINTER (U+25BA, N)
+  '◄': '<', // BLACK LEFT-POINTING POINTER (U+25C4, N)
+  '▸': '>', // BLACK RIGHT-POINTING SMALL TRIANGLE (U+25B8, N)
+  '◂': '<', // BLACK LEFT-POINTING SMALL TRIANGLE (U+25C2, N)
+  '▴': '^', // BLACK UP-POINTING SMALL TRIANGLE (U+25B4, N)
+  '▾': 'v', // BLACK DOWN-POINTING SMALL TRIANGLE (U+25BE, N)
+}
+
+// Exact Unicode East Asian Width "Ambiguous" (category A) subranges from
+// Unicode 15.1 EastAsianWidth.txt. Only includes ranges for characters that
+// commonly appear in diagrams.
+//
+// Box-drawing characters (U+2500-U+257F) are intentionally excluded — they
+// are the foundation of diagram fixer and render as 1 cell everywhere.
+// Standard arrows (→←↑↓, U+2190-U+2199) are also excluded — they render
+// correctly on all major Windows monospaced fonts.
+const AMBIGUOUS_RANGES: [number, number][] = [
+  [0x2580, 0x258f], // UPPER HALF BLOCK .. LEFT ONE EIGHTH BLOCK
+  [0x2592, 0x2595], // MEDIUM SHADE .. RIGHT ONE EIGHTH BLOCK
+  // Geometric Shapes — exact A subranges, not the full U+25A0-25FF block
+  [0x25a0, 0x25a1], // BLACK SQUARE .. WHITE SQUARE
+  [0x25a3, 0x25a9], // WHITE SQUARE WITH HORIZONTAL FILL .. SQUARE WITH DIAGONAL CROSSHATCH FILL
+  [0x25b2, 0x25b3], // BLACK UP-POINTING TRIANGLE .. WHITE UP-POINTING TRIANGLE
+  [0x25b6, 0x25b7], // BLACK RIGHT-POINTING TRIANGLE .. WHITE RIGHT-POINTING TRIANGLE
+  [0x25bc, 0x25bd], // BLACK DOWN-POINTING TRIANGLE .. WHITE DOWN-POINTING TRIANGLE
+  [0x25c0, 0x25c1], // BLACK LEFT-POINTING TRIANGLE .. WHITE LEFT-POINTING TRIANGLE
+  [0x25c6, 0x25c8], // BLACK DIAMOND .. WHITE DIAMOND CONTAINING BLACK SMALL DIAMOND
+  [0x25cb, 0x25cb], // WHITE CIRCLE
+  [0x25ce, 0x25d1], // BULLSEYE .. CIRCLE WITH RIGHT HALF BLACK
+  [0x25e2, 0x25e5], // BLACK LOWER RIGHT TRIANGLE .. BLACK UPPER RIGHT TRIANGLE
+  [0x25ef, 0x25ef], // LARGE CIRCLE
+  // Stars and misc symbols
+  [0x2605, 0x2606], // BLACK STAR .. WHITE STAR
+  [0x2609, 0x2609], // SUN
+  [0x260e, 0x260f], // BLACK TELEPHONE .. WHITE TELEPHONE
+  [0x2614, 0x2615], // UMBRELLA WITH RAIN DROPS .. HOT BEVERAGE
+  // Card suits — exact A subranges
+  [0x2660, 0x2661], // BLACK SPADE SUIT .. WHITE HEART SUIT
+  [0x2663, 0x2665], // BLACK CLUB SUIT .. BLACK HEART SUIT
+  [0x2667, 0x266a], // WHITE CLUB SUIT .. EIGHTH NOTE
+  [0x266c, 0x266d], // BEAMED SIXTEENTH NOTES .. MUSIC FLAT SIGN
+  [0x266f, 0x266f], // MUSIC SHARP SIGN
+  [0x2776, 0x277f], // DINGBAT NEGATIVE CIRCLED DIGIT ONE .. TEN
+]
+
+function isAmbiguousCodepoint(cp: number): boolean {
+  for (const [lo, hi] of AMBIGUOUS_RANGES) {
+    if (cp >= lo && cp <= hi) return true
+  }
+  return false
+}
+
 // Ranges where a codepoint occupies 2 terminal columns (East Asian Fullwidth/Wide).
 // Derived from Unicode 15.1 EastAsianWidth.txt (categories W and F).
 const WIDE_RANGES: [number, number][] = [
@@ -46,6 +126,55 @@ function isWideCodepoint(cp: number): boolean {
     if (cp >= lo && cp <= hi) return true
   }
   return false
+}
+
+/** Check if a character has ambiguous East Asian width. */
+export function isAmbiguousWidth(char: string): boolean {
+  const cp = char.codePointAt(0)!
+  return isAmbiguousCodepoint(cp)
+}
+
+/**
+ * Replace ambiguous-width characters with safe 1-cell ASCII equivalents.
+ * Only replaces characters that have a known safe mapping. Returns the
+ * modified string and a list of replacements made (for reporting).
+ */
+export function replaceAmbiguousChars(
+  line: string,
+): { result: string; replacements: Array<{ col: number; from: string; to: string }> } {
+  const replacements: Array<{ col: number; from: string; to: string }> = []
+  let result = ''
+  let col = 0
+  for (const char of line) {
+    const replacement = AMBIGUOUS_REPLACEMENTS[char]
+    if (replacement) {
+      replacements.push({ col, from: char, to: replacement })
+      result += replacement
+    } else {
+      result += char
+    }
+    col += charDisplayWidth(char)
+  }
+  return { result, replacements }
+}
+
+/**
+ * Find ambiguous-width characters that have NO auto-replacement.
+ * These need manual intervention.
+ */
+export function findUnreplaceableAmbiguous(
+  line: string,
+): Array<{ col: number; char: string; codepoint: string }> {
+  const found: Array<{ col: number; char: string; codepoint: string }> = []
+  let col = 0
+  for (const char of line) {
+    const cp = char.codePointAt(0)!
+    if (isAmbiguousCodepoint(cp) && !(char in AMBIGUOUS_REPLACEMENTS)) {
+      found.push({ col, char, codepoint: `U+${cp.toString(16).toUpperCase().padStart(4, '0')}` })
+    }
+    col += charDisplayWidth(char)
+  }
+  return found
 }
 
 /** Display width of a single character (1 or 2 columns). */
@@ -417,7 +546,9 @@ function buildBorderSegment(
  * each other.
  */
 export function fixDiagramLines(inputLines: string[]): string[] {
-  const lines = [...inputLines]
+  // First pass: replace ambiguous-width characters with safe 1-cell equivalents.
+  // This must happen before box detection so column positions are stable.
+  const lines = inputLines.map((line) => replaceAmbiguousChars(line).result)
   const boxes = findBoxes(lines)
 
   // Sort: innermost (smallest area) first so inner box fixes land before
@@ -535,6 +666,33 @@ export function validateDiagram(text: string, opts?: { maxWidth?: number }): Dia
         line: r + 1,
         col: width,
         message: `Line is ${width} cols wide, exceeds max ${maxWidth}`,
+      })
+    }
+  }
+
+  // Check for replaceable ambiguous characters (would be auto-fixed by fixDiagramLines).
+  // This makes --check fail on files that fix mode would change.
+  for (let r = 0; r < lines.length; r++) {
+    const { replacements } = replaceAmbiguousChars(lines[r]!)
+    for (const rep of replacements) {
+      issues.push({
+        line: r + 1,
+        col: rep.col + 1,
+        message: `Ambiguous-width character '${rep.from}' should be replaced with '${rep.to}' for cross-platform compatibility`,
+      })
+    }
+  }
+
+  // Check for ambiguous-width characters that have no auto-replacement.
+  // These render as 1 or 2 cells depending on the platform/font and will
+  // cause alignment issues on Windows.
+  for (let r = 0; r < lines.length; r++) {
+    const ambiguous = findUnreplaceableAmbiguous(lines[r]!)
+    for (const a of ambiguous) {
+      issues.push({
+        line: r + 1,
+        col: a.col + 1,
+        message: `Ambiguous-width character '${a.char}' (${a.codepoint}) may render as 2 cells on Windows. Replace with an ASCII alternative`,
       })
     }
   }
