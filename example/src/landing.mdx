@@ -1,0 +1,89 @@
+---
+title: Landing Page Example
+description: A custom landing page with full layout control
+mode: "custom"
+maxWidth: 700
+---
+
+<div className="flex flex-col items-center justify-center py-24 gap-6 text-center">
+
+<div className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-sm text-muted-foreground">
+  <span className="inline-block size-2 rounded-full bg-green-500" />
+  Now in public beta
+</div>
+
+<h1 className="text-5xl font-bold tracking-tight max-w-2xl">
+  Browser automation for AI agents
+</h1>
+
+<p className="text-lg text-muted-foreground max-w-xl">
+  Control your actual Chrome browser with logins, extensions, and cookies already there.
+  No headless instance. No bot detection.
+</p>
+
+<div className="flex gap-3 mt-4">
+  <a href="./quickstart" className="no-underline inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+    Get Started
+  </a>
+  <a href="https://github.com/remorses/playwriter" className="no-underline inline-flex items-center gap-2 rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent">
+    View on GitHub
+  </a>
+</div>
+
+</div>
+
+<div className="border-t border-border" />
+
+<div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-16">
+
+<div className="flex flex-col gap-3">
+  <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+    <Icon icon="chrome" size={20} />
+  </div>
+  <h3 className="text-lg font-semibold">Your Real Browser</h3>
+  <p className="text-sm text-muted-foreground">
+    Connects to your existing Chrome with all your logins, cookies, and extensions intact.
+  </p>
+</div>
+
+<div className="flex flex-col gap-3">
+  <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+    <Icon icon="zap" size={20} />
+  </div>
+  <h3 className="text-lg font-semibold">Lightning Fast</h3>
+  <p className="text-sm text-muted-foreground">
+    No browser startup cost. Instant connection to a running Chrome instance.
+  </p>
+</div>
+
+<div className="flex flex-col gap-3">
+  <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+    <Icon icon="shield" size={20} />
+  </div>
+  <h3 className="text-lg font-semibold">No Bot Detection</h3>
+  <p className="text-sm text-muted-foreground">
+    Behaves like a real user because it is one. No fingerprint leaks, no CAPTCHAs.
+  </p>
+</div>
+
+</div>
+
+<div className="border-t border-border" />
+
+<div className="py-16 flex flex-col items-center gap-6 text-center">
+
+<h2 className="text-3xl font-bold">Ready to get started?</h2>
+
+<p className="text-muted-foreground max-w-lg">
+  Install Playwriter in under a minute. Works with any AI agent framework.
+</p>
+
+```bash
+npm install playwriter
+```
+
+<a href="./quickstart" className="no-underline inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 mt-4">
+  Read the docs
+</a>
+
+</div>

@@ -40,15 +40,19 @@ import type { HolocronCSSProperties } from '../../lib/css-vars.ts'
 import type { PageMode } from '../../lib/page-frontmatter.ts'
 import { GridLinesFrame, TabBarDots, NavbarLines, AboveBottomDots } from './grid-lines.tsx'
 
-type EditorialPageMode = 'default' | 'center'
+type EditorialPageMode = 'default' | 'center' | 'custom'
 
 function resolveEditorialPageMode(mode: PageMode | undefined): EditorialPageMode {
-  // Holocron intentionally keeps page modes small: the default docs layout, or
-  // a center layout without the left navigation. Mintlify's other mode names
-  // are accepted for config compatibility, but only alias to these two
-  // layouts. Add real `wide`, `frame`, or `custom` layouts only when a user
-  // need cannot be represented by either `default` or `center`.
-  return mode === 'center' || mode === 'custom' ? 'center' : 'default'
+  // Three resolved modes:
+  // - "default" (+ "wide", "frame"): full editorial layout with left nav,
+  //   sections grid, right aside column.
+  // - "center": hides left nav, centers content in 2-column grid.
+  // - "custom": strips the editorial grid entirely. Only navbar + footer are
+  //   rendered; content is a plain full-width container. For landing pages
+  //   and custom layouts where the user controls everything.
+  if (mode === 'custom') return 'custom'
+  if (mode === 'center') return 'center'
+  return 'default'
 }
 
 
@@ -98,6 +102,7 @@ export function EditorialPage({
   sidebarWidth,
   gridGap,
   mode,
+  maxWidth,
 }: {
   sidebar?: React.ReactNode
   children?: React.ReactNode
@@ -114,6 +119,10 @@ export function EditorialPage({
   sidebarWidth?: number
   /** Optional page-level grid gap from frontmatter. */
   gridGap?: number
+  /** Override the maximum content width. Accepts a number (pixels) or a
+   *  CSS string (e.g. "700px", "80%", "60ch"). Used in custom mode to
+   *  constrain the content container. */
+  maxWidth?: number | string
   /** Mintlify-compatible page mode from MDX frontmatter. */
   mode?: PageMode
 }) {
@@ -136,6 +145,7 @@ export function EditorialPage({
   const banner = siteConfig.banner
   const decorativeLines = siteConfig.decorativeLines
   const pageMode = resolveEditorialPageMode(mode)
+  const isCustomMode = pageMode === 'custom'
   const showLeftNav = pageMode === 'default'
   // In center mode the content + right rail occupy the page width without the
   // left navigation column, so cap the grid width to drop that column's width.
@@ -285,7 +295,7 @@ export function EditorialPage({
         </div>
 
         {/* Mobile bar: Ask AI + Menu — shown under logo bar on mobile */}
-        {showLeftNav && <MobileBar enableAssistant={enableAssistant} />}
+        {(showLeftNav || isCustomMode) && <MobileBar enableAssistant={enableAssistant} />}
 
         {/* Tab row — hidden on mobile, shown in nav drawer instead */}
         {hasTabBar ? (
@@ -309,13 +319,29 @@ export function EditorialPage({
         ) : null}
       </div>
 
-      {/* Outer decorative frame wrapper — relative so GridLinesFrame lines
+      {isCustomMode ? (
+        /* Custom mode: no editorial grid, no sections, no decorative lines.
+           Just a plain full-width container matching navbar max-width so
+           users have full control for landing pages and custom layouts.
+           When maxWidth is set via frontmatter, the container is narrower
+           and centered within the page. */
+        <div
+          className='relative grow w-full max-w-full mx-auto px-(--mobile-padding) lg:px-0'
+          style={{ maxWidth: maxWidth ? (typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth) : 'var(--grid-max-width)' }}
+        >
+          <div className='flex flex-col'>
+            {children}
+          </div>
+          <ContentFooter />
+        </div>
+      ) : (
+      /* Outer decorative frame wrapper — relative so GridLinesFrame lines
            position against the max-width boundary. Vertical lines are offset
            outside by --grid-line-offset. Wraps both "above" and the 3-column
            grid so the vertical lines span the full content height.
            Negative top margin closes the flex gap so the vertical lines
            connect seamlessly to the tab-bar border; inner pt restores the
-           visual spacing for content. */}
+           visual spacing for content. */
       <div className='relative grow w-full max-w-full mx-auto lg:max-w-(--grid-max-width) lg:-mt-(--layout-gap) lg:pt-(--layout-gap) overflow-y-clip'>
         <GridLinesFrame mode={decorativeLines} />
 
@@ -472,12 +498,13 @@ export function EditorialPage({
         </div>
       </div>
       </div>
+      )}
 
       {/* AI assistant drawer — slides in from right when activated */}
       {enableAssistant && <HolocronChatBridge />}
 
       {/* Mobile navigation drawer (lg:hidden) */}
-      {showLeftNav && <NavDrawer />}
+      {(showLeftNav || isCustomMode) && <NavDrawer />}
 
       {/* Config customization panel — loaded asynchronously when idle.
           Only mounted in dev mode and on preview subdomains. DialKit

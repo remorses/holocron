@@ -298,6 +298,46 @@ function renderMdxPage({
   const pageTwitterCard = pageSeoMeta['twitter:card'] ?? 'summary_large_image'
 
   const mdast = preParsedMdast ?? mdxParse(pageMdx)
+
+  const pageMode = loaderData.currentPageFrontmatter?.mode
+
+  // Compute the baseUrl for resolving relative imports in MDX.
+  // The slug mirrors the file path inside pagesDir (e.g. 'api/overview'
+  // comes from pages/api/overview.mdx), so its directory is the baseUrl.
+  const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/') + 1) : ''
+  const mdxBaseUrl = (pagesDirPrefix || './') + slugDir
+  const mdxSourcePath = slug === 'index' ? '/' : `/${slug}`
+
+  // Custom mode: skip section splitting, aside extraction, and all editorial
+  // processing. Render the raw mdast directly so the AST stays unmutated
+  // (buildSections injects AI widget / page nav into <Aside> nodes).
+  if (pageMode === 'custom') {
+    const maxWidth = loaderData.currentPageFrontmatter?.maxWidth
+    return (
+      <>
+        <Head>
+          <Head.Title>{loaderData.headTitle}</Head.Title>
+          <Head.Meta property='og:title' content={pageSeoMeta['og:title'] ?? loaderData.headTitle} />
+          <Head.Meta name='twitter:title' content={pageSeoMeta['twitter:title'] ?? loaderData.headTitle} />
+          {loaderData.currentPageDescription && (
+            <Head.Meta name='description' content={loaderData.currentPageDescription} />
+          )}
+          {site.config.description ? <Head.Meta name='holocron:site-description' content={site.config.description} /> : null}
+          {pageOgDescription && <Head.Meta property='og:description' content={pageOgDescription} />}
+          {pageTwitterDescription && <Head.Meta name='twitter:description' content={pageTwitterDescription} />}
+          {pageKeywords && <Head.Meta name='keywords' content={pageKeywords} />}
+          {loaderData.headRobots && <Head.Meta name='robots' content={loaderData.headRobots} />}
+          <Head.Meta property='og:image' content={pageOgImage} />
+          <Head.Meta name='twitter:image' content={pageTwitterImage} />
+          <Head.Meta name='twitter:card' content={pageTwitterCard} />
+        </Head>
+        <EditorialPage mode={pageMode} bannerContent={bannerJsx} maxWidth={maxWidth}>
+          <RenderNodes markdown={pageMdx} nodes={mdast.children} modules={modules} baseUrl={mdxBaseUrl} source={mdxSourcePath} />
+        </EditorialPage>
+      </>
+    )
+  }
+
   const aboveNodes = mdast.children.filter(isAboveNode)
   const contentChildren = mdast.children.filter((node) => !isAboveNode(node))
   const contentMdast: Root = { type: 'root', children: contentChildren }
@@ -335,11 +375,11 @@ function renderMdxPage({
       nodeType === 'mdxTextExpression'
     )
   })()
-  // Non-default page modes ("center", "custom") render a bespoke, centered
-  // layout where an auto title would interfere with the author's design.
+  // Non-default page modes ("center") render a bespoke, centered layout
+  // where an auto title would interfere with the author's design.
   // "wide" and "frame" alias the default layout, so they keep the auto H1.
-  const pageMode = loaderData.currentPageFrontmatter?.mode
-  const isCustomLayoutMode = pageMode === 'center' || pageMode === 'custom'
+  // "custom" is handled above (early return).
+  const isCustomLayoutMode = pageMode === 'center'
   const shouldInjectH1 = !startsWithHeading && !startsWithJsx && !isCustomLayoutMode && !!loaderData.currentPageTitle
 
   // Extract import nodes (mdxjsEsm) from the full mdast so they can be
@@ -353,13 +393,6 @@ function renderMdxPage({
   // more horizontal room than the 210px default.
   const allAsideNodes = mdastSections.flatMap((s) => s.asideNodes)
   const sidebarWidth = computeSidebarWidthFromAsideNodes(allAsideNodes, visit)
-
-  // Compute the baseUrl for resolving relative imports in MDX.
-  // The slug mirrors the file path inside pagesDir (e.g. 'api/overview'
-  // comes from pages/api/overview.mdx), so its directory is the baseUrl.
-  const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/') + 1) : ''
-  const mdxBaseUrl = (pagesDirPrefix || './') + slugDir
-  const mdxSourcePath = slug === 'index' ? '/' : `/${slug}`
 
   const sections: EditorialSection[] = mdastSections.map((section, i) => {
     // Prepend import nodes so SafeMdxRenderer can resolve imported
@@ -462,7 +495,7 @@ function renderMdxPage({
               : <Head.Meta key={name} name={name} content={content} />
           ))}
       </Head>
-      <EditorialPage mode={loaderData.currentPageFrontmatter?.mode} sections={sections} above={above} bannerContent={bannerJsx} sidebarWidth={sidebarWidth} gridGap={gridGap} />
+      <EditorialPage mode={pageMode} sections={sections} above={above} bannerContent={bannerJsx} sidebarWidth={sidebarWidth} gridGap={gridGap} />
     </>
   )
 }

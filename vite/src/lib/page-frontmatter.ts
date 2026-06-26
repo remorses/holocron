@@ -36,7 +36,7 @@ export const pageFrontmatterSchema = z.object({
   mode: pageModeSchema
     .optional()
     .describe(
-      'Mintlify-compatible page layout mode. "default" keeps the full layout (left navigation sidebar, right table of contents, footer). "center" and "custom" hide the left navigation sidebar and center the content. "wide" and "frame" alias to the default layout.',
+      'Page layout mode. "default" keeps the full layout (left navigation sidebar, right table of contents, footer). "center" hides the left navigation sidebar and centers the content. "custom" gives full control over the page content — only navbar and footer are rendered, no editorial grid, no sections, no prose styling. Useful for landing pages and custom layouts. "wide" and "frame" alias to the default layout.',
     ),
   deprecated: z.boolean().optional().describe('Mark the page as deprecated'),
   rendering: z
@@ -46,6 +46,7 @@ export const pageFrontmatterSchema = z.object({
       'Rendering strategy for this page. "ssr" (default) renders the page on every request, so it can react to per-request data like cookies. "static" prerenders the page to static HTML at build time for faster delivery and cheaper hosting — use it for pages whose content never depends on the incoming request.',
     ),
   gridGap: z.number().optional().describe('Override the grid gap (in pixels) between content and sidebar columns'),
+  maxWidth: z.union([z.number(), z.string()]).optional().describe('Override the maximum content width. Accepts a number (treated as pixels, e.g. 700) or a CSS string (e.g. "700px", "80%", "60ch"). Useful with mode: "custom" to constrain the landing page container.'),
   hidden: z.boolean().optional().describe('Hide the page from sidebar navigation and search results'),
   noindex: z.boolean().optional().describe('Prevent search engines from indexing this page'),
   keywords: z.array(z.string()).optional().describe('Additional keywords for search indexing'),

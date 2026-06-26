@@ -34,7 +34,7 @@
               {
                 "group": "Overview",
                 "icon": "fontawesome:solid:compass",
-                "pages": ["index"]
+                "pages": ["index", "landing"]
               },
               {
                 "group": "Getting Started",

@@ -31,7 +31,7 @@
       "type": "string"
     },
     "mode": {
-      "description": "Mintlify-compatible page layout mode. \"default\" keeps the full layout (left navigation sidebar, right table of contents, footer). \"center\" and \"custom\" hide the left navigation sidebar and center the content. \"wide\" and \"frame\" alias to the default layout.",
+      "description": "Page layout mode. \"default\" keeps the full layout (left navigation sidebar, right table of contents, footer). \"center\" hides the left navigation sidebar and centers the content. \"custom\" gives full control over the page content — only navbar and footer are rendered, no editorial grid, no sections, no prose styling. Useful for landing pages and custom layouts. \"wide\" and \"frame\" alias to the default layout.",
       "type": "string",
       "enum": [
         "default",
@@ -56,6 +56,17 @@
     "gridGap": {
       "description": "Override the grid gap (in pixels) between content and sidebar columns",
       "type": "number"
+    },
+    "maxWidth": {
+      "description": "Override the maximum content width. Accepts a number (treated as pixels, e.g. 700) or a CSS string (e.g. \"700px\", \"80%\", \"60ch\"). Useful with mode: \"custom\" to constrain the landing page container.",
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "hidden": {
       "description": "Hide the page from sidebar navigation and search results",
