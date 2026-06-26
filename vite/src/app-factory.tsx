@@ -789,7 +789,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
     return {
       ...buildVisibleSiteData({ ...effectiveSite, config: effectiveConfig }),
-      icons: resolveIconSvgs(dedupeIconRefs([...sharedIconRefs, ...pageIconRefs])),
+      icons: resolveIconSvgs(dedupeIconRefs([...sharedIconRefs, ...pageIconRefs])).atlas,
       origin,
     }
   }

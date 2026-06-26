@@ -552,6 +552,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         if (syncResult.brokenAssetCount > 0) {
           errors.push(`${syncResult.brokenAssetCount} broken asset reference${syncResult.brokenAssetCount === 1 ? '' : 's'}`)
         }
+        if (syncResult.brokenIconCount > 0) {
+          errors.push(`${syncResult.brokenIconCount} unresolved icon${syncResult.brokenIconCount === 1 ? '' : 's'}`)
+        }
         if (errors.length > 0) {
           throw new Error(
             `Build failed due to content errors:\n` +

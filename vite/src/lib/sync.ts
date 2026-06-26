@@ -23,7 +23,8 @@ import { visit } from 'unist-util-visit'
 import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
 import { buildEnrichedNavigation } from './enrich-navigation.ts'
-import type { IconRef } from './collect-icons.ts'
+import { collectIconRefs, dedupeIconRefs, type IconRef } from './collect-icons.ts'
+import { resolveIconSvgs } from './resolve-icons.ts'
 import {
   type HolocronConfig,
   type ConfigNavTab,
@@ -145,6 +146,8 @@ export type SyncResult = {
   brokenRedirectCount: number
   /** Number of broken local asset references across all pages. */
   brokenAssetCount: number
+  /** Number of icon refs that could not be resolved (bad names, unsupported libraries). */
+  brokenIconCount: number
 }
 
 /**
@@ -579,6 +582,13 @@ export async function syncNavigation({
     projectRoot,
   })
 
+  // 4f. Validate icon refs — resolve all collected icons and count failures.
+  const allMdxIconRefs = Object.values(pageIconRefs).flat()
+  const allIconRefs = dedupeIconRefs([
+    ...collectIconRefs({ config, navigation, mdxIconRefs: allMdxIconRefs }),
+  ])
+  const iconResolveResult = resolveIconSvgs(allIconRefs)
+
   // 5. Write caches.
   writeCache(cachePath, navigation)
   writeMdxCache(mdxCachePath, {
@@ -614,6 +624,13 @@ export async function syncNavigation({
       `Check that image, video, and audio file paths are correct.`,
     ))
   }
+  if (iconResolveResult.unresolvedCount > 0) {
+    logger.warn('')
+    logger.warn(formatHolocronWarning(
+      `found ${colors.yellow(String(iconResolveResult.unresolvedCount))} unresolved icon${iconResolveResult.unresolvedCount === 1 ? '' : 's'}: ${iconResolveResult.unresolvedRefs.map((r) => colors.cyan(r)).join(', ')}. ` +
+      `Check icon names in docs.json and page frontmatter.`,
+    ))
+  }
   if (mdxContentErrors.size > 0) {
     logger.warn('')
     logger.warn(formatHolocronWarning(
@@ -630,6 +647,7 @@ export async function syncNavigation({
     brokenLinkCount: brokenLinkStats.brokenLinkCount,
     brokenRedirectCount: brokenLinkStats.brokenRedirectCount,
     brokenAssetCount: brokenAssetStats.brokenAssetCount,
+    brokenIconCount: iconResolveResult.unresolvedCount,
   }
 }
 

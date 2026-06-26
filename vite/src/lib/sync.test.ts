@@ -2568,3 +2568,69 @@ title: Home
     expect(warnings.some((w) => w.includes('/images/hero.png'))).toBe(true)
   })
 })
+
+describe('unresolved icon warnings', () => {
+  test('counts unresolved icons from config and frontmatter', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+        navbar: {
+          links: [{ icon: 'nonexistent-xyz', label: 'Bad', href: '/' }],
+        },
+      },
+      {
+        index: `---
+title: Home
+icon: totally-fake-icon
+---
+
+Hello world.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(result.brokenIconCount).toBeGreaterThan(0)
+  })
+
+  test('brokenIconCount is 0 when all icons resolve', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+        navbar: {
+          links: [{ icon: 'lucide:rocket', label: 'Good', href: '/' }],
+        },
+      },
+      {
+        index: `---
+title: Home
+icon: github
+---
+
+Hello world.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(result.brokenIconCount).toBe(0)
+  })
+})

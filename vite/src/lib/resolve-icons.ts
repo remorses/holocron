@@ -92,13 +92,23 @@ function parseIconRef(ref: IconRef): { library: IconLibrary; name: string; style
   return null
 }
 
-export function resolveIconSvgs(refs: IconRef[]): IconAtlas {
+export type IconResolveResult = {
+  atlas: IconAtlas
+  /** Number of icon refs that could not be resolved. */
+  unresolvedCount: number
+  /** The icon ref strings that failed to resolve, for error reporting. */
+  unresolvedRefs: string[]
+}
+
+export function resolveIconSvgs(refs: IconRef[]): IconResolveResult {
   const atlas: IconAtlas = { icons: {} }
+  const unresolvedRefs: string[] = []
 
   for (const ref of refs) {
     const parsed = parseIconRef(ref)
     if (!parsed) {
       logger.warn(formatHolocronWarning(`icon ref "${ref}" is not a supported canonical icon ref.`))
+      unresolvedRefs.push(ref)
       continue
     }
 
@@ -106,6 +116,7 @@ export function resolveIconSvgs(refs: IconRef[]): IconAtlas {
       const entry = resolveLucide(parsed.name)
       if (!entry) {
         logger.warn(formatHolocronWarning(`lucide icon "${parsed.name}" not found. Check the icon name at https://lucide.dev/icons/.`))
+        unresolvedRefs.push(ref)
         continue
       }
       atlas.icons[ref] = entry
@@ -116,6 +127,7 @@ export function resolveIconSvgs(refs: IconRef[]): IconAtlas {
       const entry = resolveFontAwesome(parsed.name, parsed.style)
       if (!entry) {
         logger.warn(formatHolocronWarning(`fontawesome icon "${parsed.name}"${parsed.style ? ` (${parsed.style})` : ''} not found.`))
+        unresolvedRefs.push(ref)
         continue
       }
       atlas.icons[ref] = entry
@@ -123,6 +135,7 @@ export function resolveIconSvgs(refs: IconRef[]): IconAtlas {
     }
 
     logger.warn(formatHolocronWarning(`icon library "${parsed.library}" is not supported yet. Icon "${parsed.name}" will render empty.`))
+    unresolvedRefs.push(ref)
   }
-  return atlas
+  return { atlas, unresolvedCount: unresolvedRefs.length, unresolvedRefs }
 }
