@@ -1,10 +1,70 @@
 ---
-title: Full-Width Layout
-description: Stretch the page grid to the edges of the screen.
+title: Layout
+description: Control the page layout, grid width, and page modes.
 icon: arrows-left-right-to-line
 ---
 
-# Full-Width Layout
+## Page modes
+
+Every page can set a **mode** in its frontmatter to control how much of the editorial layout is rendered.
+
+| Mode | Left sidebar | Right aside | Editorial grid | Use case |
+|------|-------------|-------------|----------------|----------|
+| `default` | Yes | Yes | Yes | Standard docs pages |
+| `center` | No | Yes | Yes (2-column) | Focused content without nav |
+| `custom` | No | No | No | Landing pages, custom layouts |
+
+`wide` and `frame` are accepted for Mintlify compatibility and alias to `default`.
+
+### Custom mode
+
+Set `mode: "custom"` to strip the editorial layout entirely. Only the **navbar**, **tab bar**, **footer**, and **mobile navigation** are rendered. The content area is a plain container where you control everything with your own HTML and Tailwind classes.
+
+```yaml
+---
+mode: "custom"
+---
+```
+
+This is useful for landing pages, pricing pages, or any page where you want full control over the layout. Standard MDX components like code blocks, callouts, and icons still work inside custom pages.
+
+### `maxWidth`
+
+Use the `maxWidth` frontmatter field to constrain the content container width in pixels. The navbar stays full-width; only the content area is narrowed and centered.
+
+```yaml
+---
+mode: "custom"
+maxWidth: 700
+---
+```
+
+### Example landing page
+
+````mdx
+---
+mode: "custom"
+maxWidth: 800
+---
+
+<div className="flex flex-col items-center py-24 gap-6 text-center">
+
+<h1 className="text-5xl font-bold tracking-tight">
+  Your Product Name
+</h1>
+
+<p className="text-lg text-muted-foreground max-w-xl">
+  A short description of what your product does and why it matters.
+</p>
+
+<a href="./quickstart" className="no-underline rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground">
+  Get Started
+</a>
+
+</div>
+````
+
+## Full-width layout
 
 By default Holocron caps the page grid at **1200px**. The left sidebar, content column, and right sidebar all live inside that constraint.
 
