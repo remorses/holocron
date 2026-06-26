@@ -1195,7 +1195,7 @@ describe('validateDiagram', () => {
     `
     const issues = validateDiagram(input)
     expect(issues.length).toBeGreaterThan(0)
-    expect(issues[0].message).toContain('expected')
+    expect(issues[0]!.message).toContain('expected')
   })
 
   test('reports lines exceeding max width', () => {
@@ -1203,7 +1203,7 @@ describe('validateDiagram', () => {
     const issues = validateDiagram(input, { maxWidth: 94 })
     const widthIssues = issues.filter((i) => i.message.includes('exceeds max'))
     expect(widthIssues).toHaveLength(3)
-    expect(widthIssues[0].message).toMatchInlineSnapshot('\n' + `"Line is 100 cols wide, exceeds max 94"`)
+    expect(widthIssues[0]!.message).toMatchInlineSnapshot('\n' + `"Line is 100 cols wide, exceeds max 94"`)
   })
 
   test('passes with custom max width', () => {
@@ -1218,7 +1218,7 @@ describe('validateDiagram', () => {
     const issues = validateDiagram(input, { maxWidth: 94 })
     const widthIssues = issues.filter((i) => i.message.includes('exceeds max'))
     expect(widthIssues).toHaveLength(1)
-    expect(widthIssues[0].line).toBe(4)
+    expect(widthIssues[0]!.line).toBe(4)
   })
 })
 
@@ -1247,7 +1247,7 @@ describe('validateDiagramsInText', () => {
     const input = `Line 1\nLine 2\n\n${'```'}\n┌${'─'.repeat(100)}┐\n└${'─'.repeat(100)}┘\n${'```'}`
     const issues = validateDiagramsInText(input, { maxWidth: 94 })
     // Code block starts at line 4 (0-indexed line 3), diagram at line 5 (0-indexed 4)
-    expect(issues[0].line).toBeGreaterThan(3)
+    expect(issues[0]!.line).toBeGreaterThan(3)
   })
 })
 

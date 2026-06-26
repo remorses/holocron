@@ -156,10 +156,10 @@ export function findBoxes(lines: string[]): Box[] {
   const boxes: Box[] = []
 
   for (let row = 0; row < lines.length; row++) {
-    const grid = charGrid(lines[row])
+    const grid = charGrid(lines[row]!)
 
     for (let ci = 0; ci < grid.length; ci++) {
-      const cell = grid[ci]
+      const cell = grid[ci]!
       if (!isTopLeft(cell.char)) continue
 
       const leftCol = cell.displayCol
@@ -169,10 +169,10 @@ export function findBoxes(lines: string[]): Box[] {
       let trChar: string | undefined
       let rightCol = -1
       for (let cj = ci + 1; cj < grid.length; cj++) {
-        const ch = grid[cj].char
+        const ch = grid[cj]!.char
         if (isTopRight(ch)) {
           trChar = ch
-          rightCol = grid[cj].displayCol
+          rightCol = grid[cj]!.displayCol
           break
         }
         if (!isHBorder(ch)) break
@@ -191,7 +191,7 @@ export function findBoxes(lines: string[]): Box[] {
           const cols = off === 0 ? [leftCol] : [leftCol + off, leftCol - off]
           for (const col of cols) {
             if (col < 0) continue
-            const hit = charAtDisplayCol(lines[r], col)
+            const hit = charAtDisplayCol(lines[r]!, col)
             if (!hit) continue
             if (isBottomLeft(hit.char)) {
               blChar = hit.char
@@ -214,7 +214,7 @@ export function findBoxes(lines: string[]): Box[] {
       // Find ┘ on the bottom row by scanning right from └.
       // It might be at the wrong column (misaligned), that's fine.
       // Search ±3 cols for └ to tolerate displaced bottom-left corners.
-      const bottomGrid = charGrid(lines[bottomRow])
+      const bottomGrid = charGrid(lines[bottomRow]!)
       let blCellIdx = bottomGrid.findIndex((c) => c.displayCol === leftCol && isBottomLeft(c.char))
       if (blCellIdx < 0) {
         for (let off = 1; off <= 3; off++) {
@@ -228,7 +228,7 @@ export function findBoxes(lines: string[]): Box[] {
       if (blCellIdx < 0) blCellIdx = bottomGrid.findIndex((c) => c.displayCol === leftCol)
       let brChar: string | undefined
       for (let bj = blCellIdx + 1; bj < bottomGrid.length; bj++) {
-        const ch = bottomGrid[bj].char
+        const ch = bottomGrid[bj]!.char
         if (isBottomRight(ch)) {
           brChar = ch
           break
@@ -247,7 +247,7 @@ export function findBoxes(lines: string[]): Box[] {
           let found = false
           for (const col of cols) {
             if (col < 0) continue
-            const firstContent = charAtDisplayCol(lines[row + 1], col)
+            const firstContent = charAtDisplayCol(lines[row + 1]!, col)
             if (firstContent && isVBorder(firstContent.char)) { vChar = firstContent.char; found = true; break }
           }
           if (found) break
@@ -434,7 +434,7 @@ export function fixDiagramLines(inputLines: string[]): string[] {
 
     // Fix bottom border — splice only this box's column range.
     // Search ±3 cols for └ to tolerate displaced bottom-left corners.
-    const bottomGrid = charGrid(lines[bottomRow])
+    const bottomGrid = charGrid(lines[bottomRow]!)
     let blCell = bottomGrid.find((c) => c.displayCol === leftCol && isBottomLeft(c.char))
     if (!blCell) {
       for (let off = 1; off <= 3; off++) {
@@ -449,14 +449,14 @@ export function fixDiagramLines(inputLines: string[]): string[] {
       // Find the actual ┘ by scanning right from └
       let actualBrCol = -1
       for (let i = blCell.charIndex + 1; i < bottomGrid.length; i++) {
-        if (isBottomRight(bottomGrid[i].char)) {
-          actualBrCol = bottomGrid[i].displayCol
+        if (isBottomRight(bottomGrid[i]!.char)) {
+          actualBrCol = bottomGrid[i]!.displayCol
           break
         }
-        if (!isHBorder(bottomGrid[i].char)) break
+        if (!isHBorder(bottomGrid[i]!.char)) break
       }
       if (actualBrCol >= 0) {
-        const junctions = collectJunctions(lines[bottomRow], blCell.displayCol, actualBrCol)
+        const junctions = collectJunctions(lines[bottomRow]!, blCell.displayCol, actualBrCol)
         const segment = buildBorderSegment(corners[2], corners[3], hChar, innerWidth, junctions)
         // Splice from the leftmost of expected vs actual position to the
         // rightmost of actual vs expected, padding both sides.
@@ -464,13 +464,13 @@ export function fixDiagramLines(inputLines: string[]): string[] {
         const spliceEnd = Math.max(actualBrCol, rightCol)
         const prefixGap = leftCol > spliceStart ? ' '.repeat(leftCol - spliceStart) : ''
         const extraGap = spliceEnd > rightCol ? ' '.repeat(spliceEnd - rightCol) : ''
-        lines[bottomRow] = spliceLine(lines[bottomRow], spliceStart, spliceEnd, prefixGap + segment + extraGap)
+        lines[bottomRow] = spliceLine(lines[bottomRow]!, spliceStart, spliceEnd, prefixGap + segment + extraGap)
       }
     }
 
     // Fix content lines — splice only the box's column range
     for (let r = topRow + 1; r < bottomRow; r++) {
-      const extracted = extractBoxContent(lines[r], leftCol, rightCol)
+      const extracted = extractBoxContent(lines[r]!, leftCol, rightCol)
       if (!extracted) continue
 
       // Detect horizontal divider rows (├────┤, ├──┼──┤, etc.)
@@ -501,7 +501,7 @@ export function fixDiagramLines(inputLines: string[]): string[] {
       const spliceEnd = Math.max(extracted.rightCol, rightCol)
       const prefixGap = leftCol > spliceStart ? ' '.repeat(leftCol - spliceStart) : ''
       const extraGap = spliceEnd > rightCol ? ' '.repeat(spliceEnd - rightCol) : ''
-      lines[r] = spliceLine(lines[r], spliceStart, spliceEnd, prefixGap + segment + extraGap)
+      lines[r] = spliceLine(lines[r]!, spliceStart, spliceEnd, prefixGap + segment + extraGap)
     }
   }
 
@@ -529,7 +529,7 @@ export function validateDiagram(text: string, opts?: { maxWidth?: number }): Dia
 
   // Check line width limits for every line in the diagram.
   for (let r = 0; r < lines.length; r++) {
-    const width = stringDisplayWidth(lines[r])
+    const width = stringDisplayWidth(lines[r]!)
     if (width > maxWidth) {
       issues.push({
         line: r + 1,
@@ -544,7 +544,7 @@ export function validateDiagram(text: string, opts?: { maxWidth?: number }): Dia
 
     // Check bottom border: find └ near leftCol (±3 tolerance), scan right for ┘.
     // Report if └ is displaced or ┘ is not at rightCol.
-    const bottomGrid = charGrid(lines[bottomRow])
+    const bottomGrid = charGrid(lines[bottomRow]!)
     let blCell = bottomGrid.find((c) => c.displayCol === leftCol && isBottomLeft(c.char))
     if (!blCell) {
       for (let off = 1; off <= 3; off++) {
@@ -565,11 +565,11 @@ export function validateDiagram(text: string, opts?: { maxWidth?: number }): Dia
       }
       let brCol = -1
       for (let i = blCell.charIndex + 1; i < bottomGrid.length; i++) {
-        if (isBottomRight(bottomGrid[i].char)) {
-          brCol = bottomGrid[i].displayCol
+        if (isBottomRight(bottomGrid[i]!.char)) {
+          brCol = bottomGrid[i]!.displayCol
           break
         }
-        if (!isHBorder(bottomGrid[i].char)) break
+        if (!isHBorder(bottomGrid[i]!.char)) break
       }
       if (brCol >= 0 && brCol !== rightCol) {
         issues.push({
@@ -588,7 +588,7 @@ export function validateDiagram(text: string, opts?: { maxWidth?: number }): Dia
 
     // Check content lines: left border at leftCol, right border at rightCol.
     for (let r = topRow + 1; r < bottomRow; r++) {
-      const extracted = extractBoxContent(lines[r], leftCol, rightCol)
+      const extracted = extractBoxContent(lines[r]!, leftCol, rightCol)
       if (!extracted) continue
       if (extracted.leftCol !== leftCol) {
         issues.push({
@@ -656,7 +656,7 @@ function findCodeBlocks(markdownLines: string[]): CodeBlock[] {
   let contentLines: string[] = []
 
   for (let i = 0; i < markdownLines.length; i++) {
-    const line = markdownLines[i]
+    const line = markdownLines[i]!
     const trimmed = line.trimStart()
     const indent = line.length - trimmed.length
 
@@ -664,14 +664,14 @@ function findCodeBlocks(markdownLines: string[]): CodeBlock[] {
       const match = trimmed.match(/^(`{3,}|~{3,})/)
       if (match) {
         inBlock = true
-        fenceChar = match[1][0]
+        fenceChar = match[1]![0]!
         fenceIndent = indent
         startLine = i
         contentLines = []
       }
     } else {
       const closingMatch = trimmed.match(/^(`{3,}|~{3,})\s*$/)
-      if (closingMatch && closingMatch[1][0] === fenceChar && indent <= fenceIndent) {
+      if (closingMatch && closingMatch[1]![0] === fenceChar && indent <= fenceIndent) {
         blocks.push({ startLine, endLine: i, contentLines })
         inBlock = false
       } else {
@@ -704,7 +704,7 @@ export function fixDiagramsInText(text: string): string {
 
   const result = [...lines]
   for (let i = diagramBlocks.length - 1; i >= 0; i--) {
-    const block = diagramBlocks[i]
+    const block = diagramBlocks[i]!
     const fixed = fixDiagramLines(block.contentLines)
     result.splice(block.startLine + 1, block.contentLines.length, ...fixed)
   }
@@ -723,7 +723,7 @@ function countChangedLines(before: string, after: string): number {
   let changed = 0
   const len = Math.max(a.length, b.length)
   for (let i = 0; i < len; i++) {
-    if (a[i] !== b[i]) changed++
+    if ((a[i] ?? '') !== (b[i] ?? '')) changed++
   }
   return changed
 }
