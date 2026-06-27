@@ -145,13 +145,14 @@ test.describe("Update component", () => {
   test("clicking the label updates the location hash", async ({ page }) => {
     await page.setViewportSize({ width: 1400, height: 900 });
     await page.goto("/", { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
 
     await page
       .locator(`${SECOND} [data-component-part='update-label']`)
       .click();
 
-    await expect
-      .poll(async () => page.evaluate(() => location.hash))
-      .toBe("#2026-04-05");
+    await page.waitForURL(/#2026-04-05$/);
+    const hash = await page.evaluate(() => location.hash);
+    expect(hash).toBe("#2026-04-05");
   });
 });
