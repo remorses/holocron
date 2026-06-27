@@ -1,3 +1,9 @@
+## 0.20.0
+
+1. **Ambiguous Unicode character detection and auto-replacement** — `holocron diagrams fix` now detects characters like `▶`, `◀`, `▲`, `▼`, `★`, `●`, `■` that have Unicode East Asian Width "Ambiguous". These render as 1 cell on macOS/Linux but 2 cells on many Windows monospaced fonts (Consolas, Lucida Console), breaking diagram alignment. The fixer auto-replaces 18 known-ambiguous characters with safe ASCII equivalents (`▶` → `>`, `▼` → `v`, `●` → `*`, etc.) as a first pass before box detection.
+
+   `--check` mode also warns about unreplaceable ambiguous characters that need manual intervention.
+
 ## 0.19.0
 
 1. **New `holocron diagrams fix` command** — detects and fixes misaligned Unicode box-drawing characters in markdown files. The top border (`┌─┐`) is the source of truth for box width; content lines and bottom borders are adjusted to match. Supports light (`┌┐└┘─│`), heavy (`┏┓┗┛━┃`), double (`╔╗╚╝═║`), and rounded (`╭╮╯╰`) character sets. Column-level splice ensures side-by-side and nested boxes on shared rows don't clobber each other.

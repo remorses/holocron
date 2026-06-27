@@ -1,5 +1,22 @@
 # @holocron.so/vite
 
+## 0.23.0
+
+1. **Custom page mode** — `mode: "custom"` in frontmatter now strips the editorial grid entirely, giving full control over the page content area. Only navbar, tab bar, banner, footer, mobile nav, and AI assistant are rendered. Useful for landing pages, pricing pages, or any page where you want to own the entire layout.
+
+   ```yaml
+   ---
+   mode: "custom"
+   maxWidth: 700
+   ---
+   ```
+
+   The new `maxWidth` frontmatter field constrains the content container width (in pixels). The navbar still spans full width; only the content area is narrowed.
+
+2. **HTML comment support in MDX** — `<!-- comments -->` in MDX files are now stripped before parsing so they don't cause JSX parse errors. Supports all edge cases: indented code fences, inline code spans, JSX tag attributes, expressions with `>` operator, tilde fences, and unterminated comments.
+
+3. **Simplified AI agent redirect** — the `/<slug>.md` redirect for AI coding agents now triggers only on `Accept: text/markdown` instead of User-Agent pattern matching. This eliminates false positives for SEO crawlers (Googlebot, AhrefsBot) that were getting 302 redirected. Raw markdown URLs now include `x-robots-tag: noindex, nofollow` to prevent search engines from indexing duplicate content.
+
 ## 0.22.0
 
 1. **Runtime provider system for custom tab content** — tabs in `docs.json` can now reference a provider file that generates navigation groups and MDX pages at request time. The provider result is cached with configurable TTL and promise coalescing prevents thundering herd on concurrent requests.
