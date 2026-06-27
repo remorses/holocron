@@ -1126,7 +1126,8 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   // `let app` because spiceflow's chain types don't survive the loop.
   let app: AnySpiceflow = new Spiceflow()
 
-  // Agent redirect: detect AI agents on docs pages → 302 to .md
+  // Agent redirect: when Accept includes text/markdown, 302 to .md URL.
+  // No UA sniffing — only fires when the client explicitly asks for markdown.
   app = app.use(({ request }: { request: Request }) => {
     if (request.method !== 'GET' && request.method !== 'HEAD') return
     if (!isAgentRequest(request)) return
@@ -1266,6 +1267,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
             'content-type': 'text/markdown; charset=utf-8',
             'cache-control': frontmatter['cache-control'] ?? 's-maxage=300, stale-while-revalidate=86400',
             'x-content-type-options': 'nosniff',
+            'x-robots-tag': 'noindex, nofollow',
           },
         })
       })
