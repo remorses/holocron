@@ -39,6 +39,28 @@ test.describe("home page", () => {
   });
 });
 
+test.describe("HTML comments", () => {
+  test("HTML comments are stripped from rendered output", async ({ request }) => {
+    const response = await request.get("/", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    // The fixture has <!-- This HTML comment should be stripped ... -->
+    expect(html).not.toContain("This HTML comment should be stripped");
+    // Content around the comment should still render
+    expect(html).toContain("Overview");
+  });
+
+  test("HTML comments are stripped from getting-started page", async ({ request }) => {
+    const response = await request.get("/getting-started", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    expect(html).not.toContain("TODO: update this section");
+    expect(html).toContain("Installation");
+  });
+});
+
 test.describe("index path redirects", () => {
   test("GET /index redirects to /", async ({ request }) => {
     const response = await request.get("/index", { maxRedirects: 0 });

@@ -60,6 +60,116 @@ describe('normalizeMdx error handling', () => {
 })
 
 describe('normalizeMdx', () => {
+  test('HTML comments are stripped from output', () => {
+    const input = `Some text before.
+
+<!-- Sources for this section:
+- https://example.com/foo
+- internal doc reference
+-->
+
+More text after.`
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).toMatchInlineSnapshot(`
+      "Some text before.
+
+      More text after.
+      "
+    `)
+  })
+
+  test('single-line HTML comments are stripped', () => {
+    const input = `Before <!-- this is a comment --> after.`
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).toMatchInlineSnapshot(`
+      "Before                            after.
+      "
+    `)
+  })
+
+  test('HTML comments inside code blocks are preserved', () => {
+    const input = `\`\`\`html
+<!-- This comment should stay -->
+<div>hello</div>
+\`\`\`
+
+<!-- This comment should be stripped -->
+
+Some text.`
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).toMatchInlineSnapshot(`
+      "\`\`\`html
+      <!-- This comment should stay -->
+      <div>hello</div>
+      \`\`\`
+
+      Some text.
+      "
+    `)
+  })
+
+  test('HTML comments inside nested code fences are preserved', () => {
+    const input = `\`\`\`\`md
+\`\`\`html
+<!-- should stay inside nested fence -->
+\`\`\`
+\`\`\`\`
+
+Some text.`
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).toMatchInlineSnapshot(`
+      "\`\`\`\`md
+      \`\`\`html
+      <!-- should stay inside nested fence -->
+      \`\`\`
+      \`\`\`\`
+
+      Some text.
+      "
+    `)
+  })
+
+  test('HTML comments inside inline code are preserved', () => {
+    const input = `Use \`<!-- comment -->\` syntax for comments.`
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).toMatchInlineSnapshot(`
+      "Use \`<!-- comment -->\` syntax for comments.
+      "
+    `)
+  })
+
+  test('HTML comments inside JSX string attributes are preserved', () => {
+    const input = `<Card title="<!-- keep this -->" />`
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).toMatchInlineSnapshot(`
+      "<Card title="<!-- keep this -->" />
+      "
+    `)
+  })
+
+  test('JSX comments {/* */} are preserved in output', () => {
+    const input = `Some text before.
+
+{/* Sources for this section:
+- https://example.com/foo
+- internal doc reference
+*/}
+
+More text after.`
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).toMatchInlineSnapshot(`
+      "Some text before.
+
+      {/* Sources for this section:
+        - https://example.com/foo
+        - internal doc reference
+        */}
+
+      More text after.
+      "
+    `)
+  })
+
   test('rewrites markdown headings to Heading JSX', () => {
     const { content: result } = expectSuccess(normalizeMdx('## My heading {#custom-id}'))
 

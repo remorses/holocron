@@ -41,6 +41,13 @@ export type NormalizeMdxOptions = {
  * @param source - optional file path or slug for error messages (e.g. "/getting-started")
  */
 export function normalizeMdx(content: string, source?: string, options?: NormalizeMdxOptions): HolocronMdxParseError | NormalizedMdx {
+  // MDX does not support HTML comments (<!-- -->), but many markdown authors
+  // use them. Strip them before parsing so they don't cause syntax errors.
+  // remark-comment (the proper micromark extension approach) can't be used
+  // because it depends on micromark-factory-space@1 while our pipeline uses
+  // @2, causing "expected last token to be open" errors in vitest.
+  content = stripHtmlComments(content)
+
   const processor = remark()
     .use(remarkMdx)
     .use(remarkFrontmatter, ['yaml'])
@@ -206,4 +213,151 @@ function walkRewriteLinks(nodes: RootContent[], slugDir: string | undefined) {
       walkRewriteLinks(children, slugDir)
     }
   }
+}
+
+/**
+ * Strip HTML comments (<!-- ... -->) from MDX content, replacing comment
+ * characters with spaces to preserve source positions for error reporting.
+ *
+ * Preserves comments inside:
+ * - Fenced code blocks (``` or ~~~), with proper fence matching (char + length)
+ * - Inline code spans (`...`)
+ * - JSX string attributes (quotes inside JSX tags)
+ *
+ * Replaces non-newline comment characters with spaces so line numbers in
+ * parse errors still point to the correct location in the original source.
+ */
+function stripHtmlComments(content: string): string {
+  if (!content.includes('<!--')) return content
+
+  const chars = [...content]
+  const len = chars.length
+  let i = 0
+
+  // Code fence state: when set, we're inside a fenced code block
+  let fence: { char: string; length: number } | null = null
+
+  while (i < len) {
+    // --- Fenced code block handling ---
+    if (fence) {
+      // Check for closing fence: must be at line start (after optional spaces),
+      // same char, at least same length, nothing else on the line
+      if (isLineStart(chars, i)) {
+        const fenceMatch = matchFence(chars, i, len)
+        if (fenceMatch && fenceMatch.char === fence.char && fenceMatch.length >= fence.length) {
+          // Check rest of line is blank
+          let afterFence = i + fenceMatch.length
+          while (afterFence < len && chars[afterFence] === ' ') afterFence++
+          if (afterFence >= len || chars[afterFence] === '\n') {
+            fence = null
+            i = afterFence
+            continue
+          }
+        }
+      }
+      i = skipToNextLine(chars, i, len)
+      continue
+    }
+
+    // --- Check for opening code fence at line start ---
+    if (isLineStart(chars, i)) {
+      const fenceMatch = matchFence(chars, i, len)
+      if (fenceMatch) {
+        fence = fenceMatch
+        i = skipToNextLine(chars, i, len)
+        continue
+      }
+    }
+
+    // --- Inline code span: skip past closing backtick(s) ---
+    if (chars[i] === '`') {
+      // Count opening backticks
+      let ticks = 0
+      const tickStart = i
+      while (i < len && chars[i] === '`') { ticks++; i++ }
+      // Find matching closing backticks (same count)
+      let found = false
+      for (let j = i; j <= len - ticks; j++) {
+        let match = true
+        for (let k = 0; k < ticks; k++) {
+          if (chars[j + k] !== '`') { match = false; break }
+        }
+        if (match) {
+          // Make sure it's exactly `ticks` backticks (not more)
+          if (j + ticks < len && chars[j + ticks] === '`') continue
+          i = j + ticks
+          found = true
+          break
+        }
+      }
+      if (!found) i = tickStart + 1 // unclosed, treat first backtick as literal
+      continue
+    }
+
+    // --- JSX tag: skip string attributes to avoid stripping comments in props ---
+    if (chars[i] === '<' && i + 1 < len && /[A-Z]/.test(chars[i + 1]!)) {
+      i++ // skip <
+      // Scan until > or />, skipping quoted strings
+      while (i < len && chars[i] !== '>') {
+        if (chars[i] === '"' || chars[i] === "'") {
+          const quote = chars[i]
+          i++ // skip opening quote
+          while (i < len && chars[i] !== quote) i++
+          if (i < len) i++ // skip closing quote
+        } else {
+          i++
+        }
+      }
+      if (i < len) i++ // skip >
+      continue
+    }
+
+    // --- HTML comment: blank it out ---
+    if (chars[i] === '<' && chars[i + 1] === '!' && chars[i + 2] === '-' && chars[i + 3] === '-') {
+      const commentStart = i
+      i += 4 // skip <!--
+      // Find -->
+      while (i < len) {
+        if (chars[i] === '-' && chars[i + 1] === '-' && chars[i + 2] === '>') {
+          i += 3 // skip -->
+          break
+        }
+        i++
+      }
+      // Blank out the comment, preserving newlines
+      for (let j = commentStart; j < i; j++) {
+        if (chars[j] !== '\n') chars[j] = ' '
+      }
+      continue
+    }
+
+    i++
+  }
+
+  return chars.join('')
+}
+
+/** Check if position i is at the start of a line (or start of string). */
+function isLineStart(chars: string[], i: number): boolean {
+  return i === 0 || chars[i - 1] === '\n'
+}
+
+/** Try to match a code fence at position i. Returns fence info or null. */
+function matchFence(chars: string[], i: number, len: number): { char: string; length: number } | null {
+  // Skip leading spaces (up to 3)
+  let pos = i
+  let spaces = 0
+  while (pos < len && chars[pos] === ' ' && spaces < 3) { pos++; spaces++ }
+  const char = chars[pos]
+  if (char !== '`' && char !== '~') return null
+  let count = 0
+  while (pos < len && chars[pos] === char) { count++; pos++ }
+  if (count < 3) return null
+  return { char, length: count }
+}
+
+/** Advance past the current line (skip to char after next \n, or end). */
+function skipToNextLine(chars: string[], i: number, len: number): number {
+  while (i < len && chars[i] !== '\n') i++
+  return i < len ? i + 1 : i
 }
