@@ -245,9 +245,9 @@ function stripHtmlComments(content: string): string {
       if (isLineStart(chars, i)) {
         const fenceMatch = matchFence(chars, i, len)
         if (fenceMatch && fenceMatch.char === fence.char && fenceMatch.length >= fence.length) {
-          // Check rest of line is blank
-          let afterFence = i + fenceMatch.length
-          while (afterFence < len && chars[afterFence] === ' ') afterFence++
+          // Check rest of line is blank (after the fence marker)
+          let afterFence = fenceMatch.markerEnd
+          while (afterFence < len && (chars[afterFence] === ' ' || chars[afterFence] === '\t')) afterFence++
           if (afterFence >= len || chars[afterFence] === '\n') {
             fence = null
             i = afterFence
@@ -294,22 +294,14 @@ function stripHtmlComments(content: string): string {
       continue
     }
 
-    // --- JSX tag: skip string attributes to avoid stripping comments in props ---
-    if (chars[i] === '<' && i + 1 < len && /[A-Z]/.test(chars[i + 1]!)) {
-      i++ // skip <
-      // Scan until > or />, skipping quoted strings
-      while (i < len && chars[i] !== '>') {
-        if (chars[i] === '"' || chars[i] === "'") {
-          const quote = chars[i]
-          i++ // skip opening quote
-          while (i < len && chars[i] !== quote) i++
-          if (i < len) i++ // skip closing quote
-        } else {
-          i++
-        }
+    // --- JSX/HTML tag: skip string attributes to avoid stripping comments in props ---
+    // Matches <Tag, <tag, </Tag, </tag but NOT <!, <?
+    if (chars[i] === '<') {
+      const afterTag = skipJsxTag(chars, i, len)
+      if (afterTag != null) {
+        i = afterTag
+        continue
       }
-      if (i < len) i++ // skip >
-      continue
     }
 
     // --- HTML comment: blank it out ---
@@ -343,7 +335,7 @@ function isLineStart(chars: string[], i: number): boolean {
 }
 
 /** Try to match a code fence at position i. Returns fence info or null. */
-function matchFence(chars: string[], i: number, len: number): { char: string; length: number } | null {
+function matchFence(chars: string[], i: number, len: number): { char: string; length: number; markerEnd: number } | null {
   // Skip leading spaces (up to 3)
   let pos = i
   let spaces = 0
@@ -353,11 +345,61 @@ function matchFence(chars: string[], i: number, len: number): { char: string; le
   let count = 0
   while (pos < len && chars[pos] === char) { count++; pos++ }
   if (count < 3) return null
-  return { char, length: count }
+  return { char, length: count, markerEnd: pos }
 }
 
 /** Advance past the current line (skip to char after next \n, or end). */
 function skipToNextLine(chars: string[], i: number, len: number): number {
   while (i < len && chars[i] !== '\n') i++
   return i < len ? i + 1 : i
+}
+
+/**
+ * Try to skip past a JSX/HTML tag starting at position i.
+ * Handles both uppercase and lowercase tags, closing tags (</tag>),
+ * quoted string attributes, and brace-delimited JSX expressions
+ * (so `>` inside `{a > b}` doesn't end the tag prematurely).
+ * Returns position after the closing `>`, or null if not a tag.
+ */
+function skipJsxTag(chars: string[], i: number, len: number): number | null {
+  if (chars[i] !== '<' || i + 1 >= len) return null
+  const next = chars[i + 1]!
+  // Must be <letter or </letter, not <! (comment/doctype) or <? (processing)
+  const isTag = /[A-Za-z]/.test(next) || (next === '/' && i + 2 < len && /[A-Za-z]/.test(chars[i + 2]!))
+  if (!isTag) return null
+
+  let pos = i + 1
+  let braceDepth = 0
+
+  while (pos < len) {
+    const ch = chars[pos]!
+
+    // Inside a JSX expression: track brace depth
+    if (ch === '{') {
+      braceDepth++
+      pos++
+      continue
+    }
+    if (ch === '}' && braceDepth > 0) {
+      braceDepth--
+      pos++
+      continue
+    }
+
+    // Skip quoted strings (both in attributes and inside expressions)
+    if (ch === '"' || ch === "'") {
+      const quote = ch
+      pos++ // skip opening quote
+      while (pos < len && chars[pos] !== quote) pos++
+      if (pos < len) pos++ // skip closing quote
+      continue
+    }
+
+    // Only close tag at `>` when not inside an expression
+    if (ch === '>' && braceDepth === 0) return pos + 1
+
+    pos++
+  }
+
+  return null // unclosed tag, don't skip
 }

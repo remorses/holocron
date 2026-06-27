@@ -147,6 +147,78 @@ Some text.`
     `)
   })
 
+  test('HTML comments after indented code fences are still stripped', () => {
+    const input = `   \`\`\`html
+<!-- keep inside fence -->
+   \`\`\`
+
+<!-- strip outside fence -->
+
+After.`
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).toContain('<!-- keep inside fence -->')
+    expect(result.content).not.toContain('strip outside fence')
+    expect(result.content).toContain('After.')
+  })
+
+  test('HTML comments inside lowercase HTML tag attributes are preserved', () => {
+    const input = `<img alt="<!-- keep this -->" />`
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).toContain('alt="<!-- keep this -->"')
+  })
+
+  test('HTML comments in JSX attributes after expression with > are preserved', () => {
+    const input = `<Card prop={a > b} title="<!-- keep this -->" />`
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).toContain('title="<!-- keep this -->"')
+  })
+
+  test('empty and consecutive HTML comments are stripped', () => {
+    const input = `Before <!----><!-- second --> after.`
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).not.toContain('<!--')
+    expect(result.content).toContain('Before')
+    expect(result.content).toContain('after.')
+  })
+
+  test('HTML comments with extra dashes inside are stripped', () => {
+    const input = `Before <!-- a -- b --- c --> after.`
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).not.toContain('a -- b')
+    expect(result.content).toContain('Before')
+    expect(result.content).toContain('after.')
+  })
+
+  test('unterminated HTML comment blanks through EOF', () => {
+    const input = `Before.
+
+<!-- unfinished
+hidden text`
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).toContain('Before.')
+    expect(result.content).not.toContain('unfinished')
+    expect(result.content).not.toContain('hidden text')
+  })
+
+  test('tilde code fences also protect comments', () => {
+    const input = `~~~html
+<!-- keep inside tilde fence -->
+~~~
+
+<!-- strip outside -->
+
+After.`
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).toContain('<!-- keep inside tilde fence -->')
+    expect(result.content).not.toContain('strip outside')
+  })
+
+  test('double-backtick inline code preserves comments', () => {
+    const input = 'Use ``<!-- comment -->`` syntax.'
+    const result = expectSuccess(normalizeMdx(input))
+    expect(result.content).toContain('<!-- comment -->')
+  })
+
   test('JSX comments {/* */} are preserved in output', () => {
     const input = `Some text before.
 
