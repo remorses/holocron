@@ -1180,7 +1180,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       const hrefs = collectAllPages(site.navigation)
         .filter((page) => isIndexablePage(page.frontmatter))
         .map((page) => page.href)
-        .sort()
       const urls = hrefs
         .map((href: string) => `  <url><loc>${url.origin}${withBaseRoute(site.base, href)}</loc></url>`)
         .join('\n')
