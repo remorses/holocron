@@ -239,25 +239,27 @@ function charAtDisplayCol(line: string, targetCol: number): Cell | undefined {
 
 const H_BORDER = new Set('─━═')
 const V_BORDER = new Set('│┃║')
-const TL_CORNER = new Set('┌┏╔╭')   // ╭ = rounded top-left
-const TR_CORNER = new Set('┐┓╗╮')   // ╮ = rounded top-right
-const BL_CORNER = new Set('└┗╚╰')   // ╰ = rounded bottom-left
-const BR_CORNER = new Set('┘┛╝╯')   // ╯ = rounded bottom-right
-const TOP_BORDER_JUNCTIONS = new Set('┬┳╦')
-const BOTTOM_BORDER_JUNCTIONS = new Set('┴┻╩')
-const LEFT_BORDER_JUNCTIONS = new Set('├┣╠')
-const RIGHT_BORDER_JUNCTIONS = new Set('┤┫╣')
-/** Cross junctions — used in divider detection. */
-const CROSS_JUNCTIONS = new Set('┼╬╋')
+// Mixed single/double corners (╒╓╕╖╘╙╛╜) are valid Unicode box-drawing chars
+// that appear when one border is single-line and the adjacent is double-line.
+const TL_CORNER = new Set('┌┏╔╭╒╓')
+const TR_CORNER = new Set('┐┓╗╮╕╖')
+const BL_CORNER = new Set('└┗╚╰╘╙')
+const BR_CORNER = new Set('┘┛╝╯╛╜')
+const TOP_BORDER_JUNCTIONS = new Set('┬┳╦╤╥')
+const BOTTOM_BORDER_JUNCTIONS = new Set('┴┻╩╧╨')
+const LEFT_BORDER_JUNCTIONS = new Set('├┣╠╞╟')
+const RIGHT_BORDER_JUNCTIONS = new Set('┤┫╣╡╢')
+/** Cross junctions — used in border scans and divider detection. */
+const CROSS_JUNCTIONS = new Set('┼╬╋╪╫')
 
-function isHBorder(ch: string) { return H_BORDER.has(ch) || TOP_BORDER_JUNCTIONS.has(ch) || BOTTOM_BORDER_JUNCTIONS.has(ch) }
+function isHBorder(ch: string) { return H_BORDER.has(ch) || TOP_BORDER_JUNCTIONS.has(ch) || BOTTOM_BORDER_JUNCTIONS.has(ch) || CROSS_JUNCTIONS.has(ch) }
 function isTopLeft(ch: string) { return TL_CORNER.has(ch) }
 function isTopRight(ch: string) { return TR_CORNER.has(ch) }
 function isBottomLeft(ch: string) { return BL_CORNER.has(ch) }
 function isBottomRight(ch: string) { return BR_CORNER.has(ch) }
 function isVBorder(ch: string) { return V_BORDER.has(ch) }
-function isLeftBorder(ch: string) { return V_BORDER.has(ch) || LEFT_BORDER_JUNCTIONS.has(ch) }
-function isRightBorder(ch: string) { return V_BORDER.has(ch) || RIGHT_BORDER_JUNCTIONS.has(ch) }
+function isLeftBorder(ch: string) { return V_BORDER.has(ch) || LEFT_BORDER_JUNCTIONS.has(ch) || CROSS_JUNCTIONS.has(ch) }
+function isRightBorder(ch: string) { return V_BORDER.has(ch) || RIGHT_BORDER_JUNCTIONS.has(ch) || CROSS_JUNCTIONS.has(ch) }
 
 // ─────────────────────────────────────────────────────────────
 // Box detection
@@ -636,7 +638,9 @@ export function fixDiagramLines(inputLines: string[]): string[] {
     }
   }
 
-  return lines
+  // Strip trailing whitespace left by extraGap padding when there's
+  // no real suffix content after the splice point.
+  return lines.map((line) => line.trimEnd())
 }
 
 // ─────────────────────────────────────────────────────────────

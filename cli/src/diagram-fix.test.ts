@@ -139,7 +139,7 @@ describe('fixDiagramLines', () => {
 
     expect(fixDiagramLines(input).join('\n')).toMatchInlineSnapshot('\n' + `
       "┌──────┐
-      │ text │  
+      │ text │
       └──────┘"
     `)
   })
@@ -183,9 +183,9 @@ describe('fixDiagramLines', () => {
 
     expect(fixDiagramLines(input).join('\n')).toMatchInlineSnapshot('\n' + `
       "┌─────────────────┐
-      │ line one        │  
+      │ line one        │
       │ line two        │
-      │ line three      │  
+      │ line three      │
       └─────────────────┘"
     `)
   })
@@ -480,7 +480,7 @@ describe('fixDiagramLines — real-world diagrams', () => {
                                          │
                                          v
       ┌──────────────────────────────────────────────────────────────────────────────┐
-      │                     Deployed on Vercel / Cloudflare / Netlify                │ 
+      │                     Deployed on Vercel / Cloudflare / Netlify                │
       └──────────────────────────────────────────────────────────────────────────────┘"
     `)
   })
@@ -528,31 +528,31 @@ describe('fixDiagramLines — complex scenarios', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌───────────────────────────────────────┐
-      │  1. Parse config                      │  
+      │  1. Parse config                      │
       │     > reads docs.json                 │
-      │     > validates schema                │  
+      │     > validates schema                │
       └───────────────────┬───────────────────┘
                           │
                           v
       ┌───────────────────────────────────────┐
-      │  2. Sync navigation tree              │  
+      │  2. Sync navigation tree              │
       │     > walks MDX pages                 │
       │     > computes git SHAs               │
-      │     > enriches metadata               │  
+      │     > enriches metadata               │
       └───────────────────┬───────────────────┘
                           │
                           v
       ┌───────────────────────────────────────┐
       │  3. Process MDX                       │
       │     > remark plugins                  │
-      │     > section splitting               │  
+      │     > section splitting               │
       └───────────────────┬───────────────────┘
                           │
                           v
       ┌───────────────────────────────────────┐
-      │  4. Render pages                      │  
+      │  4. Render pages                      │
       │     > safe-mdx                        │
-      │     > editorial components            │  
+      │     > editorial components            │
       └───────────────────────────────────────┘"
     `)
   })
@@ -578,7 +578,7 @@ describe('fixDiagramLines — complex scenarios', () => {
       │  Short line                                                              │
       │  Another medium-length line that is close                                │
       │  Tiny                                                                    │
-      │  Last line with extra padding way too far right                          │      
+      │  Last line with extra padding way too far right                          │
       └──────────────────────────────────────────────────────────────────────────┘"
     `)
   })
@@ -599,10 +599,10 @@ describe('fixDiagramLines — complex scenarios', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌──────────────┐   ┌──────────────┐   ┌──────────────┐
-      │  Browser     │   │  Server      │   │  Database    │   
-      │              │   │              │   │              │ 
-      │  React app   │   │  Spiceflow   │   │  PostgreSQL  │ 
-      │  Components  │   │  Routes      │   │  Tables      │  
+      │  Browser     │   │  Server      │   │  Database    │
+      │              │   │              │   │              │
+      │  React app   │   │  Spiceflow   │   │  PostgreSQL  │
+      │  Components  │   │  Routes      │   │  Tables      │
       └──────────────┘   └──────────────┘   └──────────────┘"
     `)
   })
@@ -627,14 +627,14 @@ describe('fixDiagramLines — complex scenarios', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌────────────────────────────────────────────┐
-      │  Outer container                           │   
-      │  ┌────────────────────────────────────┐    │ 
-      │  │  Middle layer                      │    │ 
+      │  Outer container                           │
+      │  ┌────────────────────────────────────┐    │
+      │  │  Middle layer                      │    │
       │  │  ┌──────────────────────────┐      │    │
       │  │  │  Innermost box           │      │    │
       │  │  │  with content            │      │    │
       │  │  └──────────────────────────┘      │    │
-      │  └────────────────────────────────────┘    │ 
+      │  └────────────────────────────────────┘    │
       └────────────────────────────────────────────┘"
     `)
   })
@@ -663,17 +663,17 @@ describe('fixDiagramLines — complex scenarios', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌─────────────────────────────────────────┐
-      │  Project structure                      │   
-      │  src/                                   │ 
-      │  ├── components/                        │   
+      │  Project structure                      │
+      │  src/                                   │
+      │  ├── components/                        │
       │  │   ├── Button.tsx                     │
-      │  │   ├── Card.tsx                       │   
+      │  │   ├── Card.tsx                       │
       │  │   └── Modal.tsx                      │
-      │  ├── lib/                               │   
+      │  ├── lib/                               │
       │  │   └── utils.ts                       │
-      │  └── index.ts                           │   
-      │                                         │ 
-      │  > Build output: dist/                  │   
+      │  └── index.ts                           │
+      │                                         │
+      │  > Build output: dist/                  │
       │  v Deploy target: Cloudflare            │
       └─────────────────────────────────────────┘"
     `)
@@ -704,7 +704,7 @@ describe('fixDiagramLines — complex scenarios', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌──────────────────┐
-      │  Input Handler   │  
+      │  Input Handler   │
       └────────┬─────────┘
                │
                v
@@ -716,8 +716,70 @@ describe('fixDiagramLines — complex scenarios', () => {
           v         v
       ┌────────┐ ┌────────┐
       │ Pass   │ │ Fail   │
-      │ handler│ │ handler│  
+      │ handler│ │ handler│
       └────────┘ └────────┘"
+    `)
+  })
+
+  test('nested boxes with cross junction ┼ on outer bottom border', () => {
+    const input = [
+      '┌──────────────────────────────────────────────────────────────────┐',
+      '│                       Palmier Pro (macOS)                         │',
+      '│                                                                  │',
+      '│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐  │',
+      '│  │   Timeline   │  │  Media Panel │  │    AI Generation       │  │',
+      '│  │   Editor     │  │  & Library   │  │  (Video/Image/Audio)   │  │',
+      '│  └──────┬───────┘  └──────┬───────┘  └───────────┬────────────┘  │',
+      '│         │                 │                       │              │',
+      '│         └─────────────────┼───────────────────────┘              │',
+      '│                           │                                      │',
+      '│                   ┌───────┴────────┐                             │',
+      '│                   │   MCP Server   │                             │',
+      '│                   │  :19789/mcp    │                             │',
+      '│                   └───────┬────────┘                             │',
+      '└───────────────────────────┼──────────────────────────────────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    const issues = validateDiagram(fixed.join('\n'), { maxWidth: 200 })
+    expect(issues).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌──────────────────────────────────────────────────────────────────┐
+      │                       Palmier Pro (macOS)                        │
+      │                                                                  │
+      │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐  │
+      │  │   Timeline   │  │  Media Panel │  │    AI Generation       │  │
+      │  │   Editor     │  │  & Library   │  │  (Video/Image/Audio)   │  │
+      │  └──────┬───────┘  └──────┬───────┘  └───────────┬────────────┘  │
+      │         │                 │                       │              │
+      │         └─────────────────┼───────────────────────┘              │
+      │                           │                                      │
+      │                   ┌───────┴────────┐                             │
+      │                   │   MCP Server   │                             │
+      │                   │  :19789/mcp    │                             │
+      │                   └───────┬────────┘                             │
+      └───────────────────────────┼──────────────────────────────────────┘"
+    `)
+  })
+
+  test('top border with cross junction ┼ is detected as a box', () => {
+    const input = [
+      '         │',
+      '┌────────┼────────┐',
+      '│  content         │',
+      '└─────────────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    const issues = validateDiagram(fixed.join('\n'), { maxWidth: 200 })
+    expect(issues).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "         │
+      ┌────────┼────────┐
+      │  content        │
+      └─────────────────┘"
     `)
   })
 
@@ -739,11 +801,11 @@ describe('fixDiagramLines — complex scenarios', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-      ┃  Authentication Flow          ┃    
+      ┃  Authentication Flow          ┃
       ┃                               ┃
-      ┃  1. User submits credentials  ┃    
+      ┃  1. User submits credentials  ┃
       ┃  2. Server validates          ┃
-      ┃  3. JWT token issued          ┃    
+      ┃  3. JWT token issued          ┃
       ┃  4. Client stores token       ┃
       ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
     `)
@@ -765,10 +827,10 @@ describe('fixDiagramLines — complex scenarios', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "╭──────────────────────────────╮
-      │  Deployment Pipeline         │  
+      │  Deployment Pipeline         │
       │                              │
       │  > lint > test > build       │
-      │  > deploy > verify           │  
+      │  > deploy > verify           │
       ╰──────────────────────────────╯"
     `)
   })
@@ -793,12 +855,12 @@ describe('fixDiagramLines — complex scenarios', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌────────────────────────────┐
-      │  Header Section            │  
+      │  Header Section            │
       │  Subtitle text             │
       ├────────────────────────────┤
-      │  Body content              │  
+      │  Body content              │
       │  More body text            │
-      │  Final paragraph           │  
+      │  Final paragraph           │
       ├────────────────────────────┤
       │  Footer                    │
       └────────────────────────────┘"
@@ -843,7 +905,7 @@ describe('fixDiagramLines — complex scenarios', () => {
 
       \`\`\`
       ┌────────────┐
-      │  Client    │   
+      │  Client    │
       └──────┬─────┘
              │
              v
@@ -856,9 +918,9 @@ describe('fixDiagramLines — complex scenarios', () => {
 
       \`\`\`
       ┌──────────────────┐
-      │  users table     │   
+      │  users table     │
       │  ├── id          │
-      │  ├── name        │   
+      │  ├── name        │
       │  └── email       │
       └──────────────────┘
       \`\`\`"
@@ -879,9 +941,9 @@ describe('fixDiagramLines — complex scenarios', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌────────────────┐
-      │  API Gateway   │  
+      │  API Gateway   │
       │  /api/v1       │
-      └────────────────┘      "
+      └────────────────┘"
     `)
   })
 
@@ -913,7 +975,7 @@ describe('fixDiagramLines — complex scenarios', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌──────────────────┐
-      │  Step 1: Init    │  
+      │  Step 1: Init    │
       └────────┬─────────┘
                │
 
@@ -928,7 +990,7 @@ describe('fixDiagramLines — complex scenarios', () => {
                │
                v
       ┌──────────────────┐
-      │  Step 3: Done    │  
+      │  Step 3: Done    │
       └──────────────────┘"
     `)
   })
@@ -947,7 +1009,7 @@ describe('fixDiagramLines — complex scenarios', () => {
     const fixed = fixDiagramLines(input)
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌──────────┐
-      │ This text is way too long for the box│                             
+      │ This text is way too long for the box│
       └──────────┘"
     `)
   })
@@ -968,7 +1030,7 @@ describe('fixDiagramLines — complex scenarios', () => {
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌──────────────────┐
       │ This line just trails off without a border
-      │ Normal line      │ 
+      │ Normal line      │
       └──────────────────┘"
     `)
   })
@@ -991,12 +1053,12 @@ describe('fixDiagramLines — complex scenarios', () => {
     // the fixer only operates on box content, not free-floating text.
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌────────────┐
-      │  Source    │ 
+      │  Source    │
       └──────┬─────┘
          some debug text covering the connector line
              v
       ┌────────────┐
-      │  Target    │ 
+      │  Target    │
       └────────────┘"
     `)
   })
@@ -1018,7 +1080,7 @@ describe('fixDiagramLines — complex scenarios', () => {
     // The fixer leaves it and the trailing text untouched. Correct behavior.
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌────────────┐
-      │  Step A    │ 
+      │  Step A    │
       └──────┬─────┘
              │ this label extends past the box
              v
@@ -1044,9 +1106,9 @@ describe('fixDiagramLines — complex scenarios', () => {
     const fixed = fixDiagramLines(input)
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌────┐
-      │ Authentication middleware validates JWT tokens│                                            
-      │ Rate limiter checks request quotas per API key│                                            
-      │ Router dispatches to correct handler function│                                            
+      │ Authentication middleware validates JWT tokens│
+      │ Rate limiter checks request quotas per API key│
+      │ Router dispatches to correct handler function│
       └────┘"
     `)
   })
@@ -1067,11 +1129,11 @@ describe('fixDiagramLines — complex scenarios', () => {
     // box independently and leaves the text line untouched. Correct behavior.
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌──────────────────┐
-      │  Request Handler │ 
+      │  Request Handler │
       └──────────────────┘
         sends response back to client via HTTP
       ┌──────────────────┐
-      │  Response Builder│ 
+      │  Response Builder│
       └──────────────────┘"
     `)
   })
@@ -1104,7 +1166,7 @@ describe('fixDiagramsInText', () => {
 
       \`\`\`
       ┌──────────┐
-      │ Server   │  
+      │ Server   │
       └──────────┘
       \`\`\`
 
@@ -1131,7 +1193,7 @@ describe('fixDiagramsInText', () => {
 
       \`\`\`diagram
       ┌──────────┐
-      │ Server   │  
+      │ Server   │
       └──────────┘
       \`\`\`"
     `)
@@ -1157,7 +1219,7 @@ describe('fixDiagramsInText', () => {
 
     expect(fixDiagramsInText(input)).toMatchInlineSnapshot('\n' + `
       "┌──────────┐
-      │ hello    │  
+      │ hello    │
       └──────────┘"
     `)
   })
@@ -1186,7 +1248,7 @@ describe('fixDiagramsInText', () => {
 
       \`\`\`
       ┌─────┐
-      │ A   │  
+      │ A   │
       └─────┘
       \`\`\`
 
@@ -1194,7 +1256,7 @@ describe('fixDiagramsInText', () => {
 
       \`\`\`
       ┌─────┐
-      │ B   │  
+      │ B   │
       └─────┘
       \`\`\`"
     `)
@@ -1342,9 +1404,9 @@ describe('edge cases', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌────────────────────┐
-      │ > step one         │  
-      │ > step two         │ 
-      │ v result           │ 
+      │ > step one         │
+      │ > step two         │
+      │ v result           │
       └────────────────────┘"
     `)
   })
@@ -1362,7 +1424,7 @@ describe('edge cases', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "╔══════════╗
-      ║ content  ║  
+      ║ content  ║
       ╚══════════╝"
     `)
   })
@@ -1379,7 +1441,7 @@ describe('edge cases', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "╭──────────╮
-      │ content  │  
+      │ content  │
       ╰──────────╯"
     `)
   })
@@ -1396,7 +1458,7 @@ describe('edge cases', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┏━━━━━━━━━━┓
-      ┃ content  ┃  
+      ┃ content  ┃
       ┗━━━━━━━━━━┛"
     `)
   })
@@ -1413,8 +1475,97 @@ describe('edge cases', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "╭──────────╮
-      │ mixed    │  
+      │ mixed    │
       ╰──────────╯"
+    `)
+  })
+
+  test('mixed single/double border ╒═╕ with misaligned content', () => {
+    const input = [
+      '╒══════════╕',
+      '│ content    │',
+      '╘══════════╛',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    expect(validateDiagram(fixed.join('\n'))).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "╒══════════╕
+      │ content  │
+      ╘══════════╛"
+    `)
+  })
+
+  test('mixed single/double border ╓─╖ with misaligned content', () => {
+    const input = [
+      '╓──────────╖',
+      '║ content    ║',
+      '╙──────────╜',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    expect(validateDiagram(fixed.join('\n'))).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "╓──────────╖
+      ║ content  ║
+      ╙──────────╜"
+    `)
+  })
+
+  test('mixed junctions ╤╧ on borders', () => {
+    const input = [
+      '╒═══╤═══╕',
+      '│ A │ B │',
+      '╘═══╧═══╛',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    expect(validateDiagram(fixed.join('\n'))).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "╒═══╤═══╕
+      │ A │ B │
+      ╘═══╧═══╛"
+    `)
+  })
+
+  test('cross junction ╪ on bottom border detected correctly', () => {
+    const input = [
+      '╒═══════════════╕',
+      '│  content        │',
+      '╘═══════╪═══════╛',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    expect(validateDiagram(fixed.join('\n'), { maxWidth: 200 })).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "╒═══════════════╕
+      │  content      │
+      ╘═══════╪═══════╛"
+    `)
+  })
+
+  test('cross junction on side border does not break vertical scan', () => {
+    const input = [
+      '┌──────────┐',
+      '│  top     │',
+      '┼──────────┤',
+      '│  bottom   │',
+      '└──────────┘',
+    ]
+
+    const fixed = fixDiagramLines(input)
+    expect(validateDiagram(fixed.join('\n'))).toEqual([])
+
+    expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
+      "┌──────────┐
+      │  top     │
+      ┼──────────┤
+      │  bottom  │
+      └──────────┘"
     `)
   })
 
@@ -1489,10 +1640,10 @@ describe('edge cases', () => {
 
     expect(fixed.join('\n')).toMatchInlineSnapshot('\n' + `
       "┌──────────────────┐
-      │ src/             │ 
-      │ ├── index.ts     │ 
+      │ src/             │
+      │ ├── index.ts     │
       │ ├── utils.ts     │
-      │ └── types.ts     │  
+      │ └── types.ts     │
       └──────────────────┘"
     `)
   })
