@@ -1112,6 +1112,31 @@ describe('fixDiagramsInText', () => {
     `)
   })
 
+  test('preserves language identifier on fenced code blocks', () => {
+    const input = dedent`
+      # Architecture
+
+      ${'```'}diagram
+      ┌──────────┐
+      │ Server     │
+      └──────────┘
+      ${'```'}
+    `
+
+    const fixed = fixDiagramsInText(input)
+    // The opening fence line (```diagram) must be preserved as-is
+    expect(fixed).toContain('```diagram')
+    expect(fixed).toMatchInlineSnapshot('\n' + `
+      "# Architecture
+
+      \`\`\`diagram
+      ┌──────────┐
+      │ Server   │  
+      └──────────┘
+      \`\`\`"
+    `)
+  })
+
   test('leaves non-diagram code blocks untouched', () => {
     const input = dedent`
       ${'```'}js
