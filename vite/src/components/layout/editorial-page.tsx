@@ -342,7 +342,7 @@ export function EditorialPage({
            Negative top margin closes the flex gap so the vertical lines
            connect seamlessly to the tab-bar border; inner pt restores the
            visual spacing for content. */
-      <div className='relative grow w-full max-w-full mx-auto lg:max-w-(--grid-max-width) lg:-mt-(--layout-gap) lg:pt-(--layout-gap) overflow-y-clip'>
+      <div className={`relative grow w-full max-w-full mx-auto lg:max-w-(--grid-max-width) lg:-mt-(--layout-gap) ${above ? '' : 'lg:pt-(--layout-gap)'} overflow-y-clip`}>
         <GridLinesFrame mode={decorativeLines} />
 
         {/* Above: rendered above the 3-column grid, spanning the full grid
