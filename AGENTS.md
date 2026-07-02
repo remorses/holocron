@@ -764,6 +764,8 @@ if needed read docs with `curl https://takumi.kane.tw/llms-full.txt`
 
 `cli/src/diagram-fix.test.ts` requires all `.toMatchInlineSnapshot()` calls to use the `'\n' + ` prefix so multiline diagram snapshots start on a fresh line and stay visually aligned with the box-drawing characters. See the comment at the top of the file.
 
+**Every test must use `.toMatchInlineSnapshot()` on the full fixed output.** Never use assertion-style checks like `expect(fixed[1]).not.toBe(input[1])` or `expect(issues).toEqual([])` alone. The inline snapshot is the primary assertion; it lets you see the actual corrected diagram at a glance. Additional assertions (like `issues.toEqual([])`) are fine as supplementary checks alongside the snapshot.
+
 **vitest -u breaks this convention.** When you run `vitest -u` to update snapshots, it replaces the `'\n' + \`` format with a bare backtick. You must write the snapshot content manually with the `'\n' + \`` prefix. Never use `vitest -u` on this file; instead, run tests once to see the expected output in the diff, then manually write the snapshot with the correct format.
 
 ```ts
