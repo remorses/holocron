@@ -463,10 +463,9 @@ Billing runs on Stripe.
     `)
   })
 
-  test('heading-first page with NO intro aside keeps per-section asides scoped', () => {
-    // The <Aside> is under ## Plans, NOT in the intro. The synthetic AI widget
-    // aside must NOT be <Aside full> or it creates a full-aside range that
-    // sweeps all per-section asides to the top.
+  test('heading-first page with NO intro aside absorbs per-section asides into full aside', () => {
+    // The synthetic AI aside is always <Aside full>, so per-section asides
+    // within the range are absorbed into the shared aside.
     const mdx = `# Pricing
 
 Holocron is free to start.
@@ -509,49 +508,32 @@ Billing runs on Stripe.
       [CONTENT]
       # Pricing
 
+      --- SECTION 1 ---
+
+      [CONTENT]
       Holocron is free to start.
 
-      [ASIDE]
-      <Aside>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>
-
-      --- SECTION 1 ---
+      --- SECTION 2 ---
 
       [CONTENT]
       ## Plans
 
       Plans table.
 
-      [ASIDE]
-      <Aside>
-        <Info>
-          Subscriptions are per site.
-        </Info>
-      </Aside>
-
-      --- SECTION 2 ---
+      --- SECTION 3 ---
 
       [CONTENT]
       ## What Pro unlocks
 
-      --- SECTION 3 ---
+      --- SECTION 4 ---
 
       [CONTENT]
       ### Preview deployments
 
       Every branch gets a preview URL.
 
-      [ASIDE]
-      <Aside>
-        <Tip>
-          Preview deployments are automatic.
-        </Tip>
-      </Aside>
-
-      --- SECTION 4 ---
+      --- SECTION 5 ---
+      asideRowSpan: 5
 
       [CONTENT]
       ## Subscribe
@@ -559,10 +541,140 @@ Billing runs on Stripe.
       Manage billing from the dashboard.
 
       [ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
+      <Aside>
+        <Info>
+          Subscriptions are per site.
+        </Info>
+      </Aside>
+
+      <Aside>
+        <Tip>
+          Preview deployments are automatic.
+        </Tip>
+      </Aside>
+
       <Aside>
         <Note>
           Billing runs on Stripe.
         </Note>
+      </Aside>"
+    `)
+  })
+
+  test('heading-only first section uses full aside spanning all sections', () => {
+    // When h1 is immediately followed by h2 (no body between them), the
+    // synthetic AI aside is <Aside full> spanning the whole page.
+    // Per-section asides are absorbed into the shared aside.
+    const mdx = `# Quickstart
+
+## Install
+
+Install instructions.
+
+## Authenticate
+
+Auth instructions.
+
+<Aside>
+<Info>
+Run \`egaki login --show\` to see providers.
+</Info>
+</Aside>
+
+## Generate
+
+Generate instructions.
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      # Quickstart
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## Install
+
+      Install instructions.
+
+      --- SECTION 2 ---
+
+      [CONTENT]
+      ## Authenticate
+
+      Auth instructions.
+
+      --- SECTION 3 ---
+      asideRowSpan: 3
+
+      [CONTENT]
+      ## Generate
+
+      Generate instructions.
+
+      [ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
+      <Aside>
+        <Info>
+          Run \`egaki login --show\` to see providers.
+        </Info>
+      </Aside>"
+    `)
+  })
+
+  test('heading-only first section with no asides anywhere spans all sections', () => {
+    // When no per-section asides exist, the AI widget is <Aside full>.
+    // The full-aside range starts after section 0 (heading-only), so the
+    // aside spans sections 1-2 (the full-aside range). Section 0 is before
+    // the range and stays empty — no row inflation.
+    const mdx = `# Quickstart
+
+## Install
+
+Install instructions.
+
+## Generate
+
+Generate instructions.
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      # Quickstart
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## Install
+
+      Install instructions.
+
+      --- SECTION 2 ---
+      asideRowSpan: 2
+
+      [CONTENT]
+      ## Generate
+
+      Generate instructions.
+
+      [ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
       </Aside>"
     `)
   })
