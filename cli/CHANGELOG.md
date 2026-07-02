@@ -1,3 +1,9 @@
+## 0.20.1
+
+1. **Diagram fixer handles cross junctions and mixed borders** — `holocron diagrams fix` now correctly detects boxes with cross junctions (`┼`, `╬`, `╋`, `╪`, `╫`) on borders, mixed single/double corners (`╒`, `╓`, `╕`, `╖`, `╘`, `╙`, `╛`, `╜`), and mixed junctions (`╤`, `╥`, `╧`, `╨`, `╞`, `╟`, `╡`, `╢`). Previously these characters broke border scanning and prevented box detection entirely.
+2. **Trailing whitespace stripped from fixed diagrams** — `fixDiagramLines` now trims trailing spaces left by the splice logic when padding adjustments leave no real suffix content.
+3. **Diagram fixer preserves language identifier on fenced code blocks** — opening fence lines like `` ```diagram `` are left untouched during fixing.
+
 ## 0.20.0
 
 1. **Ambiguous Unicode character detection and auto-replacement** — `holocron diagrams fix` now detects characters like `▶`, `◀`, `▲`, `▼`, `★`, `●`, `■` that have Unicode East Asian Width "Ambiguous". These render as 1 cell on macOS/Linux but 2 cells on many Windows monospaced fonts (Consolas, Lucida Console), breaking diagram alignment. The fixer auto-replaces 18 known-ambiguous characters with safe ASCII equivalents (`▶` → `>`, `▼` → `v`, `●` → `*`, etc.) as a first pass before box detection.

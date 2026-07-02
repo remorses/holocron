@@ -1,5 +1,10 @@
 # @holocron.so/vite
 
+## 0.23.1
+
+1. **Fixed excess top padding when Above/Hero is present** — pages with an `above` section (hero content) no longer get 36px of dead space between the header and the hero. The `pt-(--layout-gap)` padding is now conditionally applied only when there is no above content.
+2. **Sitemap.xml now uses navigation tree order** — URLs in `sitemap.xml` now follow the same order as the sidebar, `llms.txt`, and `llms-full.txt` instead of being alphabetically sorted.
+
 ## 0.23.0
 
 1. **Custom page mode** — `mode: "custom"` in frontmatter now strips the editorial grid entirely, giving full control over the page content area. Only navbar, tab bar, banner, footer, mobile nav, and AI assistant are rendered. Useful for landing pages, pricing pages, or any page where you want to own the entire layout.
