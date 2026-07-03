@@ -28,7 +28,7 @@ function stubReleases(releases: RawRelease[]): void {
   })
 }
 
-const ctx = { projectRoot: '/tmp', pagesDir: '/tmp' }
+const ctx = { projectRoot: '/tmp', pagesDir: '/tmp', publicDir: '/tmp/public' }
 
 describe('changelogProvider', () => {
   afterEach(() => {

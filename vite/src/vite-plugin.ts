@@ -920,7 +920,12 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       const isMdx = ctx.file.endsWith('.mdx') || ctx.file.endsWith('.md')
       const isConfig = configFilePath && ctx.file === configFilePath
       const isTrackedImageDep = syncResult.importedImageDepPaths.includes(ctx.file)
-      const isProviderWatchPath = syncResult.providerWatchPaths.includes(ctx.file)
+      // Provider watch paths can be files (OpenAPI specs) or directories
+      // (imageboard folders) — directories match any file inside them so
+      // adding/editing/removing media re-syncs the generated page.
+      const isProviderWatchPath = syncResult.providerWatchPaths.some(
+        (watchPath) => watchPath === ctx.file || isInsideDir(watchPath, ctx.file),
+      )
       // Holocron injects `src/styles/globals.css` directly from source into the
       // dev module graph, so editing it must reach the CSS-update path below.
       // Without this flag the early-return guard drops the event and styles only

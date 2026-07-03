@@ -1043,6 +1043,57 @@
                 "end"
               ]
             },
+            "imageboard": {
+              "type": "string",
+              "description": "Path to a folder of images and videos, relative to the project\nroot. The folder is walked recursively and every image and video\nfound is rendered in a masonry grid, sorted by last edit time\n(newest first). Edit times come from git commit history so the\norder is stable across clones and CI deployments. Examples:\n`\"./public/moodboard\"` or `\"./inspiration\"`. Files outside\n`public/` are copied into the build automatically"
+            },
+            "base": {
+              "description": "Slug for the generated imageboard page. Defaults to the folder\nname, e.g. `\"./public/moodboard\"` is served at `/moodboard`.\nA leading slash is allowed and ignored",
+              "type": "string"
+            },
+            "columns": {
+              "description": "Maximum number of masonry columns on wide viewports. Defaults to\n`3`. Fewer columns are used automatically on narrow viewports",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8
+            }
+          },
+          "required": [
+            "tab",
+            "imageboard"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "tab": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The name of the tab"
+            },
+            "icon": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/iconSchema"
+                }
+              ]
+            },
+            "iconColor": {
+              "$ref": "#/definitions/iconColorSchema"
+            },
+            "hidden": {
+              "description": "Whether the tab is hidden by default",
+              "type": "boolean"
+            },
+            "align": {
+              "description": "Tab alignment in the navigation",
+              "type": "string",
+              "enum": [
+                "start",
+                "end"
+              ]
+            },
             "provider": {
               "type": "string",
               "description": "Path to a file that default-exports a CustomTabProvider object.\nThe provider's generate() function produces navigation groups and\nMDX page content from an external source. Example:\n`\"./providers/blog.ts\"`"
@@ -1063,7 +1114,7 @@
           "additionalProperties": false
         }
       ],
-      "description": "A top-level tab in the navigation. Either contains sidebar groups, a\nflat list of pages, a link-only tab, an OpenAPI spec for\nauto-generated API reference pages, a changelog generated from a\nGitHub releases page, an MCP server definition for auto-generated\ntool and resource documentation pages, or a custom provider file\nthat generates pages from an external source"
+      "description": "A top-level tab in the navigation. Either contains sidebar groups, a\nflat list of pages, a link-only tab, an OpenAPI spec for\nauto-generated API reference pages, a changelog generated from a\nGitHub releases page, an MCP server definition for auto-generated\ntool and resource documentation pages, an imageboard folder rendered\nas a masonry image grid, or a custom provider file that generates\npages from an external source"
     },
     "iconSchema": {
       "anyOf": [

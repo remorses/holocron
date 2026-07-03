@@ -1,0 +1,67 @@
+---
+title: Imageboard
+description: Render a folder of images and videos as a masonry moodboard tab.
+icon: images
+---
+
+# Imageboard
+
+An imageboard tab turns a **folder of images and videos** into an Instagram-style masonry grid page. Point the tab at a folder, and Holocron walks it recursively, sorts everything by last edit time (newest first), and renders a zoomable, lazy-loaded grid — no sidebars, no MDX files to write.
+
+## Basic setup
+
+```json
+{
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Moodboard",
+        "icon": "images",
+        "imageboard": "./public/moodboard",
+        "columns": 3
+      }
+    ]
+  }
+}
+```
+
+Drop images into `public/moodboard/` and they appear in the grid. Subfolders are included automatically.
+
+<Note>
+Paths are resolved relative to the project root. Folders inside `public/` are served directly; folders outside `public/` work too — images and videos are copied into the build automatically.
+</Note>
+
+## How images are processed
+
+Every image goes through the same **build-time pipeline** as MDX images:
+
+- **Dimensions** are read with sharp so the grid reserves each tile's aspect ratio — no layout shift while scrolling.
+- A tiny **pixelated placeholder** renders instantly and fades into the real image once loaded.
+- Images use native `loading="lazy"`, so offscreen tiles download nothing until scrolled near.
+- Clicking a tile opens the **zoom dialog**, same as images in MDX pages.
+
+Videos (`.mp4`, `.webm`, `.mov`, `.mkv`) get their dimensions probed from the container header and render with `preload="metadata"` — only the first frame downloads until the user hits play.
+
+## Sort order
+
+Items are sorted **newest first** by last edit time. Edit times come from git commit history (the last commit that touched each file), so the order is stable across clones and CI deployments where filesystem timestamps are meaningless. Files with uncommitted changes sort by their filesystem modification time instead.
+
+## Options
+
+<ParamField path="imageboard" type="string" required>
+Folder to walk for media, relative to the project root. Example: `"./public/moodboard"` or `"./inspiration"`.
+</ParamField>
+
+<ParamField path="base" type="string" default="folder name">
+Slug for the generated page. With `"imageboard": "./public/moodboard"` the page is served at `/moodboard` by default.
+</ParamField>
+
+<ParamField path="columns" type="number" default="3">
+Maximum masonry column count on wide viewports. Between 1 and 8. Fewer columns are used automatically on narrow viewports, down to a single column on phones.
+</ParamField>
+
+## Layout behavior
+
+The grid uses CSS multi-columns: items flow **top-to-bottom per column**, like a moodboard or Pinterest board. The `columns` value is a maximum — a minimum tile width shrinks the column count fluidly as the viewport narrows, so the grid stays responsive without breakpoint configuration.
+
+The page renders in `custom` mode: only the navbar and footer surround the grid, with no navigation sidebar or table of contents.

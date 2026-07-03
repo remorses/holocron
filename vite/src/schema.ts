@@ -462,6 +462,44 @@ const tabWithMCPSchema = tabBaseSchema.extend({
   },
 })
 
+const tabWithImageboardSchema = tabBaseSchema.extend({
+  imageboard: z
+    .string()
+    .describe(
+      dedent`
+        Path to a folder of images and videos, relative to the project
+        root. The folder is walked recursively and every image and video
+        found is rendered in a masonry grid, sorted by last edit time
+        (newest first). Edit times come from git commit history so the
+        order is stable across clones and CI deployments. Examples:
+        \`"./public/moodboard"\` or \`"./inspiration"\`. Files outside
+        \`public/\` are copied into the build automatically
+      `,
+    ),
+  base: z
+    .string()
+    .optional()
+    .describe(
+      dedent`
+        Slug for the generated imageboard page. Defaults to the folder
+        name, e.g. \`"./public/moodboard"\` is served at \`/moodboard\`.
+        A leading slash is allowed and ignored
+      `,
+    ),
+  columns: z
+    .number()
+    .int()
+    .min(1)
+    .max(8)
+    .optional()
+    .describe(
+      dedent`
+        Maximum number of masonry columns on wide viewports. Defaults to
+        \`3\`. Fewer columns are used automatically on narrow viewports
+      `,
+    ),
+})
+
 const tabWithProviderSchema = tabBaseSchema.extend({
   provider: z
     .string()
@@ -504,6 +542,7 @@ export const tabSchema = z
     tabWithOpenAPISchema,
     tabWithChangelogSchema,
     tabWithMCPSchema,
+    tabWithImageboardSchema,
     tabWithProviderSchema,
   ])
   .describe(
@@ -512,8 +551,9 @@ export const tabSchema = z
       flat list of pages, a link-only tab, an OpenAPI spec for
       auto-generated API reference pages, a changelog generated from a
       GitHub releases page, an MCP server definition for auto-generated
-      tool and resource documentation pages, or a custom provider file
-      that generates pages from an external source
+      tool and resource documentation pages, an imageboard folder rendered
+      as a masonry image grid, or a custom provider file that generates
+      pages from an external source
     `,
   )
   .meta({ id: 'tabSchema' })

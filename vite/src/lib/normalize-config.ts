@@ -444,7 +444,7 @@ function normalizeTabsAndAnchors(
     }
 
     // Link-only tab → convert to anchor
-    if (typeof raw.href === 'string' && !raw.groups && !raw.pages && !raw.openapi && !raw.changelog && !raw.provider) {
+    if (typeof raw.href === 'string' && !raw.groups && !raw.pages && !raw.openapi && !raw.changelog && !raw.provider && !raw.imageboard) {
       const placement = raw.placement === 'sidebar' ? 'sidebar' : 'tabs'
       anchors.push({
         anchor: name,
@@ -501,6 +501,24 @@ function normalizeTabsAndAnchors(
         provider,
         ...(isStatic && { static: true as const }),
         ...(base !== undefined && { base }),
+      })
+      continue
+    }
+
+    // Imageboard tab → store the folder path so sync.ts can pick it up.
+    // The imageboard provider walks the folder and generates a single
+    // masonry-grid page; groups are filled in by the provider.
+    if (raw.imageboard) {
+      const imageboard = raw.imageboard as string
+      const base = normalizeBaseSlug(raw.base as string | undefined)
+      const columns = typeof raw.columns === 'number' ? raw.columns : undefined
+      tabs.push({
+        tab: name,
+        ...tabExtras,
+        groups: [],
+        imageboard,
+        ...(base !== undefined && { base }),
+        ...(columns !== undefined && { columns }),
       })
       continue
     }

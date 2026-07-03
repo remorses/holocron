@@ -35,6 +35,7 @@ export {
 
 export { CodeBlock } from './code-block.tsx'
 export { Image, LazyVideo, ChartPlaceholder } from './image.tsx'
+export { ImageboardGrid, ImageboardVideo } from './imageboard.tsx'
 export {
   Table,
   TableHeader,

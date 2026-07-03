@@ -1,0 +1,17 @@
+{
+  "name": "Imageboard Fixture",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "pages": ["index"]
+      },
+      {
+        "tab": "Moodboard",
+        "imageboard": "./public/board",
+        "base": "moodboard",
+        "columns": 2
+      }
+    ]
+  }
+}

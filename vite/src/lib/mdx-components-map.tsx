@@ -77,6 +77,8 @@ import {
   Logo,
   Marquee,
   VideoBackgroundShader,
+  ImageboardGrid,
+  ImageboardVideo,
 } from '../components/markdown/index.tsx'
 import { slug } from 'github-slugger'
 import { extractText } from './toc-tree.ts'
@@ -95,6 +97,7 @@ function ImageWithProps(props: {
   height?: string | number
   placeholder?: string
   className?: string
+  loading?: 'lazy' | 'eager'
 }) {
   return (
     <Image
@@ -104,6 +107,7 @@ function ImageWithProps(props: {
       height={props.height}
       placeholder={props.placeholder}
       className={props.className || ''}
+      loading={props.loading}
     />
   )
 }
@@ -244,6 +248,8 @@ export const mdxComponents = {
   Marquee,
   Visibility,
   VideoBackgroundShader,
+  ImageboardGrid,
+  ImageboardVideo,
   // Reads currentHeadings from useHolocronData() when `headings` prop omitted.
   // No more per-page closure binding.
   TableOfContentsPanel,

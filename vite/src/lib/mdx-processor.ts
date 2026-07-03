@@ -309,7 +309,7 @@ function collectImageSrcs(root: Root): string[] {
 /** JSX element names that carry a `src` attribute pointing to local assets. */
 const JSX_ASSET_ELEMENTS = new Set([
   'Image', 'img',
-  'video', 'Video', 'LazyVideo',
+  'video', 'Video', 'LazyVideo', 'ImageboardVideo',
   'audio', 'Audio',
   'source',
 ])

@@ -40,6 +40,7 @@ export function Image({
   className = '',
   style,
   disableZoom = false,
+  loading,
 }: {
   src: string
   /**
@@ -61,6 +62,12 @@ export function Image({
    * Useful inside Marquee or other contexts where zoom is undesirable.
    */
   disableZoom?: boolean
+  /**
+   * Native browser lazy loading for the real image. Because width/height
+   * are known at build time, lazy loading causes no layout shift. Used by
+   * imageboard grids where most images start below the fold.
+   */
+  loading?: 'lazy' | 'eager'
 }) {
   const [loaded, setLoaded] = useState(false)
   const sourceWidth = readNumericAttr(width)
@@ -81,7 +88,7 @@ export function Image({
   }, [])
 
   if (!sourceWidth || !sourceHeight) {
-    return <img src={src} alt={alt} className={className} style={{ maxWidth: '100%', height: 'auto', ...style }} />
+    return <img src={src} alt={alt} loading={loading} className={className} style={{ maxWidth: '100%', height: 'auto', ...style }} />
   }
 
   const frameStyle = buildImageFrameStyle({
@@ -98,6 +105,7 @@ export function Image({
       alt={alt}
       width={imgWidth}
       height={imgHeight}
+      loading={loading}
       onLoad={() => {
         setLoaded(true)
       }}

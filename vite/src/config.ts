@@ -74,6 +74,12 @@ export type ConfigNavTab = NavTabBase & {
    *  tool/resource pages are auto-generated from the MCP definition. Set by
    *  normalize when the raw tab has `mcp`. */
   mcp?: string
+  /** Path to a folder of images/videos (resolved relative to project root)
+   *  rendered as a masonry grid page, sorted by last edit time. Set by
+   *  normalize when the raw tab has `imageboard`. */
+  imageboard?: string
+  /** Maximum masonry column count for imageboard tabs. Defaults to 3. */
+  columns?: number
   /** Path to a custom provider file (resolved relative to project root).
    *  The file default-exports a CustomTabProvider. */
   provider?: string

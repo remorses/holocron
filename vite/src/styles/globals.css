@@ -490,6 +490,22 @@
   height: 100%;
 }
 
+/* Imageboard masonry grid — pure CSS multi-columns. `column-count` is set
+   inline from the tab config (max columns); the `column-width` floor lets
+   the browser drop columns automatically on narrow viewports. CSS columns
+   have no row-gap concept, so vertical rhythm between items uses
+   margin-bottom on children (the one place the gap-over-margin rule can't
+   apply). Children carry fixed aspect ratios, so lazy loading causes no
+   layout shift. */
+.holocron-imageboard {
+  column-width: 220px;
+  column-gap: var(--prose-gap);
+}
+.holocron-imageboard > * {
+  break-inside: avoid;
+  margin-bottom: var(--prose-gap);
+}
+
 /* Hide the rmiz unzoom button — the dialog already handles Escape and a
    click anywhere on the modal/image to close. The library renders this
    button into the portalled <dialog> (outside .holocron-pixelated-image),

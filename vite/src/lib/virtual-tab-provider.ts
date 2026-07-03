@@ -69,6 +69,9 @@ export type VirtualTabProvider = {
     tab: ConfigNavTab
     projectRoot: string
     pagesDir: string
+    /** Absolute path to the public/ dir. Files inside it are served
+     *  at their root-relative path without copying. */
+    publicDir: string
   }): Promise<VirtualTabResult>
 }
 
@@ -85,12 +88,14 @@ export async function processVirtualTabs({
   config,
   projectRoot,
   pagesDir,
+  publicDir,
   mdxContent,
   providers,
 }: {
   config: { navigation: { tabs: ConfigNavTab[] } }
   projectRoot: string
   pagesDir: string
+  publicDir: string
   mdxContent: Record<string, string>
   providers: VirtualTabProvider[]
 }): Promise<{ watchPaths: string[] }> {
@@ -141,7 +146,7 @@ export async function processVirtualTabs({
   // parsing) all overlap instead of running sequentially.
   const results = await Promise.all(
     claimedTabs.map(async ({ tab, provider }) => {
-      const result = await provider.generate({ tab, projectRoot, pagesDir })
+      const result = await provider.generate({ tab, projectRoot, pagesDir, publicDir })
       return { tab, provider, result }
     }),
   )

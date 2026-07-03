@@ -52,6 +52,7 @@ export type CustomTabProvider = {
     tab: ConfigNavTab
     projectRoot?: string
     pagesDir?: string
+    publicDir?: string
   }): Promise<VirtualTabResult>
 }
 

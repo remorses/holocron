@@ -34,6 +34,7 @@ import { virtualPageDir } from './virtual-page-mdx.ts'
 import { openapiProvider } from './openapi/provider.ts'
 import { changelogProvider } from './changelog/provider.ts'
 import { mcpProvider } from './mcp/provider.ts'
+import { imageboardProvider } from './imageboard/provider.ts'
 import type { CustomTabProvider } from './runtime-provider.ts'
 import { colors, formatHolocronError, formatHolocronWarning, logger, logMdxError, HolocronMdxParseError } from './logger.ts'
 import { redirectSourceMatches } from './redirects.ts'
@@ -259,6 +260,23 @@ export async function syncNavigation({
       // multi-example aside). The render layer parses this with mdxParse, not
       // normalizeMdx, so the rewrite must happen here.
       mdxContent[slug] = processed.normalizedContent
+      // Virtual pages can reference local images too (e.g. imageboard tabs
+      // emit one <Image> per file). Run the same dimension/placeholder
+      // injection as real pages; providers without images skip this (empty
+      // imageSrcs).
+      if (processed.imageSrcs.length > 0) {
+        const resolvedImages = await resolveAndProcessImages({
+          imageSrcs: processed.imageSrcs,
+          mdxDir: virtualMdxDir,
+          publicDir,
+          projectRoot,
+          imageCache,
+          imageOutputDir,
+        })
+        if (resolvedImages.size > 0) {
+          mdxContent[slug] = rewriteMdxImages(processed.mdast, resolvedImages)
+        }
+      }
       pageIconRefs[slug] = processed.iconRefs
       if (processed.internalLinks.length > 0) pageInternalLinks[slug] = processed.internalLinks
       if (processed.assetRefs.length > 0) pageAssetRefs[slug] = processed.assetRefs
@@ -489,20 +507,21 @@ export async function syncNavigation({
   const staticCustomProviders: VirtualTabProvider[] = customProviders.map(({ tab, provider }) => ({
     name: provider.name,
     claims: (t: ConfigNavTab) => t === tab,
-    generate: (ctx: { tab: ConfigNavTab; projectRoot: string; pagesDir: string }) => provider.generate(ctx),
+    generate: (ctx: { tab: ConfigNavTab; projectRoot: string; pagesDir: string; publicDir: string }) => provider.generate(ctx),
   }))
 
   // 2b-iii. Process build-time virtual tabs (OpenAPI, etc.) — populate groups + inject virtual MDX pages.
   // In dev mode with deferProviders, skip this step so the sync returns fast.
   // The caller runs processDeferredProviders() in the background to fill in
   // provider pages and trigger HMR when ready.
-  const providers = [openapiProvider, changelogProvider, mcpProvider, ...staticCustomProviders]
+  const providers = [openapiProvider, changelogProvider, mcpProvider, imageboardProvider, ...staticCustomProviders]
   let providerWatchPaths: string[] = []
   if (!deferProviders) {
     const result = await processVirtualTabs({
       config,
       projectRoot,
       pagesDir,
+      publicDir,
       mdxContent,
       providers,
     })
@@ -757,8 +776,9 @@ export async function processDeferredProviders({
     config: clonedConfig,
     projectRoot,
     pagesDir,
+    publicDir,
     mdxContent: syncResult.mdxContent,
-    providers: [openapiProvider, changelogProvider, mcpProvider],
+    providers: [openapiProvider, changelogProvider, mcpProvider, imageboardProvider],
   })
 
   if (signal?.aborted) return { watchPaths: [] }
@@ -850,9 +870,11 @@ export async function processDeferredProviders({
       newImageDepPaths.push(...inlineResult.imageDepPaths)
     }
 
-    // Process images for real MDX pages (virtual pages rarely have local images)
+    // Process images for real AND virtual pages — virtual pages can be
+    // image-heavy (imageboard tabs emit one <Image> per file). mdxDir is
+    // the real file's dir or the virtual page dir respectively.
     let finalMdx = processed.normalizedContent
-    if (isRealFile && processed.imageSrcs.length > 0) {
+    if (processed.imageSrcs.length > 0) {
       const resolvedImages = await resolveAndProcessImages({
         imageSrcs: processed.imageSrcs,
         mdxDir,

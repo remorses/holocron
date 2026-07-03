@@ -77,6 +77,7 @@ describe('openapi provider — selective mode', () => {
       config,
       projectRoot: dir,
       pagesDir: dir,
+      publicDir: path.join(dir, 'public'),
       mdxContent,
       providers: [openapiProvider],
     })
@@ -114,6 +115,7 @@ describe('openapi provider — selective mode', () => {
       config,
       projectRoot: dir,
       pagesDir: dir,
+      publicDir: path.join(dir, 'public'),
       mdxContent,
       providers: [openapiProvider],
     })
@@ -169,6 +171,7 @@ paths:
         config,
         projectRoot: exDir,
         pagesDir: exDir,
+        publicDir: path.join(exDir, 'public'),
         mdxContent,
         providers: [openapiProvider],
       })
@@ -227,6 +230,7 @@ paths:
         config,
         projectRoot: exDir,
         pagesDir: exDir,
+        publicDir: path.join(exDir, 'public'),
         mdxContent,
         providers: [openapiProvider],
       })
@@ -286,6 +290,7 @@ paths:
         config,
         projectRoot: exDir,
         pagesDir: exDir,
+        publicDir: path.join(exDir, 'public'),
         mdxContent,
         providers: [openapiProvider],
       })
@@ -342,6 +347,7 @@ paths:
         config,
         projectRoot: exDir,
         pagesDir: exDir,
+        publicDir: path.join(exDir, 'public'),
         mdxContent,
         providers: [openapiProvider],
       })
@@ -381,6 +387,7 @@ paths:
         config,
         projectRoot: dir,
         pagesDir: dir,
+        publicDir: path.join(dir, 'public'),
         mdxContent,
         providers: [openapiProvider],
       })
