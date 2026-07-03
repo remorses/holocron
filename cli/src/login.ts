@@ -1,10 +1,11 @@
 // Login command — authenticates with holocron.so via BetterAuth device flow.
-// Uses goke's background daemon for the polling phase so agents get immediate
-// control back, and interactive users see real-time logs via attach mode.
+// Interactive users get the clack spinner UX via loginWithDeviceFlow().
+// Agents use a background daemon so they get immediate control back.
 
 import { goke, isAgent, openInBrowser } from 'goke'
 import { stringify } from 'yaml'
 import { getBaseUrl, setServerAuth, clearServerAuth, getSessionToken, normalizeUrl, loginHint } from './config.ts'
+import { loginWithDeviceFlow } from './device-flow.ts'
 import { getApiClient } from './api-client.ts'
 import { logger, colors } from './logger.ts'
 
@@ -20,7 +21,6 @@ loginCli
 
     if (ctx.daemon.isDaemon) {
       // ── DAEMON: poll until user approves in browser ──
-      // Logs are visible to the parent when started with attach: true.
       const deviceCode = proc.env.HOLOCRON_DEVICE_CODE
       if (!deviceCode) {
         output.error(logger.error('Missing HOLOCRON_DEVICE_CODE for login daemon'))
@@ -44,11 +44,10 @@ loginCli
           }),
         })
 
-        const pollBody = await pollRes.json() as { access_token?: string; error?: string; error_description?: string }
+        const pollBody = await pollRes.json() as { access_token?: string; error?: string }
 
         if (pollRes.ok && pollBody.access_token) {
           setServerAuth(baseUrl, pollBody.access_token)
-          output.log(logger.success(`Logged in to ${colors.bold(baseUrl)}`))
           return
         }
 
@@ -69,57 +68,60 @@ loginCli
       return
     }
 
-    // ── FOREGROUND CLIENT ──
-    output.log(logger.step('Requesting device code...'))
-    const deviceRes = await fetch(new URL('/api/auth/device/code', baseUrl), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_id: CLI_CLIENT_ID }),
-    })
-
-    if (!deviceRes.ok) {
-      const text = await deviceRes.text()
-      output.error(logger.error(`Failed to request device code: ${deviceRes.status} ${text}`))
-      proc.exit(1)
-      return
-    }
-
-    const deviceData = await deviceRes.json() as {
-      device_code: string
-      user_code: string
-      verification_uri: string
-      verification_uri_complete: string
-      expires_in: number
-      interval: number
-    }
-
-    const verificationUrl =
-      deviceData.verification_uri_complete ||
-      `${baseUrl}${deviceData.verification_uri}?user_code=${deviceData.user_code}`
-
-    output.log(logger.step(`Your code: ${colors.bold(deviceData.user_code)}`))
-    output.log(logger.step(`Open: ${verificationUrl}`))
-    await openInBrowser(verificationUrl)
-
-    const expiresIn = deviceData.expires_in || 300
-    const daemonEnv = {
-      HOLOCRON_DEVICE_CODE: deviceData.device_code,
-      HOLOCRON_POLL_INTERVAL: String(deviceData.interval || 5),
-      HOLOCRON_DEVICE_EXPIRES_IN: String(expiresIn),
-    }
-    const timeoutMs = expiresIn * 1000
+    // ── FOREGROUND: agent vs interactive ──
 
     if (isAgent) {
-      // Agent: start daemon detached, return immediately
-      await ctx.daemon.start({ timeoutMs, env: daemonEnv })
+      // Request device code, start daemon, return immediately.
+      output.log(logger.step('Requesting device code...'))
+      const deviceRes = await fetch(new URL('/api/auth/device/code', baseUrl), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_id: CLI_CLIENT_ID }),
+      })
+      if (!deviceRes.ok) {
+        const text = await deviceRes.text()
+        output.error(logger.error(`Failed to request device code: ${deviceRes.status} ${text}`))
+        proc.exit(1)
+        return
+      }
+      const deviceData = await deviceRes.json() as {
+        device_code: string
+        user_code: string
+        verification_uri: string
+        verification_uri_complete: string
+        expires_in: number
+        interval: number
+      }
+      const verificationUrl =
+        deviceData.verification_uri_complete ||
+        `${baseUrl}${deviceData.verification_uri}?user_code=${deviceData.user_code}`
+
+      output.log(logger.step(`Your code: ${deviceData.user_code}`))
+      output.log(logger.step(`Open: ${verificationUrl}`))
+      await openInBrowser(verificationUrl)
+
+      const expiresIn = deviceData.expires_in || 300
+      await ctx.daemon.start({
+        timeoutMs: expiresIn * 1000,
+        env: {
+          HOLOCRON_DEVICE_CODE: deviceData.device_code,
+          HOLOCRON_POLL_INTERVAL: String(deviceData.interval || 5),
+          HOLOCRON_DEVICE_EXPIRES_IN: String(expiresIn),
+        },
+      })
       output.log(logger.step('Login running in background.'))
       output.log(logger.step('After approving in browser, verify with: holocron whoami'))
       return
     }
 
-    // Interactive: attach to daemon, see real-time logs and errors
-    output.log(logger.step('Waiting for approval...'))
-    await ctx.daemon.start({ attach: true, timeoutMs, env: daemonEnv })
+    // Interactive: use the clack-based device flow directly (nice spinner UX)
+    const result = await loginWithDeviceFlow({
+      baseUrl,
+      exit: (code) => proc.exit(code),
+    })
+
+    setServerAuth(baseUrl, result.accessToken)
+    output.log(logger.success(`Logged in to ${colors.bold(baseUrl)}`))
   })
 
 loginCli
