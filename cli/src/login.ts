@@ -1,37 +1,125 @@
 // Login command — authenticates with holocron.so via BetterAuth device flow.
-// Opens the browser for the user to approve, polls until approved, saves the token.
-// Requires a TTY terminal — fails fast in non-interactive environments.
+// Uses goke's background daemon for the polling phase so agents get immediate
+// control back, and interactive users see real-time logs via attach mode.
 
-import { goke } from 'goke'
-import * as clack from '@clack/prompts'
+import { goke, isAgent, openInBrowser } from 'goke'
 import { stringify } from 'yaml'
 import { getBaseUrl, setServerAuth, clearServerAuth, getSessionToken, normalizeUrl, loginHint } from './config.ts'
-import { loginWithDeviceFlow } from './device-flow.ts'
 import { getApiClient } from './api-client.ts'
 import { logger, colors } from './logger.ts'
+
+const CLI_CLIENT_ID = 'holocron-cli'
 
 export const loginCli = goke()
 
 loginCli
   .command('login', 'Authenticate with Holocron via browser login')
-  .action(async (_options, { console: output, process: proc }) => {
-    if (!process.stdin.isTTY) {
-      output.error(logger.error('Login requires an interactive terminal (device flow opens a browser)'))
-      output.error(logger.error('Run `holocron login` in a TTY terminal, e.g. via tmux'))
-      return proc.exit(1)
+  .action(async (_options, ctx) => {
+    const { console: output, process: proc } = ctx
+    const baseUrl = getBaseUrl()
+
+    if (ctx.daemon.isDaemon) {
+      // ── DAEMON: poll until user approves in browser ──
+      // Logs are visible to the parent when started with attach: true.
+      const deviceCode = proc.env.HOLOCRON_DEVICE_CODE
+      if (!deviceCode) {
+        output.error(logger.error('Missing HOLOCRON_DEVICE_CODE for login daemon'))
+        proc.exit(1)
+        return
+      }
+      const pollInterval = Number(proc.env.HOLOCRON_POLL_INTERVAL || 5) * 1000
+      const expiresIn = Number(proc.env.HOLOCRON_DEVICE_EXPIRES_IN || 300)
+      const deadline = Date.now() + expiresIn * 1000
+
+      while (Date.now() < deadline) {
+        await new Promise((r) => { setTimeout(r, pollInterval) })
+
+        const pollRes = await fetch(new URL('/api/auth/device/token', baseUrl), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
+            device_code: deviceCode,
+            client_id: CLI_CLIENT_ID,
+          }),
+        })
+
+        const pollBody = await pollRes.json() as { access_token?: string; error?: string; error_description?: string }
+
+        if (pollRes.ok && pollBody.access_token) {
+          setServerAuth(baseUrl, pollBody.access_token)
+          output.log(logger.success(`Logged in to ${colors.bold(baseUrl)}`))
+          return
+        }
+
+        if (pollBody.error === 'expired_token') {
+          output.error(logger.error('Device code expired.'))
+          proc.exit(1)
+          return
+        }
+        if (pollBody.error === 'access_denied') {
+          output.error(logger.error('Login was denied.'))
+          proc.exit(1)
+          return
+        }
+        // authorization_pending or slow_down — keep polling
+      }
+      output.error(logger.error('Login timed out.'))
+      proc.exit(1)
+      return
     }
 
-    const baseUrl = getBaseUrl()
-    clack.intro('Holocron — Login')
-
-    const result = await loginWithDeviceFlow({
-      baseUrl,
-      exit: (code) => proc.exit(code),
+    // ── FOREGROUND CLIENT ──
+    output.log(logger.step('Requesting device code...'))
+    const deviceRes = await fetch(new URL('/api/auth/device/code', baseUrl), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id: CLI_CLIENT_ID }),
     })
 
-    setServerAuth(baseUrl, result.accessToken)
-    output.log(logger.success(`Logged in to ${colors.bold(baseUrl)}`))
-    clack.outro('Done')
+    if (!deviceRes.ok) {
+      const text = await deviceRes.text()
+      output.error(logger.error(`Failed to request device code: ${deviceRes.status} ${text}`))
+      proc.exit(1)
+      return
+    }
+
+    const deviceData = await deviceRes.json() as {
+      device_code: string
+      user_code: string
+      verification_uri: string
+      verification_uri_complete: string
+      expires_in: number
+      interval: number
+    }
+
+    const verificationUrl =
+      deviceData.verification_uri_complete ||
+      `${baseUrl}${deviceData.verification_uri}?user_code=${deviceData.user_code}`
+
+    output.log(logger.step(`Your code: ${colors.bold(deviceData.user_code)}`))
+    output.log(logger.step(`Open: ${verificationUrl}`))
+    await openInBrowser(verificationUrl)
+
+    const expiresIn = deviceData.expires_in || 300
+    const daemonEnv = {
+      HOLOCRON_DEVICE_CODE: deviceData.device_code,
+      HOLOCRON_POLL_INTERVAL: String(deviceData.interval || 5),
+      HOLOCRON_DEVICE_EXPIRES_IN: String(expiresIn),
+    }
+    const timeoutMs = expiresIn * 1000
+
+    if (isAgent) {
+      // Agent: start daemon detached, return immediately
+      await ctx.daemon.start({ timeoutMs, env: daemonEnv })
+      output.log(logger.step('Login running in background.'))
+      output.log(logger.step('After approving in browser, verify with: holocron whoami'))
+      return
+    }
+
+    // Interactive: attach to daemon, see real-time logs and errors
+    output.log(logger.step('Waiting for approval...'))
+    await ctx.daemon.start({ attach: true, timeoutMs, env: daemonEnv })
   })
 
 loginCli
@@ -44,10 +132,17 @@ loginCli
 
 loginCli
   .command('whoami', 'Show current user, orgs, and projects')
-  .action(async (_options, { console: output, process: proc }) => {
+  .action(async (_options, ctx) => {
+    const { console: output, process: proc } = ctx
     const baseUrl = normalizeUrl(getBaseUrl())
     const sessionToken = getSessionToken(baseUrl)
     if (!sessionToken) {
+      // Check if login daemon is still running
+      const loginDaemon = ctx.daemon.forCommand('login')
+      if (await loginDaemon.isRunning()) {
+        output.error(logger.error('Login in progress. Approve in browser first.'))
+        return proc.exit(1)
+      }
       output.error(logger.error(`Not logged in. Run ${loginHint(baseUrl)} first.`))
       return proc.exit(1)
     }

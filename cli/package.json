@@ -52,7 +52,7 @@
   "dependencies": {
     "@clack/prompts": "^1.0.0",
     "fflate": "^0.8.2",
-    "goke": "^6.10.0",
+    "goke": "^6.14.0",
     "spiceflow": "1.26.0-rsc.7",
     "string-dedent": "^3.0.2",
     "yaml": "^2.8.0",
