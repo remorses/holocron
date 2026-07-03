@@ -329,7 +329,7 @@ export function EditorialPage({
           className='relative grow w-full max-w-full mx-auto px-(--mobile-padding) lg:px-0'
           style={{ maxWidth: maxWidth ? (typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth) : 'var(--grid-max-width)' }}
         >
-          <div className='flex flex-col'>
+          <div className='flex flex-col gap-(--prose-gap)'>
             {children}
           </div>
           <ContentFooter />
