@@ -1,4 +1,4 @@
-// Reusable device flow login for CLI (@holocron.so/cli create).
+// Reusable device flow login for CLI (@holocron.so/cli create, login).
 // Opens the browser for the user to approve, polls until approved,
 // returns the access token. Does NOT save config — the caller decides
 // where to store the token.
@@ -6,14 +6,45 @@
 import * as clack from '@clack/prompts'
 import { openInBrowser } from 'goke'
 
-const CLI_CLIENT_ID = 'holocron-cli'
+export const CLI_CLIENT_ID = 'holocron-cli'
 
 async function readJson<T>(response: Response): Promise<T> {
   return (await response.json()) as T
 }
 
+export interface DeviceCodeData {
+  device_code: string
+  user_code: string
+  verification_uri: string
+  verification_uri_complete: string
+  expires_in: number
+  interval: number
+}
+
 export interface DeviceFlowResult {
   accessToken: string
+}
+
+/** Request a device code from the BetterAuth device flow endpoint. */
+export async function requestDeviceCode(baseUrl: string): Promise<DeviceCodeData> {
+  const deviceRes = await fetch(new URL('/api/auth/device/code', baseUrl), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ client_id: CLI_CLIENT_ID }),
+  })
+
+  if (!deviceRes.ok) {
+    const text = await deviceRes.text()
+    throw new Error(`Failed to request device code: ${deviceRes.status} ${text}`)
+  }
+
+  return readJson<DeviceCodeData>(deviceRes)
+}
+
+/** Build the verification URL from device code data. */
+export function buildVerificationUrl(baseUrl: string, deviceData: DeviceCodeData): string {
+  return deviceData.verification_uri_complete ||
+    `${baseUrl}${deviceData.verification_uri}?user_code=${deviceData.user_code}`
 }
 
 /**
@@ -29,31 +60,16 @@ export async function loginWithDeviceFlow(options: {
   const { baseUrl, exit } = options
 
   clack.log.info('Requesting device code...')
-  const deviceRes = await fetch(new URL('/api/auth/device/code', baseUrl), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ client_id: CLI_CLIENT_ID }),
-  })
-
-  if (!deviceRes.ok) {
-    const text = await deviceRes.text()
-    clack.log.error(`Failed to request device code: ${deviceRes.status} ${text}`)
+  let deviceData: DeviceCodeData
+  try {
+    deviceData = await requestDeviceCode(baseUrl)
+  } catch (err) {
+    clack.log.error(err instanceof Error ? err.message : String(err))
     exit(1)
-    throw new Error('device code request failed')
+    throw err
   }
 
-  const deviceData: {
-    device_code: string
-    user_code: string
-    verification_uri: string
-    verification_uri_complete: string
-    expires_in: number
-    interval: number
-  } = await readJson(deviceRes)
-
-  const verificationUrl =
-    deviceData.verification_uri_complete ||
-    `${baseUrl}${deviceData.verification_uri}?user_code=${deviceData.user_code}`
+  const verificationUrl = buildVerificationUrl(baseUrl, deviceData)
 
   clack.log.info(`Your code: ${deviceData.user_code}`)
   clack.log.info('Opening browser to approve...')

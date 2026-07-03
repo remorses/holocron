@@ -5,11 +5,9 @@
 import { goke, isAgent, openInBrowser } from 'goke'
 import { stringify } from 'yaml'
 import { getBaseUrl, setServerAuth, clearServerAuth, getSessionToken, normalizeUrl, loginHint } from './config.ts'
-import { loginWithDeviceFlow } from './device-flow.ts'
+import { loginWithDeviceFlow, requestDeviceCode, buildVerificationUrl, CLI_CLIENT_ID } from './device-flow.ts'
 import { getApiClient } from './api-client.ts'
 import { logger, colors } from './logger.ts'
-
-const CLI_CLIENT_ID = 'holocron-cli'
 
 export const loginCli = goke()
 
@@ -73,28 +71,8 @@ loginCli
     if (isAgent) {
       // Request device code, start daemon, return immediately.
       output.log(logger.step('Requesting device code...'))
-      const deviceRes = await fetch(new URL('/api/auth/device/code', baseUrl), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ client_id: CLI_CLIENT_ID }),
-      })
-      if (!deviceRes.ok) {
-        const text = await deviceRes.text()
-        output.error(logger.error(`Failed to request device code: ${deviceRes.status} ${text}`))
-        proc.exit(1)
-        return
-      }
-      const deviceData = await deviceRes.json() as {
-        device_code: string
-        user_code: string
-        verification_uri: string
-        verification_uri_complete: string
-        expires_in: number
-        interval: number
-      }
-      const verificationUrl =
-        deviceData.verification_uri_complete ||
-        `${baseUrl}${deviceData.verification_uri}?user_code=${deviceData.user_code}`
+      const deviceData = await requestDeviceCode(baseUrl)
+      const verificationUrl = buildVerificationUrl(baseUrl, deviceData)
 
       output.log(logger.step(`Your code: ${deviceData.user_code}`))
       output.log(logger.step(`Open: ${verificationUrl}`))
