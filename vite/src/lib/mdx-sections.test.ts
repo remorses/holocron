@@ -25,7 +25,7 @@ Body
       Intro
 
       --- SECTION 1 ---
-      asideRowSpan: 2
+      asideRowSpan: 1
 
       [CONTENT]
       ## Section
@@ -55,7 +55,7 @@ Body
       Intro
 
       --- SECTION 1 ---
-      asideRowSpan: 2
+      asideRowSpan: 1
 
       [CONTENT]
       <Heading level="2">
@@ -87,7 +87,7 @@ Body
       Intro
 
       --- SECTION 1 ---
-      asideRowSpan: 2
+      asideRowSpan: 1
 
       [CONTENT]
       <h2>
@@ -119,7 +119,7 @@ Body
       Intro
 
       --- SECTION 1 ---
-      asideRowSpan: 2
+      asideRowSpan: 1
 
       [CONTENT]
       ## Section
@@ -508,32 +508,29 @@ Billing runs on Stripe.
       [CONTENT]
       # Pricing
 
-      --- SECTION 1 ---
-
-      [CONTENT]
       Holocron is free to start.
 
-      --- SECTION 2 ---
+      --- SECTION 1 ---
 
       [CONTENT]
       ## Plans
 
       Plans table.
 
-      --- SECTION 3 ---
+      --- SECTION 2 ---
 
       [CONTENT]
       ## What Pro unlocks
 
-      --- SECTION 4 ---
+      --- SECTION 3 ---
 
       [CONTENT]
       ### Preview deployments
 
       Every branch gets a preview URL.
 
-      --- SECTION 5 ---
-      asideRowSpan: 5
+      --- SECTION 4 ---
+      asideRowSpan: 4
 
       [CONTENT]
       ## Subscribe

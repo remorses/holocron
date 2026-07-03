@@ -158,10 +158,9 @@ export function buildSections(root: Root, { enableAssistant = true }: { enableAs
         attributes: [{ type: 'mdxJsxAttribute', name: 'full', value: null }],
         children: [...injectedNodes],
       }
-      // Insert after the leading heading (if any) so it lands in the first
-      // section's body, not before the heading.
-      const insertAt = children[0] && isHeadingNode(children[0]) ? 1 : 0
-      children.splice(insertAt, 0, syntheticAside)
+      // Insert at the end of the first section (after h1 + intro body) so
+      // the "before" range keeps heading + intro together in one section.
+      children.splice(firstSectionEnd, 0, syntheticAside)
     }
   }
 
