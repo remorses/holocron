@@ -44,6 +44,7 @@ When the user asks about a specific workflow, fetch the matching page directly:
 - **Holocron deploy**: https://holocron.so/docs/deploy/holocron.md
 - **AI assistant docs**: https://holocron.so/docs/ai/assistant.md
 - **Bleed**: https://holocron.so/docs/customize/bleed.md
+- **Layout and page modes**: https://holocron.so/docs/customize/layout.md
 
 ```bash
 curl -fsSL https://holocron.so/docs/quickstart.md
@@ -357,6 +358,22 @@ Sidebar: `Home`
 - **Every `title` MUST be unique across the site.**
 - **`index.mdx` MUST use `sidebarTitle: Home`** (or `Overview`) and a descriptive `title`.
 
+## Page modes — hiding sidebars
+
+Set **`mode`** in frontmatter to hide sidebars. Use for landing pages, tool pages, or pages that should not show left nav or AI chat. See https://holocron.so/docs/customize/layout.md for details.
+
+- **`center`** — hides the left nav, centers content. Right aside still works.
+- **`custom`** — hides both sidebars and the editorial grid. Only navbar, tab bar, and footer remain. See `example/src/landing.mdx` for a full example.
+
+In both modes the content can feel too wide. Use **`maxWidth`** to constrain it:
+
+```yaml
+---
+mode: "custom"
+maxWidth: 700
+---
+```
+
 ## Custom entry (mounting docs inside a Spiceflow app)
 
 When the site mounts Holocron inside an existing **Spiceflow** app (the `entry`
@@ -401,6 +418,23 @@ the **`knownPaths`** field in `docs.json` to tell Holocron these paths are valid
 
 Wildcards only work as a trailing `/*` suffix. Glob patterns like `/api/*/users`
 are not supported.
+
+## Vertical spacing inside wrappers
+
+When wrapping MDX content in a `<div>` or custom component, add
+`flex flex-col gap-(--prose-gap)` so children get correct vertical spacing.
+Without it, elements collapse together. Add `no-bleed` too if the wrapper
+contains images or code blocks that shouldn't escape its bounds.
+
+```mdx
+<div className='no-bleed flex flex-col gap-(--prose-gap)'>
+
+First paragraph.
+
+Second paragraph with correct spacing above.
+
+</div>
+```
 
 ## MDX container components
 
