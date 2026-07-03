@@ -87,6 +87,14 @@
             "icon": "book-open",
             "provider": "./providers/mock-guides.ts",
             "base": "guides"
+          },
+          {
+            "tab": "Moodboard",
+            "icon": "images",
+            "iconColor": "purple",
+            "imageboard": "./public/images",
+            "base": "moodboard",
+            "columns": 3
           }
         ]
       },
