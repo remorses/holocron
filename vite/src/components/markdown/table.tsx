@@ -27,7 +27,7 @@ export function TableHeader({ className, ...props }: ComponentProps<'thead'>) {
 }
 
 export function TableBody({ className, ...props }: ComponentProps<'tbody'>) {
-  return <tbody data-slot='table-body' className={cn(className)} {...props} />
+  return <tbody data-slot='table-body' className={cn('[&_tr]:last:border-b-0', className)} {...props} />
 }
 
 export function TableFooter({ className, ...props }: ComponentProps<'tfoot'>) {
