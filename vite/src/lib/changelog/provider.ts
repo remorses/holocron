@@ -57,7 +57,7 @@ export const changelogProvider: VirtualTabProvider = {
     const slug = tab.base ?? 'changelog'
     const title = tab.tab || 'Changelog'
 
-    const releases = await fetchGitHubReleases({
+    const result = await fetchGitHubReleases({
       owner: source.owner,
       repo: source.repo,
       baseUrl: process.env.HOLOCRON_CHANGELOG_API_URL,
@@ -88,7 +88,8 @@ export const changelogProvider: VirtualTabProvider = {
     const mdx = buildChangelogMdx({
       title,
       releasesUrl: source.releasesUrl,
-      releases,
+      releases: result.releases,
+      errorHint: result.hint,
       initialContentImportPath,
     })
 
@@ -102,11 +103,14 @@ function buildChangelogMdx({
   title,
   releasesUrl,
   releases,
+  errorHint,
   initialContentImportPath,
 }: {
   title: string
   releasesUrl: string
   releases: GitHubRelease[] | null
+  /** User-facing diagnostic hint when releases could not be loaded. */
+  errorHint?: string | null
   /** Relative path to the initialContent .mdx file (e.g. './changelog-intro.mdx').
    *  When set, the virtual MDX emits a default import and renders <_ChangelogIntro />
    *  above the release entries. The inline import pipeline handles the rest. */
@@ -132,12 +136,16 @@ function buildChangelogMdx({
   }
 
   if (releases === null) {
+    const detail = errorHint
+      ? escapeMdxMarkdown(errorHint)
+      : 'This is usually a transient network or rate-limit issue. The changelog will appear once the releases can be fetched again.'
     bodyParts.push(
       [
         '<Warning>',
         '',
-        `Could not load releases from [GitHub](${releasesUrl}). This is usually a transient`,
-        'network or rate-limit issue. The changelog will appear once the releases can be fetched again.',
+        `Could not load releases from [GitHub](${releasesUrl}).`,
+        '',
+        detail,
         '',
         '</Warning>',
       ].join('\n'),

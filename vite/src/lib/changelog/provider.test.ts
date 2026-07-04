@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from 'vitest'
 import type { ConfigNavTab } from '../../config.ts'
 import { processMdx } from '../mdx-processor.ts'
 import { changelogProvider } from './provider.ts'
@@ -31,6 +31,10 @@ function stubReleases(releases: RawRelease[]): void {
 const ctx = { projectRoot: '/tmp', pagesDir: '/tmp', publicDir: '/tmp/public' }
 
 describe('changelogProvider', () => {
+  // Skip the gh CLI subprocess — provider tests exercise the HTTP path via mocked fetch.
+  beforeAll(() => { process.env.HOLOCRON_SKIP_GH_CLI = '1' })
+  afterAll(() => { delete process.env.HOLOCRON_SKIP_GH_CLI })
+
   afterEach(() => {
     vi.restoreAllMocks()
   })
@@ -147,6 +151,21 @@ describe('changelogProvider', () => {
     const result = await changelogProvider.generate({ tab, ...ctx })
     expect(result.mdxContent.changelog).toContain('<Warning>')
     expect(result.mdxContent.changelog).toContain('mode: "center"')
+    expect(result.mdxContent.changelog).toContain('Could not load releases')
+  })
+
+  test('renders a 404 hint suggesting gh auth login for private repos', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('Not Found', { status: 404, statusText: 'Not Found' }))
+    const tab: ConfigNavTab = {
+      tab: 'Changelog',
+      groups: [],
+      changelog: 'https://github.com/acme/private-repo',
+    }
+    const result = await changelogProvider.generate({ tab, ...ctx })
+    const mdx = result.mdxContent.changelog!
+    expect(mdx).toContain('<Warning>')
+    expect(mdx).toContain('gh auth login')
+    expect(mdx).toContain('GITHUB_TOKEN')
   })
 
   test('release tags/names/bodies with MDX-breaking chars still produce parseable MDX', async () => {
