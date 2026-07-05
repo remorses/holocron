@@ -53,7 +53,12 @@ interface QuadBuffers {
 }
 
 function compileShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader {
-  const shader = gl.createShader(type)!
+  // createShader returns null when the context is lost or the GPU is unavailable
+  // (common on older iOS under memory pressure / low power mode). Passing null to
+  // shaderSource throws Safari's "must be an instance of WebGLShader" TypeError,
+  // so fail with a controlled error the component can catch instead.
+  const shader = gl.createShader(type)
+  if (!shader) throw new Error('WebGL unavailable: createShader returned null (context lost?)')
   gl.shaderSource(shader, source)
   gl.compileShader(shader)
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
@@ -67,7 +72,8 @@ function compileShader(gl: WebGLRenderingContext, type: number, source: string):
 function createGpuProgram(gl: WebGLRenderingContext, vertSrc: string, fragSrc: string): GpuProgram {
   const vs = compileShader(gl, gl.VERTEX_SHADER, vertSrc)
   const fs = compileShader(gl, gl.FRAGMENT_SHADER, fragSrc)
-  const program = gl.createProgram()!
+  const program = gl.createProgram()
+  if (!program) throw new Error('WebGL unavailable: createProgram returned null (context lost?)')
   gl.attachShader(program, vs)
   gl.attachShader(program, fs)
   // Fixed attribute locations so quad binding is program-independent
@@ -661,14 +667,41 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
   // premultipliedAlpha: true (default) because iOS Safari's compositor ignores the
   // premultipliedAlpha flag and always composites as premultiplied. The display
   // shader pre-multiplies RGB by alpha so compositing is correct on all browsers.
-  const gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: true })!
+  const glContext = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: true })
+  if (!glContext || glContext.isContextLost()) {
+    canvas.remove()
+    throw new Error('WebGL unavailable: could not create a webgl context')
+  }
+  const gl = glContext
 
   // Enable float texture extensions for fluid sim FBOs
   const halfFloatExt = gl.getExtension('OES_texture_half_float')
   gl.getExtension('OES_texture_float')
   gl.getExtension('EXT_color_buffer_half_float')
   gl.getExtension('WEBGL_color_buffer_float')
-  const texType = halfFloatExt ? halfFloatExt.HALF_FLOAT_OES : gl.FLOAT
+
+  // Pick the best texture type the device can actually RENDER to. Having the
+  // texture extension does not guarantee framebuffer completeness (older iOS
+  // exposes OES_texture_float but cannot render to float textures). Probe each
+  // candidate with a 4x4 FBO and fall back to UNSIGNED_BYTE as a last resort —
+  // the fluid sim degrades slightly but nothing crashes.
+  function pickRenderableTexType(): number {
+    const candidates = [
+      ...(halfFloatExt ? [halfFloatExt.HALF_FLOAT_OES] : []),
+      gl.FLOAT,
+      gl.UNSIGNED_BYTE,
+    ]
+    for (const candidate of candidates) {
+      const probe = createFBO(gl, 4, 4, candidate)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, probe.framebuffer)
+      const complete = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+      disposeFBO(gl, probe)
+      if (complete) return candidate
+    }
+    return gl.UNSIGNED_BYTE
+  }
+  const texType = pickRenderableTexType()
 
   // Sim resolution (half size for performance)
   const simW = Math.floor(width / 2)
@@ -886,25 +919,42 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
 
   function animate() {
     animId = requestAnimationFrame(animate)
+    // iOS Safari loses WebGL contexts under memory pressure / backgrounding.
+    // A lost context makes most GL calls no-ops but per-frame texImage2D from
+    // a video can still throw — stop drawing instead of throwing every frame.
+    if (gl.isContextLost()) return
     const now = performance.now()
     const dt = Math.min((now - lastTime) / 1000, 0.033)
     lastTime = now
 
-    if (video.readyState >= video.HAVE_CURRENT_DATA) {
-      gl.bindTexture(gl.TEXTURE_2D, videoTex)
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video)
+    try {
+      if (video.readyState >= video.HAVE_CURRENT_DATA) {
+        gl.bindTexture(gl.TEXTURE_2D, videoTex)
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video)
+      }
+
+      stepFluid(dt)
+
+      gl.useProgram(displayP.program)
+      gl.uniform1f(displayP.loc('time'), (now - startTime) / 1000)
+      setTexture(gl, displayP, 'uDye', dye.read.texture, 0)
+      setTexture(gl, displayP, 'uVideo', videoTex, 1)
+      setTexture(gl, displayP, 'uMask', maskTex, 2)
+      setTexture(gl, displayP, 'uCharAtlas', charAtlas.texture, 3)
+      drawPass(gl, null)
+    } catch (error) {
+      // Never let a runtime WebGL failure become an uncaught error storm —
+      // stop the loop and leave the page content intact.
+      cancelAnimationFrame(animId)
+      console.warn('VideoBackgroundShader: render loop stopped', error)
     }
-
-    stepFluid(dt)
-
-    gl.useProgram(displayP.program)
-    gl.uniform1f(displayP.loc('time'), (now - startTime) / 1000)
-    setTexture(gl, displayP, 'uDye', dye.read.texture, 0)
-    setTexture(gl, displayP, 'uVideo', videoTex, 1)
-    setTexture(gl, displayP, 'uMask', maskTex, 2)
-    setTexture(gl, displayP, 'uCharAtlas', charAtlas.texture, 3)
-    drawPass(gl, null)
   }
+
+  function onContextLost(e: Event) {
+    e.preventDefault()
+    cancelAnimationFrame(animId)
+  }
+  canvas.addEventListener('webglcontextlost', onContextLost)
 
   animate()
 
@@ -931,6 +981,7 @@ function createVideoShaderEngine(container: HTMLElement, config: Required<Omit<V
   function cleanup() {
     disposed = true
     cancelAnimationFrame(animId)
+    canvas.removeEventListener('webglcontextlost', onContextLost)
     container.removeEventListener('mousemove', onMouseMove)
     if (tryPlay) document.removeEventListener('click', tryPlay)
     resizeObserver.disconnect()
@@ -1022,19 +1073,37 @@ export function VideoBackgroundShader({
     // Safety timeout: show content after 3s even if video never loads
     const timeout = setTimeout(() => setCanvasReady(true), 3000)
 
-    const engine = createVideoShaderEngine(container, {
-      ...DEFAULT_CONFIG,
-      ...config,
-      src,
-      onReady() {
-        clearTimeout(timeout)
-        setCanvasReady(true)
-      },
-    })
+    // Engine creation can fail on devices where WebGL is unavailable or the
+    // context is immediately lost (older iOS, low power mode, tab limits).
+    // A throw here would unmount the whole React tree, taking the entire site
+    // down — so degrade gracefully: no shader background, content still shows.
+    let engine: ReturnType<typeof createVideoShaderEngine> | undefined
+    try {
+      engine = createVideoShaderEngine(container, {
+        ...DEFAULT_CONFIG,
+        ...config,
+        src,
+        onReady() {
+          clearTimeout(timeout)
+          setCanvasReady(true)
+        },
+      })
+    } catch (error) {
+      console.warn('VideoBackgroundShader: WebGL init failed, rendering without shader background', error)
+      // Remove any canvas the failed engine left behind (React does not manage
+      // the container's children, so manual cleanup is safe here)
+      for (const orphan of container.querySelectorAll('canvas')) orphan.remove()
+      clearTimeout(timeout)
+      setCanvasReady(true)
+    }
 
     return () => {
       clearTimeout(timeout)
-      engine.cleanup()
+      try {
+        engine?.cleanup()
+      } catch (error) {
+        console.warn('VideoBackgroundShader: cleanup failed', error)
+      }
     }
   }, [src, ...Object.values(config)])
 
