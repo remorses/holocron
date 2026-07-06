@@ -226,9 +226,7 @@ function ChatDrawerInner() {
           background: 'rgb(0 0 0 / 0.3)',
           opacity: isOpen ? 1 : 0,
           pointerEvents: isOpen ? 'auto' : 'none',
-          transition: isOpen
-            ? 'opacity 250ms ease 150ms'
-            : 'opacity 150ms ease',
+          transition: 'opacity 200ms ease',
         }}
       />
 
