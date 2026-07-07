@@ -1,0 +1,269 @@
+/**
+ * Chat session persistence integration tests.
+ *
+ * Verifies that AI chat conversations survive a full page reload:
+ * the proxy mints a chs_... session id (httpOnly cookie), the mock gateway
+ * stores ModelMessage snapshots per session (standing in for ChatSessionDO),
+ * and the restore endpoint returns the conversation server-rendered.
+ *
+ * Also tests widget-mode persistence: cross-origin embeds use localStorage
+ * + x-holocron-chat-session header instead of cookies. The header-based
+ * restore must work independently of the cookie.
+ *
+ * Uses HOLOCRON_CHAT_PROVIDER caching like chat-widget.test.ts — tests that
+ * need an actual AI reply reuse prompts already recorded in .aicache/ so
+ * runs without OPENAI_API_KEY replay deterministically.
+ */
+
+import { test, expect } from "../helpers/test.ts";
+import fs from "node:fs";
+import path from "node:path";
+
+const cacheDir = path.join(
+  import.meta.dirname,
+  "../../fixtures/chat-widget/.aicache",
+);
+
+function hasCacheOrApiKey(): boolean {
+  if (process.env.OPENAI_API_KEY) return true;
+  if (fs.existsSync(cacheDir) && fs.readdirSync(cacheDir).length > 0) return true;
+  return false;
+}
+
+/** Send a message via the sidebar input (opens the drawer + submits). */
+async function sendMessage(page: import("@playwright/test").Page, text: string) {
+  const chatInput = page.locator("textarea").first();
+  await chatInput.fill(text);
+  await chatInput.press("Enter");
+  // Drawer opens — it has the "New chat" button
+  await expect(page.locator("button[aria-label='New chat']")).toBeVisible({ timeout: 10000 });
+}
+
+/** Wait until the conversation shows at least `count` messages. */
+async function waitForMessages(page: import("@playwright/test").Page, count: number) {
+  await expect(async () => {
+    const messages = await page.locator("[data-message-id]").all();
+    expect(messages.length).toBeGreaterThanOrEqual(count);
+  }).toPass({ timeout: 60000 });
+}
+
+test("first chat message sets an httpOnly session cookie", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  // No session cookie before chatting
+  const before = await page.context().cookies();
+  expect(before.find((c) => c.name === "holocron_chat")).toBeUndefined();
+
+  // Sending a message triggers the chat POST; the proxy mints the session
+  // id and sets the cookie on the response regardless of the AI outcome.
+  await sendMessage(page, "hello cookie test");
+
+  await expect
+    .poll(async () => {
+      const cookies = await page.context().cookies();
+      return cookies.find((c) => c.name === "holocron_chat")?.value ?? "";
+    }, { timeout: 10000 })
+    .toMatch(/^chs_[A-Za-z0-9_-]{43}$/);
+
+  const cookie = (await page.context().cookies()).find((c) => c.name === "holocron_chat")!;
+  expect(cookie.httpOnly).toBe(true);
+});
+
+test("conversation persists across page reload", async ({ page }) => {
+  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  // Same prompt as chat-widget.test.ts so the .aicache replay hits.
+  await sendMessage(page, "What is this documentation about?");
+  await waitForMessages(page, 2);
+
+  const assistantTextBefore = await page
+    .locator("[data-message-id='msg-1']")
+    .textContent();
+  expect(assistantTextBefore?.length).toBeGreaterThan(0);
+
+  // Full reload — in-memory zustand stores are wiped; only the httpOnly
+  // cookie survives. Focusing the sidebar input triggers the lazy restore
+  // and reopens the drawer with the persisted conversation.
+  await page.reload();
+  await page.waitForLoadState("networkidle");
+  await page.locator("textarea").first().focus();
+
+  const newChatButton = page.locator("button[aria-label='New chat']");
+  await expect(newChatButton).toBeVisible({ timeout: 15000 });
+
+  await waitForMessages(page, 2);
+  const userMsg = page.locator("[data-message-id='msg-0']");
+  await expect(userMsg).toContainText("What is this documentation about?");
+
+  // The restored assistant message is server-rendered markdown (JSX), not
+  // a raw text dump — its content should match what streamed originally.
+  const assistantTextAfter = await page
+    .locator("[data-message-id='msg-1']")
+    .textContent();
+  expect(assistantTextAfter?.trim()).toBe(assistantTextBefore?.trim());
+}, 120000);
+
+test("submit after reload includes the restored history in the request", async ({ page }) => {
+  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  await sendMessage(page, "What is this documentation about?");
+  await waitForMessages(page, 2);
+
+  await page.reload();
+  await page.waitForLoadState("networkidle");
+
+  // Submit immediately after reload WITHOUT opening the drawer first.
+  // submitChat must await the session restore internally, so the POST body
+  // has to contain the restored history — otherwise the server-side
+  // snapshot would be overwritten with only the new turn.
+  const requestPromise = page.waitForRequest(
+    (req) => req.url().includes("/holocron-api/chat") && req.method() === "POST",
+    { timeout: 30000 },
+  );
+  const chatInput = page.locator("textarea").first();
+  await chatInput.fill("and who maintains it?");
+  await chatInput.press("Enter");
+
+  const request = await requestPromise;
+  const body = request.postDataJSON() as { modelMessages: unknown[]; message: string };
+  expect(body.message).toBe("and who maintains it?");
+  expect(body.modelMessages.length).toBeGreaterThan(0);
+
+  // The restored history must also be visible in the UI above the new turn.
+  const firstUserMsg = page.locator("[data-message-id='msg-0']");
+  await expect(firstUserMsg).toContainText("What is this documentation about?");
+}, 120000);
+
+test("new chat clears the persisted session", async ({ page }) => {
+  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  await sendMessage(page, "What is this documentation about?");
+  await waitForMessages(page, 2);
+
+  // Clearing deletes the server-side snapshot and expires the cookie.
+  const clearRequest = page.waitForRequest(
+    (req) => req.url().includes("/holocron-api/chat/session/clear"),
+    { timeout: 10000 },
+  );
+  await page.locator("button[aria-label='New chat']").click();
+  await clearRequest;
+
+  await expect
+    .poll(async () => {
+      const cookies = await page.context().cookies();
+      return cookies.find((c) => c.name === "holocron_chat")?.value ?? "";
+    }, { timeout: 10000 })
+    .toBe("");
+
+  await page.reload();
+  await page.waitForLoadState("networkidle");
+
+  // Focusing the input triggers the lazy restore GET. Wait for it to
+  // complete, then assert the drawer stayed closed — there was nothing
+  // to restore after the clear.
+  const restoreResponse = page.waitForResponse(
+    (res) => res.url().includes("/holocron-api/chat/session") && res.request().method() === "GET",
+    { timeout: 15000 },
+  );
+  await page.locator("textarea").first().focus();
+  await restoreResponse;
+  await expect(page.locator("button[aria-label='New chat']")).not.toBeVisible();
+}, 120000);
+
+// ── Widget-mode persistence (header-based, no cookies) ──────────────
+
+test("widget mode: restore works via x-holocron-chat-session header without cookies", async ({ page }) => {
+  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  await sendMessage(page, "What is this documentation about?");
+  await waitForMessages(page, 2);
+
+  // Extract the session ID from the cookie (server always sets it).
+  const sessionId = (await page.context().cookies())
+    .find((c) => c.name === "holocron_chat")?.value ?? "";
+  expect(sessionId).toMatch(/^chs_[A-Za-z0-9_-]{43}$/);
+
+  // Clear ALL cookies so the restore cannot use the cookie path.
+  // This simulates the cross-origin widget scenario where the browser
+  // does not send first-party cookies to a different origin.
+  await page.context().clearCookies();
+
+  // Make a restore request using ONLY the x-holocron-chat-session header
+  // (the same mechanism the ChatWidget client uses in widget mode).
+  // Use page.evaluate so the request originates from the browser with no cookies.
+  const restoreResult = await page.evaluate(async (sid) => {
+    const res = await fetch("/holocron-api/chat/session", {
+      headers: { "x-holocron-chat-session": sid },
+      // Explicitly omit credentials to prove cookies are not needed
+      credentials: "omit",
+    });
+    return { status: res.status, bodyLength: (await res.arrayBuffer()).byteLength };
+  }, sessionId);
+
+  expect(restoreResult.status).toBe(200);
+  // A successful restore returns a federation payload with rendered messages.
+  // An empty session returns a minimal payload (~220 bytes for the federation
+  // envelope). A real conversation with rendered markdown is much larger.
+  expect(restoreResult.bodyLength).toBeGreaterThan(500);
+}, 120000);
+
+test("widget mode: clear works via x-holocron-chat-session header without cookies", async ({ page }) => {
+  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  await sendMessage(page, "What is this documentation about?");
+  await waitForMessages(page, 2);
+
+  const sessionId = (await page.context().cookies())
+    .find((c) => c.name === "holocron_chat")?.value ?? "";
+  expect(sessionId).toMatch(/^chs_[A-Za-z0-9_-]{43}$/);
+
+  await page.context().clearCookies();
+
+  // Clear via header (widget mode path)
+  const clearResult = await page.evaluate(async (sid) => {
+    const res = await fetch("/holocron-api/chat/session/clear", {
+      method: "POST",
+      headers: { "x-holocron-chat-session": sid },
+      credentials: "omit",
+    });
+    return { status: res.status };
+  }, sessionId);
+  expect(clearResult.status).toBe(200);
+
+  // After clearing, restore should return an empty/minimal payload
+  const restoreResult = await page.evaluate(async (sid) => {
+    const res = await fetch("/holocron-api/chat/session", {
+      headers: { "x-holocron-chat-session": sid },
+      credentials: "omit",
+    });
+    return { status: res.status, bodyLength: (await res.arrayBuffer()).byteLength };
+  }, sessionId);
+
+  expect(restoreResult.status).toBe(200);
+  // After clear, the payload should be minimal (~220 bytes for the empty
+  // federation envelope — much smaller than a real conversation with
+  // rendered markdown which is typically 500+ bytes)
+  expect(restoreResult.bodyLength).toBeLessThan(300);
+}, 120000);
