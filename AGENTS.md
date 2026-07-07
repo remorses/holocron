@@ -832,62 +832,50 @@ Single-line form produces bare phrasing children (no `<P>` wrapper, no `editoria
 
 After creating a new `.mdx` file, add its slug to `docs.json` (or `docs.jsonc` / `holocron.jsonc`) navigation. Pages not in the navigation tree won't appear in the sidebar. Read the existing structure and pick the best tab, group, and position within reading order.
 
-## Flue chat agent (`flue-chat/`)
+## AI chat architecture
 
-The `flue-chat/` workspace package is a Flue agent deployed as a separate Cloudflare Worker at `holocron-chat.remorses.workers.dev`. It powers the AI chat for holocron docs sites via `@flue/sdk`.
-
-### Flue docs
-
-- Cloudflare deploy guide: https://flueframework.com/docs/ecosystem/deploy/cloudflare/
-- Agent API: https://flueframework.com/docs/api/agent-api/
-- Streaming protocol: https://flueframework.com/docs/api/streaming-protocol/
-- SDK overview: https://flueframework.com/docs/sdk/overview/
-- SDK agents: https://flueframework.com/docs/sdk/agents/
-- SDK events: https://flueframework.com/docs/sdk/events/
-- Sandboxes (just-bash): https://flueframework.com/docs/guide/sandboxes/
-- Project layout: https://flueframework.com/docs/guide/project-layout/
-- Flue source: https://github.com/withastro/flue
-
-### Reading Flue source code
-
-```bash
-bunx opensrc path withastro/flue
-# cached at: ~/.opensrc/repos/github.com/withastro/flue/main
-
-# Key source directories:
-# packages/runtime/src/   — agent runtime, DO wiring, sandbox
-# packages/sdk/src/       — HTTP client (createFlueClient, agents.invoke)
-# packages/cli/src/       — build + dev CLI
-# examples/cloudflare/    — reference cloudflare agent example
-```
-
-### Agent definition
-
-The agent lives at `.flue/agents/docs-chat.ts`. It uses `createAgent()` (not `defineAgent`) from `@flue/runtime`. The default virtual sandbox (just-bash) gives the agent grep, glob, read, and bash tools.
-
-### Build and deploy
-
-```bash
-cd flue-chat
-npx flue build --target cloudflare
-npx wrangler deploy --config dist/holocron_chat/wrangler.json
-```
-
-`flue dev --target cloudflare` starts a local dev server but requires `flue build` first because the CLI generates DO class wrappers via Vite. For local development, build then run `wrangler dev --config dist/holocron_chat/wrangler.json`.
+The AI chat runs entirely via the **Vercel AI SDK** (`ai` package) + **Cloudflare Workers AI** (Kimi K2.5). There is no separate agent service; the gateway route handles everything.
 
 ### How the chat flows
 
-1. Browser sends `{ message, visitorId, currentSlug }` to `/holocron-api/chat`
-2. `app-factory.tsx` proxy checks `site.config.assistant.url`:
-   - **Set** (custom agent): calls `generatePartsFromFlue()` which uses `@flue/sdk` `client.agents.invoke()` directly
-   - **Not set** (default): calls `generatePartsFromGateway()` which forwards to `holocron.so/api/chat`
-3. Gateway (`website/src/gateway.ts`) validates API key, checks usage, calls the Flue agent via `@flue/sdk`, maps events to `HolocronChatChunk`
-4. Flue events (`text_delta`, `message_end`, `tool_execution_start`, `tool_execution_end`) are mapped to `ChatPart` types (`text`, `tool-call`, `tool-result`)
+1. Browser sends `{ message, modelMessages, currentSlug }` to `/holocron-api/chat`
+2. `app-factory.tsx` proxy builds a system prompt with docs context (site name, current page, page index) and forwards to `holocron.so/api/chat`
+3. Gateway (`website/src/gateway.ts`) validates the optional `holo_xxx` API key, checks per-org usage via the `UsageCounter` Durable Object, fetches docs from `docs.zip`, creates the bash tool via `createChatBashTool()`, and calls `streamText()` from the `ai` package against Cloudflare Workers AI
+4. AI SDK chunks (`text-delta`, `tool-call`, `tool-result`) are streamed back as typed `HolocronChatChunk` SSE events
 5. Text parts are RSC-rendered via `safe-mdx` (`ChatRenderNodes`)
 
-### Wrangler migrations
+### Key files
 
-The Flue CLI generates DO class names from agent file names: `.flue/agents/docs-chat.ts` becomes class `DocsChat`. Keep `wrangler.jsonc` migrations in sync with the generated names. The `FlueRegistry` DO is always required.
+| Layer | File | Purpose |
+|-------|------|---------|
+| **Widget** | `vite/src/chat/chat-widget.tsx` | Top-level component + shadow DOM |
+| **Widget** | `vite/src/chat/use-chat-widget.ts` | Control hook (open/close/clear) |
+| **State** | `vite/src/chat/chat-store.ts` | Zustand: messages, UI state, abort controller |
+| **State** | `vite/src/chat/chat-widget-store.ts` | Config: API URL, current slug, portal target |
+| **Network** | `vite/src/chat/chat-submit.ts` | Fetch + RSC stream decoding |
+| **UI** | `vite/src/chat/chat-drawer.tsx` | Slide-in panel, message list, input |
+| **UI** | `vite/src/chat/chat-message.tsx` | Message/part rendering, tool previews |
+| **Integration** | `vite/src/components/holocron-chat-bridge.tsx` | Connects to holocron's app data |
+| **Rendering** | `vite/src/lib/chat-render.tsx` | mdast to JSX via editorial components |
+| **Gateway** | `website/src/gateway.ts` | Main chat route: auth, rate limit, AI SDK streaming |
+| **Tool** | `website/src/chat-bash-tool.ts` | Creates bash tool + skill filesystem |
+| **Proxy** | `vite/src/app-factory.tsx` (lines ~1515-1710) | Holocron's `/holocron-api/chat` endpoint |
+| **Persistence** | `website/src/chat-session-do.ts` | ChatSessionDO: one DO per site, one row per conversation |
+| **Restore** | `vite/src/lib/chat-restore.tsx` | Stored ModelMessages → ChatMessages with server-rendered JSX |
+
+### Bash tool
+
+The gateway creates a single `bash` tool via `createChatBashTool()`. It runs commands in an in-memory virtual filesystem containing all the site's documentation files (fetched from `docs.zip`). The model uses `grep`, `cat`, etc. to search docs and answer questions. Skills can be loaded as remote `SKILL.md` files into the filesystem.
+
+### Persistent chat sessions
+
+Conversations survive page refreshes. The vite proxy mints a session id (`chs_` + 43 base64url chars, 256-bit CSPRNG bearer token) on the first chat POST and stores it in a first-party httpOnly cookie (`holocron_chat`); cross-origin `ChatWidget` embeds get the id via a `{ type: 'session' }` stream chunk, keep it in localStorage, and send it back as the `x-holocron-chat-session` header.
+
+The gateway persists a **snapshot** of the full ModelMessage history (system prompt excluded) after each turn into `ChatSessionDO` — **one DO per docs site** (`idFromName(siteKey)`, where siteKey is `project:{projectId}` when authenticated or `host:{docsHost}` otherwise), one SQLite row per conversation. Per-site DO enables session caps (500, oldest evicted), a single daily prune alarm (30-day TTL), and structural cross-site isolation: a leaked session id can never be resolved through another site's DO.
+
+Restore is lazy: `ensureSessionRestored()` (singleton promise in `chat-submit.ts`) fires on drawer open / sidebar focus and is **awaited inside `submitChat`** — never remove that await, or a submit right after refresh would snapshot only the new turn and wipe the stored history. The restore endpoint (`GET /holocron-api/chat/session`) re-renders stored messages server-side via `modelMessagesToChatMessages()` and returns them as a federation payload, so restored messages carry the same JSX as live-streamed ones. `POST /holocron-api/chat/session/clear` deletes the conversation and expires the cookie ("New chat" rotates the session).
+
+The DO RPC methods exchange the messages as a **JSON string** (`modelMessagesJson`) — workerd RPC type mapping rejects `unknown[]` returns (non-Serializable), collapsing the stub return type to `never`.
 
 ## Changesets
 

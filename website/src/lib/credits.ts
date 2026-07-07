@@ -27,10 +27,6 @@ export function monthlyCreditBudget(hasActiveSubscription: boolean): number {
 // Selectable Workers AI models: friendly name → `@cf/` model id passed to the
 // binding. Kept next to the price table so a model and its rate live together.
 export const ALLOWED_MODELS: Record<string, string> = {
-  'gemma-4-26b': '@cf/google/gemma-4-26b-a4b-it',
-  'glm-4.7-flash': '@cf/zai-org/glm-4.7-flash',
-  'qwen3-30b': '@cf/qwen/qwen3-30b-a3b-fp8',
-  'llama-3.1-8b': '@cf/meta/llama-3.1-8b-instruct-fast',
   'kimi-k2.5': '@cf/moonshotai/kimi-k2.5',
 }
 
@@ -42,16 +38,10 @@ export const ALLOWED_MODELS: Record<string, string> = {
 // `cachedInput` is the (cheaper) cached-prompt rate where the model offers one;
 // computeUsdCost charges cached tokens at it and the rest at `input`.
 export const MODEL_USD_PER_1M_TOKENS: Record<string, { input: number; output: number; cachedInput?: number }> = {
-  'glm-4.7-flash': { input: 0.06, output: 0.4 },
-  'gemma-4-26b': { input: 0.1, output: 0.3 },
-  'qwen3-30b': { input: 0.051, output: 0.335 },
-  // CF's pricing page lists this rate under `@cf/meta/llama-3.1-8b-instruct-fp8-fast`;
-  // gateway.ts selects `...-instruct-fast`, which is the same fp8-fast model (alias).
-  'llama-3.1-8b': { input: 0.045, output: 0.384 },
   'kimi-k2.5': { input: 0.6, output: 3.0, cachedInput: 0.1 },
 }
 
-const DEFAULT_RATE = MODEL_USD_PER_1M_TOKENS['glm-4.7-flash']!
+const DEFAULT_RATE = MODEL_USD_PER_1M_TOKENS['kimi-k2.5']!
 
 /** Exact USD cost for a request from its token counts and the model's rate.
  *  `cachedInputTokens` (a subset of `inputTokens`) is billed at the model's

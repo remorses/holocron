@@ -39,22 +39,17 @@ describe('monthly budgets', () => {
 })
 
 describe('computeUsdCost — exact tokens × per-model rate', () => {
-  test('glm default model: 1M in + 1M out', () => {
-    // glm = $0.06 input + $0.40 output per 1M tokens.
-    expect(computeUsdCost('glm-4.7-flash', { inputTokens: 1_000_000, outputTokens: 1_000_000 })).toBeCloseTo(0.46, 10)
-  })
-
-  test('kimi is the priciest', () => {
-    // kimi = $0.60 input + $3.00 output per 1M.
+  test('kimi default model: 1M in + 1M out', () => {
+    // kimi = $0.60 input + $3.00 output per 1M tokens.
     expect(computeUsdCost('kimi-k2.5', { inputTokens: 1_000_000, outputTokens: 1_000_000 })).toBeCloseTo(3.6, 10)
   })
 
   test('realistic small request', () => {
-    expect(computeUsdCost('glm-4.7-flash', { inputTokens: 3000, outputTokens: 500 })).toMatchInlineSnapshot(`0.00038`)
+    expect(computeUsdCost('kimi-k2.5', { inputTokens: 3000, outputTokens: 500 })).toMatchInlineSnapshot(`0.0033`)
   })
 
-  test('unknown model falls back to glm rate', () => {
-    const known = computeUsdCost('glm-4.7-flash', { inputTokens: 1234, outputTokens: 567 })
+  test('unknown model falls back to default rate', () => {
+    const known = computeUsdCost('kimi-k2.5', { inputTokens: 1234, outputTokens: 567 })
     expect(computeUsdCost('not-a-real-model', { inputTokens: 1234, outputTokens: 567 })).toBe(known)
   })
 
@@ -65,12 +60,6 @@ describe('computeUsdCost — exact tokens × per-model rate', () => {
     // Half cached: 0.5M × $0.60 + 0.5M × $0.10 = $0.35.
     const halfCached = computeUsdCost('kimi-k2.5', { inputTokens: 1_000_000, outputTokens: 0, cachedInputTokens: 500_000 })
     expect(halfCached).toBeCloseTo(0.35, 10)
-  })
-
-  test('cached tokens clamp to input and models without a cached rate ignore them', () => {
-    // glm has no cachedInput rate → cached billed at normal input rate.
-    const glm = computeUsdCost('glm-4.7-flash', { inputTokens: 1000, outputTokens: 0, cachedInputTokens: 999999 })
-    expect(glm).toBe(computeUsdCost('glm-4.7-flash', { inputTokens: 1000, outputTokens: 0 }))
   })
 
   test('every selectable model (ALLOWED_MODELS) has a rate', () => {
