@@ -7,8 +7,10 @@
  * Reads/writes chatStore directly. Caller provides the API URL and current slug
  * via chatWidgetStore (already set before submitChat is called).
  *
- * Client tool execution: when the model calls a tool that exists in
- * chatWidgetStore.tools (client-side tools), the widget executes it locally,
+ * Client tool execution: tools come from two sources, merged at submit time:
+ *   1. document.modelContext (custom tools registered via defineTool())
+ *   2. chatWidgetStore.tools (browser automation tools from pageTools())
+ * When the model calls a client tool, the widget executes it locally,
  * appends the tool result to modelMessages, and re-POSTs to continue the
  * conversation. Max 10 re-POST iterations to prevent infinite loops.
  *
@@ -26,6 +28,7 @@ import { decodeFederationPayload } from 'spiceflow/react'
 import { chatStore, respondToApproval } from './chat-store.ts'
 import type { ChatMessage, ChatModelMessage, ChatPart } from './chat-store.ts'
 import { chatWidgetStore } from './chat-widget-store.ts'
+import { getRegisteredTools, getNativeModelContextTools } from './define-tool.ts'
 import type { ChatToolDefinition, ChatToolSchema, ToolApprovalCheck } from './define-tool.ts'
 
 const MAX_CLIENT_TOOL_ITERATIONS = 10
@@ -391,41 +394,52 @@ export async function submitChat(
   if (!submitText) return
   if (chatStore.getState().isGenerating) return
 
-  const { chatApiUrl, currentSlug, tools, context } = chatWidgetStore.getState()
-  if (!chatApiUrl) {
-    console.error('chatWidgetStore.chatApiUrl is not set')
-    return
-  }
+   const { chatApiUrl, currentSlug, tools: storeBrowserTools, context } = chatWidgetStore.getState()
+   if (!chatApiUrl) {
+     console.error('chatWidgetStore.chatApiUrl is not set')
+     return
+   }
 
-  // Load any persisted conversation before reading modelMessages, otherwise
-  // a submit right after a page refresh would snapshot only the new turn and
-  // overwrite the stored history server-side.
-  await ensureSessionRestored()
+   // Load any persisted conversation before reading modelMessages, otherwise
+   // a submit right after a page refresh would snapshot only the new turn and
+   // overwrite the stored history server-side.
+   await ensureSessionRestored()
 
-  const modelMessages = chatStore.getState().modelMessages
-  const nextUserMessage: ChatMessage = { role: 'user', parts: [{ type: 'text', text: submitText }] }
+   const modelMessages = chatStore.getState().modelMessages
+   const nextUserMessage: ChatMessage = { role: 'user', parts: [{ type: 'text', text: submitText }] }
 
-  const controller = new AbortController()
-  chatStore.setState((s) => ({
-    isGenerating: true,
-    messages: [...s.messages, nextUserMessage],
-    draftText: '',
-    pendingSubmit: false,
-    errorMessage: null,
-    abortController: controller,
-  }))
+   const controller = new AbortController()
+   chatStore.setState((s) => ({
+     isGenerating: true,
+     messages: [...s.messages, nextUserMessage],
+     draftText: '',
+     pendingSubmit: false,
+     errorMessage: null,
+     abortController: controller,
+   }))
 
-  if (onScrollToLastUser) {
-    setTimeout(onScrollToLastUser, 0)
-  }
+   if (onScrollToLastUser) {
+     setTimeout(onScrollToLastUser, 0)
+   }
 
-  // Build client tool lookup
-  const clientToolsByName = new Map<string, ChatToolDefinition>()
-  for (const t of tools) {
-    clientToolsByName.set(t.name, t)
-  }
-  const toolSchemas = tools.length > 0 ? extractToolSchemas(tools) : undefined
-  const contextPayload = Object.keys(context).length > 0 ? context : undefined
+   // Merge tools from three sources (lowest → highest priority):
+   //   1. Native document.modelContext — tools registered by third-party code
+   //   2. chatWidgetStore.tools — browser automation tools from pageTools()
+   //   3. getRegisteredTools() — custom tools registered via defineTool()
+   // Higher priority wins on name collision.
+   const clientToolsByName = new Map<string, ChatToolDefinition>()
+   for (const t of getNativeModelContextTools()) {
+     clientToolsByName.set(t.name, t)
+   }
+   for (const t of storeBrowserTools) {
+     clientToolsByName.set(t.name, t)
+   }
+   for (const t of getRegisteredTools()) {
+     clientToolsByName.set(t.name, t)
+   }
+   const allTools = [...clientToolsByName.values()]
+   const toolSchemas = allTools.length > 0 ? extractToolSchemas(allTools) : undefined
+   const contextPayload = Object.keys(context).length > 0 ? context : undefined
 
   try {
     let currentBody: Record<string, unknown> = {
