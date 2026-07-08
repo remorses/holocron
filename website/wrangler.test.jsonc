@@ -25,11 +25,13 @@
   "durable_objects": {
     "bindings": [
       { "name": "USAGE_COUNTER", "class_name": "UsageCounter" },
-      { "name": "CONFIG_OVERRIDE", "class_name": "ConfigOverrideDO" }
+      { "name": "CONFIG_OVERRIDE", "class_name": "ConfigOverrideDO" },
+      { "name": "CHAT_SESSION", "class_name": "ChatSessionDO" }
     ]
   },
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["UsageCounter"] },
-    { "tag": "v2", "new_sqlite_classes": ["ConfigOverrideDO"] }
+    { "tag": "v2", "new_sqlite_classes": ["ConfigOverrideDO"] },
+    { "tag": "v3", "new_sqlite_classes": ["ChatSessionDO"] }
   ]
 }

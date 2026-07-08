@@ -49,7 +49,7 @@ describe('computeUsdCost — exact tokens × per-model rate', () => {
   })
 
   test('unknown model falls back to default rate', () => {
-    const known = computeUsdCost('kimi-k2.5', { inputTokens: 1234, outputTokens: 567 })
+    const known = computeUsdCost('deepseek-v4-flash', { inputTokens: 1234, outputTokens: 567 })
     expect(computeUsdCost('not-a-real-model', { inputTokens: 1234, outputTokens: 567 })).toBe(known)
   })
 
