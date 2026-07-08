@@ -1,0 +1,146 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_04afef69dbcdbe46006a4d69962b848198aba41b0c2d5ed3f1",
+      "timestamp": "2026-07-07T21:03:18.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": "-"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": " AI"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": "-powered"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": " documentation"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": " search"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": "\n"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": "-"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": " Client"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": "-side"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": " tool"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": " execution"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": "\n"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": "-"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": " Shadow"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": " DOM"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "delta": " isolation"
+    },
+    {
+      "type": "text-end",
+      "id": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_04afef69dbcdbe46006a4d6996f0488198a0e9e5c01d3f6801"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 649,
+          "noCache": 649,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 18,
+          "text": 18,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 649,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 18,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_04afef69dbcdbe46006a4d69962b848198aba41b0c2d5ed3f1",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

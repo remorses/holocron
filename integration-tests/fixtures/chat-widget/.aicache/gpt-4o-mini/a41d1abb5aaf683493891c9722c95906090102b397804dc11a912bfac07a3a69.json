@@ -1,0 +1,186 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_044fd5d9baf04c9b006a4d93bce97c819d9efacacfe136f12d",
+      "timestamp": "2026-07-08T00:03:08.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": "The"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " documentation"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " doesn't"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " specify"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " who"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " maintains"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " it"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": "."
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " It's"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " likely"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " managed"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " by"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " development"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " team"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " behind"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " Hol"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": "oc"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": "ron"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " AI"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " chat"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": " widget"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "delta": "."
+    },
+    {
+      "type": "text-end",
+      "id": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_044fd5d9baf04c9b006a4d93bd6dd0819da4bb3cdee492e634"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 747,
+          "noCache": 747,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 26,
+          "text": 26,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 747,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 26,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_044fd5d9baf04c9b006a4d93bce97c819d9efacacfe136f12d",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

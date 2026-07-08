@@ -1,0 +1,216 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_0202f624071c5aa7006a4d6984cc648198ac43ebe5746e6e6f",
+      "timestamp": "2026-07-07T21:03:00.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": "The"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " documentation"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " is"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " likely"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " maintained"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " by"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " developers"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " or"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " team"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " behind"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " Hol"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": "oc"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": "ron"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " AI"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " project"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": "."
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " For"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " specific"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " details"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": ","
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " check"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " project"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " or"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " organizational"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " documentation"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": " directly"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "delta": "."
+    },
+    {
+      "type": "text-end",
+      "id": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0202f624071c5aa7006a4d69852f3c8198a7a81b0feba137bd"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 720,
+          "noCache": 720,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 32,
+          "text": 32,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 720,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 32,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_0202f624071c5aa7006a4d6984cc648198ac43ebe5746e6e6f",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

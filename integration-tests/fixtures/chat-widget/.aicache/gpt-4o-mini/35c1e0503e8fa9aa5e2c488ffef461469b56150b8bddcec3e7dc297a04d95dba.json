@@ -1,0 +1,118 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_00f59495249c44db006a4d698a74988198aec20288113d9df1",
+      "timestamp": "2026-07-07T21:03:06.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "tool-input-start",
+      "id": "call_LWWvBKgvMNqrltnfThAaI75k",
+      "toolName": "get_time"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_LWWvBKgvMNqrltnfThAaI75k",
+      "delta": "{\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_LWWvBKgvMNqrltnfThAaI75k",
+      "delta": "description"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_LWWvBKgvMNqrltnfThAaI75k",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_LWWvBKgvMNqrltnfThAaI75k",
+      "delta": "Get"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_LWWvBKgvMNqrltnfThAaI75k",
+      "delta": " the"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_LWWvBKgvMNqrltnfThAaI75k",
+      "delta": " current"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_LWWvBKgvMNqrltnfThAaI75k",
+      "delta": " date"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_LWWvBKgvMNqrltnfThAaI75k",
+      "delta": " and"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_LWWvBKgvMNqrltnfThAaI75k",
+      "delta": " time"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_LWWvBKgvMNqrltnfThAaI75k",
+      "delta": "\"}"
+    },
+    {
+      "type": "tool-input-end",
+      "id": "call_LWWvBKgvMNqrltnfThAaI75k"
+    },
+    {
+      "type": "tool-call",
+      "toolCallId": "call_LWWvBKgvMNqrltnfThAaI75k",
+      "toolName": "get_time",
+      "input": "{\"description\":\"Get the current date and time\"}",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "fc_00f59495249c44db006a4d698b68188198b7c38090583d58d0"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "tool-calls"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 657,
+          "noCache": 657,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 20,
+          "text": 20,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 657,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 20,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_00f59495249c44db006a4d698a74988198aec20288113d9df1",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

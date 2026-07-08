@@ -556,6 +556,13 @@ If `whoami` succeeds and shows user, orgs, and projects, skip login. Only run
 
 ## Deploy
 
+When the user asks to "deploy the site", they may mean deploying with their own
+script and platform (Cloudflare Workers, a Node server, CI pipeline), not
+`holocron deploy`. Check `package.json` scripts first: if there is a `deploy`,
+`deployment`, or similar script (e.g. wrangler deploy), use that instead of the
+Holocron CLI. Only use `holocron deploy` when the project has no own deploy
+script or the user explicitly asks for holocron.so hosting.
+
 `holocron deploy` builds the docs site and uploads it to holocron.so hosting.
 It is the fastest way to publish without managing your own server.
 

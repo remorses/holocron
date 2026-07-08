@@ -1,0 +1,136 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_0d5cc636185c3497006a4d92dad5ac819fa34aec431d133211",
+      "timestamp": "2026-07-07T23:59:22.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "delta": "It"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "delta": " looks"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "delta": " like"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "delta": " I"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "delta": " can't"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "delta": " proceed"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "delta": " with"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "delta": " that"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "delta": " action"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "delta": " since"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "delta": " it"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "delta": " requires"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "delta": " approval"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "delta": "."
+    },
+    {
+      "type": "text-end",
+      "id": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0d5cc636185c3497006a4d92dc16ac819fae69f836cc4365e1"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 1213,
+          "noCache": 1213,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 16,
+          "text": 16,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 1213,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 16,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_0d5cc636185c3497006a4d92dad5ac819fa34aec431d133211",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}
