@@ -155,7 +155,7 @@ test("submit after reload includes the restored history in the request", async (
   await expect(firstUserMsg).toContainText("What is this documentation about?");
 }, 120000);
 
-test("new chat clears the persisted session", async ({ page }) => {
+test("new chat rotates the session without opening the old one on reload", async ({ page }) => {
   test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
 
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -165,13 +165,10 @@ test("new chat clears the persisted session", async ({ page }) => {
   await sendMessage(page, "What is this documentation about?");
   await waitForMessages(page, 2);
 
-  // Clearing deletes the server-side snapshot and expires the cookie.
-  const clearRequest = page.waitForRequest(
-    (req) => req.url().includes("/holocron-api/chat/session/clear"),
-    { timeout: 10000 },
-  );
+  // New chat expires the cookie locally and resets the conversation.
+  // It does NOT delete the server-side snapshot — the old session stays
+  // available in the session select.
   await page.locator("button[aria-label='New chat']").click();
-  await clearRequest;
 
   await expect
     .poll(async () => {
@@ -179,21 +176,63 @@ test("new chat clears the persisted session", async ({ page }) => {
       return cookies.find((c) => c.name === "holocron_chat")?.value ?? "";
     }, { timeout: 10000 })
     .toBe("");
+  await expect(page.locator("[data-message-id]")).toHaveCount(0);
 
   await page.reload();
   await page.waitForLoadState("networkidle");
 
-  // After clear, the cookie is expired so eager restore does not fire on
-  // page load (hasExistingSession() returns false). Focusing the sidebar
-  // input should NOT open the drawer — there is nothing to restore.
-  // Focus the sidebar input — since the cookie was expired, hasExistingSession()
-  // returns false, so no eager restore fires. The handleFocus path also sees
-  // messages.length === 0 and skips opening the drawer.
+  // The cookie is expired so eager restore does not fire on page load
+  // (hasExistingSession() returns false). Focusing the sidebar input should
+  // NOT open the drawer — the fresh session has nothing to restore.
   await page.locator("textarea").first().focus();
   // Type something to prove the sidebar is interactive (the textarea accepts input)
   // but the drawer must NOT open since there is no session to restore.
   await page.locator("textarea").first().fill("test");
   await expect(page.locator("button[aria-label='New chat']")).not.toBeVisible({ timeout: 3000 });
+}, 120000);
+
+test("session select shows the AI title and switches back to a past session", async ({ page }) => {
+  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  await sendMessage(page, "What is this documentation about?");
+  await waitForMessages(page, 2);
+
+  // The gateway (mocked) emits a title chunk after the first turn; the
+  // select trigger swaps the preview placeholder for the AI title.
+  const trigger = page.locator("button[aria-label='Chat sessions']");
+  await expect(trigger).toContainText("Title: What is this", { timeout: 30000 });
+
+  // Start a fresh chat — trigger falls back to the placeholder and the
+  // conversation area resets.
+  await page.locator("button[aria-label='New chat']").click();
+  await expect(page.locator("[data-message-id]")).toHaveCount(0);
+  await expect(trigger).toContainText("New chat");
+
+  // Opening the menu must not mutate <body> (Radix Select's scroll lock
+  // forced margin-right on body, shifting margin-auto-centered host pages —
+  // the non-modal dropdown applies no body styles at all).
+  const bodyStyleBefore = await page.evaluate(() => document.body.getAttribute("style"));
+  await trigger.click();
+  const bodyStyleOpen = await page.evaluate(() => document.body.getAttribute("style"));
+  expect(bodyStyleOpen).toBe(bodyStyleBefore);
+
+  // The old session is listed in the select; picking it restores the
+  // conversation from the server-side snapshot.
+  await page.getByRole("menuitemradio", { name: /Title: What is this/ }).click();
+
+  await waitForMessages(page, 2);
+  await expect(page.locator("[data-message-id='msg-0']")).toContainText(
+    "What is this documentation about?",
+  );
+
+  // The dropdown also offers a "New chat" action item (same as the plus button).
+  await trigger.click();
+  await page.getByRole("menuitem", { name: "New chat" }).click();
+  await expect(page.locator("[data-message-id]")).toHaveCount(0);
 }, 120000);
 
 // ── Widget-mode persistence (header-based, no cookies) ──────────────

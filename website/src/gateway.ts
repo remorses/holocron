@@ -18,7 +18,7 @@
 // so spamming bogus keys can't bypass the IP limit. When the limit is hit we
 // yield a friendly notice chunk (rendered as a card) instead of a raw 429.
 
-import { streamText, jsonSchema, tool as aiTool, type LanguageModelUsage, type ModelMessage, type UIMessageChunk } from 'ai'
+import { streamText, generateText, jsonSchema, tool as aiTool, type LanguageModelUsage, type ModelMessage, type UIMessageChunk } from 'ai'
 import { createGateway } from '@ai-sdk/gateway'
 import { createFallback } from 'ai-fallback'
 import { captureException } from '@strada.sh/sdk'
@@ -35,6 +35,8 @@ import { MAX_SNAPSHOT_BYTES, type ChatSessionDO } from './chat-session-do.ts'
 
 const DEFAULT_MODEL = 'deepseek-v4-flash'
 const TEMPORARY_MODEL = 'deepseek-v4-flash'
+// Cheapest allowed model — used for the one-shot conversation title.
+const TITLE_MODEL = 'deepseek-v4-flash'
 const DOCS_ZIP_CACHE_MS = 5 * 60 * 1000
 
 // All fallback models tried in order when the primary fails. The first model
@@ -61,8 +63,16 @@ export type HolocronChatUsageChunk = {
   credits: number
 }
 
+// AI-generated conversation title, yielded once after the first turn of a
+// session. The widget stores it in its local session list (localStorage).
+export type HolocronChatTitleChunk = {
+  type: 'title'
+  title: string
+}
+
 export type HolocronChatChunk = UIMessageChunk | HolocronChatNoticeChunk
   | HolocronChatUsageChunk
+  | HolocronChatTitleChunk
   | { type: 'model-messages'; messages: ModelMessage[] }
 
 // Shown in the chat UI (as a yellow notice card) when an unauthenticated
@@ -150,6 +160,17 @@ function trimSnapshot(messages: unknown[]): unknown[] {
     trimmed = trimmed.slice(1)
   }
   return trimmed
+}
+
+/** Text of the first user message — the input for title generation. */
+function firstUserText(messages: ModelMessage[]): string {
+  const first = messages.find((m) => m.role === 'user')
+  if (!first) return ''
+  if (typeof first.content === 'string') return first.content
+  return first.content
+    .filter((part) => part.type === 'text')
+    .map((part) => part.text)
+    .join(' ')
 }
 
 // Resolve a turn's exact usage and USD cost. result.usage sums every tool-call
@@ -292,6 +313,23 @@ export const gatewayApp = new Spiceflow()
           })
         : gateway(primaryModelId)
 
+      // Generate a short conversation title on the first message of a
+      // persistent session. Runs in parallel with the main stream on the
+      // cheapest model (one-shot generateText, ~$0.0001 — not usage-billed);
+      // the title chunk is yielded after the stream so it never delays the
+      // answer. Failures just leave the widget showing its preview label.
+      const isFirstTurn = messages.filter((m) => m.role === 'user').length === 1
+      const titlePromise = body.sessionId && isFirstTurn
+        ? generateText({
+            model: gateway(ALLOWED_MODELS[TITLE_MODEL]!),
+            prompt: `Write a short title (at most 6 words) summarizing this documentation question. Reply with the title only — no quotes, no trailing punctuation.\n\nQuestion: ${firstUserText(messages).slice(0, 2000)}`,
+            maxOutputTokens: 200,
+            abortSignal: request.signal,
+          })
+            .then((result) => result.text.trim().replace(/^["']|["']$/g, '').slice(0, 80) || null)
+            .catch(() => null)
+        : null
+
       // Subscribed projects never see the upgrade nag. Unauthenticated callers
       // (no API key → no project to bill) still see it. Resolved above
       // concurrently with the usage-limit check.
@@ -393,7 +431,8 @@ export const gatewayApp = new Spiceflow()
         // before the stream closes: a page reload right after the answer must
         // find the snapshot already stored. Cost is one DO roundtrip after
         // all text has already streamed. Concurrent tabs on the same session
-        // are last-write-wins by design (whole-snapshot replace).
+        // are last-write-wins by design (whole-snapshot replace). Runs BEFORE
+        // awaiting the title so a slow title model can't delay persistence.
         if (body.sessionId && siteKey) {
           const snapshot = trimSnapshot([
             ...messages.filter((m) => m.role !== 'system'),
@@ -410,6 +449,11 @@ export const gatewayApp = new Spiceflow()
               tags: { route: 'gateway', reason: 'chat-session-save-failed' },
             })
           }
+        }
+
+        const title = titlePromise ? await titlePromise : null
+        if (title) {
+          yield { type: 'title', title } satisfies HolocronChatTitleChunk
         }
       }
 

@@ -5,8 +5,9 @@
  *
  * Conversations persist server-side keyed by a session id (JS-readable cookie
  * in embedded mode, localStorage in widget mode). The conversation is restored
- * eagerly on page load by HolocronChatBridge; "New chat" deletes it via
- * clearChatSession().
+ * eagerly on page load by HolocronChatBridge. The top bar hosts a session
+ * select (past sessions from localStorage, titled by the gateway) plus a
+ * "New chat" button that rotates to a fresh session via startNewChat().
  *
  * Pure CSS transitions — no Radix, no framer-motion.
  * Portal target comes from chatWidgetStore (document.body for holocron,
@@ -21,13 +22,14 @@ function useChatStore<T>(selector: (s: import('./chat-store.ts').ChatState) => T
   return useSyncExternalStore(chatStore.subscribe, () => selector(chatStore.getState()), () => selector(chatStore.getState()))
 }
 import { chatWidgetStore } from './chat-widget-store.ts'
-import { clearChatSession, ensureSessionRestored, submitChat } from './chat-submit.ts'
+import { startNewChat, ensureSessionRestored, submitChat } from './chat-submit.ts'
 import {
   ChatMessages,
   ChatLoadingDots,
 } from './chat-message.tsx'
 import { ChatInput, hideChildrenForSnapshot } from './chat-input.tsx'
-import { TrashIcon, CloseIcon } from './chat-icons.tsx'
+import { PlusIcon, CloseIcon } from './chat-icons.tsx'
+import { ChatSessionSelect } from './chat-session-select.tsx'
 
 // ── ChatDrawer ───────────────────────────────────────────────────────
 
@@ -142,24 +144,17 @@ function ChatDrawerInner() {
     void handleSubmit(userText)
   }, [handleSubmit])
 
-  // ── Clear / new chat ───────────────────────────────────────────
+  // ── New chat ───────────────────────────────────────────────────
 
-  const handleClear = useCallback(() => {
-    handleStop()
-    // Delete the persisted conversation and rotate the session id so the
-    // next message starts a fresh server-side session.
-    void clearChatSession()
-    chatStore.setState({
-      isGenerating: false,
-      abortController: null,
-      messages: [],
-      modelMessages: [],
-      draftText: '',
-      pendingSubmit: false,
-      errorMessage: null,
-      approvalResolvers: {},
-    })
-  }, [handleStop])
+  const handleNewChat = useCallback(() => {
+    // Rotate to a fresh session. The old conversation stays in the local
+    // session list (and server-side) so the select can restore it.
+    startNewChat()
+    // Focus synchronously so the user can start typing immediately. A
+    // deferred focus (setTimeout) could land while the session menu is
+    // open and close it — the non-modal menu dismisses on focus-out.
+    drawerInputRef.current?.focus()
+  }, [])
 
   // ── Close ──────────────────────────────────────────────────────
 
@@ -205,9 +200,8 @@ function ChatDrawerInner() {
   // Auto-close drawer when any link is clicked (internal navigation,
   // hash links, external links). Uses a document-level click listener
   // so every <a> in the page is covered without per-component wiring.
-  // Programmatic clicks (e.isTrusted === false) from client tools
-  // (e.g. browser_click calling el.click()) are excluded so the drawer
-  // stays open while tools navigate.
+  // Programmatic clicks (e.isTrusted === false) are excluded so the
+  // drawer stays open during tool execution.
   useEffect(() => {
     if (drawerState !== 'open') return
     function onClickLink(e: MouseEvent) {
@@ -272,19 +266,11 @@ function ChatDrawerInner() {
             flexShrink: 0,
           }}
         >
-          <span
-            style={{
-              fontWeight: 600,
-              fontSize: '14px',
-              color: 'var(--foreground)',
-            }}
-          >
-            Chat
-          </span>
+          <ChatSessionSelect onNewChat={handleNewChat} />
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <button
               type='button'
-              onClick={handleClear}
+              onClick={handleNewChat}
               title='New chat'
               style={{
                 display: 'flex',
@@ -300,7 +286,7 @@ function ChatDrawerInner() {
               }}
               aria-label='New chat'
             >
-              <TrashIcon />
+              <PlusIcon />
             </button>
             <button
               type='button'
