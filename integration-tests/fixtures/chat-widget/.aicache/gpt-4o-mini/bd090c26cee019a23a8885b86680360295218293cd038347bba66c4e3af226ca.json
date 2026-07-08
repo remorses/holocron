@@ -1,0 +1,121 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_01d24beb0f6a4693006a4ec79bbb44819a98a0d27ed6fd95f7",
+      "timestamp": "2026-07-08T21:56:43.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041",
+      "delta": "Typed"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041",
+      "delta": " \""
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041",
+      "delta": "new"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041",
+      "delta": "@example"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041",
+      "delta": ".com"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041",
+      "delta": "\""
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041",
+      "delta": " into"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041",
+      "delta": " email"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041",
+      "delta": " input"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041",
+      "delta": "."
+    },
+    {
+      "type": "text-end",
+      "id": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_01d24beb0f6a4693006a4ec79c9750819a88288fbe61830041"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 1599,
+          "noCache": 1599,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 13,
+          "text": 13,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 1599,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 13,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_01d24beb0f6a4693006a4ec79bbb44819a98a0d27ed6fd95f7",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

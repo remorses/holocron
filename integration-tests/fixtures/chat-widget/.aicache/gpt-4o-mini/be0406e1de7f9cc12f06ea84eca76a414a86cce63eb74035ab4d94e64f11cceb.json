@@ -1,0 +1,208 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_0ba31ab2c68572a0006a4ec799a630819bae9e1b702c9c18fc",
+      "timestamp": "2026-07-08T21:56:41.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "tool-input-start",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "toolName": "browser_type"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "{\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "selector"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "["
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "data"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "-action"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "=\\\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "email"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "-input"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "\\\"]"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "\",\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "text"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "new"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "@example"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": ".com"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "\",\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "description"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "Type"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": " the"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": " new"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": " email"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": " into"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": " the"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": " email"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": " input"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "delta": "\"}"
+    },
+    {
+      "type": "tool-input-end",
+      "id": "call_SSRAQBZOOYgUrk1LKEtI7yvp"
+    },
+    {
+      "type": "tool-call",
+      "toolCallId": "call_SSRAQBZOOYgUrk1LKEtI7yvp",
+      "toolName": "browser_type",
+      "input": "{\"selector\":\"[data-action=\\\"email-input\\\"]\",\"text\":\"new@example.com\",\"description\":\"Type the new email into the email input\"}",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "fc_0ba31ab2c68572a0006a4ec79a8e44819bb7d3e5d011e5cc95"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "tool-calls"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 1539,
+          "noCache": 1539,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 38,
+          "text": 38,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 1539,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 38,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_0ba31ab2c68572a0006a4ec799a630819bae9e1b702c9c18fc",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

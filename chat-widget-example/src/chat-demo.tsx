@@ -255,8 +255,9 @@ export function ChatDemo() {
           >
             Save
           </button>
-          {/* Protected action: browser_click on this button shows an
-              Approve/Deny prompt with the attribute value as the message */}
+          {/* Protected action: DOM-mutating tools (browser_type) targeting
+              elements in this container show an Approve/Deny prompt with
+              the attribute value as the message */}
           <span data-holocron-requires-approval='This will delete the demo account'>
             <button
               type='button'

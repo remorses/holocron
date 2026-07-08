@@ -1,0 +1,218 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_0f08f9b25f326035006a4ec79e23dc819a8e9b639b6d255e1c",
+      "timestamp": "2026-07-08T21:56:46.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "tool-input-start",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "toolName": "browser_type"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "{\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "selector"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "["
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "data"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "-action"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "=\\\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "name"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "-input"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "\\\"]"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "\",\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "text"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "New"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": " Name"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "\",\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "description"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "Type"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": " '"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "New"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": " Name"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "'"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": " into"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": " the"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": " display"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": " name"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": " input"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": ".\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "delta": "}"
+    },
+    {
+      "type": "tool-input-end",
+      "id": "call_4ih2QswrDvGCk2OYntGFKXoy"
+    },
+    {
+      "type": "tool-call",
+      "toolCallId": "call_4ih2QswrDvGCk2OYntGFKXoy",
+      "toolName": "browser_type",
+      "input": "{\"selector\":\"[data-action=\\\"name-input\\\"]\",\"text\":\"New Name\",\"description\":\"Type 'New Name' into the display name input.\"}",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "fc_0f08f9b25f326035006a4ec79ed398819ab6421b3bd0616747"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "tool-calls"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 1539,
+          "noCache": 1539,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 40,
+          "text": 40,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 1539,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 40,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_0f08f9b25f326035006a4ec79e23dc819a8e9b639b6d255e1c",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,161 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_0634902ee3441d5a006a4ec79d3c58819993a4abd58c056916",
+      "timestamp": "2026-07-08T21:56:45.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": "I"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": " can't"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": " proceed"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": " without"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": " your"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": " approval"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": "."
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": " Please"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": " give"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": " go"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": "-a"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": "head"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": " to"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": " type"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": " new"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": " email"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "delta": "."
+    },
+    {
+      "type": "text-end",
+      "id": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0634902ee3441d5a006a4ec79dd6b08199ad2a95603c6966f4"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 1591,
+          "noCache": 1591,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 21,
+          "text": 21,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 1591,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 21,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_0634902ee3441d5a006a4ec79d3c58819993a4abd58c056916",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

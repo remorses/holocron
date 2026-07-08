@@ -1,0 +1,111 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_0780567b4eeaaa96006a4ea26e247c819abd1939b90ade7f45",
+      "timestamp": "2026-07-08T19:18:06.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_0780567b4eeaaa96006a4ea26f6d40819ab4d56f041ff6096e",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0780567b4eeaaa96006a4ea26f6d40819ab4d56f041ff6096e"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0780567b4eeaaa96006a4ea26f6d40819ab4d56f041ff6096e",
+      "delta": "Hey"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0780567b4eeaaa96006a4ea26f6d40819ab4d56f041ff6096e",
+      "delta": "!"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0780567b4eeaaa96006a4ea26f6d40819ab4d56f041ff6096e",
+      "delta": " What"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0780567b4eeaaa96006a4ea26f6d40819ab4d56f041ff6096e",
+      "delta": " do"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0780567b4eeaaa96006a4ea26f6d40819ab4d56f041ff6096e",
+      "delta": " you"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0780567b4eeaaa96006a4ea26f6d40819ab4d56f041ff6096e",
+      "delta": " need"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0780567b4eeaaa96006a4ea26f6d40819ab4d56f041ff6096e",
+      "delta": " help"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0780567b4eeaaa96006a4ea26f6d40819ab4d56f041ff6096e",
+      "delta": " with"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0780567b4eeaaa96006a4ea26f6d40819ab4d56f041ff6096e",
+      "delta": "?"
+    },
+    {
+      "type": "text-end",
+      "id": "msg_0780567b4eeaaa96006a4ea26f6d40819ab4d56f041ff6096e",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0780567b4eeaaa96006a4ea26f6d40819ab4d56f041ff6096e"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 549,
+          "noCache": 549,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 10,
+          "text": 10,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 549,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 10,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_0780567b4eeaaa96006a4ea26e247c819abd1939b90ade7f45",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

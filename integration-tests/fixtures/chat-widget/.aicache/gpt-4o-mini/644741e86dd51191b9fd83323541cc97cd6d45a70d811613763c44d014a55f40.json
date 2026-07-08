@@ -1,0 +1,253 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_099b469b4d79e7ef006a4ec62d39e481989faf3eeab0d6d719",
+      "timestamp": "2026-07-08T21:50:37.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "tool-input-start",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "toolName": "browser_highlight"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "{\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "selector"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "["
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "data"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "-action"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "=\\\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "delete"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "-account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "\\\"]"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "\",\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "message"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "Click"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " here"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " to"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " delete"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " your"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "."
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " You'll"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " need"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " to"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " confirm"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " this"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " action"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " afterwards"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": ".\",\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "description"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "Highlight"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " the"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " Delete"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": " button"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": ".\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe",
+      "delta": "}"
+    },
+    {
+      "type": "tool-input-end",
+      "id": "call_PVJco8zvny9lDdLB80zEesMe"
+    },
+    {
+      "type": "tool-call",
+      "toolCallId": "call_PVJco8zvny9lDdLB80zEesMe",
+      "toolName": "browser_highlight",
+      "input": "{\"selector\":\"[data-action=\\\"delete-account\\\"]\",\"message\":\"Click here to delete your account. You'll need to confirm this action afterwards.\",\"description\":\"Highlight the Delete account button.\"}",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "fc_099b469b4d79e7ef006a4ec62e2d948198be0277cab82a0623"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "tool-calls"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 1474,
+          "noCache": 1474,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 48,
+          "text": 48,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 1474,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 48,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_099b469b4d79e7ef006a4ec62d39e481989faf3eeab0d6d719",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

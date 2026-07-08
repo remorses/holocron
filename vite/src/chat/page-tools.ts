@@ -8,10 +8,14 @@
  *        browser_read_page, browser_highlight
  *
  * Highlight overlay: browser_highlight shows an onboarding-style spotlight
- * over a DOM element with a tooltip message. browser_type also flashes a
- * brief highlight before acting so the user can see what the AI is
- * interacting with. The overlay renders on `document.body` (outside any
- * shadow DOM) with inline styles so it works on any host page.
+ * over a DOM element with an optional description card. The overlay is
+ * persistent — it stays visible until the user dismisses it via the ×
+ * button or by clicking the highlighted element (or the element leaves
+ * the DOM, e.g. on navigation). The tool returns immediately; it never
+ * blocks the AI loop waiting for dismissal. browser_type flashes a very
+ * brief ring (no page dim) before acting so the user can see what the AI
+ * is interacting with. The overlay renders on `document.body` (outside
+ * any shadow DOM) with inline styles so it works on any host page.
  *
  * Design decision: there is no browser_click tool. Instead of clicking
  * elements for the user, the AI highlights them with browser_highlight and
@@ -193,33 +197,48 @@ const HIGHLIGHT_ATTR = 'data-holocron-highlight-overlay'
 const HIGHLIGHT_PADDING = 8
 const HIGHLIGHT_RADIUS = 8
 const HIGHLIGHT_Z = 2147483647
+const HIGHLIGHT_FADE_MS = 180
+/** Glow ring around the highlighted element (indigo, subtle). */
+const HIGHLIGHT_RING =
+  '0 0 0 2px rgba(99, 102, 241, 0.65), 0 0 18px 2px rgba(99, 102, 241, 0.25)'
+
+/**
+ * Teardown for the currently visible highlight. Removes the overlay DOM
+ * and all listeners/rAF loops. Only one highlight can be visible at a time.
+ */
+let activeHighlightTeardown: (() => void) | null = null
 
 /** Remove any existing highlight overlay from the DOM. */
 function clearHighlight(): void {
-  document.querySelector(`[${HIGHLIGHT_ATTR}]`)?.remove()
+  activeHighlightTeardown?.()
+  activeHighlightTeardown = null
 }
 
 /**
- * Show an onboarding-style spotlight overlay on a DOM element.
+ * Show a persistent onboarding-style spotlight overlay on a DOM element.
  *
  * Creates a full-viewport backdrop with a cutout around the target element
  * using the CSS outline trick (a positioned div with `outline: 9999px solid`).
- * An optional tooltip message is positioned below or above the element.
+ * The backdrop is a light dim so the page stays readable. An optional
+ * description card is positioned below or above the element.
  *
- * Returns a promise that resolves when the highlight auto-dismisses.
- * Any subsequent call to showHighlight or clearHighlight removes the previous one.
+ * The overlay has NO auto-dismiss timer. It stays until:
+ *   - the user clicks the × close button,
+ *   - the user clicks the highlighted element itself (task done), or
+ *   - the element leaves the DOM (e.g. client-side navigation), or
+ *   - another highlight replaces it.
+ *
+ * Position is tracked every frame via requestAnimationFrame so the
+ * spotlight follows the element through scrolling, resizes, and layout
+ * shifts (including the smooth scrollIntoView right before showing).
  */
-function showHighlight(
-  el: Element,
-  options: { message?: string; durationMs?: number } = {},
-): Promise<void> {
-  const { message, durationMs = 3000 } = options
+function showHighlight(el: Element, options: { message?: string } = {}): void {
+  const { message } = options
 
   clearHighlight()
 
-  const rect = el.getBoundingClientRect()
-
-  // Container: fixed, full viewport, pointer-events none, above everything
+  // Container: fixed, full viewport, pointer-events none so the user can
+  // still click the highlighted element through the overlay.
   const container = document.createElement('div')
   container.setAttribute(HIGHLIGHT_ATTR, '')
   Object.assign(container.style, {
@@ -228,40 +247,48 @@ function showHighlight(
     zIndex: String(HIGHLIGHT_Z),
     pointerEvents: 'none',
     opacity: '0',
-    transition: 'opacity 150ms ease',
+    transition: `opacity ${HIGHLIGHT_FADE_MS}ms ease`,
   } satisfies Partial<CSSStyleDeclaration>)
 
   // Spotlight cutout: positioned over the element with a massive outline
-  // that covers the rest of the viewport as a semi-transparent backdrop.
+  // that covers the rest of the viewport as a light dim backdrop.
   const spotlight = document.createElement('div')
   Object.assign(spotlight.style, {
     position: 'fixed',
-    top: `${rect.top - HIGHLIGHT_PADDING}px`,
-    left: `${rect.left - HIGHLIGHT_PADDING}px`,
-    width: `${rect.width + HIGHLIGHT_PADDING * 2}px`,
-    height: `${rect.height + HIGHLIGHT_PADDING * 2}px`,
     borderRadius: `${HIGHLIGHT_RADIUS}px`,
-    outline: '9999px solid rgba(0, 0, 0, 0.55)',
-    boxShadow: '0 0 0 4px rgba(99, 102, 241, 0.5), 0 0 24px 4px rgba(99, 102, 241, 0.2)',
-    transition: 'top 200ms ease, left 200ms ease, width 200ms ease, height 200ms ease',
+    outline: '9999px solid rgba(0, 0, 0, 0.15)',
+    boxShadow: HIGHLIGHT_RING,
   } satisfies Partial<CSSStyleDeclaration>)
   container.appendChild(spotlight)
 
-  // Tooltip with message (if provided)
-  if (message) {
-    const tooltip = document.createElement('div')
-    // Decide if tooltip goes above or below
-    const spaceBelow = window.innerHeight - rect.bottom
-    const placeAbove = spaceBelow < 120 && rect.top > 120
+  // × close button — dismisses the overlay. Lives inside the description
+  // card when a message is shown, otherwise floats at the spotlight corner.
+  const closeButton = document.createElement('button')
+  closeButton.type = 'button'
+  closeButton.setAttribute('aria-label', 'Dismiss highlight')
+  closeButton.textContent = '×'
+  Object.assign(closeButton.style, {
+    pointerEvents: 'auto',
+    cursor: 'pointer',
+    border: 'none',
+    padding: '0',
+    width: '22px',
+    height: '22px',
+    borderRadius: '50%',
+    fontSize: '15px',
+    lineHeight: '22px',
+    textAlign: 'center',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+  } satisfies Partial<CSSStyleDeclaration>)
 
+  // Description card with message (if provided)
+  let tooltip: HTMLDivElement | null = null
+  if (message) {
+    tooltip = document.createElement('div')
     Object.assign(tooltip.style, {
       position: 'fixed',
-      left: `${Math.max(12, Math.min(rect.left, window.innerWidth - 300))}px`,
-      ...(placeAbove
-        ? { bottom: `${window.innerHeight - rect.top + HIGHLIGHT_PADDING + 12}px` }
-        : { top: `${rect.bottom + HIGHLIGHT_PADDING + 12}px` }),
-      maxWidth: '280px',
-      padding: '10px 14px',
+      maxWidth: '300px',
+      padding: '10px 34px 10px 14px',
       borderRadius: '10px',
       backgroundColor: 'rgba(15, 15, 15, 0.92)',
       color: '#f0f0f0',
@@ -273,35 +300,140 @@ function showHighlight(
       backdropFilter: 'blur(8px)',
     } satisfies Partial<CSSStyleDeclaration>)
     tooltip.textContent = message
+    Object.assign(closeButton.style, {
+      position: 'absolute',
+      top: '5px',
+      right: '5px',
+      backgroundColor: 'transparent',
+      color: 'rgba(240, 240, 240, 0.7)',
+    } satisfies Partial<CSSStyleDeclaration>)
+    tooltip.appendChild(closeButton)
     container.appendChild(tooltip)
+  } else {
+    Object.assign(closeButton.style, {
+      position: 'fixed',
+      backgroundColor: 'rgba(15, 15, 15, 0.9)',
+      color: '#f0f0f0',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.25)',
+    } satisfies Partial<CSSStyleDeclaration>)
+    container.appendChild(closeButton)
   }
 
+  /** Position spotlight, description card, and close button from the
+   *  element's current viewport rect. Called every animation frame. */
+  function positionParts(): void {
+    const rect = el.getBoundingClientRect()
+    Object.assign(spotlight.style, {
+      top: `${rect.top - HIGHLIGHT_PADDING}px`,
+      left: `${rect.left - HIGHLIGHT_PADDING}px`,
+      width: `${rect.width + HIGHLIGHT_PADDING * 2}px`,
+      height: `${rect.height + HIGHLIGHT_PADDING * 2}px`,
+    })
+    if (tooltip) {
+      const spaceBelow = window.innerHeight - rect.bottom
+      const placeAbove = spaceBelow < 120 && rect.top > 120
+      Object.assign(tooltip.style, {
+        left: `${Math.max(12, Math.min(rect.left, window.innerWidth - 320))}px`,
+        ...(placeAbove
+          ? {
+              bottom: `${window.innerHeight - rect.top + HIGHLIGHT_PADDING + 12}px`,
+              top: 'auto',
+            }
+          : { top: `${rect.bottom + HIGHLIGHT_PADDING + 12}px`, bottom: 'auto' }),
+      })
+    } else {
+      // Floating close button at the spotlight's top-right corner
+      Object.assign(closeButton.style, {
+        top: `${rect.top - HIGHLIGHT_PADDING - 11}px`,
+        left: `${rect.left + rect.width + HIGHLIGHT_PADDING - 11}px`,
+      })
+    }
+  }
+
+  let rafId = 0
+  let dismissed = false
+
+  function teardown(): void {
+    cancelAnimationFrame(rafId)
+    el.removeEventListener('click', dismiss)
+    container.remove()
+    if (activeHighlightTeardown === teardown) activeHighlightTeardown = null
+  }
+
+  function dismiss(): void {
+    if (dismissed) return
+    dismissed = true
+    container.style.opacity = '0'
+    setTimeout(teardown, HIGHLIGHT_FADE_MS)
+  }
+
+  function track(): void {
+    // Element removed (e.g. client-side navigation) — nothing to point at
+    if (!el.isConnected) {
+      teardown()
+      return
+    }
+    positionParts()
+    rafId = requestAnimationFrame(track)
+  }
+
+  closeButton.addEventListener('click', dismiss)
+  // Clicking the highlighted element means the user followed the hint —
+  // the spotlight has done its job, fade it out.
+  el.addEventListener('click', dismiss)
+
+  activeHighlightTeardown = teardown
+
+  positionParts()
   document.body.appendChild(container)
+  rafId = requestAnimationFrame(track)
 
   // Trigger fade-in on next frame
   requestAnimationFrame(() => {
     container.style.opacity = '1'
   })
-
-  return new Promise<void>((resolve) => {
-    setTimeout(() => {
-      container.style.opacity = '0'
-      setTimeout(() => {
-        container.remove()
-        resolve()
-      }, 160)
-    }, durationMs)
-  })
 }
 
 /**
- * Flash a brief highlight on an element before an action (click, type).
- * Shorter duration, no tooltip. Scrolls the element into view first.
+ * Flash a very brief glow ring on an element before an action (type,
+ * select). No page dim, no tooltip — just a quick "look here" pulse.
+ * Scrolls the element into view first.
  */
 async function flashHighlight(el: Element): Promise<void> {
+  clearHighlight()
   el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   await new Promise((r) => setTimeout(r, 100))
-  await showHighlight(el, { durationMs: 600 })
+
+  const rect = el.getBoundingClientRect()
+  const ring = document.createElement('div')
+  ring.setAttribute(HIGHLIGHT_ATTR, '')
+  Object.assign(ring.style, {
+    position: 'fixed',
+    top: `${rect.top - HIGHLIGHT_PADDING}px`,
+    left: `${rect.left - HIGHLIGHT_PADDING}px`,
+    width: `${rect.width + HIGHLIGHT_PADDING * 2}px`,
+    height: `${rect.height + HIGHLIGHT_PADDING * 2}px`,
+    borderRadius: `${HIGHLIGHT_RADIUS}px`,
+    boxShadow: HIGHLIGHT_RING,
+    zIndex: String(HIGHLIGHT_Z),
+    pointerEvents: 'none',
+    opacity: '0',
+    transition: 'opacity 120ms ease',
+  } satisfies Partial<CSSStyleDeclaration>)
+
+  function teardown(): void {
+    ring.remove()
+    if (activeHighlightTeardown === teardown) activeHighlightTeardown = null
+  }
+  activeHighlightTeardown = teardown
+
+  document.body.appendChild(ring)
+  requestAnimationFrame(() => {
+    ring.style.opacity = '1'
+  })
+  await new Promise((r) => setTimeout(r, 300))
+  ring.style.opacity = '0'
+  setTimeout(teardown, 140)
 }
 
 // ── Tool generators ─────────────────────────────────────────────────
@@ -420,12 +552,12 @@ export function pageTools(pages: PageDefinition[], options?: PageToolsOptions): 
     {
       ...internal,
       name: 'browser_highlight',
-      description: 'Highlight an element on the page with a spotlight overlay and optional tooltip message. ALWAYS use this tool when the user asks to do something on the page. This is the primary way to guide users to interact with elements — there is no click tool. For example, if the user asks "change my email", type the new value with browser_type, then highlight the Save button with a message like "Click here to save your changes". Use this to point at buttons, links, form controls, or any UI element the user should interact with. The rest of the page dims and the element is spotlighted with a glowing border.',
+      description: 'Highlight an element on the page with a persistent spotlight overlay and a description card next to it, like an onboarding tour step. ALWAYS use this tool when the user asks to do something on the page. This is the primary way to guide users to interact with elements — there is no click tool. For example, if the user asks "change my email", type the new value with browser_type, then highlight the Save button with a message like "Click here to save your changes". Use this to point at buttons, links, form controls, or any UI element the user should interact with. The overlay stays visible until the user dismisses it (via the × button or by clicking the element), so always provide a message telling the user what to do. Always pass a `message`.',
       inputJsonSchema: {
         type: 'object',
         properties: {
           selector: { type: 'string', description: 'CSS selector of the element to highlight' },
-          message: { type: 'string', description: 'Short explanation shown in a tooltip next to the element' },
+          message: { type: 'string', description: 'Short instruction shown in a card next to the element, e.g. "Click here to save your changes"' },
           ...descriptionProperty,
         },
         required: ['selector', 'description'],
@@ -437,10 +569,15 @@ export function pageTools(pages: PageDefinition[], options?: PageToolsOptions): 
         if (!el) {
           return { error: `Element not found: ${selector}` }
         }
-        el.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-        await new Promise((r) => setTimeout(r, 150))
-        await showHighlight(el, { message, durationMs: 3500 })
-        return { highlighted: selector }
+        // The rAF position tracker follows the smooth scroll, so the
+        // overlay can be shown immediately and the tool returns right
+        // away — it never blocks the AI loop waiting for dismissal.
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        showHighlight(el, { message })
+        return {
+          highlighted: selector,
+          note: 'Overlay stays visible until the user dismisses it or clicks the element.',
+        }
       },
     },
     {

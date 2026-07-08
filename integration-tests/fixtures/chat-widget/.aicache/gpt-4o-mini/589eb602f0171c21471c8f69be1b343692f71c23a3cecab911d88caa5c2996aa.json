@@ -1,0 +1,218 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_02c9fa48aaaa3516006a4ea4158128819a9d45ca0c6a787d0d",
+      "timestamp": "2026-07-08T19:25:09.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "tool-input-start",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "toolName": "browser_highlight"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "{\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "selector"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "["
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "data"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "-action"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "=\\\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "rename"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "-account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "\\\"]"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "\",\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "message"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "Click"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": " the"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": " Rename"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": " account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": " button"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": " to"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": " proceed"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": ".\",\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "description"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "Click"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": " the"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": " Rename"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": " account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": " button"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": ".\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "delta": "}"
+    },
+    {
+      "type": "tool-input-end",
+      "id": "call_AjXOL3iHrJtBPTtE90T6Yp3E"
+    },
+    {
+      "type": "tool-call",
+      "toolCallId": "call_AjXOL3iHrJtBPTtE90T6Yp3E",
+      "toolName": "browser_highlight",
+      "input": "{\"selector\":\"[data-action=\\\"rename-account\\\"]\",\"message\":\"Click the Rename account button to proceed.\",\"description\":\"Click the Rename account button.\"}",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "fc_02c9fa48aaaa3516006a4ea4163ccc819ab561f689bdd33fdb"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "tool-calls"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 1399,
+          "noCache": 1399,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 41,
+          "text": 41,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 1399,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 41,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_02c9fa48aaaa3516006a4ea4158128819a9d45ca0c6a787d0d",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

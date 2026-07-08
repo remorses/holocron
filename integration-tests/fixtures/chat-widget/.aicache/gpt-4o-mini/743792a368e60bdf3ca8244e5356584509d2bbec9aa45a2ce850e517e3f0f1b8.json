@@ -1,0 +1,101 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_0810669c10811902006a4ea277e9e08198b4751226ebd3b08e",
+      "timestamp": "2026-07-08T19:18:15.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_0810669c10811902006a4ea2787ef4819886c82a60d8413478",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0810669c10811902006a4ea2787ef4819886c82a60d8413478"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0810669c10811902006a4ea2787ef4819886c82a60d8413478",
+      "delta": "Hey"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0810669c10811902006a4ea2787ef4819886c82a60d8413478",
+      "delta": "!"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0810669c10811902006a4ea2787ef4819886c82a60d8413478",
+      "delta": " How"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0810669c10811902006a4ea2787ef4819886c82a60d8413478",
+      "delta": "’s"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0810669c10811902006a4ea2787ef4819886c82a60d8413478",
+      "delta": " it"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0810669c10811902006a4ea2787ef4819886c82a60d8413478",
+      "delta": " going"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0810669c10811902006a4ea2787ef4819886c82a60d8413478",
+      "delta": "?"
+    },
+    {
+      "type": "text-end",
+      "id": "msg_0810669c10811902006a4ea2787ef4819886c82a60d8413478",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0810669c10811902006a4ea2787ef4819886c82a60d8413478"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 547,
+          "noCache": 547,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 8,
+          "text": 8,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 547,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 8,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_0810669c10811902006a4ea277e9e08198b4751226ebd3b08e",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}
