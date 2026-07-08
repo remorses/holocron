@@ -137,16 +137,22 @@ export function ChatWidget({
       tools: propTools,
       context: context ?? {},
     })
-    // Register prop tools on document.modelContext for agent discovery
+    // Register prop tools on document.modelContext for agent discovery.
+    // Tools with exposeToModelContext: false (browser automation) are skipped.
+    // Track which tools we actually registered so cleanup only removes ours.
+    const registered: string[] = []
     for (const t of propTools) {
-      registerToolOnModelContext(t)
+      if (t.exposeToModelContext !== false) {
+        registerToolOnModelContext(t)
+        registered.push(t.name)
+      }
     }
     if (hasExistingSession()) {
       void ensureSessionRestored()
     }
     return () => {
-      for (const t of propTools) {
-        unregisterTool(t.name)
+      for (const name of registered) {
+        unregisterTool(name)
       }
     }
   }, [domain, currentSlug, siteName, tools, context])

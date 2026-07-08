@@ -99,6 +99,10 @@ export type ChatToolDefinition = ChatToolSchema & {
   needsApproval?:
     | boolean
     | ((args: { input: Record<string, unknown> }) => ToolApprovalCheck | Promise<ToolApprovalCheck>)
+  /** Whether to expose this tool on document.modelContext for external browser
+   *  agent discovery. Defaults to true. Browser automation tools from pageTools()
+   *  set this to false so they stay internal to the holocron chat widget. */
+  exposeToModelContext?: boolean
 }
 
 // ── document.modelContext polyfill + internal registry ───────────────
@@ -132,9 +136,9 @@ type ModelContextTool = {
 }
 
 type ModelContext = {
-  registerTool: (tool: ModelContextTool) => void
+  registerTool: (tool: ModelContextTool) => void | Promise<void>
   unregisterTool: (name: string) => void
-  getTools: () => ModelContextTool[]
+  getTools: () => ModelContextTool[] | Promise<ModelContextTool[]>
 }
 
 /** Install the polyfill if document.modelContext is not natively available. */
@@ -178,6 +182,7 @@ function toModelContextTool(tool: ChatToolDefinition): ModelContextTool {
  */
 export function registerToolOnModelContext(tool: ChatToolDefinition): void {
   getToolRegistry().set(tool.name, tool)
+  if (tool.exposeToModelContext === false) return
   const ctx = ensureModelContext()
   if (ctx) ctx.registerTool(toModelContextTool(tool))
 }
@@ -204,13 +209,16 @@ export function getRegisteredTools(): ChatToolDefinition[] {
  * code (not through defineTool()). Adapts the WebMCP execute(input) shape into
  * our ChatToolDefinition run({input}) shape. Tools already in our internal
  * registry are excluded to avoid duplicates.
+ *
+ * Async because the native WebMCP API returns promises from getTools().
  */
-export function getNativeModelContextTools(): ChatToolDefinition[] {
+export async function getNativeModelContextTools(): Promise<ChatToolDefinition[]> {
   if (typeof document === 'undefined' || !('modelContext' in document)) return []
   const ctx = (document as any).modelContext as ModelContext
   const registry = getToolRegistry()
+  const nativeTools = await ctx.getTools()
   const tools: ChatToolDefinition[] = []
-  for (const native of ctx.getTools()) {
+  for (const native of nativeTools) {
     // Skip tools we registered ourselves (already in the internal registry)
     if (registry.has(native.name)) continue
     tools.push({
