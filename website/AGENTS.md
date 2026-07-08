@@ -20,7 +20,7 @@ Key references:
 
 ## Supported models
 
-Allowed models are defined in `src/gateway.ts` (`ALLOWED_MODELS`). GLM 4.7 Flash is both the authenticated default and the missing-key temporary fallback. To add a new model, add its `@cf/` ID to the map.
+Allowed models are defined in `src/gateway.ts` (`ALLOWED_MODELS`). Kimi K2.5 is both the authenticated default and the missing-key temporary fallback. To add a new model, add its `@cf/` ID to the map.
 
 ## Error tracking with strada
 
