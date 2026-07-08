@@ -8,6 +8,7 @@
  */
 
 import { createStore } from 'zustand'
+import type { ChatToolDefinition } from './define-tool.ts'
 
 export type ChatWidgetConfig = {
   /** Full API URL for chat requests (e.g. "https://docs.myapp.com/holocron-api/chat") */
@@ -18,6 +19,14 @@ export type ChatWidgetConfig = {
   siteName: string
   /** Portal target for drawers/tooltips (shadow mount container or document.body) */
   portalTarget: HTMLElement | null
+  /** Client-side tools that execute in the browser when the model calls them. */
+  tools: ChatToolDefinition[]
+  /** Arbitrary context object injected into the system prompt as XML. */
+  context: Record<string, unknown>
+  /** Persistent chat session id (chs_...). In embedded mode read from the
+   *  JS-readable cookie on page load; in cross-origin widget mode loaded
+   *  from/persisted to localStorage. */
+  sessionId: string | null
 }
 
 export const chatWidgetStore = createStore<ChatWidgetConfig>(() => ({
@@ -25,4 +34,7 @@ export const chatWidgetStore = createStore<ChatWidgetConfig>(() => ({
   currentSlug: '/',
   siteName: '',
   portalTarget: null,
+  tools: [],
+  context: {},
+  sessionId: null,
 }))

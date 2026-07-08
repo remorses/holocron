@@ -6,10 +6,11 @@
  * siteName) so ChatDrawer can be holocron-agnostic.
  */
 
-import { useLayoutEffect } from 'react'
+import { useLayoutEffect, useEffect } from 'react'
 import { useHolocronData } from '../router.ts'
 import { chatWidgetStore } from '../chat/chat-widget-store.ts'
 import { ChatDrawer } from '../chat/chat-drawer.tsx'
+import { ensureSessionRestored, hasExistingSession } from '../chat/chat-submit.ts'
 
 export function HolocronChatBridge() {
   const { currentPageHref, site } = useHolocronData()
@@ -27,6 +28,16 @@ export function HolocronChatBridge() {
       // portalTarget stays null → ChatDrawer falls back to document.body
     })
   }, [basePath, currentPageHref, site.config?.name])
+
+  // Eagerly restore the persisted conversation on page load when a session
+  // cookie exists. This pre-populates chatStore so the sidebar and drawer
+  // show the previous conversation immediately instead of waiting for
+  // the user to open the chat.
+  useEffect(() => {
+    if (hasExistingSession()) {
+      void ensureSessionRestored()
+    }
+  }, [])
 
   return <ChatDrawer />
 }

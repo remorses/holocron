@@ -5,6 +5,7 @@
 
 export { UsageCounter } from './usage-counter-do.ts'
 export { ConfigOverrideDO } from './config-override-do.ts'
+export { ChatSessionDO } from './chat-session-do.ts'
 
 import './strada-ssr.ts'
 import { trace, captureException, SpanStatusCode } from '@strada.sh/sdk'

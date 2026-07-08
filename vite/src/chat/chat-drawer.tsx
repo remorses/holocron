@@ -3,9 +3,10 @@
 /**
  * ChatDrawer — slide-in panel for AI chat.
  *
- * Fully ephemeral — no localStorage persistence. Chat resets on page
- * reload. Persistence can be added later server-side (JSX parts can't
- * be serialized to localStorage).
+ * Conversations persist server-side keyed by a session id (JS-readable cookie
+ * in embedded mode, localStorage in widget mode). The conversation is restored
+ * eagerly on page load by HolocronChatBridge; "New chat" deletes it via
+ * clearChatSession().
  *
  * Pure CSS transitions — no Radix, no framer-motion.
  * Portal target comes from chatWidgetStore (document.body for holocron,
@@ -20,7 +21,7 @@ function useChatStore<T>(selector: (s: import('./chat-store.ts').ChatState) => T
   return useSyncExternalStore(chatStore.subscribe, () => selector(chatStore.getState()), () => selector(chatStore.getState()))
 }
 import { chatWidgetStore } from './chat-widget-store.ts'
-import { submitChat } from './chat-submit.ts'
+import { clearChatSession, ensureSessionRestored, submitChat } from './chat-submit.ts'
 import {
   ChatMessages,
   ChatLoadingDots,
@@ -145,6 +146,9 @@ function ChatDrawerInner() {
 
   const handleClear = useCallback(() => {
     handleStop()
+    // Delete the persisted conversation and rotate the session id so the
+    // next message starts a fresh server-side session.
+    void clearChatSession()
     chatStore.setState({
       isGenerating: false,
       abortController: null,
@@ -153,6 +157,7 @@ function ChatDrawerInner() {
       draftText: '',
       pendingSubmit: false,
       errorMessage: null,
+      approvalResolvers: {},
     })
   }, [handleStop])
 
@@ -171,6 +176,10 @@ function ChatDrawerInner() {
 
   useEffect(() => {
     if (drawerState !== 'open') return
+    // Lazily restore the persisted conversation the first time the drawer
+    // opens. submitChat also awaits this internally, so an auto-submit
+    // below cannot race the restore and overwrite server-side history.
+    void ensureSessionRestored()
     const { pendingSubmit, draftText } = chatStore.getState()
     if (pendingSubmit && draftText.trim()) {
       void handleSubmit(draftText.trim())
@@ -196,9 +205,13 @@ function ChatDrawerInner() {
   // Auto-close drawer when any link is clicked (internal navigation,
   // hash links, external links). Uses a document-level click listener
   // so every <a> in the page is covered without per-component wiring.
+  // Programmatic clicks (e.isTrusted === false) from client tools
+  // (e.g. browser_click calling el.click()) are excluded so the drawer
+  // stays open while tools navigate.
   useEffect(() => {
     if (drawerState !== 'open') return
     function onClickLink(e: MouseEvent) {
+      if (!e.isTrusted) return
       const anchor = (e.target as HTMLElement)?.closest?.('a')
       if (!anchor) return
       chatStore.setState({ drawerState: 'closed' })

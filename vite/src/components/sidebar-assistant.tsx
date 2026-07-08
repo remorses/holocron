@@ -24,6 +24,7 @@ export type { ChatInputProps } from '../chat/chat-input.tsx'
 
 // Import for local use
 import { ChatInput, hideChildrenForSnapshot } from '../chat/chat-input.tsx'
+import { ensureSessionRestored } from '../chat/chat-submit.ts'
 
 // ── Sidebar assistant (wraps ChatInput with muted header) ────────────
 
@@ -59,7 +60,22 @@ export function SidebarAssistant() {
         () => { chatStore.setState({ drawerState: 'open' }) },
         () => hideChildrenForSnapshot(widgetRef.current),
       )
+      return
     }
+    // After a page refresh the store is empty but a persisted conversation
+    // may exist server-side. Restore lazily on first focus and reopen the
+    // drawer if a conversation came back (mirrors the in-memory behavior).
+    void ensureSessionRestored().then(() => {
+      if (
+        chatStore.getState().messages.length > 0 &&
+        chatStore.getState().drawerState === 'closed'
+      ) {
+        withViewTransition(
+          () => { chatStore.setState({ drawerState: 'open' }) },
+          () => hideChildrenForSnapshot(widgetRef.current),
+        )
+      }
+    })
   }
 
   // Sidebar owns the view-transition-name only when drawer is closed.

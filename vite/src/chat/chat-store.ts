@@ -38,6 +38,18 @@ export type ChatPart =
       output: string
       error?: string
     }
+  | {
+      type: 'tool-approval-request'
+      toolCallId: string
+      toolName: string
+      /** Human readable description of the action (model-provided `description`
+       *  input field when available, otherwise stringified args). */
+      description: string
+      /** Optional custom confirmation message (e.g. from the
+       *  data-holocron-requires-approval attribute value). */
+      message?: string
+      state: 'pending' | 'approved' | 'denied'
+    }
 
 export type ChatMessage = {
   role: 'user' | 'assistant'
@@ -55,7 +67,9 @@ export type ChatState = {
   /** When true, the drawer auto-submits draftText on open (user pressed Enter in sidebar). */
   pendingSubmit: boolean
   abortController: AbortController | null
-  errorMessage: string | null
+  errorMessage: null | string
+  /** Resolvers for pending tool approval prompts, keyed by toolCallId. */
+  approvalResolvers: Record<string, (approved: boolean) => void>
 }
 
 export const chatStore = createStore<ChatState>(() => ({
@@ -67,7 +81,28 @@ export const chatStore = createStore<ChatState>(() => ({
   pendingSubmit: false,
   abortController: null,
   errorMessage: null,
+  approvalResolvers: {},
 }))
+
+/** Resolve a pending tool approval: flips the approval part's state in the
+ *  message list and resumes the awaiting submitChat loop. */
+export function respondToApproval(toolCallId: string, approved: boolean): void {
+  const { approvalResolvers, messages } = chatStore.getState()
+  const resolve = approvalResolvers[toolCallId]
+  const { [toolCallId]: _removed, ...rest } = approvalResolvers
+  chatStore.setState({
+    approvalResolvers: rest,
+    messages: messages.map((m) => ({
+      ...m,
+      parts: m.parts.map((p) =>
+        p.type === 'tool-approval-request' && p.toolCallId === toolCallId && p.state === 'pending'
+          ? { ...p, state: approved ? 'approved' : 'denied' }
+          : p,
+      ),
+    })),
+  })
+  resolve?.(approved)
+}
 
 /** VT name shared between sidebar widget (closed) and drawer panel (open). */
 export const CHAT_CONTAINER_VT_NAME = 'holocron-chat-container'
@@ -80,7 +115,7 @@ export function withViewTransition(
   fn: () => void,
   prepare?: () => (() => void) | void,
 ): void {
-  if (typeof document !== 'undefined' && 'startViewTransition' in document) {
+  if (typeof document !== 'undefined' && typeof document.startViewTransition === 'function') {
     const cleanup = prepare?.()
     const vt = (document as any).startViewTransition(() => {
       flushSync(fn)
