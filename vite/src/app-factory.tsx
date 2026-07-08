@@ -33,7 +33,7 @@ import { RenderBannerNodes } from './components/layout/banner.tsx'
 import { P, SectionHeading } from './components/markdown/typography.tsx'
 import { Danger, Warning } from './components/markdown/callout.tsx'
 import { CodeBlock } from './components/markdown/code-block.tsx'
-import { extractParseErrorInfo, HolocronMdxParseError } from './lib/logger.ts'
+import { extractParseErrorInfo, HolocronMdxParseError, logger } from './lib/logger.ts'
 import { slug as githubSlug } from 'github-slugger'
 import { NotFound } from './components/not-found.tsx'
 import {
@@ -58,7 +58,7 @@ import { visit } from 'unist-util-visit'
 import { RenderNodes, mdxComponents, renderNode } from './lib/mdx-components-map.tsx'
 import { SiteHead, THEME_SCRIPT, GtmNoscript } from './lib/site-head.tsx'
 import { encodeFederationPayload } from 'spiceflow/federation'
-import { ChatRenderNodes } from './lib/chat-render.tsx'
+import { modelMessagesToChatMessages, renderMarkdownTextPart } from './lib/chat-restore.tsx'
 import dedent from 'string-dedent'
 import { buildOgImageUrl } from './lib/og-utils.ts'
 import { getPageRendering, getPageRobots, getPageSeoMeta, isIndexablePage, parsePageFrontmatter, serializeKeywords, type PageFrontmatter, type PageRendering } from './lib/page-frontmatter.ts'
@@ -548,6 +548,8 @@ function parseChatRequestBody(value: unknown): {
   modelMessages: Record<string, unknown>[]
   message: string
   currentSlug: string
+  toolSchemas?: { name: string; description: string; inputJsonSchema: Record<string, unknown> }[]
+  context?: Record<string, unknown>
 } {
   if (!isRecord(value) || !Array.isArray(value.modelMessages) || typeof value.message !== 'string' || typeof value.currentSlug !== 'string') {
     throw new Error('Invalid chat request body')
@@ -557,11 +559,61 @@ function parseChatRequestBody(value: unknown): {
     modelMessages: value.modelMessages.filter(isRecord),
     message: value.message,
     currentSlug: value.currentSlug,
+    toolSchemas: Array.isArray(value.toolSchemas) ? value.toolSchemas as any : undefined,
+    context: isRecord(value.context) ? value.context : undefined,
   }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+// ── Persistent chat sessions ─────────────────────────────────────────
+// The session id is a 256-bit random bearer token (chs_ + 43 base64url
+// chars). It is stored in a first-party cookie (JS-readable, not
+// httpOnly) for the embedded docs site so the client can detect an
+// existing session on page load and eagerly restore the conversation.
+// The id is also mirrored to the widget via a `session` stream chunk so
+// cross-origin ChatWidget embeds (which cannot receive our cookie) can
+// keep it in localStorage and send it back as a header.
+
+const CHAT_SESSION_COOKIE = 'holocron_chat'
+const CHAT_SESSION_ID_RE = /^chs_[A-Za-z0-9_-]{43}$/
+
+/** Read the chat session id from the request — explicit header first
+ *  (cross-origin widget), then the first-party cookie (embedded mode). */
+function readChatSessionId(request: Request): string | null {
+  const header = request.headers.get('x-holocron-chat-session')
+  if (header && CHAT_SESSION_ID_RE.test(header)) return header
+  const cookie = request.headers.get('cookie') || ''
+  const match = cookie.match(/(?:^|;\s*)holocron_chat=([^;\s]+)/)
+  const value = match?.[1]
+  if (value && CHAT_SESSION_ID_RE.test(value)) return value
+  return null
+}
+
+/** Generate a new chat session id: 32 CSPRNG bytes as base64url (43 chars). */
+function generateChatSessionId(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32))
+  let binary = ''
+  for (const byte of bytes) binary += String.fromCharCode(byte)
+  return 'chs_' + btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '')
+}
+
+/** Build the Set-Cookie value for the chat session (30 days).
+ *  NOT httpOnly — the client reads document.cookie to detect an existing
+ *  session on page load and eagerly restore the conversation.
+ *  `Secure` is added on https only so plain-http dev servers keep working.
+ *  Path is scoped to the site's base path so two holocron sites hosted on
+ *  the same origin under different base paths keep separate sessions. */
+function chatSessionCookie(args: {
+  sessionId: string
+  requestUrl: string
+  maxAgeSeconds: number
+  path: string
+}): string {
+  const secure = args.requestUrl.startsWith('https:') ? '; Secure' : ''
+  return `${CHAT_SESSION_COOKIE}=${args.sessionId}; Path=${args.path}; Max-Age=${args.maxAgeSeconds}; SameSite=Lax${secure}`
 }
 
 function getToolArgs(input: unknown): Record<string, unknown> {
@@ -697,6 +749,11 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
    *  contain `--` and must not end with `-`. */
   function escapeXmlComment(value: string): string {
     return value.replaceAll('--', '- -').replace(/-$/, '- ')
+  }
+
+  /** Escape a string for use as XML text content. */
+  function escapeXmlText(value: string): string {
+    return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
   }
 
   function buildLlmsTxt(origin: string): string {
@@ -1513,12 +1570,19 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   }
 
   // /holocron-api/chat — only registered when assistant is enabled
-  // CORS headers for cross-origin widget use
+  // CORS headers for cross-origin widget use. x-holocron-chat-session carries
+  // the persistent session id for widget embeds that cannot use our cookie.
   const chatCorsHeaders = {
     'access-control-allow-origin': '*',
-    'access-control-allow-methods': 'POST, OPTIONS',
-    'access-control-allow-headers': 'content-type',
+    'access-control-allow-methods': 'GET, POST, OPTIONS',
+    'access-control-allow-headers': 'content-type, x-holocron-chat-session',
   }
+  const CHAT_SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60
+  // Cookie path + site-key suffix scoped to the base path so multiple
+  // holocron sites on one origin (different base paths) don't share sessions.
+  const chatSessionCookiePath = withBaseRoute(site.base, '/')
+  const chatSiteKey = (request: Request) =>
+    `${new URL(request.url).host}${chatSessionCookiePath === '/' ? '' : chatSessionCookiePath}`
   for (const chatRoute of new Set(['/holocron-api/chat', withBaseRoute(site.base, '/holocron-api/chat')])) {
     // OPTIONS preflight for CORS
     app = app.options(chatRoute, async () => new Response(null, { status: 204, headers: chatCorsHeaders }))
@@ -1529,10 +1593,17 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     app = app.post(chatRoute, async ({ request }: { request: Request }) => {
       const body = parseChatRequestBody(await request.json())
 
+      // Resolve or mint the persistent session id. Newly minted ids are
+      // announced to the client via a `session` stream chunk (for the
+      // cross-origin widget) and set as a first-party httpOnly cookie
+      // (for the embedded docs site).
+      const existingSessionId = readChatSessionId(request)
+      const sessionId = existingSessionId ?? generateChatSessionId()
+
       // Build system prompt
       const allPages = collectAllPages(site.navigation)
       const pageIndex = allPages
-        .map((p) => `<page path="/docs/${p.slug}.mdx" title="${p.title}" />`)
+        .map((p) => `<page path="/docs/${p.slug}.mdx" href="${p.href}" title="${p.title}" />`)
         .join('\n')
       const currentPageSlug = slugs.find((slug) => {
         const href = slugToHref(slug)
@@ -1562,12 +1633,10 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         - Then read the best match: cat /docs/slug.mdx
 
         ## Links
+        - Each page in the <pages> index has an href attribute — always use that exact href for links
         - Render markdown links with absolute paths starting with /
-        - Convert file paths to page paths: remove /docs/ prefix, remove .mdx extension, remove trailing /index
-        - /docs/index.mdx -> [Home](/)
-        - /docs/quickstart.mdx -> [Quickstart](/quickstart)
-        - /docs/guide/index.mdx -> [Guide](/guide)
-        - /docs/api/overview.mdx -> [API](/api/overview)
+        - If you find a file via bash (e.g. /docs/foo/bar.mdx), look up its href in the <pages> index
+        - If not in the index, convert manually: remove /docs/ prefix, remove .mdx extension, remove trailing /index, then prepend /
         - NEVER include the site origin, base URL, or domain in links
         - NEVER use bare relative paths like "docs/foo" without a leading slash
 
@@ -1587,57 +1656,46 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         <pages>
         ${pageIndex}
         </pages>
+        ${body.context && Object.keys(body.context).length > 0
+          ? `\n<user_context format="json">\n${escapeXmlText(JSON.stringify(body.context, null, 2))}\n</user_context>`
+          : ''
+        }
+        ${body.toolSchemas?.length
+          ? `\n## Client tools\nYou have access to these additional tools that run in the user's browser:\n${body.toolSchemas.map((t: any) => `- **${t.name}**: ${t.description}`).join('\n')}\n\nAlways prefer client tools over the bash tool when both could accomplish the task. Client tools interact directly with the page the user is on. Only fall back to bash for tasks client tools cannot handle, like searching or reading documentation files.`
+          : ''
+        }
       `
 
       const messages = [
         { role: 'system' as const, content: systemPrompt },
         ...body.modelMessages,
-        { role: 'user' as const, content: body.message },
+        // On initial submit, message is the user's text. On re-POST after
+        // client tool execution, message is empty and modelMessages already
+        // contains the full conversation history including tool results.
+        ...(body.message ? [{ role: 'user' as const, content: body.message }] : []),
       ]
 
-      // Points to the hosted Holocron chat route. It owns model selection,
-      // quota checks, docs.zip fetching, and AI SDK streaming.
-      const chatUrl = new URL(holocronUrl('/api/chat'))
-      const useInlineDocs = isLocalhostUrl(request.url)
-      const apiKey = getHolocronApiKey()
       let textBuffer = ''
       const toolNames = new Map<string, string>()
 
-      async function* generateParts() {
-        // Uses `any` — vite is the framework package and must not depend on the
-        // website. The chat endpoint shape is validated at runtime by the server.
-        const chatFetch = createSpiceflowFetch<any>(chatUrl.origin, {
-          headers: apiKey ? { authorization: `Bearer ${apiKey}` } : {},
-        })
-        const docsPayload = useInlineDocs
-          ? {
-              docsPages: {
-                // Page MDX content
-                ...Object.fromEntries(
-                  (await Promise.all(slugs.map(async (slug) => {
-                    const mdx = await providers.getMdxSource(slug)
-                    return mdx === undefined ? undefined : [`/docs/${slug}.mdx`, buildMarkdownSource(mdx)] as const
-                  }))).filter((page) => page !== undefined),
-                ),
-
-              },
-            }
-          : { docsZipUrl: new URL(withBaseRoute(site.base, '/docs.zip'), request.url).toString() }
-        const uiStream = await chatFetch('/api/chat', {
-          method: 'POST',
-          body: {
-            messages,
-            ...docsPayload,
-            skillUrls: [],
-            pageSlug: body.currentSlug,
-          },
-        })
-
-        if (uiStream instanceof Error) {
-          yield { type: 'tool-result' as const, toolCallId: 'holocron-chat', toolName: 'holocron-chat', output: '', error: uiStream.message }
-          return
+      /** Yield any buffered text as a rendered part. Called on text-end AND
+       *  before tool parts: some providers only close the text part (text-end)
+       *  after the tool input chunk, so without this flush a tool call that
+       *  the model announced with text would render ABOVE that text. */
+      function flushTextBuffer() {
+        if (!textBuffer.trim()) {
+          textBuffer = ''
+          return null
         }
+        // Shared with the session restore path (chat-restore.tsx) so
+        // restored and streamed messages render identically.
+        const part = renderMarkdownTextPart(textBuffer)
+        textBuffer = ''
+        return part
+      }
 
+      /** Convert a UIMessageStream-like async iterable into ChatPart stream. */
+      async function* convertChunksToParts(uiStream: AsyncIterable<any>) {
         for await (const chunk of uiStream) {
           if (chunk.type === 'notice') {
             yield chunk
@@ -1650,26 +1708,14 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
           }
 
           if (chunk.type === 'text-end') {
-            if (textBuffer.trim()) {
-              let jsx: React.ReactNode
-              try {
-                const mdast = mdxParse(textBuffer)
-                jsx = (
-                  <ChatRenderNodes
-                    markdown={textBuffer}
-                    nodes={mdast.children}
-                  />
-                )
-              } catch {
-                jsx = <P className='whitespace-pre-wrap'>{textBuffer}</P>
-              }
-              yield { type: 'text' as const, jsx, text: textBuffer }
-            }
-            textBuffer = ''
+            const text = flushTextBuffer()
+            if (text) yield text
             continue
           }
 
           if (chunk.type === 'tool-input-available') {
+            const text = flushTextBuffer()
+            if (text) yield text
             toolNames.set(chunk.toolCallId, chunk.toolName)
             yield {
               type: 'tool-call' as const,
@@ -1681,6 +1727,8 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
           }
 
           if (chunk.type === 'tool-output-available') {
+            const text = flushTextBuffer()
+            if (text) yield text
             const rawOutput = getToolOutput(chunk.output)
             yield {
               type: 'tool-result' as const,
@@ -1697,7 +1745,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
               type: 'model-messages' as const,
               messages: [
                 ...body.modelMessages,
-                { role: 'user', content: body.message },
+                ...(body.message ? [{ role: 'user', content: body.message }] : []),
                 ...chunk.messages,
               ],
             }
@@ -1706,12 +1754,137 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         }
       }
 
+      async function* generateParts() {
+        // Announce a freshly minted session id so the widget can persist it
+        // (localStorage in cross-origin mode; the cookie covers embedded mode).
+        if (!existingSessionId) {
+          yield { type: 'session' as const, sessionId }
+        }
+        // Forward to the Holocron chat gateway (holocron.so or HOLOCRON_URL override).
+        const chatUrl = new URL(holocronUrl('/api/chat'))
+        const useInlineDocs = isLocalhostUrl(request.url)
+        const apiKey = getHolocronApiKey()
+        const chatFetch = createSpiceflowFetch<any>(chatUrl.origin, {
+          headers: {
+            ...(apiKey ? { authorization: `Bearer ${apiKey}` } : {}),
+            // Site key for session scoping when unauthenticated. Includes the
+            // base path so co-hosted holocron sites stay isolated.
+            'x-holocron-site': chatSiteKey(request),
+          },
+        })
+        const docsPayload = useInlineDocs
+          ? {
+              docsPages: {
+                ...Object.fromEntries(
+                  (await Promise.all(slugs.map(async (slug) => {
+                    const mdx = await providers.getMdxSource(slug)
+                    return mdx === undefined ? undefined : [`/docs/${slug}.mdx`, buildMarkdownSource(mdx)] as const
+                  }))).filter((page) => page !== undefined),
+                ),
+              },
+            }
+          : { docsZipUrl: new URL(withBaseRoute(site.base, '/docs.zip'), request.url).toString() }
+        const uiStream = await chatFetch('/api/chat', {
+          method: 'POST',
+          body: {
+            messages,
+            ...docsPayload,
+            skillUrls: [],
+            pageSlug: body.currentSlug,
+            sessionId,
+            ...(body.toolSchemas?.length ? { toolSchemas: body.toolSchemas } : {}),
+          },
+        })
+
+        if (uiStream instanceof Error) {
+          yield { type: 'tool-result' as const, toolCallId: 'holocron-chat', toolName: 'holocron-chat', output: '', error: uiStream.message }
+          return
+        }
+
+        yield* convertChunksToParts(uiStream)
+      }
+
       const response = await encodeFederationPayload({ stream: generateParts() })
       for (const [key, value] of Object.entries(chatCorsHeaders)) {
         response.headers.set(key, value)
       }
+      // Refresh (or set) the session cookie on every turn so active
+      // conversations keep sliding their 30-day expiry forward.
+      response.headers.append(
+        'set-cookie',
+        chatSessionCookie({ sessionId, requestUrl: request.url, maxAgeSeconds: CHAT_SESSION_MAX_AGE_SECONDS, path: chatSessionCookiePath }),
+      )
       return response
     })
+  }
+
+  // /holocron-api/chat/session — restore + clear persisted conversations.
+  // GET returns the stored conversation rendered server-side (same JSX
+  // pipeline as live streaming) as a federation payload. POST /clear deletes
+  // the conversation and expires the cookie ("New chat").
+  if (site.config.assistant.enabled) {
+    const forwardSessionHeaders = (request: Request, sessionId: string) => ({
+      ...(getHolocronApiKey() ? { authorization: `Bearer ${getHolocronApiKey()}` } : {}),
+      'x-holocron-chat-session': sessionId,
+      'x-holocron-site': chatSiteKey(request),
+    })
+
+    for (const sessionRoute of new Set(['/holocron-api/chat/session', withBaseRoute(site.base, '/holocron-api/chat/session')])) {
+      app = app.options(sessionRoute, async () => new Response(null, { status: 204, headers: chatCorsHeaders }))
+      app = app.get(sessionRoute, async ({ request }: { request: Request }) => {
+        const sessionId = readChatSessionId(request)
+        let modelMessages: Record<string, unknown>[] = []
+        if (sessionId) {
+          try {
+            const gatewayResponse = await fetch(holocronUrl('/api/chat/session'), {
+              headers: forwardSessionHeaders(request, sessionId),
+            })
+            if (gatewayResponse.ok) {
+              const data = await gatewayResponse.json()
+              if (isRecord(data) && Array.isArray(data.modelMessages)) {
+                modelMessages = data.modelMessages.filter(isRecord)
+              }
+            }
+          } catch (error) {
+            logger.error(`chat session restore failed: ${error}`)
+          }
+        }
+        const response = await encodeFederationPayload({
+          messages: modelMessagesToChatMessages(modelMessages),
+          modelMessages,
+        })
+        for (const [key, value] of Object.entries(chatCorsHeaders)) {
+          response.headers.set(key, value)
+        }
+        return response
+      })
+    }
+
+    for (const clearRoute of new Set(['/holocron-api/chat/session/clear', withBaseRoute(site.base, '/holocron-api/chat/session/clear')])) {
+      app = app.options(clearRoute, async () => new Response(null, { status: 204, headers: chatCorsHeaders }))
+      app = app.post(clearRoute, async ({ request }: { request: Request }) => {
+        const sessionId = readChatSessionId(request)
+        if (sessionId) {
+          try {
+            await fetch(holocronUrl('/api/chat/session'), {
+              method: 'DELETE',
+              headers: forwardSessionHeaders(request, sessionId),
+            })
+          } catch (error) {
+            logger.error(`chat session clear failed: ${error}`)
+          }
+        }
+        return new Response(JSON.stringify({ cleared: true }), {
+          status: 200,
+          headers: {
+            'content-type': 'application/json',
+            ...chatCorsHeaders,
+            // Expire the cookie so the next message mints a fresh session.
+            'set-cookie': chatSessionCookie({ sessionId: '', requestUrl: request.url, maxAgeSeconds: 0, path: chatSessionCookiePath }),
+          },
+        })
+      })
+    }
   }
 
   // Resolve the per-page rendering strategy (ssr vs static) from frontmatter.

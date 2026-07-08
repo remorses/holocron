@@ -12,10 +12,16 @@
  * - ◆ for completed tool calls
  * - ⎿ gutter + whitespace-pre-wrap for tool output
  * - font-mono ToolPreviewContainer wrapper
+ *
+ * Tool call labels prefer the model-provided `description` input field
+ * (every tool schema injects one). Tools without a description fall back
+ * to the Claude-style `toolName(primary-arg)` title instead of raw JSON.
+ * All tool UI uses monospace font consistently.
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import type { ChatMessage, ChatPart } from './chat-store.ts'
+import { respondToApproval } from './chat-store.ts'
 import { CopyIcon, CheckIcon, RefreshIcon } from './chat-icons.tsx'
 import { NavTooltip } from './chat-input.tsx'
 import { ShowMore } from './show-more.tsx'
@@ -173,7 +179,58 @@ function ChatPartRenderer({
     return <ToolCallCompleted part={part} />
   }
 
+  if (part.type === 'tool-approval-request') {
+    return <ToolApprovalRequest part={part} />
+  }
+
   return null
+}
+
+// ── Tool approval request — Approve/Deny prompt before execution ─────
+
+function ToolApprovalRequest({
+  part,
+}: {
+  part: Extract<ChatPart, { type: 'tool-approval-request' }>
+}) {
+  const resolved = part.state !== 'pending'
+  const buttonClass =
+    'cursor-pointer rounded-md border border-border px-3 py-1 text-xs font-medium transition-colors'
+
+  return (
+    <div
+      data-approval-request={part.toolCallId}
+      data-approval-state={part.state}
+      className='no-bleed flex flex-col gap-2 rounded-lg border border-border bg-foreground/4 p-3'
+    >
+      <div className='text-xs font-semibold text-foreground'>
+        {part.message || 'The assistant wants to perform this action:'}
+      </div>
+      <div className='text-xs text-muted-foreground'>{part.description}</div>
+      {resolved ? (
+        <div className='text-xs text-muted-foreground'>
+          {part.state === 'approved' ? '✓ Approved' : '✗ Denied'}
+        </div>
+      ) : (
+        <div className='flex gap-2'>
+          <button
+            type='button'
+            onClick={() => respondToApproval(part.toolCallId, true)}
+            className={`${buttonClass} bg-foreground text-background hover:opacity-85`}
+          >
+            Approve
+          </button>
+          <button
+            type='button'
+            onClick={() => respondToApproval(part.toolCallId, false)}
+            className={`${buttonClass} text-foreground hover:bg-accent`}
+          >
+            Deny
+          </button>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function ChatNotice({ part }: { part: Extract<ChatPart, { type: 'notice' }> }) {
@@ -206,6 +263,34 @@ function ChatNotice({ part }: { part: Extract<ChatPart, { type: 'notice' }> }) {
 
 // ── Tool call started — animated PieLoader or static ◆ ──────────────
 
+/** Pick the primary argument to display for a tool call: the command for
+ *  bash, path/selector for browser tools, first string value otherwise. */
+function getToolPrimaryArg(args: Record<string, unknown> | undefined): string {
+  if (!args) return ''
+  for (const key of ['command', 'path', 'selector', 'value', 'text']) {
+    if (typeof args[key] === 'string' && args[key]) return args[key]
+  }
+  const firstString = Object.entries(args).find(
+    ([key, value]) => key !== 'description' && typeof value === 'string' && value,
+  )
+  if (firstString) return firstString[1] as string
+  const rest = Object.fromEntries(
+    Object.entries(args).filter(([key]) => key !== 'description'),
+  )
+  return Object.keys(rest).length > 0 ? JSON.stringify(rest) : ''
+}
+
+function truncate(text: string, max: number): string {
+  return text.length > max ? text.slice(0, max) + '…' : text
+}
+
+/** Claude-style `Tool(primary-arg)` fallback title when the model did not
+ *  provide a human readable description. */
+function formatToolTitle(toolName: string, args: Record<string, unknown> | undefined): string {
+  const primaryArg = getToolPrimaryArg(args)
+  return primaryArg ? `${toolName}(${truncate(primaryArg, 100)})` : `${toolName}()`
+}
+
 function ToolCallStarted({
   part,
   allParts,
@@ -222,20 +307,27 @@ function ToolCallStarted({
     [allParts, part.toolCallId],
   )
 
-  const command =
-    typeof part.args?.command === 'string'
-      ? part.args.command
-      : JSON.stringify(part.args)
-  const truncatedCommand =
-    command.length > 120 ? command.slice(0, 120) + '…' : command
+  // Human readable label: model-provided `description` input field when
+  // available, Claude-style `tool(primary-arg)` fallback otherwise.
+  const description =
+    typeof part.args?.description === 'string' && part.args.description
+      ? part.args.description
+      : ''
+  const label = description || formatToolTitle(part.toolName, part.args)
 
   return (
-    <ToolPreviewContainer>
-      <span style={{ whiteSpace: 'pre' }}>
-        {hasResult ? <span>◆ </span> : <PieLoader />}
-      </span>
-      <span className='truncate'><Highlight>{truncatedCommand}</Highlight></span>
-    </ToolPreviewContainer>
+    <div
+      className='flex flex-col'
+      data-tool-call={part.toolName}
+      data-tool-state={hasResult ? 'completed' : 'running'}
+    >
+      <ToolPreviewContainer>
+        <span style={{ whiteSpace: 'pre' }}>
+          {hasResult ? <span>◆ </span> : <PieLoader />}
+        </span>
+        <span className='truncate text-foreground'>{label}</span>
+      </ToolPreviewContainer>
+    </div>
   )
 }
 
@@ -290,9 +382,8 @@ function ToolPreviewContainer({
 }) {
   return (
     <div
-      className='flex items-center min-w-0 text-xs'
+      className='flex items-center min-w-0 text-xs font-mono'
       style={{
-        fontFamily: 'var(--font-code)',
         padding: '4px 0',
         lineHeight: '1.5',
         width: '100%',
