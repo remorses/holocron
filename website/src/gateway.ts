@@ -133,7 +133,7 @@ function getChatSessionStub(siteKey: string): DurableObjectStub<ChatSessionDO> {
 // Scoping sessions per site means a leaked session id from one site can
 // never be resolved through another site's key space.
 function resolveSiteKey(args: {
-  projectId?: string
+  projectId?: string | null
   siteHeader?: string | null
   docsZipUrl?: string
 }): string | null {
@@ -248,11 +248,21 @@ export const gatewayApp = new Spiceflow()
         }
       }
 
+      // Org-scoped keys are control-plane only. Chat is always billed per site
+      // via a project key; allowing org keys would skip usage limits.
+      if (authResult?.scope === 'org') {
+        throw new Response(
+          'Org-scoped API keys cannot use AI chat. Use a project-scoped holo_ key instead.',
+          { status: 403 },
+        )
+      }
+
       const body = chatRequestSchema.parse(await request.json())
       const messages: ModelMessage[] = body.messages
       const pageSlug = body.pageSlug ?? ''
+      const chatProjectId = authResult?.projectId ?? null
       const siteKey = resolveSiteKey({
-        projectId: authResult?.projectId,
+        projectId: chatProjectId,
         siteHeader: request.headers.get('x-holocron-site'),
         docsZipUrl: body.docsZipUrl,
       })
@@ -260,13 +270,13 @@ export const gatewayApp = new Spiceflow()
       // ── Authenticated: subscription (D1) → per-project credit limit (DO) ─
       // The limit is per project and depends on the subscription (Pro gets a
       // bigger budget), so resolve the subscription first, then check spend.
-      const subscriptionResult = authResult
-        ? await getProjectSubscription(authResult.projectId)
+      const subscriptionResult = chatProjectId
+        ? await getProjectSubscription(chatProjectId)
         : null
 
-      const limitCheck = authResult
+      const limitCheck = authResult && chatProjectId
         ? await getUsageStub(authResult.orgId).checkLimit({
-            projectId: authResult.projectId,
+            projectId: chatProjectId,
             sinceMs: getMonthStartMs(),
             usdLimit: creditsToUsd(monthlyCreditBudget(!!subscriptionResult)),
           })
@@ -460,8 +470,8 @@ export const gatewayApp = new Spiceflow()
       // Usage recording runs unconditionally (even on stream error/abort)
       // because the model already cost money. waitUntil survives the response.
       {
-        if (authResult) {
-          const projectId = authResult.projectId
+        if (authResult && chatProjectId) {
+          const projectId = chatProjectId
           const orgId = authResult.orgId
           waitUntil(
             (async () => {
@@ -508,8 +518,14 @@ export const gatewayApp = new Spiceflow()
         throw new Response('Invalid or missing x-holocron-chat-session header', { status: 400 })
       }
       const authResult = await validateApiKey(request.headers.get('authorization'))
+      if (authResult?.scope === 'org') {
+        throw new Response(
+          'Org-scoped API keys cannot use AI chat sessions. Use a project-scoped holo_ key instead.',
+          { status: 403 },
+        )
+      }
       const siteKey = resolveSiteKey({
-        projectId: authResult?.projectId,
+        projectId: authResult?.projectId ?? null,
         siteHeader: request.headers.get('x-holocron-site'),
       })
       if (!siteKey) {
@@ -539,8 +555,14 @@ export const gatewayApp = new Spiceflow()
         throw new Response('Invalid or missing x-holocron-chat-session header', { status: 400 })
       }
       const authResult = await validateApiKey(request.headers.get('authorization'))
+      if (authResult?.scope === 'org') {
+        throw new Response(
+          'Org-scoped API keys cannot use AI chat sessions. Use a project-scoped holo_ key instead.',
+          { status: 403 },
+        )
+      }
       const siteKey = resolveSiteKey({
-        projectId: authResult?.projectId,
+        projectId: authResult?.projectId ?? null,
         siteHeader: request.headers.get('x-holocron-site'),
       })
       if (!siteKey) {

@@ -68,7 +68,10 @@ const ErrorResponse = z.object({ error: z.string() })
 async function requireProjectAccess(request: Request, projectId: string) {
   const auth = await requireManagementAuth(request)
   const db = getDb()
-  const project = await db.query.project.findFirst({ where: { projectId } })
+  const project = await db.query.project.findFirst({
+    where: { projectId },
+    with: { org: { columns: { plan: true } } },
+  })
   if (!project) throw json({ error: 'project not found' }, { status: 404 })
 
   if (auth.type === 'session') {
@@ -76,11 +79,20 @@ async function requireProjectAccess(request: Request, projectId: string) {
       where: { userId: auth.userId, orgId: project.orgId },
     })
     if (!membership) throw json({ error: 'not a member of this organization' }, { status: 403 })
-  } else if (auth.type === 'api-key' && auth.projectId !== projectId) {
-    throw json({ error: 'API key is scoped to a different project' }, { status: 403 })
+  } else if (auth.type === 'api-key') {
+    // Org keys are control-plane only. Domains attach to a site → project key.
+    if (auth.scope === 'org') {
+      throw json(
+        { error: 'org-scoped API keys cannot manage domains. Use a project-scoped key.' },
+        { status: 403 },
+      )
+    }
+    if (auth.projectId !== projectId) {
+      throw json({ error: 'API key is scoped to a different project' }, { status: 403 })
+    }
   }
 
-  return { db, project }
+  return { db, project, orgPlan: project.org?.plan ?? 'free' as const }
 }
 
 /** Sync the KV mapping for a domain based on its Cloudflare status.
@@ -114,7 +126,7 @@ export const domainApp = new Spiceflow()
     }),
     detail: {
       summary: 'Add custom domain',
-      description: 'Register a custom domain for a deployed project. Requires a Pro subscription. The domain must be CNAMEd to cname.holocron.so for SSL provisioning.',
+      description: 'Register a custom domain for a deployed project. Requires a Pro subscription or a partner org. The domain must be CNAMEd to cname.holocron.so for SSL provisioning.',
       tags: ['Domains'],
     },
     response: {
@@ -126,13 +138,16 @@ export const domainApp = new Spiceflow()
     async handler({ request }) {
       const body = await request.json()
       const hostname = validateHostname(body.hostname)
-      const { db, project } = await requireProjectAccess(request, body.projectId)
+      const { db, project, orgPlan } = await requireProjectAccess(request, body.projectId)
 
-      // Subscription gate
+      // Subscription gate (partner orgs skip Stripe)
       const activeSubscription = await db.query.subscription.findFirst({
         where: { projectId: body.projectId, status: { in: [...ACTIVE_SUBSCRIPTION_STATUSES] } },
       })
-      const decision = canAddDomain({ hasActiveSubscription: !!activeSubscription })
+      const decision = canAddDomain({
+        hasActiveSubscription: !!activeSubscription,
+        orgPlan,
+      })
       if (!decision.allowed) {
         throw json({ error: decision.reason }, { status: 402 })
       }
