@@ -1,0 +1,213 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_021f9d39a92f0243006a4ea2aad7c0819bbe9db9484f980de0",
+      "timestamp": "2026-07-08T19:19:06.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "tool-input-start",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "toolName": "browser_highlight"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "{\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "selector"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "["
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "data"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "-action"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "=\\\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "delete"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "-account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "\\\"]"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "\",\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "message"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "Click"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": " here"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": " to"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": " delete"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": " your"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": " account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": ".\",\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "description"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "Highlight"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": " the"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": " Delete"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": " account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": " button"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": ".\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "delta": "}"
+    },
+    {
+      "type": "tool-input-end",
+      "id": "call_shTPmEdXpeA92WFyQciw0zVM"
+    },
+    {
+      "type": "tool-call",
+      "toolCallId": "call_shTPmEdXpeA92WFyQciw0zVM",
+      "toolName": "browser_highlight",
+      "input": "{\"selector\":\"[data-action=\\\"delete-account\\\"]\",\"message\":\"Click here to delete your account.\",\"description\":\"Highlight the Delete account button.\"}",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "fc_021f9d39a92f0243006a4ea2ab93ec819bab4c6dbdd158c17a"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "tool-calls"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 1399,
+          "noCache": 1399,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 40,
+          "text": 40,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 1399,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 40,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_021f9d39a92f0243006a4ea2aad7c0819bbe9db9484f980de0",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

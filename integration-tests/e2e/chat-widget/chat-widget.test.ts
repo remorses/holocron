@@ -126,11 +126,14 @@ test("client tool execution — model calls get_time and receives result", async
 
 // ── Tool approvals ────────────────────────────────────────────────
 //
-// The /approval fixture page registers pageTools (browser_click etc.) and
-// renders a Delete account button wrapped in data-holocron-requires-approval.
-// Clicking protected elements must show an Approve/Deny prompt first.
+// The /approval fixture page registers pageTools (browser_type etc.) and
+// renders an email input wrapped in data-holocron-requires-approval.
+// DOM-mutating tools targeting protected elements must show an
+// Approve/Deny prompt first. There is deliberately no click tool — the
+// model highlights elements instead — so approvals are exercised via
+// browser_type.
 
-async function askToClick(page: import("@playwright/test").Page, prompt: string) {
+async function askOnApprovalPage(page: import("@playwright/test").Page, prompt: string) {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/approval");
   await page.waitForLoadState("networkidle");
@@ -143,29 +146,29 @@ async function askToClick(page: import("@playwright/test").Page, prompt: string)
   await expect(page.locator("button[aria-label='New chat']")).toBeVisible({ timeout: 10000 });
 }
 
-const deletePrompt =
-  'Use the browser_click tool to click the Delete account button with selector [data-action="delete-account"]. Do it now without asking any questions.';
+const changeEmailPrompt =
+  'Use the browser_type tool to type "new@example.com" into the email input with selector [data-action="email-input"]. Do it now without asking any questions.';
 
-test("tool approval — Approve runs the protected click", async ({ page }) => {
+test("tool approval — Approve runs the protected type", async ({ page }) => {
   test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
 
-  await askToClick(page, deletePrompt);
+  await askOnApprovalPage(page, changeEmailPrompt);
 
   // Approval card appears; the tool has NOT run yet
   const approvalCard = page.locator("[data-approval-request]");
   await expect(approvalCard).toBeVisible({ timeout: 60000 });
-  await expect(page.getByTestId("account-status")).toHaveText("Account status: active");
+  await expect(page.getByTestId("account-email")).toHaveText("Account email: old@example.com");
 
   // The card shows the custom message from the data attribute and the
   // model-provided human readable description (not raw JSON args)
-  await expect(approvalCard).toContainText("This will delete the test account");
+  await expect(approvalCard).toContainText("This will change the account email");
   const cardText = await approvalCard.textContent();
   expect(cardText).not.toContain("{");
 
   await approvalCard.locator("button", { hasText: "Approve" }).click();
 
-  // Tool executes: the button gets clicked and state flips
-  await expect(page.getByTestId("account-status")).toHaveText("Account status: deleted", { timeout: 15000 });
+  // Tool executes: the value is typed and React state updates
+  await expect(page.getByTestId("account-email")).toHaveText("Account email: new@example.com", { timeout: 15000 });
   await expect(approvalCard).toHaveAttribute("data-approval-state", "approved");
 
   // The conversation continues after the tool result
@@ -175,10 +178,10 @@ test("tool approval — Approve runs the protected click", async ({ page }) => {
   }).toPass({ timeout: 60000 });
 }, 120000);
 
-test("tool approval — Deny blocks the protected click", async ({ page }) => {
+test("tool approval — Deny blocks the protected type", async ({ page }) => {
   test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
 
-  await askToClick(page, deletePrompt);
+  await askOnApprovalPage(page, changeEmailPrompt);
 
   const approvalCard = page.locator("[data-approval-request]");
   await expect(approvalCard).toBeVisible({ timeout: 60000 });
@@ -188,7 +191,7 @@ test("tool approval — Deny blocks the protected click", async ({ page }) => {
   await expect(approvalCard).toHaveAttribute("data-approval-state", "denied");
 
   // The tool never ran — DOM state unchanged
-  await expect(page.getByTestId("account-status")).toHaveText("Account status: active");
+  await expect(page.getByTestId("account-email")).toHaveText("Account email: old@example.com");
 
   // The denial is sent back as a tool error and the model responds with text
   await expect(async () => {
@@ -200,20 +203,54 @@ test("tool approval — Deny blocks the protected click", async ({ page }) => {
   }).toPass({ timeout: 60000 });
 
   // Still unchanged after the model's follow-up turn
-  await expect(page.getByTestId("account-status")).toHaveText("Account status: active");
+  await expect(page.getByTestId("account-email")).toHaveText("Account email: old@example.com");
 }, 120000);
 
-test("tool approval — unprotected click runs without approval", async ({ page }) => {
+test("tool approval — unprotected type runs without approval", async ({ page }) => {
   test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
 
-  await askToClick(
+  await askOnApprovalPage(
     page,
-    'Use the browser_click tool to click the Rename account button with selector [data-action="rename-account"]. Do it now without asking any questions.',
+    'Use the browser_type tool to type "New Name" into the display name input with selector [data-action="name-input"]. Do it now without asking any questions.',
   );
 
-  // The click happens directly — no approval prompt
-  await expect(page.getByTestId("account-status")).toHaveText("Account status: renamed", { timeout: 60000 });
+  // The type happens directly — no approval prompt
+  await expect(page.getByTestId("account-name")).toHaveText("Account name: New Name", { timeout: 60000 });
   await expect(page.locator("[data-approval-request]")).toHaveCount(0);
+}, 120000);
+
+test("browser_highlight — persistent overlay, returns immediately, dismissed via × button", async ({ page }) => {
+  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
+
+  await askOnApprovalPage(
+    page,
+    'Use the browser_highlight tool to highlight the Rename account button with selector [data-action="rename-account"] and message "Click here to rename your account". Do it now without asking any questions.',
+  );
+
+  // The spotlight overlay appears on document.body
+  const overlay = page.locator("[data-holocron-highlight-overlay]");
+  await expect(overlay).toBeVisible({ timeout: 60000 });
+
+  // The tool returns immediately (it does not block the AI loop waiting
+  // for dismissal), so the tool call completes while the overlay stays up.
+  const toolCall = page.locator('[data-tool-call="browser_highlight"]').first();
+  await expect(toolCall).toHaveAttribute("data-tool-state", "completed", { timeout: 30000 });
+
+  // Wait for the assistant turn to finish — the overlay must still be
+  // visible after the chat stream ends (no auto-dismiss timer).
+  await expect(async () => {
+    const messages = await page.locator("[data-message-id]").all();
+    expect(messages.length).toBeGreaterThanOrEqual(2);
+  }).toPass({ timeout: 60000 });
+  await expect(overlay).toBeVisible();
+
+  // The description card renders with a × dismiss button
+  const dismissButton = overlay.locator("button[aria-label='Dismiss highlight']");
+  await expect(dismissButton).toBeVisible();
+
+  // Clicking × removes the overlay
+  await dismissButton.click();
+  await expect(overlay).toHaveCount(0, { timeout: 5000 });
 }, 120000);
 
 test("chat messages survive client-side navigation while drawer is open", async ({ page }) => {

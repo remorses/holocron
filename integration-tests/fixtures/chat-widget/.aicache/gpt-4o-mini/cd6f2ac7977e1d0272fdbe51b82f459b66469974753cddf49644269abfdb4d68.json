@@ -1,0 +1,218 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_0bf7897d8680ccfd006a4ec6f37628819abf8f1183eb849134",
+      "timestamp": "2026-07-08T21:53:55.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "tool-input-start",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "toolName": "browser_highlight"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "{\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "selector"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "["
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "data"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "-action"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "=\\\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "rename"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "-account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "\\\"]"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "\",\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "message"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "Click"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": " here"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": " to"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": " rename"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": " your"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": " account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": ".\",\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "description"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "Highlight"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "ing"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": " the"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": " Rename"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": " account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": " button"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": ".\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "delta": "}"
+    },
+    {
+      "type": "tool-input-end",
+      "id": "call_jg0cFvgkrw3zKTV7S6YI9N87"
+    },
+    {
+      "type": "tool-call",
+      "toolCallId": "call_jg0cFvgkrw3zKTV7S6YI9N87",
+      "toolName": "browser_highlight",
+      "input": "{\"selector\":\"[data-action=\\\"rename-account\\\"]\",\"message\":\"Click here to rename your account.\",\"description\":\"Highlighting the Rename account button.\"}",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "fc_0bf7897d8680ccfd006a4ec6f41c64819a99ddd241e3b53978"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "tool-calls"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 1474,
+          "noCache": 1474,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 41,
+          "text": 41,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 1474,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 41,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_0bf7897d8680ccfd006a4ec6f37628819abf8f1183eb849134",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

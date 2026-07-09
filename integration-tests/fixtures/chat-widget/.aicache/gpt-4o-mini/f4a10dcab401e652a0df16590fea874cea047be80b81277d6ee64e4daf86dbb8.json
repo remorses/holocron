@@ -1,0 +1,131 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_01d133287d9b1772006a4ea41a94d08198ba07307b2eb1d1d7",
+      "timestamp": "2026-07-08T19:25:14.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "delta": "I've"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "delta": " highlighted"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "delta": " Rename"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "delta": " account"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "delta": " button"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "delta": "."
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "delta": " Go"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "delta": " ahead"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "delta": " and"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "delta": " click"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "delta": " it"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "delta": "!"
+    },
+    {
+      "type": "text-end",
+      "id": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_01d133287d9b1772006a4ea41b55548198a6f73ee87b82649e"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 1458,
+          "noCache": 1458,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 15,
+          "text": 15,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 1458,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 15,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_01d133287d9b1772006a4ea41a94d08198ba07307b2eb1d1d7",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

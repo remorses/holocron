@@ -1,0 +1,166 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_0aeb685d0d74d113006a4ec7a21318819bb6ea2a8724c08376",
+      "timestamp": "2026-07-08T21:56:50.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": "The"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " Rename"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " account"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " button"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " has"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " been"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " highlighted"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": "."
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " You"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " can"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " now"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " see"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " message"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " prompting"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " you"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " to"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " click"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": " it"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "delta": "."
+    },
+    {
+      "type": "text-end",
+      "id": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0aeb685d0d74d113006a4ec7a2a7b4819ba4e1761be1944e28"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 1620,
+          "noCache": 212,
+          "cacheRead": 1408
+        },
+        "outputTokens": {
+          "total": 22,
+          "text": 22,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 1620,
+          "input_tokens_details": {
+            "cached_tokens": 1408
+          },
+          "output_tokens": 22,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_0aeb685d0d74d113006a4ec7a21318819bb6ea2a8724c08376",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}
