@@ -16,6 +16,7 @@ import * as orm from 'drizzle-orm'
 import * as schema from 'db/schema'
 import { ulid } from 'ulid'
 import {
+  apiKeyCanAccessProject,
   getDb,
   requireManagementAuth,
   ensureOrg,
@@ -23,11 +24,12 @@ import {
   getOrgsForUser,
   generateApiKey,
   hashApiKey,
+  validateApiKey,
 } from './db.ts'
 import { gatewayApp } from './gateway.ts'
 import { deployApp } from './deploy-api.ts'
 import { domainApp } from './domain-api.ts'
-import { resolveGithubOidcDeployAuth } from './deploy-auth.ts'
+import { resolveGithubOidcDeployAuth, validateCustomSubdomain } from './deploy-auth.ts'
 
 // ── Shared schemas (derived from Drizzle tables) ────────────────────────
 //
@@ -47,11 +49,12 @@ const ApiKeyResponse = createSelectSchema(schema.apiKey, {
   name: true,
   prefix: true,
   projectId: true,
+  scope: true,
   createdAt: true,
 })
 
 const ApiKeyCreatedResponse = createSelectSchema(schema.apiKey)
-  .pick({ id: true, name: true, prefix: true })
+  .pick({ id: true, name: true, prefix: true, scope: true, projectId: true })
   .extend({
     key: z.string().describe('Full `holo_xxx` key. Shown only once at creation.'),
   })
@@ -76,9 +79,9 @@ async function requireAdminSessionForProject(request: Request, projectId: string
   return { db, orgId: project.orgId }
 }
 
-async function requireAdminSessionForOrg(request: Request) {
+async function requireAdminSessionForOrg(request: Request, targetOrgId?: string) {
   const session = await requireSession(request)
-  const org = await ensureOrg(session.userId, session.user.name)
+  const org = await ensureOrg(session.userId, session.user.name, targetOrgId)
   const db = getDb()
   const membership = await db.query.orgMember.findFirst({
     where: { userId: session.userId, orgId: org.id },
@@ -87,7 +90,7 @@ async function requireAdminSessionForOrg(request: Request) {
     throw json({ error: 'only admins can manage API keys' }, { status: 403 })
   }
 
-  return { db, orgId: org.id }
+  return { db, orgId: org.id, session }
 }
 
 async function requireAdminSessionForKey(request: Request, keyId: string) {
@@ -104,6 +107,14 @@ async function requireAdminSessionForKey(request: Request, keyId: string) {
   }
 
   return { db, key }
+}
+
+/** Assert a custom subdomain is free (unique). Throws 409 if taken. */
+async function assertSubdomainAvailable(db: ReturnType<typeof getDb>, subdomain: string) {
+  const existing = await db.query.project.findFirst({ where: { subdomain } })
+  if (existing) {
+    throw json({ error: `subdomain "${subdomain}" is already in use` }, { status: 409 })
+  }
 }
 
 
@@ -133,21 +144,68 @@ export const apiApp = new Spiceflow()
     path: '/api/v0/keys',
     request: z.object({
       name: z.string().min(1),
-      projectId: z.string().min(1).describe('Project ULID the key is scoped to.'),
+      scope: z.enum(['project', 'org']).optional().describe('project (default) or org. Org keys require a signed-in admin session.'),
+      projectId: z.string().min(1).optional().describe('Required when scope is project. Ignored for org keys.'),
+      orgId: z.string().min(1).optional().describe('Target org for scope=org when the caller belongs to multiple orgs. Defaults to the caller\'s default org.'),
     }),
     detail: {
       hide: true,
       summary: 'Create API key',
       description:
-        'Creates a new `holo_xxx` API key scoped to a project. Requires a signed-in org admin. The full key is returned only in this response; it is never stored in plain text.',
+        'Creates a new `holo_xxx` API key. Project keys can be minted by a signed-in org admin or by an existing org-scoped key. Org keys can only be created by a signed-in org admin (pass orgId when the admin belongs to multiple orgs). The full key is returned only once.',
       tags: ['API Keys'],
     },
     response: {
       200: ApiKeyCreatedResponse,
+      400: ErrorResponse,
+      403: ErrorResponse,
     },
     async handler({ request }) {
       const body = await request.json()
-      const { db, orgId } = await requireAdminSessionForProject(request, body.projectId)
+      const scope = body.scope ?? 'project'
+      const db = getDb()
+
+      if (scope === 'org') {
+        // Only signed-in admins can mint org keys (prevents org-key sprawl).
+        // Pass orgId when the admin belongs to multiple orgs (e.g. personal + partner).
+        const { orgId } = await requireAdminSessionForOrg(request, body.orgId)
+        const { fullKey, prefix } = generateApiKey()
+        const hash = await hashApiKey(fullKey)
+        const id = ulid()
+        await db.insert(schema.apiKey).values({
+          id,
+          orgId,
+          projectId: null,
+          scope: 'org',
+          name: body.name,
+          prefix,
+          hash,
+        })
+        return { id, name: body.name, prefix, key: fullKey, scope: 'org' as const, projectId: null }
+      }
+
+      if (!body.projectId) {
+        throw json({ error: 'projectId is required when scope is project' }, { status: 400 })
+      }
+
+      // Session admin OR org-scoped API key for the project's org.
+      const auth = await requireManagementAuth(request)
+      const project = await db.query.project.findFirst({ where: { projectId: body.projectId } })
+      if (!project) throw json({ error: 'project not found' }, { status: 404 })
+
+      if (auth.type === 'session') {
+        const membership = await db.query.orgMember.findFirst({
+          where: { userId: auth.userId, orgId: project.orgId },
+        })
+        if (!membership) throw json({ error: 'not a member of this organization' }, { status: 403 })
+        if (membership.role !== 'admin') throw json({ error: 'only admins can manage API keys' }, { status: 403 })
+      } else if (auth.scope !== 'org' || auth.orgId !== project.orgId) {
+        // Project keys cannot mint sibling keys; only org keys (same org) can.
+        throw json(
+          { error: 'creating project keys requires a signed-in admin session or an org-scoped API key' },
+          { status: 403 },
+        )
+      }
 
       const { fullKey, prefix } = generateApiKey()
       const hash = await hashApiKey(fullKey)
@@ -155,14 +213,22 @@ export const apiApp = new Spiceflow()
 
       await db.insert(schema.apiKey).values({
         id,
-        orgId,
+        orgId: project.orgId,
         projectId: body.projectId,
+        scope: 'project',
         name: body.name,
         prefix,
         hash,
       })
 
-      return { id, name: body.name, prefix, key: fullKey }
+      return {
+        id,
+        name: body.name,
+        prefix,
+        key: fullKey,
+        scope: 'project' as const,
+        projectId: body.projectId,
+      }
     },
   })
 
@@ -189,11 +255,12 @@ export const apiApp = new Spiceflow()
       })
 
       return {
-        keys: keys.map(({ id, name, prefix, projectId, createdAt }) => ({
+        keys: keys.map(({ id, name, prefix, projectId, scope, createdAt }) => ({
           id,
           name,
           prefix,
-          projectId,
+          projectId: projectId ?? null,
+          scope,
           createdAt,
         })),
       }
@@ -246,23 +313,29 @@ export const apiApp = new Spiceflow()
       tags: ['API Keys'],
     },
     response: {
-      200: z.object({ keyId: z.string(), orgId: z.string(), projectId: z.string() }),
+      200: z.object({
+        keyId: z.string(),
+        orgId: z.string(),
+        projectId: z.string().nullable(),
+        scope: z.enum(['project', 'org']),
+      }),
       401: ErrorResponse,
     },
     async handler({ request }) {
       const body = await request.json()
-      const hash = await hashApiKey(body.key)
-      const db = getDb()
-
-      const found = await db.query.apiKey.findFirst({
-        where: { hash },
-      })
-
+      // Reuse validateApiKey so defensive invariants (e.g. project scope without
+      // projectId) match every other auth path.
+      const found = await validateApiKey(`Bearer ${body.key}`)
       if (!found) {
         return json({ error: 'invalid key' }, { status: 401 })
       }
 
-      return { keyId: found.id, orgId: found.orgId, projectId: found.projectId }
+      return {
+        keyId: found.keyId,
+        orgId: found.orgId,
+        projectId: found.projectId,
+        scope: found.scope,
+      }
     },
   })
 
@@ -274,7 +347,7 @@ export const apiApp = new Spiceflow()
     detail: {
       summary: 'Get me',
       description:
-        'For a signed-in session, returns the user, all orgs they belong to, and projects per org. For a project-scoped API key, returns only the key\'s org and its single project (no user identity).',
+        'For a signed-in session, returns the user, all orgs they belong to, and projects per org. For a project-scoped API key, returns only the key\'s org and its single project (no user identity). For an org-scoped API key, returns all projects in that org.',
       tags: ['Account'],
     },
     response: {
@@ -296,17 +369,30 @@ export const apiApp = new Spiceflow()
       const auth = await requireManagementAuth(request)
       const db = getDb()
 
-      // API key: no user identity. Return only the key's org + its one project.
+      // API key: no user identity.
       if (auth.type === 'api-key') {
         const org = await db.query.org.findFirst({ where: { id: auth.orgId } })
-        const proj = await db.query.project.findFirst({
-          where: { projectId: auth.projectId, orgId: auth.orgId },
-        })
+        if (!org) return { user: null, orgs: [] }
+
+        if (auth.scope === 'org') {
+          const projects = await db.query.project.findMany({
+            where: { orgId: auth.orgId },
+            orderBy: { updatedAt: 'desc' },
+          })
+          return {
+            user: null,
+            orgs: [{ id: org.id, name: org.name, role: 'api-key', projects }],
+          }
+        }
+
+        const proj = auth.projectId
+          ? await db.query.project.findFirst({
+              where: { projectId: auth.projectId, orgId: auth.orgId },
+            })
+          : null
         return {
           user: null,
-          orgs: org
-            ? [{ id: org.id, name: org.name, role: 'api-key', projects: proj ? [proj] : [] }]
-            : [],
+          orgs: [{ id: org.id, name: org.name, role: 'api-key', projects: proj ? [proj] : [] }],
         }
       }
 
@@ -353,7 +439,7 @@ export const apiApp = new Spiceflow()
     detail: {
       summary: 'List projects',
       description:
-        'For a signed-in session, lists every project across all orgs the caller belongs to. For a project-scoped API key, lists only the key\'s own project.',
+        'For a signed-in session, lists every project across all orgs the caller belongs to. For a project-scoped API key, lists only the key\'s own project. For an org-scoped API key, lists every project in that org.',
       tags: ['Projects'],
     },
     response: {
@@ -370,13 +456,24 @@ export const apiApp = new Spiceflow()
       const auth = await requireManagementAuth(request)
       const db = getDb()
 
-      // API key: only its own project.
+      // Project API key: only its own project. Org API key: all projects in org.
       if (auth.type === 'api-key') {
-        const proj = await db.query.project.findFirst({
-          where: { projectId: auth.projectId, orgId: auth.orgId },
-        })
-        if (!proj) return { projects: [] }
         const org = await db.query.org.findFirst({ where: { id: auth.orgId } })
+        if (auth.scope === 'org') {
+          const projects = await db.query.project.findMany({
+            where: { orgId: auth.orgId },
+            orderBy: { updatedAt: 'desc' },
+          })
+          return {
+            projects: projects.map((p) => ({ ...p, orgName: org?.name || '' })),
+          }
+        }
+        const proj = auth.projectId
+          ? await db.query.project.findFirst({
+              where: { projectId: auth.projectId, orgId: auth.orgId },
+            })
+          : null
+        if (!proj) return { projects: [] }
         return { projects: [{ ...proj, orgName: org?.name || '' }] }
       }
 
@@ -403,44 +500,90 @@ export const apiApp = new Spiceflow()
   })
 
   // Called by: @holocron.so/cli create after device flow login,
-  // and the /deploy server action (via actions.tsx).
-  // Creates a docs site project record tied to the caller's org (auto-created if needed).
-  // When orgId is provided, creates the project in that specific org (user must be a member).
+  // the /deploy server action, and multi-tenant control planes (org API key).
+  // Creates a docs site project record tied to the caller's org.
   .route({
     method: 'POST',
     path: '/api/v0/projects',
     request: z.object({
       name: z.string().min(1),
-      orgId: z.string().min(1).optional().describe('Target org ID. If omitted, uses the default org (auto-created if needed).'),
+      orgId: z.string().min(1).optional().describe('Target org ID. Session only; org keys always use the key\'s org.'),
+      subdomain: z.string().min(1).max(63).optional().describe('Custom internal subdomain slug (e.g. acme-docs → acme-docs-site.holocron.so). Immutable after first production deploy.'),
+      source: z.string().min(1).max(64).optional().describe('Optional provenance label (e.g. notaku).'),
+      externalId: z.string().min(1).max(200).optional().describe('Optional external system id; unique per org.'),
     }),
     detail: {
       hide: true,
       summary: 'Create project',
-      description: 'Creates a new project in the caller\'s org (auto-created if needed). Pass orgId to target a specific org. Requires a signed-in session; project-scoped API keys cannot create sibling projects.',
+      description:
+        'Creates a new project. Accepts a signed-in session or an org-scoped API key. Project-scoped API keys cannot create sibling projects. Optional subdomain, source, and externalId support multi-tenant control planes.',
       tags: ['Projects'],
     },
-    response: { 200: ProjectResponse, 403: ErrorResponse },
+    response: {
+      200: ProjectResponse,
+      400: ErrorResponse,
+      403: ErrorResponse,
+      409: ErrorResponse,
+    },
     async handler({ request }) {
       const auth = await requireManagementAuth(request)
-      // A project-scoped API key must not create sibling projects in the org.
-      if (auth.type === 'api-key') {
-        throw json({ error: 'creating projects requires a signed-in session, not an API key' }, { status: 403 })
-      }
       const body = await request.json()
-      const org = await ensureOrg(auth.userId, auth.userName, body.orgId)
-
       const db = getDb()
+
+      let orgId: string
+      if (auth.type === 'api-key') {
+        if (auth.scope !== 'org') {
+          throw json(
+            { error: 'creating projects requires a signed-in session or an org-scoped API key' },
+            { status: 403 },
+          )
+        }
+        if (body.orgId && body.orgId !== auth.orgId) {
+          throw json({ error: 'org API key cannot create projects in another org' }, { status: 403 })
+        }
+        orgId = auth.orgId
+      } else {
+        const org = await ensureOrg(auth.userId, auth.userName, body.orgId)
+        orgId = org.id
+      }
+
+      const subdomain = body.subdomain ? validateCustomSubdomain(body.subdomain) : null
+      if (subdomain) await assertSubdomainAvailable(db, subdomain)
+
+      if (body.externalId) {
+        const existingExternal = await db.query.project.findFirst({
+          where: { orgId, externalId: body.externalId },
+        })
+        if (existingExternal) {
+          throw json(
+            { error: `externalId "${body.externalId}" is already in use in this org` },
+            { status: 409 },
+          )
+        }
+      }
+
       const projectId = ulid()
 
       // githubOwner/githubRepo are only set via OIDC (verified JWT claims).
       // Project creation never accepts unverified github metadata.
-      const [created] = await db.insert(schema.project).values({
-        projectId,
-        orgId: org.id,
-        name: body.name,
-      }).returning()
-
-      return created!
+      try {
+        const [created] = await db.insert(schema.project).values({
+          projectId,
+          orgId,
+          name: body.name,
+          subdomain,
+          source: body.source ?? null,
+          externalId: body.externalId ?? null,
+        }).returning()
+        return created!
+      } catch (err) {
+        // Unique constraint race on subdomain or externalId
+        const message = err instanceof Error ? err.message : String(err)
+        if (message.includes('UNIQUE') || message.includes('unique')) {
+          throw json({ error: 'subdomain or externalId already in use' }, { status: 409 })
+        }
+        throw err
+      }
     },
   })
 
@@ -483,7 +626,7 @@ export const apiApp = new Spiceflow()
           where: { userId: auth.userId, orgId: project.orgId },
         })
         if (!membership) throw json({ error: 'not a member of this organization' }, { status: 403 })
-      } else if (auth.type === 'api-key' && auth.projectId !== projectId) {
+      } else if (auth.type === 'api-key' && !apiKeyCanAccessProject(auth, projectId, project.orgId)) {
         throw json({ error: 'API key is scoped to a different project' }, { status: 403 })
       }
 

@@ -98,15 +98,15 @@ describe('API key — project scoped', () => {
     const projectA = await seedProject(orgId)
     const key = await seedApiKey(orgId, projectA)
 
-    // A leaked key must not mint replacement keys for persistence, even for
-    // its own project. Key creation requires an admin session.
+    // A leaked project key must not mint replacement keys for persistence.
+    // Org-scoped keys may mint project keys; project keys get 403 (auth ok, forbidden).
     expectError(
       await f('/api/v0/keys', {
         method: 'POST',
         body: { name: 'new', projectId: projectA },
         headers: bearer(key.fullKey),
       }),
-      401,
+      403,
     )
   })
 
