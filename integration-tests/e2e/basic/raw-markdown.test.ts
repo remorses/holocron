@@ -99,7 +99,14 @@ test.describe("agent detection redirects to .md URL", () => {
     expect(body).toContain("## Overview");
   });
 
-  test("ClaudeBot user-agent redirects to .md", async ({ request }) => {
+  // Agent detection was simplified (commit cb1e69c2): the redirect now only
+  // triggers on `Accept: text/markdown`. User-Agent sniffing was removed
+  // because it caused false positives for SEO crawlers (Googlebot, AhrefsBot)
+  // that ended up 302-redirected to markdown instead of HTML.
+
+  test("agent user-agent WITHOUT Accept: text/markdown gets HTML (no UA sniffing)", async ({
+    request,
+  }) => {
     const res = await request.get("/getting-started", {
       headers: {
         "user-agent":
@@ -107,39 +114,21 @@ test.describe("agent detection redirects to .md URL", () => {
       },
     });
     expect(res.status()).toBe(200);
-    expect(res.url()).toContain("/getting-started.md");
-    expect(res.headers()["content-type"]).toContain("text/markdown");
+    expect(res.url()).not.toContain(".md");
+    expect(res.headers()["content-type"]).toContain("text/html");
   });
 
-  test("claude-code user-agent redirects to .md and serves markdown", async ({
+  test("agent UA combined with Accept: text/markdown redirects and serves markdown", async ({
     request,
   }) => {
     const res = await request.get("/getting-started", {
-      headers: { "user-agent": "claude-code/1.2.3" },
+      headers: { "user-agent": "claude-code/1.2.3", accept: "text/markdown" },
     });
     expect(res.status()).toBe(200);
     expect(res.url()).toContain("/getting-started.md");
     expect(res.headers()["content-type"]).toContain("text/markdown");
     const body = await res.text();
     expect(body).toContain("## Installation");
-  });
-
-  test("ChatGPT-User user-agent redirects to .md", async ({ request }) => {
-    const res = await request.get("/", {
-      headers: { "user-agent": "ChatGPT-User/1.0" },
-    });
-    expect(res.status()).toBe(200);
-    expect(res.url()).toContain("/index.md");
-    expect(res.headers()["content-type"]).toContain("text/markdown");
-  });
-
-  test("Signature-Agent header redirects to .md", async ({ request }) => {
-    const res = await request.get("/getting-started", {
-      headers: { "signature-agent": '"https://chatgpt.com"' },
-    });
-    expect(res.status()).toBe(200);
-    expect(res.url()).toContain("/getting-started.md");
-    expect(res.headers()["content-type"]).toContain("text/markdown");
   });
 
   test("agent requesting .mdx directly is NOT redirected (served inline) @build", async ({
