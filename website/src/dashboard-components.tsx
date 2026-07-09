@@ -589,7 +589,7 @@ export function BillingPanel({
         )}
         <form action={openBillingPortal}>
           <input type="hidden" name="projectId" value={projectId} />
-          <Button type="submit" variant="outline" loadingText="Opening...">
+          <Button data-action="manage-subscription" type="submit" variant="outline" loadingText="Opening...">
             Manage subscription
           </Button>
         </form>
@@ -612,14 +612,14 @@ export function BillingPanel({
         <form action={startCheckout} className="flex-1">
           <input type="hidden" name="projectId" value={projectId} />
           <input type="hidden" name="interval" value="monthly" />
-          <Button type="submit" className="w-full" loadingText="Redirecting...">
+          <Button data-action="subscribe-monthly" type="submit" className="w-full" loadingText="Redirecting...">
             Subscribe monthly
           </Button>
         </form>
         <form action={startCheckout} className="flex-1">
           <input type="hidden" name="projectId" value={projectId} />
           <input type="hidden" name="interval" value="yearly" />
-          <Button type="submit" variant="outline" className="w-full" loadingText="Redirecting...">
+          <Button data-action="subscribe-yearly" type="submit" variant="outline" className="w-full" loadingText="Redirecting...">
             Subscribe yearly
           </Button>
         </form>
@@ -635,7 +635,7 @@ export function CreateApiKeyButton({ projectId }: { projectId: string }) {
 
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)}>
+      <Button data-action="create-key" variant="outline" onClick={() => setOpen(true)}>
         <KeyIcon className="size-4" />
         Create API key
       </Button>
@@ -759,7 +759,7 @@ export function InviteButton({ orgId }: { orgId: string }) {
 
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)}>
+      <Button data-action="invite-member" variant="outline" onClick={() => setOpen(true)}>
         <UserPlusIcon className="size-4" />
         Invite member
       </Button>
@@ -895,7 +895,7 @@ export function GrantOrgAccessButton({ githubClientId }: { githubClientId: strin
 
   return (
     <div>
-      <Button variant="outline" asChild>
+      <Button data-action="grant-org-access" variant="outline" asChild>
         <a href={settingsUrl} target="_blank" rel="noopener noreferrer">
           <BuildingIcon className="size-4" />
           Grant org access
@@ -939,7 +939,7 @@ export function SettingsForm({ projectId, initialName }: { projectId: string; in
           placeholder="My Docs"
           className="max-w-sm"
         />
-        <Button onClick={handleSave} loading={loading} disabled={name.trim() === initialName}>
+        <Button data-action="save-project-name" onClick={handleSave} loading={loading} disabled={name.trim() === initialName}>
           {saved ? 'Saved' : 'Save'}
         </Button>
       </div>
@@ -974,7 +974,7 @@ export function DeleteProjectButton({ projectId, projectName }: { projectId: str
   if (!confirming) {
     return (
       <div>
-        <Button variant="destructive" size="sm" onClick={() => setConfirming(true)}>
+        <Button data-action="delete-project" variant="destructive" size="sm" onClick={() => setConfirming(true)}>
           Delete this site
         </Button>
       </div>
@@ -1226,7 +1226,7 @@ export function ConnectGscButton({ projectId, connection }: {
   return (
     <div className="flex flex-col gap-2">
       <div>
-        <Button variant="outline" onClick={handleConnect} loading={loading}>
+        <Button data-action="connect-gsc" variant="outline" onClick={handleConnect} loading={loading}>
           <LinkIcon className="size-4" />
           Connect Google Search Console
         </Button>
@@ -1271,7 +1271,7 @@ export function CustomDomainsSection({ projectId, domains: initialDomains, hasSu
       )}
 
       <div className="flex gap-2">
-        <Button variant="outline" onClick={() => setAddOpen(true)} disabled={!hasSubscription}>
+        <Button data-action="add-domain" variant="outline" onClick={() => setAddOpen(true)} disabled={!hasSubscription}>
           <GlobeIcon className="size-4" />
           Add domain
         </Button>
