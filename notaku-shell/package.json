@@ -1,0 +1,23 @@
+{
+  "name": "notaku-shell",
+  "private": true,
+  "type": "module",
+  "description": "Minimal Holocron deploy shell for Notaku multi-tenant deploys. Built with HOLOCRON_DEPLOY=1 so holocron-data.js + holocron-page-*.js are split for per-site swapping.",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "HOLOCRON_DEPLOY=1 vite build",
+    "build:shell": "HOLOCRON_DEPLOY=1 vite build",
+    "start": "node dist/rsc/index.js"
+  },
+  "dependencies": {
+    "@holocron.so/vite": "workspace:^",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "vite": "^8.0.10"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3"
+  }
+}
