@@ -99,6 +99,13 @@ export type ChatWidgetProps = {
   tools?: ChatToolDefinition[]
   /** Arbitrary context object injected into the system prompt as XML. */
   context?: Record<string, unknown>
+  /** Client-side navigation function for browser_navigate tool.
+   *
+   *  Examples:
+   *    - Next.js: `(path) => router.push(path)`
+   *    - React Router: `(path) => navigate(path)`
+   *    - Spiceflow: `(path) => router.push(path)` */
+  navigate: (path: string) => void | Promise<void>
 }
 
 export function ChatWidget({
@@ -111,6 +118,7 @@ export function ChatWidget({
   className,
   tools,
   context,
+  navigate,
 }: ChatWidgetProps) {
   const systemDark = useSyncExternalStore(
     subscribeSystemDark,
@@ -136,6 +144,7 @@ export function ChatWidget({
       siteName,
       tools: propTools,
       context: context ?? {},
+      navigate,
     })
     // Register prop tools on document.modelContext for agent discovery.
     // Tools with exposeToModelContext: false (browser automation) are skipped.
@@ -155,7 +164,7 @@ export function ChatWidget({
         unregisterTool(name)
       }
     }
-  }, [domain, currentSlug, siteName, tools, context])
+  }, [domain, currentSlug, siteName, tools, context, navigate])
 
   // Portal target is set reactively via onMountPoint callback from ChatShadowHost.
   // No setTimeout or querySelector needed.
