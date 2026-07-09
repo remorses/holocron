@@ -428,7 +428,7 @@ export async function submitChat(
    //   3. getRegisteredTools() — custom tools registered via defineTool()
    // Higher priority wins on name collision.
    const clientToolsByName = new Map<string, ChatToolDefinition>()
-   for (const t of getNativeModelContextTools()) {
+   for (const t of await getNativeModelContextTools()) {
      clientToolsByName.set(t.name, t)
    }
    for (const t of storeBrowserTools) {
