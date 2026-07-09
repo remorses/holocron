@@ -41,9 +41,9 @@ test.describe("raw markdown under base path", () => {
     expect(body).toContain("# Guide");
   });
 
-  test("agent UA redirects to .md under base path", async ({ request }) => {
+  test("Accept: text/markdown redirects to .md under base path", async ({ request }) => {
     const res = await request.get("/docs/intro", {
-      headers: { "user-agent": "claude-code/1.0" },
+      headers: { accept: "text/markdown" },
     });
     expect(res.status()).toBe(200);
     expect(res.url()).toContain("/docs/intro.md");
