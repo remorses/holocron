@@ -1,11 +1,13 @@
 // Credit economics for hosted AI chat usage. Pure — no I/O.
 //
 // Cost is computed from the EXACT token counts the AI SDK returns, times a
-// hardcoded per-model USD rate table. This is the only viable approach: no
-// Cloudflare runtime API returns real cost/neurons for @cf/ models (getLog is a
-// dashboard log written minutes later, not a billing API), so the price has to
-// live here. Credits are a user-facing layer over dollars; USD_PER_CREDIT is
-// the only exchange-rate knob.
+// hardcoded per-model USD rate table. Credits are a user-facing layer over
+// dollars; USD_PER_CREDIT is the only exchange-rate knob.
+//
+// Models are accessed via @ai-sdk/gateway (Vercel AI Gateway) which proxies to
+// the upstream provider. The gateway model id format is "provider/model-name"
+// (e.g. "moonshotai/kimi-k2.5"). ai-fallback wraps multiple gateway models so
+// if the primary is down we automatically try the next one.
 
 /** Real USD spend one credit represents. The only exchange-rate knob. */
 export const USD_PER_CREDIT = 0.001
@@ -24,24 +26,32 @@ export function monthlyCreditBudget(hasActiveSubscription: boolean): number {
   return hasActiveSubscription ? PRO_MONTHLY_CREDITS : FREE_MONTHLY_CREDITS
 }
 
-// Selectable Workers AI models: friendly name → `@cf/` model id passed to the
-// binding. Kept next to the price table so a model and its rate live together.
+// Selectable models: friendly name → gateway model id (provider/model format).
+// Kept next to the price table so a model and its rate live together.
+// All models are accessed via @ai-sdk/gateway (Vercel AI Gateway).
+// Order matters: the first entry is the primary model, the rest are fallbacks
+// tried in order by ai-fallback when the primary errors.
 export const ALLOWED_MODELS: Record<string, string> = {
-  'kimi-k2.5': '@cf/moonshotai/kimi-k2.5',
+  'deepseek-v4-flash': 'deepseek/deepseek-v4-flash',
+  'kimi-k2.5': 'moonshotai/kimi-k2.5',
+  'gpt-4.1-mini': 'openai/gpt-4.1-mini',
+  'claude-sonnet-4': 'anthropic/claude-sonnet-4-20250514',
 }
 
-// Official Workers AI per-million-token USD rates, copied from
-// developers.cloudflare.com/workers-ai/platform/pricing. Keyed by the
-// ALLOWED_MODELS name in gateway.ts. A test asserts every selectable model has
-// a rate here, so a model can never reach production without one.
+// Per-million-token USD rates for each model. Keyed by the ALLOWED_MODELS
+// friendly name. A test asserts every selectable model has a rate here, so a
+// model can never reach production without one.
 //
 // `cachedInput` is the (cheaper) cached-prompt rate where the model offers one;
 // computeUsdCost charges cached tokens at it and the rest at `input`.
 export const MODEL_USD_PER_1M_TOKENS: Record<string, { input: number; output: number; cachedInput?: number }> = {
+  'deepseek-v4-flash': { input: 0.2, output: 0.6, cachedInput: 0.05 },
   'kimi-k2.5': { input: 0.6, output: 3.0, cachedInput: 0.1 },
+  'gpt-4.1-mini': { input: 0.4, output: 1.6, cachedInput: 0.1 },
+  'claude-sonnet-4': { input: 3.0, output: 15.0, cachedInput: 0.3 },
 }
 
-const DEFAULT_RATE = MODEL_USD_PER_1M_TOKENS['kimi-k2.5']!
+const DEFAULT_RATE = MODEL_USD_PER_1M_TOKENS['deepseek-v4-flash']!
 
 /** Exact USD cost for a request from its token counts and the model's rate.
  *  `cachedInputTokens` (a subset of `inputTokens`) is billed at the model's

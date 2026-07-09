@@ -3,6 +3,12 @@
 // creates the docs bash tool, and streams AI SDK UI chunks through Spiceflow's
 // typed SSE generator support.
 //
+// Provider architecture: all models are accessed via @ai-sdk/gateway (Vercel AI
+// Gateway) which proxies to upstream providers (Moonshot, Anthropic, OpenAI,
+// etc.). ai-fallback wraps the primary model with fallbacks so if one provider
+// is down we automatically try the next. The AI_GATEWAY_API_KEY secret
+// authenticates with Vercel's gateway; it covers all providers in one key.
+//
 // Usage tracking: authenticated requests are counted in a per-org Durable Object
 // (UsageCounter). checkLimit() runs before streaming; recordUsage() inserts the
 // full row after streaming via waitUntil so it survives after the response closes.
@@ -13,13 +19,13 @@
 // yield a friendly notice chunk (rendered as a card) instead of a raw 429.
 
 import { streamText, jsonSchema, tool as aiTool, type LanguageModelUsage, type ModelMessage, type UIMessageChunk } from 'ai'
+import { createGateway } from '@ai-sdk/gateway'
+import { createFallback } from 'ai-fallback'
 import { captureException } from '@strada.sh/sdk'
 import { env, waitUntil } from 'cloudflare:workers'
 import { unzipSync, strFromU8 } from 'fflate'
 import { Spiceflow } from 'spiceflow'
 import { z } from 'zod'
-import { createWorkersAI } from 'workers-ai-provider'
-import type { WorkersAI } from 'workers-ai-provider'
 import { validateApiKey, getProjectSubscription } from './db.ts'
 import { shouldShowTempAiNotice } from './lib/billing-rules.ts'
 import { ALLOWED_MODELS, computeUsdCost, creditsToUsd, monthlyCreditBudget, MODEL_USD_PER_1M_TOKENS, usdToCredits } from './lib/credits.ts'
@@ -27,14 +33,15 @@ import { createChatBashTool } from './chat-bash-tool.ts'
 import { NOTICE_USAGE_LIMIT_REACHED, type UsageCounter } from './usage-counter-do.ts'
 import { MAX_SNAPSHOT_BYTES, type ChatSessionDO } from './chat-session-do.ts'
 
-const DEFAULT_MODEL = 'kimi-k2.5'
-const TEMPORARY_MODEL = 'kimi-k2.5'
+const DEFAULT_MODEL = 'deepseek-v4-flash'
+const TEMPORARY_MODEL = 'deepseek-v4-flash'
 const DOCS_ZIP_CACHE_MS = 5 * 60 * 1000
 
-const THINKING_DISABLED = {
-  reasoning_effort: null,
-  chat_template_kwargs: { enable_thinking: false },
-} satisfies NonNullable<Parameters<WorkersAI['chat']>[1]>
+// All fallback models tried in order when the primary fails. The first model
+// in the ALLOWED_MODELS map is always the primary; the rest are fallbacks.
+// ai-fallback automatically switches to the next model on retryable errors
+// (rate limits, timeouts, 5xx) and resets to the primary after 60s.
+const FALLBACK_MODEL_NAMES = Object.keys(ALLOWED_MODELS)
 
 export type HolocronChatNoticeChunk = {
   type: 'notice'
@@ -145,16 +152,15 @@ function trimSnapshot(messages: unknown[]): unknown[] {
   return trimmed
 }
 
-// Resolve a turn's exact usage and USD cost. totalUsage sums every tool-call
-// step (result.usage is only the last step) and exposes cached prompt tokens,
-// which computeUsdCost bills at the model's cheaper cached rate. Tolerates a
-// rejected/absent usage promise (e.g. client abort before final usage) by
-// returning zeros.
+// Resolve a turn's exact usage and USD cost. result.usage sums every tool-call
+// step and exposes cached prompt tokens, which computeUsdCost bills at the
+// model's cheaper cached rate. Tolerates a rejected/absent usage promise
+// (e.g. client abort before final usage) by returning zeros.
 async function resolveUsageCost(
-  totalUsage: PromiseLike<LanguageModelUsage>,
+  usagePromise: PromiseLike<LanguageModelUsage>,
   modelName: string,
 ): Promise<{ inputTokens: number; outputTokens: number; costUsd: number }> {
-  const usage = await Promise.resolve(totalUsage).catch(() => null)
+  const usage = await Promise.resolve(usagePromise).catch(() => null)
   const inputTokens = usage?.inputTokens ?? 0
   const outputTokens = usage?.outputTokens ?? 0
   const cachedInputTokens = usage?.inputTokenDetails?.cacheReadTokens ?? 0
@@ -260,10 +266,31 @@ export const gatewayApp = new Spiceflow()
         skillUrls: body.skillUrls ?? [],
       })
 
-      const workersai = createWorkersAI({ binding: env.AI })
       const usesTemporaryModel = !authResult
       const modelName = usesTemporaryModel ? TEMPORARY_MODEL : DEFAULT_MODEL
-      const modelId = ALLOWED_MODELS[modelName] ?? ALLOWED_MODELS[DEFAULT_MODEL]!
+
+      // Build the AI model with automatic fallback across providers.
+      // All models go through @ai-sdk/gateway (Vercel AI Gateway) which
+      // proxies to the upstream provider (Moonshot, Anthropic, OpenAI, etc.).
+      // ai-fallback tries models in order on retryable errors (rate limits,
+      // timeouts, 5xx) and resets to the primary after 60s.
+      const gateway = createGateway({ apiKey: env.AI_GATEWAY_API_KEY })
+      const primaryModelId = ALLOWED_MODELS[modelName] ?? ALLOWED_MODELS[DEFAULT_MODEL]!
+      const fallbackModels = FALLBACK_MODEL_NAMES
+        .filter((name) => name !== modelName)
+        .map((name) => gateway(ALLOWED_MODELS[name]!))
+
+      const model = fallbackModels.length > 0
+        ? createFallback({
+            models: [gateway(primaryModelId), ...fallbackModels],
+            modelResetInterval: 60_000,
+            onError: (error, failedModelId) => {
+              captureException(error instanceof Error ? error : new Error(String(error)), {
+                tags: { route: 'gateway', model: failedModelId, reason: 'ai-fallback' },
+              })
+            },
+          })
+        : gateway(primaryModelId)
 
       // Subscribed projects never see the upgrade nag. Unauthenticated callers
       // (no API key → no project to bill) still see it. Resolved above
@@ -302,12 +329,10 @@ export const gatewayApp = new Spiceflow()
       )
 
       const result = streamText({
-        model: workersai(modelId, THINKING_DISABLED),
+        model,
         tools: { bash, ...clientTools },
         messages,
-        providerOptions: {
-          'workers-ai': THINKING_DISABLED,
-        },
+        allowSystemInMessages: true,
         stopWhen: (event) => event.steps.length >= 100,
         abortSignal: request.signal,
       })
@@ -321,14 +346,37 @@ export const gatewayApp = new Spiceflow()
         })
       }
 
+      let streamError: Error | undefined
       try {
         for await (const chunk of result.toUIMessageStream()) {
           yield chunk
         }
+      } catch (error) {
+        streamError = error instanceof Error ? error : new Error(String(error))
+        // Surface a human-readable error as a notice chunk so the user
+        // sees the actual failure reason instead of a generic "An unexpected
+        // error occurred". The AI SDK throws NoOutputGeneratedError when
+        // the model stream ends without producing output (provider timeout,
+        // empty response, upstream 5xx that exhausted fallbacks, etc.).
+        const isNoOutput = streamError.message.includes('No output generated')
+        yield {
+          type: 'notice',
+          code: 'HOLOCRON_STREAM_ERROR',
+          title: isNoOutput ? 'AI model unavailable' : 'Something went wrong',
+          message: isNoOutput
+            ? 'The AI model did not return a response. This usually means the provider is temporarily unavailable. Please try again.'
+            : streamError.message,
+        } as const satisfies HolocronChatNoticeChunk
+        captureException(streamError, {
+          tags: { route: 'gateway', model: modelName, reason: 'stream-error' },
+        })
+      }
+
+      if (!streamError) {
         // Emit this turn's exact usage (authenticated only). Cost is tokens ×
         // the per-model rate table — synchronous, no gateway.
         if (authResult) {
-          const { inputTokens, outputTokens, costUsd } = await resolveUsageCost(result.totalUsage, modelName)
+          const { inputTokens, outputTokens, costUsd } = await resolveUsageCost(result.usage, modelName)
           yield {
             type: 'usage',
             inputTokens,
@@ -363,16 +411,17 @@ export const gatewayApp = new Spiceflow()
             })
           }
         }
-      } finally {
-        // Record usage in `finally` so it runs even on stream error/abort —
-        // the model already cost money, so skipping it would let a project keep
-        // spending while checkLimit sees 0. waitUntil survives the response.
+      }
+
+      // Usage recording runs unconditionally (even on stream error/abort)
+      // because the model already cost money. waitUntil survives the response.
+      {
         if (authResult) {
           const projectId = authResult.projectId
           const orgId = authResult.orgId
           waitUntil(
             (async () => {
-              const { inputTokens, outputTokens, costUsd } = await resolveUsageCost(result.totalUsage, modelName)
+              const { inputTokens, outputTokens, costUsd } = await resolveUsageCost(result.usage, modelName)
               // Zero tokens after a real stream means the provider dropped usage
               // and we'd bill nothing — surface it instead of silently under-billing.
               if (inputTokens === 0 && outputTokens === 0) {
