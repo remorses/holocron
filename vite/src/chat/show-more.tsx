@@ -14,7 +14,7 @@ import { ChevronDownIcon } from './chat-icons.tsx'
 
 export function ShowMore({
   children,
-  height = 40,
+  height = 20,
 }: {
   children: React.ReactNode
   height?: number

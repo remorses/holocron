@@ -132,6 +132,7 @@ export async function createChatBashTool({
       'Execute bash commands in the in-memory documentation filesystem.',
       'Working directory: /docs',
       'Use grep -rn "term" /docs to search and cat /docs/slug.mdx to read files.',
+      'Always provide a short 5-10 word `description` summarizing what the command does; it is shown to the user.',
       skills.length === 0
         ? ''
         : [
@@ -142,6 +143,11 @@ export async function createChatBashTool({
     ].filter(Boolean).join('\n'),
     inputSchema: z.object({
       command: z.string().describe('The bash command to execute'),
+      description: z
+        .string()
+        .describe(
+          'Short human readable summary of what this command does, shown to the user, e.g. "Searching docs for navigation config"',
+        ),
     }),
     execute: async ({ command }: { command: string }) => {
       const result = await bash.exec(command)
