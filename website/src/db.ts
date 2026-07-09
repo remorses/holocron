@@ -285,7 +285,15 @@ export async function getOrgsForUser(userId: string): Promise<Array<{ id: string
 // cache TTL window, which is a security risk for deploy credentials. The D1
 // query is fast enough (<10ms in-region) and runs once per request at most.
 
-export async function validateApiKey(authHeader: string | null): Promise<{ orgId: string; keyId: string; projectId: string } | null> {
+export type ValidatedApiKey = {
+  orgId: string
+  keyId: string
+  /** Null for org-scoped keys. */
+  projectId: string | null
+  scope: schema.ApiKeyScope
+}
+
+export async function validateApiKey(authHeader: string | null): Promise<ValidatedApiKey | null> {
   if (!authHeader) return null
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader
   if (!token.startsWith('holo_')) return null
@@ -296,20 +304,37 @@ export async function validateApiKey(authHeader: string | null): Promise<{ orgId
     where: { hash },
   })
   if (!found) return null
-  return { orgId: found.orgId, keyId: found.id, projectId: found.projectId }
+  // Defensive: project scope without projectId is invalid data (CHECK should prevent this).
+  if (found.scope === 'project' && !found.projectId) return null
+  return {
+    orgId: found.orgId,
+    keyId: found.id,
+    projectId: found.projectId ?? null,
+    scope: found.scope,
+  }
 }
 
 // ── Management API auth (session OR api-key) ─────────────────────────
 
 /** Auth context for the `/api/v0/*` management endpoints. Either a signed-in
- *  BetterAuth session (browser/dashboard/device-flow) or a project-scoped
- *  `holo_xxx` API key. API keys are NOT impersonated as a user: they are a
- *  service principal pinned to one org + one project. Each route constrains
- *  api-key callers to `projectId` so a key for project A cannot touch
- *  project B in the same org. */
+ *  BetterAuth session (browser/dashboard/device-flow) or a `holo_xxx` API key.
+ *  API keys are NOT impersonated as a user: they are a service principal.
+ *  - scope=project: pinned to one org + one project (deploy, domains, chat)
+ *  - scope=org: control-plane only (create projects, mint project keys, list) */
 export type ManagementAuth =
   | { type: 'session'; userId: string; orgId: string; userName: string }
-  | { type: 'api-key'; orgId: string; projectId: string; keyId: string }
+  | { type: 'api-key'; orgId: string; projectId: string | null; keyId: string; scope: schema.ApiKeyScope }
+
+/** True when an api-key ManagementAuth may access the given projectId. */
+export function apiKeyCanAccessProject(
+  auth: Extract<ManagementAuth, { type: 'api-key' }>,
+  projectId: string,
+  projectOrgId: string,
+): boolean {
+  if (auth.orgId !== projectOrgId) return false
+  if (auth.scope === 'org') return true
+  return auth.projectId === projectId
+}
 
 /** Resolve management-API auth. Prefers a `holo_xxx` API key in the
  *  Authorization header, otherwise falls back to a signed-in session.
@@ -326,7 +351,13 @@ export type ManagementAuth =
 export async function requireManagementAuth(request: RequestHeaders): Promise<ManagementAuth> {
   const apiKey = await validateApiKey(request.headers.get('authorization'))
   if (apiKey) {
-    return { type: 'api-key', orgId: apiKey.orgId, projectId: apiKey.projectId, keyId: apiKey.keyId }
+    return {
+      type: 'api-key',
+      orgId: apiKey.orgId,
+      projectId: apiKey.projectId,
+      keyId: apiKey.keyId,
+      scope: apiKey.scope,
+    }
   }
 
   const session = await getSession(request)
