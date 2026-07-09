@@ -47,6 +47,43 @@
  * holocron integration where globals.css handles it. */
 @custom-variant dark (:host(.dark) &, &:where(.dark, .dark *));
 
+/* ── Tailwind --tw-* defaults for shadow DOM ──────────────────────────
+ * Tailwind v4 utilities (border, shadow-*, ring-*, transforms) read --tw-*
+ * custom properties whose defaults come from @property rules. @property is
+ * document-global and IGNORED when the stylesheet lives inside a shadow
+ * root, so those utilities silently break in the standalone widget (border
+ * width computes to 0, box-shadow to none). Tailwind's own fallback block
+ * (@layer properties) is @supports-guarded to old browsers only, so modern
+ * Chrome never applies it. Replicate the defaults unguarded, scoped to the
+ * widget, in @layer base so utilities (in @layer utilities) still win. */
+@layer base {
+  :host, :host *, :host ::before, :host ::after,
+  :where(.holocron-chat), :where(.holocron-chat) *,
+  :where(.holocron-chat) ::before, :where(.holocron-chat) ::after {
+    --tw-translate-x: 0;
+    --tw-translate-y: 0;
+    --tw-translate-z: 0;
+    --tw-border-style: solid;
+    --tw-shadow: 0 0 #0000;
+    --tw-shadow-color: initial;
+    --tw-shadow-alpha: 100%;
+    --tw-inset-shadow: 0 0 #0000;
+    --tw-inset-shadow-color: initial;
+    --tw-inset-shadow-alpha: 100%;
+    --tw-ring-color: initial;
+    --tw-ring-shadow: 0 0 #0000;
+    --tw-inset-ring-color: initial;
+    --tw-inset-ring-shadow: 0 0 #0000;
+    --tw-ring-inset: initial;
+    --tw-ring-offset-width: 0px;
+    --tw-ring-offset-color: #fff;
+    --tw-ring-offset-shadow: 0 0 #0000;
+    --tw-outline-style: solid;
+    --tw-duration: initial;
+    --tw-ease: initial;
+  }
+}
+
 /* ── Thin scrollbars ─────────────────────────────────────────────────── */
 * {
   scrollbar-width: thin;
@@ -116,6 +153,23 @@
   ::view-transition-old(holocron-chat-container),
   ::view-transition-new(holocron-chat-container) {
     animation-duration: 0ms;
+  }
+}
+
+/* ── Session dropdown open animation (subtle fade + scale) ───────────── */
+.holocron-dropdown-content {
+  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+  animation: holocron-dropdown-in 120ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes holocron-dropdown-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .holocron-dropdown-content {
+    animation: none;
   }
 }
 

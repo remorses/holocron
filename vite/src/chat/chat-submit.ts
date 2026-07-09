@@ -28,6 +28,7 @@ import { decodeFederationPayload } from 'spiceflow/react'
 import { chatStore, respondToApproval } from './chat-store.ts'
 import type { ChatMessage, ChatModelMessage, ChatPart } from './chat-store.ts'
 import { chatWidgetStore } from './chat-widget-store.ts'
+import { previewFromText, upsertStoredSession } from './chat-sessions.ts'
 import { getRegisteredTools, getNativeModelContextTools } from './define-tool.ts'
 import type { ChatToolDefinition, ChatToolSchema, ToolApprovalCheck } from './define-tool.ts'
 
@@ -70,6 +71,7 @@ type StreamChunk =
   | ChatPart
   | { type: 'model-messages'; messages: ChatModelMessage[] }
   | { type: 'session'; sessionId: string }
+  | { type: 'title'; title: string }
 
 // ── Tool approvals ──────────────────────────────────────────────────
 
@@ -191,6 +193,9 @@ function getSessionId(chatApiUrl: string): string | null {
 
 function storeSessionId(chatApiUrl: string, sessionId: string): void {
   chatWidgetStore.setState({ sessionId })
+  // Embedded mode: also write the cookie so switching to a past session
+  // survives a page reload (the server only refreshes the cookie on POST).
+  writeEmbeddedSessionCookie(chatApiUrl, sessionId)
   if (isWidgetMode(chatApiUrl) && typeof localStorage !== 'undefined') {
     try {
       localStorage.setItem(sessionStorageKey(chatApiUrl), sessionId)
@@ -198,6 +203,16 @@ function storeSessionId(chatApiUrl: string, sessionId: string): void {
       // best effort
     }
   }
+}
+
+/** Preview label for the session list: the most recent user message. */
+function latestUserPreview(): string {
+  const lastUser = chatStore.getState().messages.findLast((m) => m.role === 'user')
+  const text = (lastUser?.parts ?? [])
+    .filter((part) => part.type === 'text')
+    .map((part) => part.text)
+    .join(' ')
+  return previewFromText(text)
 }
 
 function sessionHeaders(chatApiUrl: string): Record<string, string> {
@@ -213,8 +228,9 @@ export function hasExistingSession(): boolean {
   return getSessionId(chatApiUrl) !== null
 }
 
-// Restore runs at most once per page load (singleton promise). Reset by
-// clearChatSession() so "New chat" doesn't resurrect the old conversation.
+// Restore runs at most once per page load (singleton promise). Replaced by
+// startNewChat() (resolved no-op, so a fresh chat can't resurrect the old
+// conversation) and by switchChatSession() (new restore for the chosen id).
 let restorePromise: Promise<void> | null = null
 
 /**
@@ -238,8 +254,13 @@ async function restoreChatSession(): Promise<void> {
   if (!chatApiUrl) return
   if (chatStore.getState().messages.length > 0) return
 
+  // Capture the id being restored so a New chat / session switch during the
+  // fetch can't write another conversation's messages into the store.
+  const expectedSessionId = getSessionId(chatApiUrl)
+  if (!expectedSessionId) return
+
   const response = await fetch(`${chatApiUrl}/session`, {
-    headers: sessionHeaders(chatApiUrl),
+    headers: { 'x-holocron-chat-session': expectedSessionId },
   })
   if (!response.ok) return
 
@@ -249,6 +270,9 @@ async function restoreChatSession(): Promise<void> {
   }>(response)
   if (!decoded.messages?.length) return
 
+  // Session changed while the restore was in flight (New chat / switch) —
+  // discard the stale payload instead of resurrecting the old conversation.
+  if (chatWidgetStore.getState().sessionId !== expectedSessionId) return
   // Don't clobber a conversation that started while the restore was in flight.
   const state = chatStore.getState()
   if (state.messages.length > 0 || state.isGenerating) return
@@ -256,6 +280,15 @@ async function restoreChatSession(): Promise<void> {
     messages: decoded.messages,
     modelMessages: decoded.modelMessages ?? [],
   })
+
+  // Make sure the restored session appears in the local session list
+  // (covers sessions created before the list existed, or another device).
+  const firstUser = decoded.messages.find((m) => m.role === 'user')
+  const text = (firstUser?.parts ?? [])
+    .filter((part) => part.type === 'text')
+    .map((part) => part.text)
+    .join(' ')
+  upsertStoredSession(chatApiUrl, { id: expectedSessionId, preview: previewFromText(text) })
 }
 
 /** Derive the cookie path from the chatApiUrl so embedded-mode cookie
@@ -272,36 +305,70 @@ function expireEmbeddedSessionCookie(chatApiUrl: string): void {
   document.cookie = `holocron_chat=; Path=${embeddedCookiePath(chatApiUrl)}; Max-Age=0; SameSite=Lax`
 }
 
+/** Write the embedded-mode cookie via document.cookie (JS-writable, matches
+ *  the server's cookie attributes) so a reload restores the chosen session. */
+function writeEmbeddedSessionCookie(chatApiUrl: string, sessionId: string): void {
+  if (isWidgetMode(chatApiUrl) || typeof document === 'undefined') return
+  const secure = location.protocol === 'https:' ? '; Secure' : ''
+  const maxAge = 30 * 24 * 60 * 60
+  document.cookie = `holocron_chat=${sessionId}; Path=${embeddedCookiePath(chatApiUrl)}; Max-Age=${maxAge}; SameSite=Lax${secure}`
+}
+
+/** Reset the live chat state (messages, generation, draft). */
+function resetChatStoreState(): void {
+  chatStore.getState().abortController?.abort()
+  chatStore.setState({
+    isGenerating: false,
+    abortController: null,
+    messages: [],
+    modelMessages: [],
+    draftText: '',
+    pendingSubmit: false,
+    errorMessage: null,
+    approvalResolvers: {},
+  })
+}
+
 /**
- * Delete the persisted conversation ("New chat"): clears the server-side
- * snapshot, expires the cookie synchronously, and forgets the localStorage id.
- *
- * Restore stays intentionally disabled for the rest of the page lifetime —
- * the in-memory store is the live state after a clear, so re-fetching could
- * only ever resurrect stale data.
- *
- * Returns the server deletion promise. UI callers reset state immediately
- * without awaiting it.
+ * Start a fresh conversation ("New chat"): forgets the current session id
+ * locally (cookie + localStorage + store) and resets the live chat state.
+ * The old conversation is NOT deleted — it stays in the local session list
+ * and server-side, so the user can switch back to it from the select.
  */
-export function clearChatSession(): Promise<void> {
+export function startNewChat(): void {
   const { chatApiUrl } = chatWidgetStore.getState()
+  // Nothing to restore for a fresh session — disable the eager restore.
   restorePromise = Promise.resolve()
-  if (!chatApiUrl) return Promise.resolve()
-  const headers = sessionHeaders(chatApiUrl)
-  // Expire the cookie synchronously BEFORE clearing the store, so a quick
-  // resubmit can't re-read the old session id from document.cookie.
-  expireEmbeddedSessionCookie(chatApiUrl)
-  chatWidgetStore.setState({ sessionId: null })
-  if (isWidgetMode(chatApiUrl) && typeof localStorage !== 'undefined') {
-    try {
-      localStorage.removeItem(sessionStorageKey(chatApiUrl))
-    } catch {
-      // best effort
+  if (chatApiUrl) {
+    // Expire the cookie synchronously BEFORE clearing the store, so a quick
+    // resubmit can't re-read the old session id from document.cookie.
+    expireEmbeddedSessionCookie(chatApiUrl)
+    if (isWidgetMode(chatApiUrl) && typeof localStorage !== 'undefined') {
+      try {
+        localStorage.removeItem(sessionStorageKey(chatApiUrl))
+      } catch {
+        // best effort
+      }
     }
   }
-  return fetch(`${chatApiUrl}/session/clear`, { method: 'POST', headers })
-    .then(() => {})
-    .catch(() => {})
+  chatWidgetStore.setState({ sessionId: null })
+  resetChatStoreState()
+}
+
+/**
+ * Switch to a past conversation from the session select: aborts any live
+ * generation, points the session id at the chosen conversation, and
+ * re-fetches its server-side snapshot into the store.
+ */
+export async function switchChatSession(sessionId: string): Promise<void> {
+  const { chatApiUrl, sessionId: currentId } = chatWidgetStore.getState()
+  if (!chatApiUrl || sessionId === currentId) return
+  resetChatStoreState()
+  storeSessionId(chatApiUrl, sessionId)
+  restorePromise = restoreChatSession().catch((error) => {
+    console.error('Chat session switch failed:', error)
+  })
+  await restorePromise
 }
 
 /** Pending client tool call detected during streaming. */
@@ -321,7 +388,12 @@ async function streamChatRequest(
   body: Record<string, unknown>,
   signal: AbortSignal,
   clientToolsByName: Map<string, ChatToolDefinition>,
-): Promise<{ pendingToolCalls: PendingClientToolCall[] }> {
+): Promise<{ pendingToolCalls: PendingClientToolCall[]; requestSessionId: string | null }> {
+  // The session this request belongs to. Session-list writes (preview,
+  // title) target THIS id — never the store's current id, which may point
+  // at a different conversation if the user switches mid-stream.
+  let requestSessionId = getSessionId(chatApiUrl)
+
   const response = await fetch(chatApiUrl, {
     method: 'POST',
     headers: { 'content-type': 'application/json', ...sessionHeaders(chatApiUrl) },
@@ -336,7 +408,7 @@ async function streamChatRequest(
         ? errorBody.error
         : `Chat request failed: ${response.status} ${response.statusText}`,
     })
-    return { pendingToolCalls: [] }
+    return { pendingToolCalls: [], requestSessionId }
   }
 
   const decoded = await decodeFederationPayload<{ stream: AsyncIterable<StreamChunk> }>(response)
@@ -345,8 +417,20 @@ async function streamChatRequest(
   for await (const part of decoded.stream) {
     if (part.type === 'session') {
       // Freshly minted session id from the proxy — persist it so this
-      // conversation can be restored after a page refresh.
+      // conversation can be restored after a page refresh, and register it
+      // in the local session list with the first message as preview label.
+      requestSessionId = part.sessionId
       storeSessionId(chatApiUrl, part.sessionId)
+      upsertStoredSession(chatApiUrl, { id: part.sessionId, preview: latestUserPreview() })
+      continue
+    }
+
+    if (part.type === 'title') {
+      // AI-generated conversation title (first turn only) — replaces the
+      // preview placeholder in the session select for this request's session.
+      if (requestSessionId) {
+        upsertStoredSession(chatApiUrl, { id: requestSessionId, title: part.title })
+      }
       continue
     }
 
@@ -373,7 +457,7 @@ async function streamChatRequest(
     }))
   }
 
-  return { pendingToolCalls }
+  return { pendingToolCalls, requestSessionId }
 }
 
 /**
@@ -441,6 +525,10 @@ export async function submitChat(
    const toolSchemas = allTools.length > 0 ? extractToolSchemas(allTools) : undefined
    const contextPayload = Object.keys(context).length > 0 ? context : undefined
 
+  // The session this submit belongs to — used by the finally block so a
+  // mid-stream session switch can't bump the wrong session's recency.
+  let submitSessionId = getSessionId(chatApiUrl)
+
   try {
     let currentBody: Record<string, unknown> = {
       modelMessages,
@@ -451,12 +539,13 @@ export async function submitChat(
     }
 
     for (let iteration = 0; iteration < MAX_CLIENT_TOOL_ITERATIONS; iteration++) {
-      const { pendingToolCalls } = await streamChatRequest(
+      const { pendingToolCalls, requestSessionId } = await streamChatRequest(
         chatApiUrl,
         currentBody,
         controller.signal,
         clientToolsByName,
       )
+      if (requestSessionId) submitSessionId = requestSessionId
 
       // No client tool calls pending: conversation turn is complete
       if (pendingToolCalls.length === 0) break
@@ -543,5 +632,12 @@ export async function submitChat(
       isGenerating: false,
       abortController: null,
     })
+    // Bump the session's recency in the local list (creates the entry when
+    // the id predates the list feature, e.g. restored empty sessions).
+    // Uses the id captured for THIS submit — never the store's current id,
+    // which may already point at another session after a mid-stream switch.
+    if (submitSessionId) {
+      upsertStoredSession(chatApiUrl, { id: submitSessionId, preview: previewFromText(submitText) })
+    }
   }
 }

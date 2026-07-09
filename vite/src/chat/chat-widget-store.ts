@@ -9,6 +9,7 @@
 
 import { createStore } from 'zustand'
 import type { ChatToolDefinition } from './define-tool.ts'
+import type { StoredChatSession } from './chat-sessions.ts'
 
 export type ChatWidgetConfig = {
   /** Full API URL for chat requests (e.g. "https://docs.myapp.com/holocron-api/chat") */
@@ -27,6 +28,9 @@ export type ChatWidgetConfig = {
    *  JS-readable cookie on page load; in cross-origin widget mode loaded
    *  from/persisted to localStorage. */
   sessionId: string | null
+  /** Past sessions for this site (mirrored from localStorage by
+   *  chat-sessions.ts) so the drawer's session select can list them. */
+  sessions: StoredChatSession[]
 }
 
 export const chatWidgetStore = createStore<ChatWidgetConfig>(() => ({
@@ -37,4 +41,5 @@ export const chatWidgetStore = createStore<ChatWidgetConfig>(() => ({
   tools: [],
   context: {},
   sessionId: null,
+  sessions: [],
 }))

@@ -131,6 +131,25 @@ export async function startMockChatServer(): Promise<number> {
           `event: message\ndata: ${JSON.stringify({ type: "model-messages", messages: responseMessages })}\n\n`,
         );
 
+        // Same as the real gateway: emit an AI-generated title chunk on the
+        // first turn of a session. Canned (derived from the first user
+        // message) so tests are deterministic without extra model calls.
+        const userMessages = messages.filter((m: any) => m?.role === "user");
+        if (
+          typeof body.sessionId === "string" &&
+          body.sessionId &&
+          userMessages.length === 1
+        ) {
+          const text =
+            typeof userMessages[0]?.content === "string"
+              ? userMessages[0].content
+              : "";
+          const title = `Title: ${text.split(/\s+/).slice(0, 4).join(" ")}`;
+          res.write(
+            `event: message\ndata: ${JSON.stringify({ type: "title", title })}\n\n`,
+          );
+        }
+
         if (typeof body.sessionId === "string" && body.sessionId) {
           const site = req.headers["x-holocron-site"];
           const key = `${typeof site === "string" ? site : ""}:${body.sessionId}`;

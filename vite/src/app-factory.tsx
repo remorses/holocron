@@ -1702,6 +1702,13 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
             continue
           }
 
+          // AI-generated conversation title (first turn) — forwarded so the
+          // widget can label this session in its local session list.
+          if (chunk.type === 'title') {
+            yield chunk
+            continue
+          }
+
           if (chunk.type === 'text-delta') {
             textBuffer += chunk.delta
             continue
