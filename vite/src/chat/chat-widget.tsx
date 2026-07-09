@@ -19,6 +19,8 @@ import { chatWidgetStore } from './chat-widget-store.ts'
 import { chatStore } from './chat-store.ts'
 import { ChatDrawer } from './chat-drawer.tsx'
 import { ChatShadowHost } from './chat-shadow-host.tsx'
+import { ensureSessionRestored, hasExistingSession } from './chat-submit.ts'
+import type { ChatToolDefinition } from './define-tool.ts'
 
 // ── System dark mode detection (stable callbacks for useSyncExternalStore) ──
 
@@ -92,6 +94,10 @@ export type ChatWidgetProps = {
   style?: React.CSSProperties
   /** Class name for the shadow host container */
   className?: string
+  /** Client-side tools that execute in the browser when the model calls them. */
+  tools?: ChatToolDefinition[]
+  /** Arbitrary context object injected into the system prompt as XML. */
+  context?: Record<string, unknown>
 }
 
 export function ChatWidget({
@@ -102,6 +108,8 @@ export function ChatWidget({
   theme = 'system',
   style,
   className,
+  tools,
+  context,
 }: ChatWidgetProps) {
   const systemDark = useSyncExternalStore(
     subscribeSystemDark,
@@ -110,15 +118,22 @@ export function ChatWidget({
   )
   const isDark = theme === 'dark' || (theme === 'system' && systemDark)
 
-  // Initialize widget store with config
+  // Initialize widget store with config and eagerly restore any persisted
+  // session (localStorage in widget mode) so the drawer shows the previous
+  // conversation immediately when opened.
   useEffect(() => {
     const protocol = domain.startsWith('localhost') ? 'http' : 'https'
     chatWidgetStore.setState({
       chatApiUrl: `${protocol}://${domain}/holocron-api/chat`,
       currentSlug,
       siteName,
+      tools: tools ?? [],
+      context: context ?? {},
     })
-  }, [domain, currentSlug, siteName])
+    if (hasExistingSession()) {
+      void ensureSessionRestored()
+    }
+  }, [domain, currentSlug, siteName, tools, context])
 
   // Portal target is set reactively via onMountPoint callback from ChatShadowHost.
   // No setTimeout or querySelector needed.

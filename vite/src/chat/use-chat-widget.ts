@@ -9,6 +9,7 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import { chatStore } from './chat-store.ts'
 import { chatWidgetStore } from './chat-widget-store.ts'
+import { clearChatSession } from './chat-submit.ts'
 
 export function useChatWidget() {
   const isOpen = useSyncExternalStore(chatStore.subscribe, () => chatStore.getState().drawerState === 'open', () => false)
@@ -31,6 +32,8 @@ export function useChatWidget() {
 
   const clear = useCallback(() => {
     chatStore.getState().abortController?.abort()
+    // Also delete the persisted server-side conversation + session id.
+    void clearChatSession()
     chatStore.setState({
       isGenerating: false,
       abortController: null,
@@ -39,6 +42,7 @@ export function useChatWidget() {
       draftText: '',
       pendingSubmit: false,
       errorMessage: null,
+      approvalResolvers: {},
     })
   }, [])
 
