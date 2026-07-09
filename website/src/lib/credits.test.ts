@@ -24,9 +24,13 @@ describe('credit ↔ usd conversion', () => {
 
 describe('monthly budgets', () => {
   test('free vs pro', () => {
-    expect(monthlyCreditBudget(false)).toBe(FREE_MONTHLY_CREDITS)
-    expect(monthlyCreditBudget(true)).toBe(PRO_MONTHLY_CREDITS)
+    expect(monthlyCreditBudget({ hasActiveSubscription: false })).toBe(FREE_MONTHLY_CREDITS)
+    expect(monthlyCreditBudget({ hasActiveSubscription: true })).toBe(PRO_MONTHLY_CREDITS)
     expect(PRO_MONTHLY_CREDITS).toBeGreaterThan(FREE_MONTHLY_CREDITS)
+  })
+
+  test('partner gets pro budget without subscription', () => {
+    expect(monthlyCreditBudget({ hasActiveSubscription: false, isPartner: true })).toBe(PRO_MONTHLY_CREDITS)
   })
 
   test('free budget in dollars', () => {

@@ -21,9 +21,14 @@ export const PRO_MONTHLY_CREDITS = 50_000
 export const creditsToUsd = (credits: number): number => credits * USD_PER_CREDIT
 export const usdToCredits = (usd: number): number => usd / USD_PER_CREDIT
 
-/** The monthly credit budget for a project given its subscription state. */
-export function monthlyCreditBudget(hasActiveSubscription: boolean): number {
-  return hasActiveSubscription ? PRO_MONTHLY_CREDITS : FREE_MONTHLY_CREDITS
+/** The monthly credit budget for a project given its billing state.
+ *  Partner orgs get Pro budget without a Stripe subscription. */
+export function monthlyCreditBudget(opts: {
+  hasActiveSubscription: boolean
+  isPartner?: boolean
+}): number {
+  if (opts.hasActiveSubscription || opts.isPartner) return PRO_MONTHLY_CREDITS
+  return FREE_MONTHLY_CREDITS
 }
 
 // Selectable models: friendly name → gateway model id (provider/model format).

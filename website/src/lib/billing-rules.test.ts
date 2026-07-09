@@ -5,6 +5,7 @@ import {
   canDeploy,
   FREE_PRODUCTION_DEPLOY_LIMIT,
   hasDeployEntitlement,
+  shouldShowTempAiNotice,
 } from './billing-rules.ts'
 
 describe('hasDeployEntitlement', () => {
@@ -90,5 +91,37 @@ describe('canAddDomain', () => {
   test('free cannot add domain without subscription', () => {
     const decision = canAddDomain({ hasActiveSubscription: false, orgPlan: 'free' })
     expect(decision.allowed).toBe(false)
+  })
+})
+
+describe('shouldShowTempAiNotice', () => {
+  test('partner never sees temp model nag', () => {
+    expect(shouldShowTempAiNotice({
+      authenticated: true,
+      hasActiveSubscription: false,
+      orgPlan: 'partner',
+    })).toBe(false)
+  })
+
+  test('subscribed never sees nag', () => {
+    expect(shouldShowTempAiNotice({
+      authenticated: true,
+      hasActiveSubscription: true,
+    })).toBe(false)
+  })
+
+  test('unauthenticated sees nag', () => {
+    expect(shouldShowTempAiNotice({
+      authenticated: false,
+      hasActiveSubscription: false,
+    })).toBe(true)
+  })
+
+  test('authenticated free without subscription does not see nag', () => {
+    expect(shouldShowTempAiNotice({
+      authenticated: true,
+      hasActiveSubscription: false,
+      orgPlan: 'free',
+    })).toBe(false)
   })
 })

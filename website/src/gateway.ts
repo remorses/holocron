@@ -26,7 +26,7 @@ import { env, waitUntil } from 'cloudflare:workers'
 import { unzipSync, strFromU8 } from 'fflate'
 import { Spiceflow } from 'spiceflow'
 import { z } from 'zod'
-import { validateApiKey, getProjectSubscription } from './db.ts'
+import { validateApiKey, getProjectBillingContext } from './db.ts'
 import { shouldShowTempAiNotice } from './lib/billing-rules.ts'
 import { ALLOWED_MODELS, computeUsdCost, creditsToUsd, monthlyCreditBudget, MODEL_USD_PER_1M_TOKENS, usdToCredits } from './lib/credits.ts'
 import { createChatBashTool } from './chat-bash-tool.ts'
@@ -267,18 +267,19 @@ export const gatewayApp = new Spiceflow()
         docsZipUrl: body.docsZipUrl,
       })
 
-      // ── Authenticated: subscription (D1) → per-project credit limit (DO) ─
-      // The limit is per project and depends on the subscription (Pro gets a
-      // bigger budget), so resolve the subscription first, then check spend.
-      const subscriptionResult = chatProjectId
-        ? await getProjectSubscription(chatProjectId)
-        : null
+      // ── Authenticated: subscription + org plan (one D1 read) → credit limit (DO) ─
+      // getProjectBillingContext joins project → org + subscriptions in a single
+      // SQL statement, so this adds zero extra latency vs the old subscription-only query.
+      const { subscription: subscriptionResult, orgPlan } = chatProjectId
+        ? await getProjectBillingContext(chatProjectId)
+        : { subscription: null, orgPlan: 'free' as const }
+      const isPartner = orgPlan === 'partner'
 
       const limitCheck = authResult && chatProjectId
         ? await getUsageStub(authResult.orgId).checkLimit({
             projectId: chatProjectId,
             sinceMs: getMonthStartMs(),
-            usdLimit: creditsToUsd(monthlyCreditBudget(!!subscriptionResult)),
+            usdLimit: creditsToUsd(monthlyCreditBudget({ hasActiveSubscription: !!subscriptionResult, isPartner })),
           })
         : null
 
@@ -340,12 +341,12 @@ export const gatewayApp = new Spiceflow()
             .catch(() => null)
         : null
 
-      // Subscribed projects never see the upgrade nag. Unauthenticated callers
-      // (no API key → no project to bill) still see it. Resolved above
-      // concurrently with the usage-limit check.
+      // Subscribed or partner-entitled projects never see the upgrade nag.
+      // Unauthenticated callers (no API key → no project to bill) still see it.
       const showTempNotice = shouldShowTempAiNotice({
         authenticated: !!authResult,
         hasActiveSubscription: !!subscriptionResult,
+        orgPlan,
       })
 
       if (showTempNotice) {
