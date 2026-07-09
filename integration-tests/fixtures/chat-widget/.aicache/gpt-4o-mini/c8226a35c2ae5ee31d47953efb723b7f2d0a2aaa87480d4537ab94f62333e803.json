@@ -1,0 +1,291 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_044fd5d9baf04c9b006a4d8cc3965c819d8f21643c37f21d4b",
+      "timestamp": "2026-07-07T23:33:23.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": "This"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " documentation"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " is"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " about"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " Chat"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " Test"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " Docs"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": ","
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " a"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " site"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " for"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " testing"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " Hol"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": "oc"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": "ron"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " AI"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " chat"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " widget"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": "."
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " It"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " covers"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " features"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " like"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " AI"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": "-driven"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " documentation"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " search"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": ","
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " client"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": "-side"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " tool"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " execution"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": ","
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " and"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " how"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " to"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " get"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " started"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " with"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " chat"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": " widget"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "delta": "."
+    },
+    {
+      "type": "text-end",
+      "id": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_044fd5d9baf04c9b006a4d8cc48168819db172c7ae97607c20"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 689,
+          "noCache": 689,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 47,
+          "text": 47,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 689,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 47,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_044fd5d9baf04c9b006a4d8cc3965c819d8f21643c37f21d4b",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

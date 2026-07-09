@@ -19,6 +19,7 @@
     "@types/node": "^25.9.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
+    "ai": "^6.0.149",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "spiceflow": "1.26.0-rsc.7",
@@ -26,6 +27,7 @@
     "vite": "^8.0.10"
   },
   "devDependencies": {
+    "@ai-sdk/openai": "^4.0.8",
     "@playwright/test": "^1.60.0",
     "fflate": "^0.8.2",
     "rollup-plugin-visualizer": "^7.0.1"

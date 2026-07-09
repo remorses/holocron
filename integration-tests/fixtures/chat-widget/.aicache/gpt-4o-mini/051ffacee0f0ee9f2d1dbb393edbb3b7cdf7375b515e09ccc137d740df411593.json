@@ -1,0 +1,136 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_0d2f89511c6e7c0e006a4d8ced52f481a2ad7eff748e97ffc8",
+      "timestamp": "2026-07-07T23:34:05.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "delta": "Hey"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "delta": "!"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "delta": " Just"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "delta": " checking"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "delta": " in"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "delta": "—"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "delta": "what"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "delta": " do"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "delta": " you"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "delta": " need"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "delta": " help"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "delta": " with"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "delta": "?"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "delta": " 🍪"
+    },
+    {
+      "type": "text-end",
+      "id": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0d2f89511c6e7c0e006a4d8ceee38081a2ab47b18167c8ae9f"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 686,
+          "noCache": 686,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 17,
+          "text": 17,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 686,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 17,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_0d2f89511c6e7c0e006a4d8ced52f481a2ad7eff748e97ffc8",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

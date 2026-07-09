@@ -4,23 +4,23 @@ The marketing site and AI gateway for holocron. Runs as a Cloudflare Worker with
 
 ## AI Gateway
 
-The `/api/chat` route is Holocron's hosted AI chat interface. It validates optional `holo_xxx` API keys, fetches the caller's `docs.zip`, creates the in-memory docs bash tool, calls AI SDK against Cloudflare Workers AI, and streams typed Spiceflow SSE chunks back to docs sites.
+The `/api/chat` route is Holocron's hosted AI chat interface. It validates optional `holo_xxx` API keys, fetches the caller's `docs.zip`, creates the in-memory docs bash tool, and streams typed Spiceflow SSE chunks back to docs sites.
 
-Full CF AI Gateway docs: `curl https://developers.cloudflare.com/ai-gateway/llms-full.txt`
-Full CF Workers AI docs: `curl https://developers.cloudflare.com/workers-ai/llms-full.txt`
+All models are accessed via `@ai-sdk/gateway` (Vercel AI Gateway), which proxies requests to upstream providers (Moonshot, Anthropic, OpenAI, etc.) through one API key (`AI_GATEWAY_API_KEY`). `ai-fallback` wraps the primary model with fallbacks so if one provider is down, the next model is tried automatically.
 
 Key references:
-- Workers AI binding: https://developers.cloudflare.com/ai-gateway/integrations/aig-workers-ai-binding/
-- Worker binding methods (getLog, patchLog, getUrl): https://developers.cloudflare.com/ai-gateway/integrations/worker-binding-methods/
-- Custom metadata: https://developers.cloudflare.com/ai-gateway/observability/custom-metadata/
-- Logging: https://developers.cloudflare.com/ai-gateway/observability/logging/
-- Analytics (GraphQL): https://developers.cloudflare.com/ai-gateway/observability/analytics/
-- Workers AI models catalog: https://developers.cloudflare.com/workers-ai/models/
-- Workers AI get started: https://developers.cloudflare.com/workers-ai/get-started/workers-wrangler/
+- Vercel AI Gateway: https://sdk.vercel.ai/docs/ai-gateway
+- Vercel AI SDK: https://sdk.vercel.ai/docs
+- ai-fallback: https://github.com/remorses/ai-fallback
 
 ## Supported models
 
-Allowed models are defined in `src/gateway.ts` (`ALLOWED_MODELS`). Kimi K2.5 is both the authenticated default and the missing-key temporary fallback. To add a new model, add its `@cf/` ID to the map.
+Allowed models are defined in `src/lib/credits.ts` (`ALLOWED_MODELS`). Each entry maps a friendly name to a Vercel AI Gateway model id in `provider/model` format (e.g. `moonshotai/kimi-k2.5`). Kimi K2.5 is the primary model; Claude Sonnet 4 and GPT-4.1 Mini are fallbacks.
+
+To add a new model:
+1. Add its gateway id to `ALLOWED_MODELS` in `src/lib/credits.ts`
+2. Add its per-million-token USD rate to `MODEL_USD_PER_1M_TOKENS` (the test asserts every model has a rate)
+3. The model will automatically be included in the fallback chain
 
 ## Error tracking with strada
 

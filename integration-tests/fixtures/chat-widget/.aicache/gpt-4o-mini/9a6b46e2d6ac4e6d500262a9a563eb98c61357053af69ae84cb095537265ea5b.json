@@ -1,0 +1,108 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_0746006853d269da006a4d92d52fb8819c99af2d69ae54bf6e",
+      "timestamp": "2026-07-07T23:59:17.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "tool-input-start",
+      "id": "call_7lr2GFkCtjD8mEqYUFHxSWvo",
+      "toolName": "get_time"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_7lr2GFkCtjD8mEqYUFHxSWvo",
+      "delta": "{\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_7lr2GFkCtjD8mEqYUFHxSWvo",
+      "delta": "description"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_7lr2GFkCtjD8mEqYUFHxSWvo",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_7lr2GFkCtjD8mEqYUFHxSWvo",
+      "delta": "Get"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_7lr2GFkCtjD8mEqYUFHxSWvo",
+      "delta": " the"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_7lr2GFkCtjD8mEqYUFHxSWvo",
+      "delta": " current"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_7lr2GFkCtjD8mEqYUFHxSWvo",
+      "delta": " time"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_7lr2GFkCtjD8mEqYUFHxSWvo",
+      "delta": "\"}"
+    },
+    {
+      "type": "tool-input-end",
+      "id": "call_7lr2GFkCtjD8mEqYUFHxSWvo"
+    },
+    {
+      "type": "tool-call",
+      "toolCallId": "call_7lr2GFkCtjD8mEqYUFHxSWvo",
+      "toolName": "get_time",
+      "input": "{\"description\":\"Get the current time\"}",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "fc_0746006853d269da006a4d92d5c9a8819c91ac172237d2ab7e"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "tool-calls"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 698,
+          "noCache": 698,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 18,
+          "text": 18,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 698,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 18,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_0746006853d269da006a4d92d52fb8819c99af2d69ae54bf6e",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

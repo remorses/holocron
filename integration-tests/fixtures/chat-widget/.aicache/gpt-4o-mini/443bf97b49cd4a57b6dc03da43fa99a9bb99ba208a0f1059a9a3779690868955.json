@@ -1,0 +1,126 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_0bca09ca08991ce6006a4d697fef98819981980403d9d5015d",
+      "timestamp": "2026-07-07T21:02:55.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d",
+      "delta": "Hey"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d",
+      "delta": "!"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d",
+      "delta": " How"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d",
+      "delta": " can"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d",
+      "delta": " I"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d",
+      "delta": " help"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d",
+      "delta": " you"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d",
+      "delta": " with"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d",
+      "delta": " cookie"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d",
+      "delta": " test"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d",
+      "delta": "?"
+    },
+    {
+      "type": "text-end",
+      "id": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0bca09ca08991ce6006a4d6980c4fc81999ca55c01c18ea11d"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 645,
+          "noCache": 645,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 14,
+          "text": 14,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 645,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 14,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_0bca09ca08991ce6006a4d697fef98819981980403d9d5015d",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

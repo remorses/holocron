@@ -1,0 +1,163 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_02b5a2a1b0e9b9d8006a4d6990a254819bbf44f393c3a2d663",
+      "timestamp": "2026-07-07T21:03:12.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "tool-input-start",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "toolName": "browser_click"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "{\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "selector"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "["
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "data"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "-action"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "=\\\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "rename"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "-account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "\\\"]"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "\",\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "description"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "Click"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": " the"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": " Rename"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": " account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": " button"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "delta": "\"}"
+    },
+    {
+      "type": "tool-input-end",
+      "id": "call_qJ0PvZCyGzjCkxDoIc3qXgIP"
+    },
+    {
+      "type": "tool-call",
+      "toolCallId": "call_qJ0PvZCyGzjCkxDoIc3qXgIP",
+      "toolName": "browser_click",
+      "input": "{\"selector\":\"[data-action=\\\"rename-account\\\"]\",\"description\":\"Click the Rename account button\"}",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "fc_02b5a2a1b0e9b9d8006a4d6991bee8819ba5b3abf14ec4ff6e"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "tool-calls"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 1129,
+          "noCache": 1129,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 29,
+          "text": 29,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 1129,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 29,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_02b5a2a1b0e9b9d8006a4d6990a254819bbf44f393c3a2d663",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

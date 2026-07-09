@@ -1,0 +1,161 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_0271f76e50dc1307006a4d698ba924819ab533b41bdd365581",
+      "timestamp": "2026-07-07T21:03:07.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": "The"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": " current"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": " time"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": " is"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": " "
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": "12"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": ":"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": "00"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": " PM"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": " UTC"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": " on"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": " January"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": " "
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": "1"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": ","
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": " "
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": "202"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": "6"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "delta": "."
+    },
+    {
+      "type": "text-end",
+      "id": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0271f76e50dc1307006a4d698c2ef4819ab138a3a2314f0b74"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 705,
+          "noCache": 705,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 21,
+          "text": 21,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 705,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 21,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_0271f76e50dc1307006a4d698ba924819ab533b41bdd365581",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

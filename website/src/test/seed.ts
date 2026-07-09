@@ -113,6 +113,88 @@ export async function seedApiKey(
   return { keyId, fullKey }
 }
 
+export interface SeededDeployment {
+  id: string
+  version: string
+}
+
+/** Insert a deployment row for a project. Returns the deployment id and version. */
+export async function seedDeployment(
+  projectId: string,
+  opts: {
+    status?: 'uploading' | 'active' | 'superseded'
+    branch?: string
+    preview?: boolean
+    subdomain?: string
+    githubActor?: string
+    triggeredByUserId?: string
+  } = {},
+): Promise<SeededDeployment> {
+  const db = getDb()
+  const id = ulid()
+  const version = ulid()
+  await db.insert(schema.deployment).values({
+    id,
+    projectId,
+    version,
+    status: opts.status ?? 'active',
+    branch: opts.branch ?? 'main',
+    preview: opts.preview ?? false,
+    subdomain: opts.subdomain ?? null,
+    githubActor: opts.githubActor ?? null,
+    triggeredByUserId: opts.triggeredByUserId ?? null,
+  })
+  return { id, version }
+}
+
+/** Insert a subscription row for a project. Returns the subscription id. */
+export async function seedSubscription(
+  orgId: string,
+  projectId: string,
+  opts: {
+    status?: string
+    interval?: 'month' | 'year'
+  } = {},
+): Promise<string> {
+  const db = getDb()
+  const id = ulid()
+  await db.insert(schema.subscription).values({
+    id,
+    subscriptionId: `sub_${ulid()}`,
+    orgId,
+    projectId,
+    customerId: `cus_${ulid()}`,
+    priceId: `price_${ulid()}`,
+    productId: `prod_${ulid()}`,
+    status: opts.status ?? 'active',
+    interval: opts.interval ?? 'month',
+    currentPeriodEnd: Date.now() + YEAR_MS,
+    cancelAtPeriodEnd: false,
+  })
+  return id
+}
+
+/** Insert a custom domain row for a project. Returns the domain id. */
+export async function seedDomain(
+  projectId: string,
+  opts: {
+    hostname?: string
+    status?: string
+    sslStatus?: string
+  } = {},
+): Promise<string> {
+  const db = getDb()
+  const id = ulid()
+  await db.insert(schema.domain).values({
+    id,
+    projectId,
+    hostname: opts.hostname ?? `${ulid().toLowerCase().slice(-8)}.example.com`,
+    status: opts.status ?? 'active',
+    sslStatus: opts.sslStatus ?? 'active',
+  })
+  return id
+}
+
 /** Authorization header object for a bearer token (session token or holo_ key). */
 export function bearer(token: string): { authorization: string } {
   return { authorization: `Bearer ${token}` }

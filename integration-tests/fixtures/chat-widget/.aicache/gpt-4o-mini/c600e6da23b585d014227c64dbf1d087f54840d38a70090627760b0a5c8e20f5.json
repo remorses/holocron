@@ -1,0 +1,163 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_00a719c747a13bcd006a4d698cb7f8819991f1a13dedb7b6a2",
+      "timestamp": "2026-07-07T21:03:08.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "tool-input-start",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "toolName": "browser_click"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "{\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "selector"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "["
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "data"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "-action"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "=\\\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "delete"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "-account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "\\\"]"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "\",\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "description"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "\":\""
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "Click"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": " the"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": " Delete"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": " account"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": " button"
+    },
+    {
+      "type": "tool-input-delta",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "delta": "\"}"
+    },
+    {
+      "type": "tool-input-end",
+      "id": "call_5KRRDSuOq6nDfIvuy2LA1DbD"
+    },
+    {
+      "type": "tool-call",
+      "toolCallId": "call_5KRRDSuOq6nDfIvuy2LA1DbD",
+      "toolName": "browser_click",
+      "input": "{\"selector\":\"[data-action=\\\"delete-account\\\"]\",\"description\":\"Click the Delete account button\"}",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "fc_00a719c747a13bcd006a4d698d94408199bb20890689d53906"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "tool-calls"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 1129,
+          "noCache": 1129,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 29,
+          "text": 29,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 1129,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 29,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_00a719c747a13bcd006a4d698cb7f8819991f1a13dedb7b6a2",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

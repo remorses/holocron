@@ -666,9 +666,13 @@ All secrets must be managed through **sigillo**. Never hardcode secrets, never r
 
 holocron docs website generator uses spiceflow deeply. I am also the author of spiceflow so if there is any issues there and we need to change code there clearly say so and create a plan and present it to me. the spiceflow source code can be downloaded with chamber to be read, then you can use the kimaki cli to find the source code to modify after plan is approved
 
-## integration tests and example
+## Always build after changes
 
-after you make changes to holocron vite you will have to run `pnpm build` again inside vite so that the example and integration tests can use the updated code from dist.
+After ANY change to `vite/src/`, always run `pnpm --dir vite build` before verifying the result. The example app, chat-widget-example, integration tests, and all consumers import from `dist/`, not from source. If you skip the build, your changes won't be visible.
+
+```bash
+pnpm --dir vite build
+```
 
 ### integration-tests fixture architecture
 
@@ -750,8 +754,6 @@ client 3.82 MiB 18 js files
 ```
 
 **Playwright waits**: avoid fixed sleeps like `page.waitForTimeout(2000)` in integration tests. Prefer condition-based waits such as `expect(...).toBeVisible()`, `page.waitForLoadState('networkidle')`, `expect.poll(...)`, or a concrete DOM/state change tied to the behavior under test.
-
-After changing `vite/src/` you must run `pnpm build` in the `vite/` package before re-running integration tests.
 
 ## takumi
 
@@ -869,11 +871,11 @@ The gateway creates a single `bash` tool via `createChatBashTool()`. It runs com
 
 ### Persistent chat sessions
 
-Conversations survive page refreshes. The vite proxy mints a session id (`chs_` + 43 base64url chars, 256-bit CSPRNG bearer token) on the first chat POST and stores it in a first-party httpOnly cookie (`holocron_chat`); cross-origin `ChatWidget` embeds get the id via a `{ type: 'session' }` stream chunk, keep it in localStorage, and send it back as the `x-holocron-chat-session` header.
+Conversations survive page refreshes. The vite proxy mints a session id (`chs_` + 43 base64url chars, 256-bit CSPRNG bearer token) on the first chat POST and stores it in a first-party cookie (`holocron_chat`, JS-readable, not httpOnly) so the client can detect an existing session on page load. Cross-origin `ChatWidget` embeds get the id via a `{ type: 'session' }` stream chunk, keep it in localStorage, and send it back as the `x-holocron-chat-session` header.
 
 The gateway persists a **snapshot** of the full ModelMessage history (system prompt excluded) after each turn into `ChatSessionDO` — **one DO per docs site** (`idFromName(siteKey)`, where siteKey is `project:{projectId}` when authenticated or `host:{docsHost}` otherwise), one SQLite row per conversation. Per-site DO enables session caps (500, oldest evicted), a single daily prune alarm (30-day TTL), and structural cross-site isolation: a leaked session id can never be resolved through another site's DO.
 
-Restore is lazy: `ensureSessionRestored()` (singleton promise in `chat-submit.ts`) fires on drawer open / sidebar focus and is **awaited inside `submitChat`** — never remove that await, or a submit right after refresh would snapshot only the new turn and wipe the stored history. The restore endpoint (`GET /holocron-api/chat/session`) re-renders stored messages server-side via `modelMessagesToChatMessages()` and returns them as a federation payload, so restored messages carry the same JSX as live-streamed ones. `POST /holocron-api/chat/session/clear` deletes the conversation and expires the cookie ("New chat" rotates the session).
+Restore is eager: `HolocronChatBridge` calls `ensureSessionRestored()` on mount when `hasExistingSession()` returns true (cookie or localStorage has a session id). The singleton promise in `chat-submit.ts` is also **awaited inside `submitChat`** — never remove that await, or a submit right after refresh would snapshot only the new turn and wipe the stored history. The restore endpoint (`GET /holocron-api/chat/session`) re-renders stored messages server-side via `modelMessagesToChatMessages()` and returns them as a federation payload, so restored messages carry the same JSX as live-streamed ones. `POST /holocron-api/chat/session/clear` deletes the conversation and expires the cookie ("New chat" rotates the session).
 
 The DO RPC methods exchange the messages as a **JSON string** (`modelMessagesJson`) — workerd RPC type mapping rejects `unknown[]` returns (non-Serializable), collapsing the stub return type to `never`.
 
