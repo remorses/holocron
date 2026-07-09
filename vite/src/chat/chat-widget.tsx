@@ -20,6 +20,7 @@ import { chatStore } from './chat-store.ts'
 import { ChatDrawer } from './chat-drawer.tsx'
 import { ChatShadowHost } from './chat-shadow-host.tsx'
 import { ensureSessionRestored, hasExistingSession } from './chat-submit.ts'
+import { registerToolOnModelContext, unregisterTool } from './define-tool.ts'
 import type { ChatToolDefinition } from './define-tool.ts'
 
 // ── System dark mode detection (stable callbacks for useSyncExternalStore) ──
@@ -121,17 +122,32 @@ export function ChatWidget({
   // Initialize widget store with config and eagerly restore any persisted
   // session (localStorage in widget mode) so the drawer shows the previous
   // conversation immediately when opened.
+  //
+  // Prop-based tools are stored in chatWidgetStore (for browser automation
+  // tools from pageTools()) AND registered on document.modelContext (for
+  // custom tools passed via props for backward compat). On cleanup,
+  // previously registered prop tools are unregistered.
   useEffect(() => {
     const protocol = domain.startsWith('localhost') ? 'http' : 'https'
+    const propTools = tools ?? []
     chatWidgetStore.setState({
       chatApiUrl: `${protocol}://${domain}/holocron-api/chat`,
       currentSlug,
       siteName,
-      tools: tools ?? [],
+      tools: propTools,
       context: context ?? {},
     })
+    // Register prop tools on document.modelContext for agent discovery
+    for (const t of propTools) {
+      registerToolOnModelContext(t)
+    }
     if (hasExistingSession()) {
       void ensureSessionRestored()
+    }
+    return () => {
+      for (const t of propTools) {
+        unregisterTool(t.name)
+      }
     }
   }, [domain, currentSlug, siteName, tools, context])
 
