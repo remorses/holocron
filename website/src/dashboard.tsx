@@ -48,6 +48,7 @@ import {
   ConnectGscButton,
   CustomDomainsSection,
 } from './dashboard-components.tsx'
+import { DashboardChat } from './components/dashboard-chat.tsx'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
 const CLI_CREATE_COMMAND = 'npx -y @holocron.so/cli create'
@@ -255,6 +256,7 @@ export const dashboardApp = new Spiceflow()
           </div>
         </div>
         </div>
+        <DashboardChat />
       </div>
     )
   })
@@ -568,7 +570,7 @@ export const dashboardApp = new Spiceflow()
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {keys.map((key: { id: string; name: string; prefix: string; projectId: string; createdAt: number }) => (
+                    {keys.map((key: { id: string; name: string; prefix: string; projectId: string | null; createdAt: number }) => (
                       <TableRow key={key.id}>
                         <TableCell>
                           <span className="text-sm font-medium">{key.name}</span>

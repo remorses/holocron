@@ -64,6 +64,7 @@ export async function createApiKeyAction({ name, projectId }: {
     id,
     orgId,
     projectId,
+    scope: 'project',
     name: name.trim(),
     prefix: generated.prefix,
     hash: keyHash,
@@ -440,10 +441,19 @@ export async function addDomainAction({ projectId, hostname }: {
   const db = getDb()
   const { ACTIVE_SUBSCRIPTION_STATUSES, canAddDomain } = await import('./lib/billing-rules.ts')
 
-  const activeSubscription = await db.query.subscription.findFirst({
-    where: { projectId, status: { in: [...ACTIVE_SUBSCRIPTION_STATUSES] } },
+  const [activeSubscription, org] = await db.batch([
+    db.query.subscription.findFirst({
+      where: { projectId, status: { in: [...ACTIVE_SUBSCRIPTION_STATUSES] } },
+    }),
+    db.query.org.findFirst({
+      where: { id: project.orgId },
+      columns: { plan: true },
+    }),
+  ] as const)
+  const decision = canAddDomain({
+    hasActiveSubscription: !!activeSubscription,
+    orgPlan: org?.plan ?? 'free',
   })
-  const decision = canAddDomain({ hasActiveSubscription: !!activeSubscription })
   if (!decision.allowed) throw new Error(decision.reason)
 
   const normalized = hostname.trim().toLowerCase().replace(/\.$/, '')
