@@ -170,6 +170,9 @@ export async function generateHolocronData({
     `export function getModules() { return modules; }`,
     `export var pagesDirPrefix = "./";`,
     ``,
+    `// Runtime tab entries (empty for multi-tenant; OpenAPI tabs are not supported yet).`,
+    `export var runtimeTabEntries = [];`,
+    ``,
   ].join('\n')
 
   return { dataChunkSource, pageChunks }
