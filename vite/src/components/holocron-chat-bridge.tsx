@@ -7,6 +7,7 @@
  */
 
 import { useLayoutEffect, useEffect } from 'react'
+import { router } from 'spiceflow/react'
 import { useHolocronData } from '../router.ts'
 import { chatWidgetStore } from '../chat/chat-widget-store.ts'
 import { ChatDrawer } from '../chat/chat-drawer.tsx'
@@ -26,6 +27,8 @@ export function HolocronChatBridge() {
       currentSlug: currentPageHref || '/',
       siteName: site.config?.name || '',
       // portalTarget stays null → ChatDrawer falls back to document.body
+      // Use spiceflow's router.push for client-side navigation in chat tools
+      navigate: (path: string) => router.push(path),
     })
   }, [basePath, currentPageHref, site.config?.name])
 

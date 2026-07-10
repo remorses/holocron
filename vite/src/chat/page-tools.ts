@@ -27,6 +27,7 @@
 
 import { toolDescriptionProperty } from './define-tool.ts'
 import type { ChatToolDefinition, ToolApprovalCheck } from './define-tool.ts'
+import { chatWidgetStore } from './chat-widget-store.ts'
 
 export type PageAction = {
   name: string
@@ -42,13 +43,9 @@ export type PageDefinition = {
 
 export type PageToolsOptions = {
   /**
-   * Custom navigation function for client-side routing.
-   * Called instead of the default `history.pushState` + `popstate` fallback.
-   *
-   * Examples:
-   *   - Next.js: `(path) => router.push(path)`
-   *   - React Router: `(path) => navigate(path)`
-   *   - SPA with custom router: `(path) => myRouter.go(path)`
+   * Override the navigation function for this tool set.
+   * If not provided, reads from chatWidgetStore.navigate (set via
+   * ChatWidget's `navigate` prop or HolocronChatBridge).
    */
   navigate?: (path: string) => void | Promise<void>
 }
@@ -473,14 +470,8 @@ export function pageTools(pages: PageDefinition[], options?: PageToolsOptions): 
       },
       async run({ input }) {
         const path = input.path as string
-        if (options?.navigate) {
-          await options.navigate(path)
-        } else {
-          // Fallback: pushState + popstate. Works for most SPAs but won't
-          // trigger framework-specific route transitions.
-          history.pushState(null, '', path)
-          window.dispatchEvent(new PopStateEvent('popstate'))
-        }
+        const navigateFn = options?.navigate ?? chatWidgetStore.getState().navigate
+        await navigateFn(path)
         await new Promise((r) => setTimeout(r, 200))
         return { navigated: path, currentPath: window.location.pathname }
       },

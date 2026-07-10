@@ -31,6 +31,9 @@ export type ChatWidgetConfig = {
   /** Past sessions for this site (mirrored from localStorage by
    *  chat-sessions.ts) so the drawer's session select can list them. */
   sessions: StoredChatSession[]
+  /** Client-side navigation function used by browser_navigate tool.
+   *  Set by HolocronChatBridge (router.push) or ChatWidget prop. */
+  navigate: (path: string) => void | Promise<void>
 }
 
 export const chatWidgetStore = createStore<ChatWidgetConfig>(() => ({
@@ -42,4 +45,10 @@ export const chatWidgetStore = createStore<ChatWidgetConfig>(() => ({
   context: {},
   sessionId: null,
   sessions: [],
+  navigate: (path: string) => {
+    // Default: pushState + popstate. Overridden by HolocronChatBridge
+    // or ChatWidget's navigate prop with the framework's client-side router.
+    history.pushState(null, '', path)
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  },
 }))

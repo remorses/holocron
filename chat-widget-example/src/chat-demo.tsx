@@ -310,6 +310,10 @@ export function ChatDemo() {
         trigger={useCustomTrigger ? CustomTrigger : undefined}
         tools={exampleTools}
         context={exampleContext}
+        navigate={(path) => {
+          history.pushState(null, '', path)
+          window.dispatchEvent(new PopStateEvent('popstate'))
+        }}
       />
     </div>
   )
