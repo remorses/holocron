@@ -349,6 +349,17 @@ async function verifyGitHubOidc(token: string, audience: string): Promise<OidcRe
   }
 }
 
+export const TEMPLATE_DEFAULT_SITE_NAME = 'My Docs'
+
+/** Convert a GitHub repo slug like "my-awesome-docs" into "My Awesome Docs". */
+function humanizeRepoName(repo: string): string {
+  return repo
+    .replace(/[._-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
 async function upsertProjectForOidc({
   db,
   orgId,
@@ -367,8 +378,14 @@ async function upsertProjectForOidc({
   })
 
   if (existing) {
+    const updates: Record<string, unknown> = { updatedAt: Date.now() }
+    // Auto-rename projects still using the template default "My Docs"
+    // to a human-readable version of the GitHub repo name.
+    if (existing.name === TEMPLATE_DEFAULT_SITE_NAME) {
+      updates.name = humanizeRepoName(githubRepo)
+    }
     await db.update(schema.project)
-      .set({ updatedAt: Date.now() })
+      .set(updates)
       .where(orm.eq(schema.project.projectId, existing.projectId))
       .limit(1)
     return existing.projectId
@@ -385,7 +402,7 @@ async function upsertProjectForOidc({
   await db.insert(schema.project).values({
     projectId,
     orgId,
-    name: `${githubOwner}/${githubRepo}`,
+    name: humanizeRepoName(githubRepo),
     githubOwner,
     githubRepo,
     defaultBranch,

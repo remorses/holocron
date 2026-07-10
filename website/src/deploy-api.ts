@@ -25,7 +25,7 @@ import { ulid } from 'ulid'
 import { unzipSync } from 'fflate'
 import { getDb } from './db.ts'
 import { canDeploy, ACTIVE_SUBSCRIPTION_STATUSES } from './lib/billing-rules.ts'
-import { resolveProjectSubdomain, resolveCreateDeployAuth, requireDeployAccess, sanitizeForDns } from './deploy-auth.ts'
+import { resolveProjectSubdomain, resolveCreateDeployAuth, requireDeployAccess, sanitizeForDns, TEMPLATE_DEFAULT_SITE_NAME } from './deploy-auth.ts'
 
 /** Build a subdomain for a base-path deployment.
  *  Format: `{sanitized-base}-base-{project-subdomain}`.
@@ -186,7 +186,9 @@ export const deployApp = new Spiceflow()
       await db.update(schema.project)
         .set({
           updatedAt: Date.now(),
-          ...(body.name ? { name: body.name } : {}),
+          // Skip syncing the template default "My Docs" — let the auto-derived
+          // repo name from upsertProjectForOidc take precedence.
+          ...(body.name && body.name !== TEMPLATE_DEFAULT_SITE_NAME ? { name: body.name } : {}),
         })
         .where(orm.eq(schema.project.projectId, auth.projectId))
 
