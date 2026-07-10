@@ -42,7 +42,7 @@ export function buildBasePathSubdomain(basePath: string, projectSubdomain: strin
   }
   return `${sanitized.slice(0, maxBaseLen).replace(/-$/, '')}-base-${projectSubdomain}`
 }
-import { buildDeployEmailHtml, buildDeployEmailSubject, type DeployEmailData } from './deploy-email.tsx'
+import { buildDeployEmailHtml, buildDeployEmailSubject, type DeployEmailData } from './deploy-email.ts'
 
 // ── Subdomain helpers ───────────────────────────────────────────────
 
