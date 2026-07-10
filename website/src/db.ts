@@ -267,6 +267,39 @@ export async function getProjectSubscription(projectId: string): Promise<Project
   }
 }
 
+/** Look up the project's billing context in one query: active subscription + org plan.
+ *  Uses a single db.query with relation joins, so it's one SQL statement / one D1 read. */
+export async function getProjectBillingContext(projectId: string): Promise<{
+  subscription: ProjectSubscription | null
+  orgPlan: schema.OrgPlan
+}> {
+  const db = getDb()
+  const proj = await db.query.project.findFirst({
+    where: { projectId },
+    columns: { orgId: true },
+    with: {
+      org: { columns: { plan: true } },
+      subscriptions: {
+        where: { status: { in: [...ACTIVE_SUBSCRIPTION_STATUSES] } },
+        limit: 1,
+      },
+    },
+  })
+  const orgPlan = proj?.org?.plan ?? 'free'
+  const active = proj?.subscriptions?.[0]
+  if (!active) return { subscription: null, orgPlan }
+  return {
+    subscription: {
+      subscriptionId: active.subscriptionId,
+      status: active.status,
+      interval: active.interval ?? null,
+      currentPeriodEnd: active.currentPeriodEnd ?? null,
+      cancelAtPeriodEnd: active.cancelAtPeriodEnd ?? false,
+    },
+    orgPlan,
+  }
+}
+
 /** Get all orgs a user is a member of, with their role. */
 export async function getOrgsForUser(userId: string): Promise<Array<{ id: string; name: string; role: string }>> {
   const db = getDb()

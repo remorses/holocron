@@ -103,12 +103,13 @@ export function canAddDomain(opts: {
 }
 
 /** The AI chat shows a "temporary model" nag to push users toward a paid plan.
- *  Subscribed projects never see it. Unauthenticated callers (no API key) still
- *  see it because they have no project to bill. */
+ *  Subscribed or partner-entitled projects never see it. Unauthenticated callers
+ *  (no API key → no project to bill) still see it. */
 export function shouldShowTempAiNotice(opts: {
   authenticated: boolean
   hasActiveSubscription: boolean
+  orgPlan?: OrgPlan | null
 }): boolean {
-  if (opts.hasActiveSubscription) return false
+  if (hasDeployEntitlement(opts)) return false
   return !opts.authenticated
 }
