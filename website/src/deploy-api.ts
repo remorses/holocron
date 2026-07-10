@@ -25,7 +25,7 @@ import { ulid } from 'ulid'
 import { unzipSync } from 'fflate'
 import { getDb } from './db.ts'
 import { canDeploy, ACTIVE_SUBSCRIPTION_STATUSES } from './lib/billing-rules.ts'
-import { buildProjectSubdomain, resolveCreateDeployAuth, requireDeployAccess, sanitizeForDns } from './deploy-auth.ts'
+import { resolveProjectSubdomain, resolveCreateDeployAuth, requireDeployAccess, sanitizeForDns } from './deploy-auth.ts'
 
 /** Build a subdomain for a base-path deployment.
  *  Format: `{sanitized-base}-base-{project-subdomain}`.
@@ -120,9 +120,9 @@ export const deployApp = new Spiceflow()
       // ── Subscription gating ─────────────────────────────────────────
       // Previews require a subscription; production gets 1 free deploy. Gate
       // here in the create step so blocked deploys never waste blob uploads.
-      // Batch the two independent reads (active subscription + production deploy
-      // count) into a single D1 round-trip instead of two sequential queries.
-      const [activeSubscription, deployCountRows] = await db.batch([
+      // Partner orgs (org.plan=partner) skip Stripe and get unlimited deploys.
+      // Batch independent reads into a single D1 round-trip.
+      const [activeSubscription, deployCountRows, projectForOrg] = await db.batch([
         db.query.subscription.findFirst({
           where: { projectId: auth.projectId, status: { in: [...ACTIVE_SUBSCRIPTION_STATUSES] } },
           columns: { id: true },
@@ -137,8 +137,14 @@ export const deployApp = new Spiceflow()
               orm.eq(schema.deployment.preview, false),
             ),
           ),
+        db.query.project.findFirst({
+          where: { projectId: auth.projectId },
+          columns: { orgId: true },
+          with: { org: { columns: { plan: true } } },
+        }),
       ] as const)
       const productionDeployCount = deployCountRows[0]?.count ?? 0
+      const orgPlan = projectForOrg?.org?.plan ?? 'free'
       const decision = canDeploy({
         isPreview,
         hasActiveSubscription: !!activeSubscription,
@@ -148,6 +154,7 @@ export const deployApp = new Spiceflow()
         // already set is the 2nd one, which canDeploy blocks via the count.
         isRefinalizeOfActive: false,
         hasBasePath: !!body.basePath,
+        orgPlan,
       })
       if (!decision.allowed) {
         const upgradeUrl = `${new URL(request.url).origin}/dashboard/projects/${auth.projectId}/billing`
@@ -389,7 +396,8 @@ export const deployApp = new Spiceflow()
       // Compute subdomains and batch D1 updates.
       // Base-path deploys get a distinct subdomain ({base}-base-{project}) so they
       // coexist with root deploys on the same project without overriding each other.
-      const projectSubdomain = buildProjectSubdomain(proj)
+      // Prefer a stored custom slug so Notaku/control-plane subdomains survive redeploys.
+      const projectSubdomain = resolveProjectSubdomain(proj)
       const baseSubdomain = deploy.basePath
         ? buildBasePathSubdomain(deploy.basePath, projectSubdomain)
         : projectSubdomain

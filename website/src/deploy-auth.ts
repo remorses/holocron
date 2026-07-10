@@ -7,6 +7,7 @@ import * as orm from 'drizzle-orm'
 import { json } from 'spiceflow'
 import { ulid } from 'ulid'
 import * as schema from 'db/schema'
+import type { ApiKeyScope } from 'db/schema'
 import { ensureOrg, getDb, getSession, validateApiKey } from './db.ts'
 
 export const GITHUB_OIDC_HEADER = 'x-holocron-github-oidc-token'
@@ -22,6 +23,55 @@ export function sanitizeForDns(input: string): string {
     .replace(/[^a-z0-9-]/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
+}
+
+/** Labels that must never be claimed as custom project subdomains. */
+export const RESERVED_SUBDOMAINS = new Set([
+  'www',
+  'api',
+  'app',
+  'cdn',
+  'static',
+  'admin',
+  'dashboard',
+  'preview',
+  'cname',
+  'mail',
+  'status',
+  'docs',
+  'holocron',
+  'site',
+  'site-preview',
+  'assets',
+  'auth',
+  'login',
+  'oauth',
+  'device',
+  'billing',
+  'support',
+  'help',
+  'blog',
+  'www-site',
+])
+
+/** Validate and normalize a custom project subdomain slug.
+ *  Returns the sanitized label or throws a spiceflow json Response. */
+export function validateCustomSubdomain(raw: string): string {
+  const sanitized = sanitizeForDns(raw)
+  if (sanitized.length < 3 || sanitized.length > 48) {
+    throw json(
+      { error: 'subdomain must be 3–48 characters after sanitization (a-z, 0-9, hyphens)' },
+      { status: 400 },
+    )
+  }
+  if (RESERVED_SUBDOMAINS.has(sanitized)) {
+    throw json({ error: `subdomain "${sanitized}" is reserved` }, { status: 400 })
+  }
+  // Must start with a letter or digit (sanitize already strips leading hyphens)
+  if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(sanitized)) {
+    throw json({ error: 'subdomain must start and end with a letter or digit' }, { status: 400 })
+  }
+  return sanitized
 }
 
 /** Build the project's base subdomain from github info or projectId.
@@ -42,6 +92,18 @@ export function buildProjectSubdomain(project: {
   return project.projectId.toLowerCase()
 }
 
+/** Prefer a stored custom subdomain; only derive from github/projectId when unset.
+ *  Finalize must use this so custom slugs are not clobbered on every deploy. */
+export function resolveProjectSubdomain(project: {
+  subdomain?: string | null
+  githubOwner?: string | null
+  githubRepo?: string | null
+  projectId: string
+}): string {
+  if (project.subdomain) return project.subdomain
+  return buildProjectSubdomain(project)
+}
+
 type OidcResult = {
   ownerIdStr: string
   owner: string
@@ -53,7 +115,7 @@ type OidcResult = {
 }
 
 export type DeployAuth =
-  | { type: 'api-key'; orgId: string; projectId: string; userId?: string }
+  | { type: 'api-key'; orgId: string; projectId: string; userId?: string; scope: ApiKeyScope }
   | { type: 'session'; orgId: string; projectId: string; userId: string }
   | {
       type: 'github-oidc'
@@ -70,7 +132,20 @@ export type DeployAuth =
 export async function resolveCreateDeployAuth(request: Request, bodyProjectId?: string): Promise<DeployAuth> {
   const apiKeyAuth = await validateApiKey(request.headers.get('authorization'))
   if (apiKeyAuth) {
-    return { type: 'api-key', orgId: apiKeyAuth.orgId, projectId: apiKeyAuth.projectId }
+    // Org keys are control-plane only (create projects / mint project keys).
+    // Deploys always use a project-scoped key so blast radius stays per site.
+    if (apiKeyAuth.scope === 'org') {
+      throw json(
+        { error: 'org-scoped API keys cannot deploy. Mint a project-scoped key and use that.' },
+        { status: 403 },
+      )
+    }
+    return {
+      type: 'api-key',
+      orgId: apiKeyAuth.orgId,
+      projectId: apiKeyAuth.projectId!,
+      scope: 'project',
+    }
   }
 
   const session = await getSession(request)
@@ -100,10 +175,21 @@ export async function resolveCreateDeployAuth(request: Request, bodyProjectId?: 
 export async function requireDeployAccess(request: Request, projectId: string): Promise<DeployAuth> {
   const apiKeyAuth = await validateApiKey(request.headers.get('authorization'))
   if (apiKeyAuth) {
+    if (apiKeyAuth.scope === 'org') {
+      throw json(
+        { error: 'org-scoped API keys cannot deploy. Mint a project-scoped key and use that.' },
+        { status: 403 },
+      )
+    }
     if (apiKeyAuth.projectId !== projectId) {
       throw json({ error: 'deployment does not belong to your project' }, { status: 403 })
     }
-    return { type: 'api-key', orgId: apiKeyAuth.orgId, projectId: apiKeyAuth.projectId }
+    return {
+      type: 'api-key',
+      orgId: apiKeyAuth.orgId,
+      projectId: apiKeyAuth.projectId!,
+      scope: 'project',
+    }
   }
 
   const session = await getSession(request)
