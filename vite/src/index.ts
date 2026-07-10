@@ -61,6 +61,11 @@ export { TableOfContentsPanel } from './components/toc-panel.tsx'
 
 export type { HolocronApp, HolocronLoaderData } from './app-factory.tsx'
 
+/* ── OpenAPI page generation (for multi-tenant pipelines) ────────────── */
+
+export { generateOpenAPIPages } from './lib/openapi/generate.ts'
+export type { GenerateOpenAPIPagesOptions, GenerateOpenAPIPagesResult } from './lib/openapi/generate.ts'
+
 /* ── Custom tab provider interface ───────────────────────────────────── */
 
 export type { CustomTabProvider } from './lib/runtime-provider.ts'

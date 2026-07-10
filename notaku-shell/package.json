@@ -7,7 +7,7 @@
     "dev": "vite dev",
     "build": "HOLOCRON_DEPLOY=1 vite build",
     "build:shell": "HOLOCRON_DEPLOY=1 vite build",
-    "start": "node dist/rsc/index.js"
+    "start": "node dist/.holocron/rsc/index.js"
   },
   "dependencies": {
     "@holocron.so/vite": "workspace:^",

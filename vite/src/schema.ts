@@ -1333,6 +1333,12 @@ export const holocronConfigSchema = z
     decorativeLines: decorativeLinesSchema.optional(),
     layout: layoutSchema.optional(),
     integrations: integrationsSchema.optional(),
+    customCss: z
+      .string()
+      .optional()
+      .describe(
+        'Raw CSS string injected as a <style> tag at runtime. Useful for multi-tenant sites where users cannot provide CSS files at build time.',
+      ),
   })
   .passthrough()
   .describe(

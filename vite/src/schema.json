@@ -211,6 +211,10 @@
           "$ref": "#/definitions/integrationsSchema"
         }
       ]
+    },
+    "customCss": {
+      "description": "Raw CSS string injected as a <style> tag at runtime. Useful for multi-tenant sites where users cannot provide CSS files at build time.",
+      "type": "string"
     }
   },
   "required": [

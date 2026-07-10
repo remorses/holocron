@@ -138,6 +138,9 @@ export function normalize(raw: Record<string, unknown>): HolocronConfig {
     decorativeLines: normalizeDecorativeLines(raw.decorativeLines),
     layout: normalizeLayout(raw.layout),
     integrations: normalizeIntegrations(raw.integrations),
+    ...(typeof raw.customCss === 'string' && raw.customCss
+      ? { customCss: raw.customCss }
+      : {}),
   }
 }
 

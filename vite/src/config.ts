@@ -185,6 +185,9 @@ export type HolocronConfig = {
   decorativeLines: 'none' | 'lines' | 'dashed' | 'lines-with-dots'
   layout: { maxWidth: number; sidebarWidth: number; columnGap: number; radius: number }
   integrations: z.output<typeof integrationsSchema>
+  /** Raw CSS injected as a <style> tag. For multi-tenant sites that cannot
+   *  bundle user CSS at build time. */
+  customCss?: string
 }
 
 /* ── Type guard (for page entries) ───────────────────────────────────── */
