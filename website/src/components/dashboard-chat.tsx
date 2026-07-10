@@ -67,7 +67,7 @@ const dashboardPages = [
   },
   {
     path: '/dashboard/deploy',
-    description: 'Create a new docs project. Shows two setup cards: create from the GitHub template (opens the template repo), or scaffold locally with the CLI (npx -y @holocron.so/cli create). The site is created on the first deployment.',
+    description: 'Create a new docs project. Shows two setup cards: create from the GitHub template (opens the template repo), or scaffold locally with the CLI (npx -y "@holocron.so/cli" create). The site is created on the first deployment.',
   },
 ]
 

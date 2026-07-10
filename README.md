@@ -26,7 +26,7 @@ workflows, patterns, and tools specific to this project.
 Scaffold a new project with the CLI:
 
 ```bash
-npx -y @holocron.so/cli create
+npx -y "@holocron.so/cli" create
 ```
 
 This creates a working docs site with sample pages, navigation, and a `vite.config.ts`. Run `pnpm install && pnpm dev` and you're live.
@@ -205,7 +205,7 @@ The plugin reads your config file, walks the navigation tree to discover MDX pag
 The fastest way to get a live URL. Builds and uploads your site to `holocron.so`:
 
 ```bash
-npx -y @holocron.so/cli deploy
+npx -y "@holocron.so/cli" deploy
 ```
 
 In **GitHub Actions**, the deploy command uses OIDC tokens automatically (no API key needed). Add `permissions: id-token: write` to your workflow.

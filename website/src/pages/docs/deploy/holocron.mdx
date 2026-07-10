@@ -13,7 +13,7 @@ the fastest way to publish a site without managing your own server or Cloudflare
 Worker.
 
 ```bash
-npx -y @holocron.so/cli deploy
+npx -y "@holocron.so/cli" deploy
 ```
 
 The command runs your build, uploads only changed files, finalizes the deployment,
@@ -52,20 +52,20 @@ or [Node.js](/docs/deploy/node) if you need your own domain today.
 **Auth priority** (first match wins):
 
 1. **`HOLOCRON_KEY`** env var — API key scoped to a specific project. The server resolves the org and project from the key. No flags needed.
-2. **Session token** from `npx -y @holocron.so/cli login` — if the account has multiple projects, pass `--project prj_xxx` or the CLI prompts interactively.
+2. **Session token** from `npx -y "@holocron.so/cli" login` — if the account has multiple projects, pass `--project prj_xxx` or the CLI prompts interactively.
 3. **GitHub Actions OIDC** — automatic when running in GitHub Actions with `permissions: id-token: write`. No API key or login needed if the repo owner matches the Holocron account.
 
 For local deploys, log in once:
 
 ```bash
-npx -y @holocron.so/cli login
-npx -y @holocron.so/cli deploy
+npx -y "@holocron.so/cli" login
+npx -y "@holocron.so/cli" deploy
 ```
 
 For CI deploys, use a project API key:
 
 ```bash
-HOLOCRON_KEY=holo_xxx npx -y @holocron.so/cli deploy
+HOLOCRON_KEY=holo_xxx npx -y "@holocron.so/cli" deploy
 ```
 
 No project ID is saved locally on disk. It is either derived from the API key,
@@ -91,14 +91,14 @@ permissions:
 ### Organizations and project resolution
 
 Each user gets a **personal org** auto-created on first login. All projects and
-API keys are scoped to an org. Run `npx -y @holocron.so/cli whoami` to see all orgs
+API keys are scoped to an org. Run `npx -y "@holocron.so/cli" whoami` to see all orgs
 and projects.
 
 When a user belongs to multiple orgs, `projects create` prompts which org to
 use. Pass `--org <orgId>` to skip the prompt:
 
 ```bash
-npx -y @holocron.so/cli projects create --name "My Docs" --org <orgId>
+npx -y "@holocron.so/cli" projects create --name "My Docs" --org <orgId>
 ```
 
 The deploy command resolves the org from the project itself, so `--org` is not

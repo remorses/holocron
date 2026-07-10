@@ -41,27 +41,27 @@ Both produce the same `holo_xxx` key.
 First authenticate the CLI once with the device flow (opens your browser):
 
 ```bash
-npx -y @holocron.so/cli login
+npx -y "@holocron.so/cli" login
 ```
 
 If you do not have a project yet, create one:
 
 ```bash
-npx -y @holocron.so/cli projects create --name "My Docs"
+npx -y "@holocron.so/cli" projects create --name "My Docs"
 ```
 
 Then create a key scoped to that project. Run `keys create` without `--project`
 to pick from a list, or pass the project ID directly:
 
 ```bash
-npx -y @holocron.so/cli keys create --name production --project <projectId>
+npx -y "@holocron.so/cli" keys create --name production --project <projectId>
 ```
 
 The command prints the key once. Copy it immediately; it is not shown again.
 
 <Tip>
-List existing keys with `npx -y @holocron.so/cli keys list` and revoke one with
-`npx -y @holocron.so/cli keys delete <keyId>`.
+List existing keys with `npx -y "@holocron.so/cli" keys list` and revoke one with
+`npx -y "@holocron.so/cli" keys delete <keyId>`.
 </Tip>
 
 ### From the holocron.so dashboard

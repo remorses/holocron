@@ -56,7 +56,7 @@ curl -fsSL https://holocron.so/docs/organize/docs-json.md
 Use the CLI to create a new docs site with a working template:
 
 ```bash
-npx -y @holocron.so/cli create --name "My Docs" my-docs --skip-auth
+npx -y "@holocron.so/cli" create --name "My Docs" my-docs --skip-auth
 ```
 
 The `--skip-auth` flag skips cloud setup & AI chat setup (suitable for agents and local-only
@@ -539,7 +539,7 @@ section above.
 Run `--help` to see all available commands. Never truncate the output.
 
 ```bash
-npx -y @holocron.so/cli --help
+npx -y "@holocron.so/cli" --help
 ```
 
 Key commands: `login`, `logout`, `whoami`, `deploy`, `projects list`,
@@ -548,11 +548,11 @@ Key commands: `login`, `logout`, `whoami`, `deploy`, `projects list`,
 Before logging in, always check if the user is already authenticated:
 
 ```bash
-npx -y @holocron.so/cli whoami
+npx -y "@holocron.so/cli" whoami
 ```
 
 If `whoami` succeeds and shows user, orgs, and projects, skip login. Only run
-`npx -y @holocron.so/cli login` if `whoami` fails.
+`npx -y "@holocron.so/cli" login` if `whoami` fails.
 
 ## Deploy
 
@@ -567,7 +567,7 @@ script or the user explicitly asks for holocron.so hosting.
 It is the fastest way to publish without managing your own server.
 
 ```bash
-npx -y @holocron.so/cli deploy
+npx -y "@holocron.so/cli" deploy
 ```
 
 The command runs the build, uploads only changed files, finalizes the deployment,
@@ -647,7 +647,7 @@ Use ASCII diagrams frequently in MDX pages. Always use the **`diagram`** languag
 - Never exceed 94 characters per line.
 - Prefer a **varied, organic layout**. Mix plain text labels, boxes for major components, and directional arrows.
 - All connections must use **directional arrows**. Never use plain lines without an arrowhead.
-- Verify alignment by running `npx -y @holocron.so/cli diagrams fix <file>` (see dedicated section below).
+- Verify alignment by running `npx -y "@holocron.so/cli" diagrams fix <file>` (see dedicated section below).
 
 ````mdx
 ```diagram
@@ -673,7 +673,7 @@ docs.jsonc ───►│  Vite Plugin  │──────► Build Output
 LLMs cannot count characters reliably. Every time you create or edit a diagram in an MDX page, you **must** run the alignment fixer before committing. This is not optional.
 
 ```bash
-npx -y @holocron.so/cli diagrams fix path/to/file.mdx
+npx -y "@holocron.so/cli" diagrams fix path/to/file.mdx
 ```
 
 The command:
@@ -718,7 +718,7 @@ See https://holocron.so/docs/customize/bleed.md for the full reference.
 - All ASCII diagrams in MDX pages must use the `diagram` language hint on the
   code fence (` ```diagram `). This renders them with proper styling on the
   website instead of plain monospace.
-- After creating or editing any diagram, run `npx -y @holocron.so/cli diagrams fix <file>`
+- After creating or editing any diagram, run `npx -y "@holocron.so/cli" diagrams fix <file>`
   to auto-fix alignment. LLMs cannot count characters reliably.
 - Never pipe curl or `--help` output through `head`, `tail`, or any truncation
   command. Always read the full output.

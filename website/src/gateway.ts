@@ -83,7 +83,7 @@ const NOTICE_RATE_LIMIT_REACHED = {
   code: 'HOLOCRON_RATE_LIMIT_REACHED',
   title: 'Rate limit reached',
   message: 'Too many AI chat requests. Wait a minute and try again, or add a HOLOCRON_KEY for higher limits.',
-  command: 'npx -y @holocron.so/cli keys create --name production --project <projectId>',
+  command: 'npx -y "@holocron.so/cli" keys create --name production --project <projectId>',
 } as const satisfies HolocronChatNoticeChunk
 
 // Client tool names are re-validated server-side — the widget's defineTool()
@@ -355,7 +355,7 @@ export const gatewayApp = new Spiceflow()
           code: 'HOLOCRON_TEMPORARY_AI_MODEL',
           title: 'Temporary AI model',
           message: 'Add HOLOCRON_KEY before deploying for reliable AI chat.',
-          command: 'npx -y @holocron.so/cli keys create --name production --project <projectId>',
+          command: 'npx -y "@holocron.so/cli" keys create --name production --project <projectId>',
         } as const
       }
 

@@ -31,7 +31,7 @@ Subpath hosting requires a **Holocron Pro** subscription. [Subscribe from your d
 Add `--base-path` to your deploy command. The path is the subpath prefix where your docs will live:
 
 ```bash
-HOLOCRON_KEY=holo_xxx npx -y @holocron.so/cli deploy --base-path /docs
+HOLOCRON_KEY=holo_xxx npx -y "@holocron.so/cli" deploy --base-path /docs
 ```
 
 This builds your site with all routes and assets prefixed under `/docs/` and deploys it to your holocron.so URL. Your deployed site serves pages at `/docs/quickstart`, `/docs/api-reference`, etc.
@@ -252,7 +252,7 @@ jobs:
         with:
           node-version: 22
       - run: npm install
-      - run: npx -y @holocron.so/cli deploy --base-path /docs
+      - run: npx -y "@holocron.so/cli" deploy --base-path /docs
 ```
 
 ## Self-hosted base path
