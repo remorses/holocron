@@ -4,6 +4,12 @@
 // trivial to reason about and the callers (deploy-api.ts, gateway.ts) only have
 // to fetch state and apply the decision. Keeping the policy in one place avoids
 // scattering "is this allowed?" checks across the codebase.
+//
+// Partner orgs (org.plan = 'partner') get full deploy/domain entitlements without
+// a per-project Stripe subscription. Used by multi-tenant control planes (e.g.
+// Notaku) that own many Holocron projects under one org.
+
+import type { OrgPlan } from 'db/schema'
 
 export const PRO_PRICE_LOOKUP_KEYS = {
   monthly: 'pro_monthly',
@@ -12,22 +18,34 @@ export const PRO_PRICE_LOOKUP_KEYS = {
 
 export type BillingInterval = keyof typeof PRO_PRICE_LOOKUP_KEYS
 
+export type { OrgPlan }
+
 /** Stripe statuses that count as "the project is paid and active". past_due is
  *  included so a failed renewal doesn't instantly lock a customer out while
  *  Stripe retries the charge. */
 export const ACTIVE_SUBSCRIPTION_STATUSES = ['active', 'trialing', 'past_due'] as const
 
 /** Free projects get exactly ONE production deployment. Previews always require
- *  a subscription. */
+ *  a subscription (unless the org is partner). */
 export const FREE_PRODUCTION_DEPLOY_LIMIT = 1
 
 export type DeployDecision =
   | { allowed: true }
   | { allowed: false; code: 'SUBSCRIPTION_REQUIRED'; reason: string }
 
+/** True when the project may use Pro features (unlimited deploys, domains, …).
+ *  Partner orgs bypass Stripe; everyone else needs an active subscription. */
+export function hasDeployEntitlement(opts: {
+  hasActiveSubscription: boolean
+  orgPlan?: OrgPlan | null
+}): boolean {
+  if (opts.orgPlan === 'partner') return true
+  return opts.hasActiveSubscription
+}
+
 /** Decide whether a deployment is allowed given the project's billing state.
  *
- *  - Subscribed projects: always allowed.
+ *  - Partner org or subscribed projects: always allowed.
  *  - Preview deploys (PR/branch): require a subscription.
  *  - Production deploys: the first is free; subsequent ones require a
  *    subscription. `isRefinalizeOfActive` is true when re-finalizing the
@@ -38,8 +56,9 @@ export function canDeploy(opts: {
   productionDeployCount: number
   isRefinalizeOfActive: boolean
   hasBasePath?: boolean
+  orgPlan?: OrgPlan | null
 }): DeployDecision {
-  if (opts.hasActiveSubscription) return { allowed: true }
+  if (hasDeployEntitlement(opts)) return { allowed: true }
   if (opts.isRefinalizeOfActive) return { allowed: true }
 
   if (opts.hasBasePath) {
@@ -70,11 +89,12 @@ export function canDeploy(opts: {
 }
 
 /** Custom domains require an active subscription because they cost money
- *  (Cloudflare SSL for SaaS per-hostname charges). */
+ *  (Cloudflare SSL for SaaS per-hostname charges). Partner orgs are exempt. */
 export function canAddDomain(opts: {
   hasActiveSubscription: boolean
+  orgPlan?: OrgPlan | null
 }): DeployDecision {
-  if (opts.hasActiveSubscription) return { allowed: true }
+  if (hasDeployEntitlement(opts)) return { allowed: true }
   return {
     allowed: false,
     code: 'SUBSCRIPTION_REQUIRED',
