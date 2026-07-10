@@ -203,6 +203,111 @@ for (const [, chunk] of result.pageChunks) {
 }
 ```
 
+## OpenAPI pages
+
+Multi-tenant sites can generate OpenAPI endpoint pages without a Vite build. The `generateOpenAPIPages` function takes a raw spec (YAML, JSON, or parsed object) and produces MDX pages with the `<OpenAPIEndpoint>` component, which is already bundled in the stable shell chunk.
+
+```ts
+import {
+  normalizeConfig,
+  generateHolocronData,
+  generateOpenAPIPages,
+} from '@holocron.so/vite'
+
+// 1. Generate OpenAPI pages from a spec
+const { pages: apiPages, navigation: apiNavGroups } = await generateOpenAPIPages({
+  spec: openApiYamlString, // YAML, JSON string, or parsed object
+  slugPrefix: 'api',       // pages land at api/get-users, api/post-users, etc.
+})
+
+// 2. Merge OpenAPI pages into the tenant's page map
+const allPages = { ...tenantPages, ...apiPages }
+const allSlugs = Object.keys(allPages)
+
+// 3. Merge OpenAPI navigation into the config
+const config = normalizeConfig({
+  ...tenantDocsJson,
+  navigation: {
+    ...tenantDocsJson.navigation,
+    tabs: [
+      ...tenantDocsJson.navigation.tabs,
+      { tab: 'API Reference', groups: apiNavGroups },
+    ],
+  },
+})
+
+// 4. Generate data as usual
+const result = await generateHolocronData({
+  config,
+  getMdxSource: async (slug) => allPages[slug] ?? '',
+  slugs: allSlugs,
+})
+```
+
+`generateOpenAPIPages` processes the spec through the same pipeline as the Vite plugin: `@scalar` bundling, 3.1 upgrade, full dereferencing. Each operation becomes one MDX page with curl examples, request/response examples, and the interactive `<OpenAPIEndpoint>` component.
+
+The `navigation` output groups endpoints by their first OpenAPI tag, ready to drop into a tab's `groups` array.
+
+## Custom CSS
+
+Set `customCss` in the tenant's docs.json to inject arbitrary CSS at runtime. This is useful for multi-tenant sites where users cannot provide CSS files at build time.
+
+```json
+{
+  "name": "My Docs",
+  "customCss": ".editorial-heading { font-weight: 800; } .slot-navbar { border-bottom: 2px solid var(--primary); }"
+}
+```
+
+The CSS string is injected as a `<style>` tag alongside the theme's color and font styles.
+
+## Custom fonts
+
+Set `fonts` in docs.json to use Google Fonts or custom web fonts. The shell loads them at runtime via Google Fonts API.
+
+```json
+{
+  "fonts": {
+    "heading": {
+      "family": "Space Grotesk",
+      "weight": 700
+    },
+    "body": {
+      "family": "Inter"
+    }
+  }
+}
+```
+
+No build step needed. The font family is applied via CSS custom properties (`--font-sans`, `--font-heading`).
+
+## Search
+
+Sidebar search works automatically in multi-tenant mode. It uses [Orama](https://orama.com) to build a full-text index **client-side** from the navigation tree. Page titles, descriptions, and headings are all indexed.
+
+No build-time search index generation is needed. The navigation data in `holocron-data.js` contains all the metadata Orama needs.
+
+## Feature support
+
+| Feature | Multi-tenant support |
+|---|---|
+| MDX pages (all content) | Works |
+| Navigation (tabs, groups, nested) | Works |
+| Code blocks (Shiki highlighting) | Works (runtime) |
+| Mermaid diagrams | Works (client-side render) |
+| Math / KaTeX | Works (client-side render) |
+| Colors / theming | Works via `colors` config |
+| Custom fonts | Works via `fonts` config |
+| Custom CSS | Works via `customCss` config |
+| Icons (lucide, emoji, URL) | Works |
+| Redirects | Works |
+| Sidebar search | Works (Orama, client-side) |
+| AI chat widget | Works (built into shell) |
+| Anchors | Works |
+| OpenAPI tabs | Works via `generateOpenAPIPages` |
+| Custom MDX components | Not supported |
+| Changelog tabs | Not yet supported |
+
 ## What each export does
 
 | Export | Purpose |
@@ -210,6 +315,7 @@ for (const [, chunk] of result.pageChunks) {
 | `normalizeConfig(raw)` | Parse a raw docs.json object into a `HolocronConfig` |
 | `parseConfigSource(jsonString)` | Parse a JSON/JSONC string into a `HolocronConfig` |
 | `generateHolocronData(opts)` | Produce `holocron-data.js` + page chunk sources |
+| `generateOpenAPIPages(opts)` | Generate MDX pages + navigation from an OpenAPI spec |
 | `buildNavigationData(opts)` | Build the enriched navigation tree (used internally by `generateHolocronData`) |
 | `processMdx(content, library)` | Process a single MDX string into normalized content + metadata |
 | `collectIconRefs(opts)` | Collect all icon refs needed for the icon atlas |

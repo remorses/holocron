@@ -147,6 +147,10 @@ export function SiteHead({ config, titleOverride }: { config: HolocronConfig; ti
     ...colorStyles,
     ...fontHead.fontFaces,
     fontHead.fontVarOverrides.length > 0 ? `:root { ${fontHead.fontVarOverrides.join(' ')} }` : '',
+    // Sanitize customCss: strip </style to prevent XSS breakout from the
+    // style tag. HTML parsing terminates <style> before CSS parsing, so
+    // a tenant could inject </style><script>...</script> otherwise.
+    config.customCss ? config.customCss.replace(/<\/style/gi, '') : '',
   ].filter(Boolean).join('\n')
   const injectedStylesHref = `/holocron-injected-styles?${stableHash(injectedStyles)}`
 
