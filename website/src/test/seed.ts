@@ -47,11 +47,15 @@ export async function seedUserWithSession(
 /** Insert an org and make the user an admin member. Returns the org id. */
 export async function seedOrg(
   userId: string,
-  opts: { name?: string; role?: 'admin' | 'member' } = {},
+  opts: { name?: string; role?: 'admin' | 'member'; plan?: schema.OrgPlan } = {},
 ): Promise<string> {
   const db = getDb()
   const orgId = ulid()
-  await db.insert(schema.org).values({ id: orgId, name: opts.name ?? `Org ${orgId.slice(-6)}` })
+  await db.insert(schema.org).values({
+    id: orgId,
+    name: opts.name ?? `Org ${orgId.slice(-6)}`,
+    plan: opts.plan ?? 'free',
+  })
   await db.insert(schema.orgMember).values({
     id: ulid(),
     orgId,
@@ -74,7 +78,13 @@ export async function seedMembership(
 /** Insert a project in an org. Returns the projectId. */
 export async function seedProject(
   orgId: string,
-  opts: { name?: string } = {},
+  opts: {
+    name?: string
+    subdomain?: string
+    source?: string
+    externalId?: string
+    currentDeploymentId?: string
+  } = {},
 ): Promise<string> {
   const db = getDb()
   const projectId = ulid()
@@ -82,6 +92,10 @@ export async function seedProject(
     projectId,
     orgId,
     name: opts.name ?? `Project ${projectId.slice(-6)}`,
+    subdomain: opts.subdomain ?? null,
+    source: opts.source ?? null,
+    externalId: opts.externalId ?? null,
+    currentDeploymentId: opts.currentDeploymentId ?? null,
   })
   return projectId
 }
@@ -106,7 +120,29 @@ export async function seedApiKey(
     id: keyId,
     orgId,
     projectId,
+    scope: 'project',
     name: opts.name ?? 'test key',
+    prefix,
+    hash,
+  })
+  return { keyId, fullKey }
+}
+
+/** Insert an org-scoped API key (control plane). projectId is null. */
+export async function seedOrgApiKey(
+  orgId: string,
+  opts: { name?: string } = {},
+): Promise<SeededApiKey> {
+  const db = getDb()
+  const keyId = ulid()
+  const { fullKey, prefix } = generateApiKey()
+  const hash = await hashApiKey(fullKey)
+  await db.insert(schema.apiKey).values({
+    id: keyId,
+    orgId,
+    projectId: null,
+    scope: 'org',
+    name: opts.name ?? 'org key',
     prefix,
     hash,
   })
