@@ -15,7 +15,7 @@ export interface DeployEmailData {
 const mono = "Consolas, 'Courier New', Monaco, Menlo, monospace"
 const sans = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 
-const DOCS_BASE = 'https://holocron.so'
+const DOCS_BASE = 'https://holocron.so/docs'
 
 const darkModeStyles = `
   @media (prefers-color-scheme: dark) {
@@ -126,7 +126,7 @@ function DeployEmail({ data }: { data: DeployEmailData }) {
         <Hr />
 
         <p className="hc-muted" style={{ fontSize: 12, color: '#6b7280', margin: '0' }}>
-          Holocron · <Link href={DOCS_BASE}>holocron.so</Link>
+          Holocron · <Link href="https://holocron.so">holocron.so</Link>
         </p>
       </div>
     </EmailShell>
