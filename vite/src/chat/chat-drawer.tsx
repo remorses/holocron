@@ -11,7 +11,7 @@
  *
  * Pure CSS transitions — no Radix, no framer-motion.
  * Portal target comes from chatWidgetStore (document.body for holocron,
- * shadow mount container for standalone widget).
+ * the .holocron-chat light-DOM container for the standalone widget).
  */
 
 import React, { useEffect, useRef, useCallback, useSyncExternalStore } from 'react'
@@ -223,21 +223,21 @@ function ChatDrawerInner() {
   return createPortal(
     // Single wrapper — z-index 200 beats navbar's z-index 100
     <div style={{ position: 'relative', zIndex: 200 }}>
-      {/* Backdrop */}
+      {/* Click-catcher — fin.ai style: no dim, page stays visible behind
+       * the frosted glass panel. Clicking outside still closes. */}
       <div
         onClick={handleClose}
         aria-hidden='true'
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgb(0 0 0 / 0.3)',
-          opacity: isOpen ? 1 : 0,
           pointerEvents: isOpen ? 'auto' : 'none',
-          transition: 'opacity 200ms ease',
         }}
       />
 
-      {/* Drawer panel — VT morphs sidebar widget into this panel */}
+      {/* Drawer panel — VT morphs sidebar widget / pill into this panel.
+       * Frosted glass surface matching fin.ai's conversation panel:
+       * translucent token-derived background + blur(50px) + layered shadow. */}
       <div
         ref={drawerPanelRef}
         style={{
@@ -249,6 +249,7 @@ function ChatDrawerInner() {
           pointerEvents: isOpen ? 'auto' : 'none',
           visibility: isOpen ? 'visible' : 'hidden',
           background: 'var(--background)',
+          boxShadow: '0 1px 3px rgb(0 0 0 / 0.15), 0 4px 12px rgb(0 0 0 / 0.2)',
           borderRadius: 'var(--radius-3xl)',
           display: isOpen ? 'flex' : 'none',
           flexDirection: 'column',
