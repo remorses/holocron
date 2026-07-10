@@ -47,12 +47,13 @@ import {
   GrantOrgAccessButton,
   ConnectGscButton,
   CustomDomainsSection,
+  DASHBOARD_THEME_SCRIPT,
 } from './dashboard-components.tsx'
 import { DashboardChat } from './components/dashboard-chat.tsx'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
-const CLI_CREATE_COMMAND = 'npx -y @holocron.so/cli create'
-const CLI_DEPLOY_COMMAND = 'npx -y @holocron.so/cli deploy'
+const CLI_CREATE_COMMAND = 'npx -y "@holocron.so/cli" create'
+const CLI_DEPLOY_COMMAND = 'npx -y "@holocron.so/cli" deploy'
 
 function GitHubIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -229,6 +230,7 @@ export const dashboardApp = new Spiceflow()
     const projectId = pathMatch?.[1] ?? null
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <script dangerouslySetInnerHTML={{ __html: DASHBOARD_THEME_SCRIPT }} />
         <UpgradeBanner projectId={projectId} isBillingPage={request.parsedUrl.pathname.endsWith('/billing')} />
         {/* Navbar */}
         <header className="border-b border-border bg-background relative z-10">

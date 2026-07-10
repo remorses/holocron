@@ -42,16 +42,16 @@ LLMs frequently produce diagrams where vertical bars, corners, and bottom border
 
 ```bash
 # Fix diagrams in a file (writes in-place)
-npx -y @holocron.so/cli diagrams fix docs/architecture.mdx
+npx -y "@holocron.so/cli" diagrams fix docs/architecture.mdx
 
 # Preview changes without writing
-npx -y @holocron.so/cli diagrams fix docs/architecture.mdx --dry-run
+npx -y "@holocron.so/cli" diagrams fix docs/architecture.mdx --dry-run
 
 # Validate only (exits 1 if issues found)
-npx -y @holocron.so/cli diagrams fix docs/architecture.mdx --check
+npx -y "@holocron.so/cli" diagrams fix docs/architecture.mdx --check
 
 # Custom max width (default: 94)
-npx -y @holocron.so/cli diagrams fix docs/architecture.mdx --max-width 120
+npx -y "@holocron.so/cli" diagrams fix docs/architecture.mdx --max-width 120
 ```
 
 The fixer processes only diagram content inside fenced code blocks. Prose text is never modified.

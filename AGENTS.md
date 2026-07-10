@@ -29,7 +29,7 @@ both follow the same schema.
 ## CLI package name
 
 The `holocron` binary is published by the scoped package `@holocron.so/cli`.
-When writing one-off command examples, use `npx -y @holocron.so/cli <command>`
+When writing one-off command examples, use `npx -y "@holocron.so/cli" <command>`
 instead of `npx holocron <command>`. The unscoped `holocron` package is not the
 Holocron CLI.
 

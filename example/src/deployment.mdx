@@ -10,7 +10,7 @@ iconColor: orange
 Holocron deploys your documentation site to **holocron.so** with a single command. Every deploy gets a live URL.
 
 ```bash
-npx -y @holocron.so/cli deploy
+npx -y "@holocron.so/cli" deploy
 ```
 
 The deploy command runs `vite build`, collects the output, and uploads it. Files are content-addressed (SHA-256 hashed), so unchanged files are never re-uploaded. A typical redeploy after a small edit uploads only the changed pages.
@@ -43,7 +43,7 @@ jobs:
       - run: bun install
       - name: Deploy
         id: deploy
-        run: npx -y @holocron.so/cli deploy
+        run: npx -y "@holocron.so/cli" deploy
         env:
           HOLOCRON_KEY: ${{ secrets.HOLOCRON_KEY }}
 ```
@@ -132,10 +132,10 @@ For CI systems other than GitHub Actions, or if you prefer explicit authenticati
 
 ```bash
 # Create a key (requires login)
-npx -y @holocron.so/cli keys create --name production --project <projectId>
+npx -y "@holocron.so/cli" keys create --name production --project <projectId>
 
 # Deploy with the key
-HOLOCRON_KEY=holo_xxx npx -y @holocron.so/cli deploy
+HOLOCRON_KEY=holo_xxx npx -y "@holocron.so/cli" deploy
 ```
 
 In GitHub Actions, store the key as a [repository secret](https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions) and reference it with `${{ secrets.HOLOCRON_KEY }}`.
@@ -143,7 +143,7 @@ In GitHub Actions, store the key as a [repository secret](https://docs.github.co
 ## CLI options
 
 ```bash
-npx -y @holocron.so/cli deploy [options]
+npx -y "@holocron.so/cli" deploy [options]
 ```
 
 | Option | Description |
