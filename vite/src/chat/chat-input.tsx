@@ -16,6 +16,7 @@ import {
   ArrowUpIcon,
   StopSquareIcon,
 } from './chat-icons.tsx'
+import { chatWidgetStore } from './chat-widget-store.ts'
 
 // ── Reusable chat input (textarea + send/stop button) ────────────────
 //
@@ -94,7 +95,7 @@ export function ChatInput({
           <button
             type='button'
             onClick={handleButtonClick}
-            className='flex items-center justify-center w-6 h-6 rounded-md transition-colors bg-foreground/[0.06] text-muted-foreground/50 hover:bg-foreground/[0.12]'
+            className='flex items-center justify-center size-7 rounded-full transition-colors bg-foreground/[0.06] text-muted-foreground/50 hover:bg-foreground/[0.12]'
             aria-label='Stop generating'
           >
             <StopSquareIcon />
@@ -104,14 +105,14 @@ export function ChatInput({
             type='button'
             onClick={handleButtonClick}
             disabled={disabled || !value.trim()}
-            className={`flex items-center justify-center w-6 h-6 rounded-md transition-colors ${
+            className={`flex items-center justify-center size-7 rounded-full transition-colors ${
               value.trim()
                 ? 'bg-foreground text-background'
                 : 'bg-foreground/[0.06] text-muted-foreground/50'
             }`}
             aria-label='Send message'
           >
-            <ArrowUpIcon />
+            <ArrowUpIcon size={13} />
           </button>
         )}
       </div>
@@ -134,7 +135,10 @@ export function hideChildrenForSnapshot(el: HTMLElement | null): (() => void) | 
 // ── NavTooltip ───────────────────────────────────────────────────────
 //
 // Portal-based tooltip used in chat message footers (copy/regenerate).
-// Accepts an optional portalTarget; defaults to document.body.
+// Portals into chatWidgetStore.portalTarget so the tooltip stays inside
+// the scoped CSS container (critical for the standalone ChatWidget where
+// holocron's Tailwind classes aren't available on document.body).
+// All positioning uses inline styles to avoid CSS scope issues.
 
 export function NavTooltip({ label, children, position = 'above', portalTarget }: { label: string; children: React.ReactNode; position?: 'above' | 'below'; portalTarget?: HTMLElement | null }) {
   const [open, setOpen] = useState(false)
@@ -152,21 +156,35 @@ export function NavTooltip({ label, children, position = 'above', portalTarget }
     })
   }, [open, position])
 
-  const target = portalTarget ?? (typeof document !== 'undefined' ? document.body : null)
+  const target = portalTarget ?? chatWidgetStore.getState().portalTarget ?? (typeof document !== 'undefined' ? document.body : null)
 
   return (
     <span
       ref={triggerRef}
-      className='inline-flex'
+      style={{ display: 'inline-flex' }}
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
       {children}
       {open && target && createPortal(
         <span
-          className={`fixed -translate-x-1/2 whitespace-nowrap rounded-md border border-border-subtle bg-card px-2 py-1 text-[11px] text-foreground shadow-md pointer-events-none ${position === 'below' ? '' : '-translate-y-full'}`}
           role='tooltip'
-          style={{ top: pos.top, left: pos.left, zIndex: 300 }}
+          style={{
+            position: 'fixed',
+            top: pos.top,
+            left: pos.left,
+            transform: `translateX(-50%)${position === 'above' ? ' translateY(-100%)' : ''}`,
+            whiteSpace: 'nowrap',
+            borderRadius: '6px',
+            border: '1px solid var(--border-subtle, var(--border))',
+            backgroundColor: 'var(--card, #fff)',
+            padding: '2px 8px',
+            fontSize: '11px',
+            color: 'var(--foreground)',
+            boxShadow: '0 1px 3px rgb(0 0 0 / 0.1), 0 1px 2px rgb(0 0 0 / 0.06)',
+            pointerEvents: 'none',
+            zIndex: 300,
+          }}
         >
           {label}
         </span>,
