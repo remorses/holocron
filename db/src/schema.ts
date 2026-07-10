@@ -80,9 +80,16 @@ export const org = s.sqliteTable('org', {
    *  Single source of truth; reused for every checkout/portal call so we never
    *  create duplicate Stripe customers. */
   stripeCustomerId: s.text('stripe_customer_id'),
+  /** free = normal billing gates. partner = unlimited deploys + domains without
+   *  a per-project Stripe subscription (multi-tenant control planes like Notaku).
+   *  Only set via ops/scripts — no public API mutates this. */
+  plan: s.text('plan', { enum: ['free', 'partner'] }).notNull().default('free'),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
   updatedAt: epochMs('updated_at').notNull().$defaultFn(() => Date.now()),
 })
+
+/** free | partner — derived from org.plan enum, not a hand-written union. */
+export type OrgPlan = typeof org.$inferSelect.plan
 
 export const orgMember = s.sqliteTable('org_member', {
   id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
@@ -125,10 +132,15 @@ export const project = s.sqliteTable('project', {
   defaultBranch: s.text('default_branch').default('main'),
   githubOwner: s.text('github_owner'),
   githubRepo: s.text('github_repo'),
+  /** Optional provenance label (e.g. "notaku", "cli", "github"). Free string for support. */
+  source: s.text('source'),
+  /** Optional external system id (e.g. Notaku site id). Unique per org when set. */
+  externalId: s.text('external_id'),
   createdAt: epochMs('created_at').notNull().$defaultFn(() => Date.now()),
   updatedAt: epochMs('updated_at').notNull().$defaultFn(() => Date.now()),
 }, (table) => [
   s.index('project_org_id_idx').on(table.orgId),
+  s.uniqueIndex('project_org_id_external_id_unique').on(table.orgId, table.externalId),
 ])
 
 
@@ -209,12 +221,18 @@ export const subscription = s.sqliteTable('subscription', {
   s.index('subscription_project_id_idx').on(table.projectId),
 ])
 
-// ── API keys (one key per project, key alone identifies the project) ─
+// ── API keys ────────────────────────────────────────────────────────
+// scope=project: pinned to one project (deploy, domains, chat for that site).
+// scope=org: control-plane only — create projects, mint project keys, list.
+//   Cannot deploy, manage domains, or use AI chat. projectId is null.
 
 export const apiKey = s.sqliteTable('api_key', {
   id: s.text('id').primaryKey().notNull().$defaultFn(() => ulid()),
   orgId: s.text('org_id').notNull().references(() => org.id, { onDelete: 'cascade' }),
-  projectId: s.text('project_id').notNull().references(() => project.projectId, { onDelete: 'cascade' }),
+  /** Null when scope is org. Required when scope is project. */
+  projectId: s.text('project_id').references(() => project.projectId, { onDelete: 'cascade' }),
+  /** project = single-site key; org = multi-tenant control plane key. */
+  scope: s.text('scope', { enum: ['project', 'org'] }).notNull().default('project'),
   name: s.text('name').notNull(),
   prefix: s.text('prefix').notNull(),
   hash: s.text('hash').notNull().unique(),
@@ -223,6 +241,9 @@ export const apiKey = s.sqliteTable('api_key', {
   s.index('api_key_org_id_idx').on(table.orgId),
   s.index('api_key_project_id_idx').on(table.projectId),
 ])
+
+/** project | org — derived from apiKey.scope enum. */
+export type ApiKeyScope = typeof apiKey.$inferSelect.scope
 
 // ── Google Search Console connection (one per project) ──────────────
 // Stores OAuth tokens obtained via an external OAuth proxy (e.g. Framer's
