@@ -24,7 +24,7 @@ This page covers the **standalone widget** for embedding on external sites. If y
 </Note>
 </Aside>
 
-The widget renders in the page's **light DOM** (not shadow DOM) so view transitions work natively. CSS is scoped at build time under `.holocron-chat` to prevent style leakage.
+The widget renders inside a **Shadow DOM** for style isolation from the host page. Pill ↔ drawer morph uses **Motion `layoutId`** (CSS view transitions ignore elements inside shadow roots).
 
 ## Installation
 

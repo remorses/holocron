@@ -108,9 +108,17 @@ export function DashboardChat() {
     ...(hasSubscription !== null ? { hasSubscription } : {}),
   }
 
+  // Same-origin host, never a hard-coded production domain. Pointing the
+  // widget at holocron.so while the page runs on localhost makes session
+  // restore decode a production RSC federation payload. Those client
+  // reference ids are opaque build hashes; the local Vite host then does
+  // import("/<hash>"), 404s, and React blanks the whole dashboard.
+  const domain =
+    typeof window !== 'undefined' ? window.location.host : 'holocron.so'
+
   return (
     <ChatWidget
-      domain='holocron.so'
+      domain={domain}
       siteName='Holocron'
       theme={isDark ? 'light' : 'dark'}
       style={{ '--pill-width': '260px' } as any}

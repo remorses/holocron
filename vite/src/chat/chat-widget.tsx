@@ -5,10 +5,8 @@
  *
  * Point it at your holocron docs domain and get a working AI chat.
  * The widget fetches docs, streams responses via RSC federation, and
- * renders in the page's light DOM inside a `.holocron-chat` container with
- * build-time-scoped CSS. Light DOM (not shadow DOM) is required for the
- * pill → drawer view transition morph: Chrome ignores view-transition-name
- * on elements inside shadow roots.
+ * renders inside a Shadow DOM for style isolation. Pill ↔ drawer morph
+ * uses Motion layoutId (Chrome ignores CSS view-transition-name in shadow).
  *
  * Usage:
  *   import { ChatWidget } from '@holocron.so/vite/chat'
@@ -22,7 +20,7 @@ import { chatWidgetStore } from './chat-widget-store.ts'
 import { chatStore } from './chat-store.ts'
 import { ChatDrawer } from './chat-drawer.tsx'
 import { ChatPill } from './chat-pill.tsx'
-import { ChatHost } from './chat-host.tsx'
+import { ChatShadowHost } from './chat-shadow-host.tsx'
 import { ensureSessionRestored, hasExistingSession } from './chat-submit.ts'
 import { registerToolOnModelContext, unregisterTool } from './define-tool.ts'
 import type { ChatToolDefinition } from './define-tool.ts'
@@ -138,8 +136,7 @@ export function ChatWidget({
     }
   }, [domain, currentSlug, siteName, tools, context, navigate])
 
-  // Portal target is set reactively via onMountPoint callback from ChatHost.
-  // No setTimeout or querySelector needed.
+  // Portal target is set reactively via onMountPoint callback from ChatShadowHost.
   const handleMountPoint = useCallback((mount: HTMLElement) => {
     chatWidgetStore.setState({ portalTarget: mount })
   }, [])
@@ -151,16 +148,12 @@ export function ChatWidget({
 
   return (
     <>
-      {/* Custom trigger stays outside the .holocron-chat container so users
-       * can style it with their own page CSS */}
+      {/* Custom trigger stays outside shadow so users can style it with page CSS */}
       {TriggerComponent ? <TriggerComponent onClick={handleToggle} /> : null}
 
-      {/* Chat UI in a light-DOM .holocron-chat container. Default CSS
-       * variable values come from :where(.holocron-chat) in chat.css (zero
-       * specificity, host overrides win). Light DOM lets the pill and drawer
-       * share the holocron-chat-container view transition — shadow DOM
-       * elements are excluded from view transitions by Chrome. */}
-      <ChatHost
+      {/* Pill + drawer inside shadow DOM for style isolation. Motion layoutId
+       * morphs pill ↔ drawer (works in shadow; CSS view transitions do not). */}
+      <ChatShadowHost
         className={className}
         style={style}
         dark={isDark}
@@ -168,7 +161,7 @@ export function ChatWidget({
       >
         {!TriggerComponent && <ChatPill />}
         <ChatDrawer />
-      </ChatHost>
+      </ChatShadowHost>
     </>
   )
 }

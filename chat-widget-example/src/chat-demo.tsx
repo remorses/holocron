@@ -2,8 +2,8 @@
  * Client component that mounts the standalone ChatWidget and exposes
  * useChatWidget() controls for testing the full widget API surface.
  *
- * Validates: scoped light-DOM rendering, CSS injection, cross-origin RSC
- * streaming, portal targeting, pill/custom trigger, view transition morph,
+ * Validates: shadow DOM rendering, CSS injection, cross-origin RSC
+ * streaming, portal targeting, pill/custom trigger, Motion layout morph,
  * and the hook API.
  */
 

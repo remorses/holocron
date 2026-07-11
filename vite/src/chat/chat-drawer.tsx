@@ -9,14 +9,15 @@
  * select (past sessions from localStorage, titled by the gateway) plus a
  * "New chat" button that rotates to a fresh session via startNewChat().
  *
- * Pure CSS transitions — no Radix, no framer-motion.
+ * Shell morph uses Motion layoutId (shared with ChatPill / SidebarAssistant).
  * Portal target comes from chatWidgetStore (document.body for holocron,
- * the .holocron-chat light-DOM container for the standalone widget).
+ * the shadow mount for the standalone widget).
  */
 
 import React, { useEffect, useRef, useCallback, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
-import { chatStore, CHAT_CONTAINER_VT_NAME, withViewTransition } from './chat-store.ts'
+import { motion, useReducedMotion } from 'motion/react'
+import { chatStore, CHAT_LAYOUT_ID, CHAT_LAYOUT_TRANSITION } from './chat-store.ts'
 
 function useChatStore<T>(selector: (s: import('./chat-store.ts').ChatState) => T): T {
   return useSyncExternalStore(chatStore.subscribe, () => selector(chatStore.getState()), () => selector(chatStore.getState()))
@@ -27,7 +28,7 @@ import {
   ChatMessages,
   ChatLoadingDots,
 } from './chat-message.tsx'
-import { ChatInput, hideChildrenForSnapshot } from './chat-input.tsx'
+import { ChatInput } from './chat-input.tsx'
 import { PlusIcon, CloseIcon } from './chat-icons.tsx'
 import { ChatSessionSelect } from './chat-session-select.tsx'
 
@@ -57,6 +58,7 @@ function ChatDrawerInner() {
   const draftText = useChatStore((s) => s.draftText)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const drawerPanelRef = useRef<HTMLDivElement>(null)
+  const reduceMotion = useReducedMotion()
 
   /** Scroll the last user message to the top of the scroll area so the
    *  response streams in below it, matching fumabase's chat UX. */
@@ -159,10 +161,7 @@ function ChatDrawerInner() {
   // ── Close ──────────────────────────────────────────────────────
 
   const handleClose = useCallback(() => {
-    withViewTransition(
-      () => { chatStore.setState({ drawerState: 'closed' }) },
-      () => hideChildrenForSnapshot(drawerPanelRef.current),
-    )
+    chatStore.setState({ drawerState: 'closed' })
   }, [])
 
   // ── Draft auto-submit (sidebar → drawer handoff) ───────────────
@@ -220,6 +219,11 @@ function ChatDrawerInner() {
   const portalTarget = useSyncExternalStore(chatWidgetStore.subscribe, getPortalTarget, getNull)
   if (!portalTarget) return null
 
+  // Only mount the shell while open. Shared layoutId morph requires the
+  // previous shell (pill/sidebar) to unmount and this one to mount — keeping
+  // a display:none / visibility:hidden twin does not animate.
+  if (!isOpen) return null
+
   return createPortal(
     // Single wrapper — z-index 200 beats navbar's z-index 100
     <div style={{ position: 'relative', zIndex: 200 }}>
@@ -231,31 +235,32 @@ function ChatDrawerInner() {
         style={{
           position: 'fixed',
           inset: 0,
-          pointerEvents: isOpen ? 'auto' : 'none',
+          pointerEvents: 'auto',
         }}
       />
 
-      {/* Drawer panel — VT morphs sidebar widget / pill into this panel.
-       * Frosted glass surface matching fin.ai's conversation panel:
-       * translucent token-derived background + blur(50px) + layered shadow. */}
-      <div
+      {/* Drawer panel — Motion layoutId morphs sidebar widget / pill into this
+       * panel. Frosted glass surface matching fin.ai's conversation panel. */}
+      <motion.div
         ref={drawerPanelRef}
+        className='holocron-chat-drawer-panel'
+        layoutId={CHAT_LAYOUT_ID}
+        layout
+        initial={false}
+        transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
         style={{
           position: 'fixed',
           right: 16,
           top: 16,
           bottom: 16,
           width: 'min(440px, calc(100vw - 32px))',
-          pointerEvents: isOpen ? 'auto' : 'none',
-          visibility: isOpen ? 'visible' : 'hidden',
+          pointerEvents: 'auto',
           background: 'var(--background)',
-          boxShadow: '0 1px 3px rgb(0 0 0 / 0.15), 0 4px 12px rgb(0 0 0 / 0.2)',
-          borderRadius: 'var(--radius-3xl)',
-          display: isOpen ? 'flex' : 'none',
+          borderRadius: 24,
+          display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          viewTransitionName: isOpen ? CHAT_CONTAINER_VT_NAME : 'none',
-        } as React.CSSProperties}
+        }}
       >
         {/* Top bar */}
         <div
@@ -350,9 +355,7 @@ function ChatDrawerInner() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Footer — same muted frame as sidebar assistant.
-         * Owns the view-transition-name when drawer is open so the browser
-         * morphs the chat input from the sidebar position to here. */}
+        {/* Footer — same muted frame as sidebar assistant. */}
         <div style={{ flexShrink: 0 }}>
           <div
             style={{
@@ -374,7 +377,7 @@ function ChatDrawerInner() {
             />
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>,
     portalTarget,
   )
