@@ -14,7 +14,7 @@
 //   /dashboard/deploy                    → create project flow
 
 import { Spiceflow, redirect } from 'spiceflow'
-import { Link, router } from 'spiceflow/react'
+import { Link, ProgressBar, router } from 'spiceflow/react'
 import type * as React from 'react'
 import { getDb, getSession, getProjectSubscription, requireSession } from './db.ts'
 import { normalizeAuthRedirectPath } from './auth-redirect.ts'
@@ -230,6 +230,7 @@ export const dashboardApp = new Spiceflow()
     const projectId = pathMatch?.[1] ?? null
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <ProgressBar color="var(--primary)" />
         <script dangerouslySetInnerHTML={{ __html: DASHBOARD_THEME_SCRIPT }} />
         <UpgradeBanner projectId={projectId} isBillingPage={request.parsedUrl.pathname.endsWith('/billing')} />
         {/* Navbar */}
