@@ -2,9 +2,10 @@
 
 import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { motion, useReducedMotion } from 'motion/react'
 import { Link } from './link.tsx'
 import { useSyncExternalStore } from 'react'
-import { chatStore, CHAT_CONTAINER_VT_NAME, withViewTransition, type ChatState } from '../chat/chat-store.ts'
+import { chatStore, CHAT_LAYOUT_ID, CHAT_LAYOUT_TRANSITION, type ChatState } from '../chat/chat-store.ts'
 
 function useChatStore<T>(selector: (s: ChatState) => T): T {
   return useSyncExternalStore(chatStore.subscribe, () => selector(chatStore.getState()), () => selector(chatStore.getState()))
@@ -23,7 +24,7 @@ export { ChatInput, hideChildrenForSnapshot, NavTooltip } from '../chat/chat-inp
 export type { ChatInputProps } from '../chat/chat-input.tsx'
 
 // Import for local use
-import { ChatInput, hideChildrenForSnapshot } from '../chat/chat-input.tsx'
+import { ChatInput } from '../chat/chat-input.tsx'
 import { ensureSessionRestored } from '../chat/chat-submit.ts'
 
 // ── Sidebar assistant (wraps ChatInput with muted header) ────────────
@@ -34,7 +35,7 @@ export function SidebarAssistant() {
   // so the drawer can read it, but never read back from the store.
   const [inputValue, setInputValue] = useState('')
   const drawerState = useChatStore((s) => s.drawerState)
-  const widgetRef = useRef<HTMLDivElement>(null)
+  const reduceMotion = useReducedMotion()
 
   const {site } = useHolocronData()
   const handleChange = (value: string) => {
@@ -45,10 +46,7 @@ export function SidebarAssistant() {
   const handleSubmit = () => {
     const text = inputValue.trim()
     if (!text) return
-    withViewTransition(
-      () => { chatStore.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' }) },
-      () => hideChildrenForSnapshot(widgetRef.current),
-    )
+    chatStore.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' })
   }
 
   const handleFocus = () => {
@@ -56,10 +54,7 @@ export function SidebarAssistant() {
     // This keeps the sidebar input SSR-safe in the RSC page shell while
     // preserving the "reopen existing chat" behavior on the client.
     if (chatStore.getState().messages.length > 0) {
-      withViewTransition(
-        () => { chatStore.setState({ drawerState: 'open' }) },
-        () => hideChildrenForSnapshot(widgetRef.current),
-      )
+      chatStore.setState({ drawerState: 'open' })
       return
     }
     // After a page refresh the store is empty but a persisted conversation
@@ -70,30 +65,44 @@ export function SidebarAssistant() {
         chatStore.getState().messages.length > 0 &&
         chatStore.getState().drawerState === 'closed'
       ) {
-        withViewTransition(
-          () => { chatStore.setState({ drawerState: 'open' }) },
-          () => hideChildrenForSnapshot(widgetRef.current),
-        )
+        chatStore.setState({ drawerState: 'open' })
       }
     })
   }
 
-  // Sidebar owns the view-transition-name only when drawer is closed.
-  // When drawer is open, the drawer footer owns it instead.
-  // Also hide the sidebar input when the drawer is open so only one
-  // textarea is visible — the view transition already captured the old
-  // snapshot before this state update commits.
-  const isDrawerOpen = drawerState === 'open'
-  const vtName = isDrawerOpen ? 'none' : CHAT_CONTAINER_VT_NAME
+  // Unmount while drawer is open so layoutId can morph into the drawer shell.
+  // Keep a same-size placeholder so the aside does not jump.
+  if (drawerState === 'open') {
+    return (
+      <div
+        className='hidden lg:block w-full rounded-2xl bg-accent px-0.5 pt-px pb-0.5 opacity-0 pointer-events-none'
+        aria-hidden
+      >
+        <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
+          <span className='text-muted-foreground shrink-0'>
+            <InfoCircleIcon />
+          </span>
+          <span className='text-[11px] font-medium text-muted-foreground'>
+            Ask AI about this page
+          </span>
+        </div>
+        <ChatInput
+          value=''
+          onChange={() => {}}
+          onSubmit={() => {}}
+          placeholder={`what is ${site.config?.name || 'this page'}?`}
+        />
+      </div>
+    )
+  }
 
   return (
-    <div
-      ref={widgetRef}
+    <motion.div
       className='hidden lg:block w-full rounded-2xl bg-accent px-0.5 pt-px pb-0.5'
-      style={{
-        viewTransitionName: vtName,
-        visibility: isDrawerOpen ? 'hidden' : 'visible',
-      } as React.CSSProperties}
+      layoutId={CHAT_LAYOUT_ID}
+      layout
+      transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
+      style={{ borderRadius: 16 }}
     >
       <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
         <span className='text-muted-foreground shrink-0'>
@@ -110,7 +119,7 @@ export function SidebarAssistant() {
         onFocus={handleFocus}
         placeholder={`what is ${site.config?.name || 'this page'}?`}
       />
-    </div>
+    </motion.div>
   )
 }
 

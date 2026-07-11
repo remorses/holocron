@@ -850,7 +850,7 @@ The AI chat runs entirely via the **Vercel AI SDK** (`ai` package) + **Cloudflar
 
 | Layer | File | Purpose |
 |-------|------|---------|
-| **Widget** | `vite/src/chat/chat-widget.tsx` | Top-level component + light-DOM host (scoped CSS) |
+| **Widget** | `vite/src/chat/chat-widget.tsx` | Top-level component + shadow DOM host (Motion layout morph) |
 | **Widget** | `vite/src/chat/use-chat-widget.ts` | Control hook (open/close/clear) |
 | **State** | `vite/src/chat/chat-store.ts` | Zustand: messages, UI state, abort controller |
 | **State** | `vite/src/chat/chat-widget-store.ts` | Config: API URL, current slug, portal target |

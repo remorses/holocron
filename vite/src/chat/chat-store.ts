@@ -4,13 +4,11 @@
  * Chat store — vanilla zustand state shared by the chat drawer, sidebar
  * widget, and mobile nav without depending on React hooks.
  *
- * Marked 'use client' because withViewTransition imports flushSync from
- * react-dom which is not available in the RSC server environment.
+ * Marked 'use client' so client-only chat UI can import this module safely.
  */
 
 import { createStore } from 'zustand'
 import type { ReactNode } from 'react'
-import { flushSync } from 'react-dom'
 
 export type DrawerState = 'closed' | 'open'
 
@@ -104,26 +102,16 @@ export function respondToApproval(toolCallId: string, approved: boolean): void {
   resolve?.(approved)
 }
 
-/** VT name shared between sidebar widget (closed) and drawer panel (open). */
-export const CHAT_CONTAINER_VT_NAME = 'holocron-chat-container'
-
 /**
- * Wrap a DOM mutation in a view transition. `prepare` runs before the old
- * snapshot is captured (e.g. hide children so snapshot is a solid rectangle).
+ * Shared Motion layoutId for the pill/sidebar trigger ↔ drawer morph.
+ * Works inside shadow DOM (unlike CSS view-transition-name).
  */
-export function withViewTransition(
-  fn: () => void,
-  prepare?: () => (() => void) | void,
-): void {
-  if (typeof document !== 'undefined' && typeof document.startViewTransition === 'function') {
-    const cleanup = prepare?.()
-    const vt = (document as any).startViewTransition(() => {
-      flushSync(fn)
-      cleanup?.()
-    })
-    // Safety: also restore on transition skip/error
-    vt.finished?.catch?.(() => cleanup?.())
-  } else {
-    fn()
-  }
+export const CHAT_LAYOUT_ID = 'holocron-chat-container'
+
+/** Default spring used for the chat shell morph. */
+export const CHAT_LAYOUT_TRANSITION = {
+  type: 'spring' as const,
+  stiffness: 420,
+  damping: 36,
+  mass: 0.8,
 }
