@@ -18,6 +18,8 @@ import { buildSearchEntries, buildSidebarAnchors, collectAncestorGroupKeys, coll
 import { SearchIcon } from '../markdown/icons.tsx'
 import { Icon, resolveIconColor } from '../icon.tsx'
 import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
+import { chatStore } from '../../chat/chat-store.ts'
+import { startNewChat } from '../../chat/chat-submit.ts'
 
 const SEARCH_SHORTCUT_HINT = '/'
 
@@ -172,6 +174,7 @@ export function SideNav() {
 
   const isSearchActive = searchState !== null
   const noResults = isSearchActive && focusableHrefs.length === 0
+  const showSearchWithAi = isSearchActive && siteConfig.assistant.enabled
   const sidebarTreeContext = useMemo(() => {
     return {
       currentPageHref: effectiveCurrentPageHref,
@@ -184,6 +187,17 @@ export function SideNav() {
       animate: sidebarAnimate,
     }
   }, [activeId, effectiveCurrentPageHref, effectiveExpandedGroups, highlightedHref, searchState, sidebarAnimate, toggleGroup])
+
+  const handleSearchWithAi = useCallback(() => {
+    const q = query.trim()
+    if (!q) return
+    startNewChat()
+    chatStore.setState({
+      draftText: `search for "${q}". find all relevant information and show links of relevant pages. be concise.`,
+      pendingSubmit: true,
+      drawerState: 'open',
+    })
+  }, [query])
 
   return (
     <aside className='flex flex-col max-w-(--grid-nav-width) min-h-0 text-sm'>
@@ -279,6 +293,20 @@ export function SideNav() {
             ))
           )}
         </SidebarTreeProvider>
+        {showSearchWithAi && (
+          <button
+            type='button'
+            onClick={handleSearchWithAi}
+            className='group flex items-center gap-1.5 no-underline w-full text-left cursor-pointer border-none bg-transparent p-0 font-inherit hover:[background:var(--accent)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--accent)]'
+            style={{
+              color: 'var(--sidebar-foreground)',
+              transition: sidebarAnimate ? 'color 0.15s, opacity 0.15s ease' : 'none',
+            }}
+          >
+            <span className='font-medium'>Search with AI chat</span>
+            <span className='ml-auto mr-1 opacity-50' aria-hidden='true'>→</span>
+          </button>
+        )}
       </nav>
     </aside>
   )

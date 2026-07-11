@@ -153,6 +153,7 @@ test.describe("getting-started page", () => {
 
     await expect(noResults).toBeVisible();
     await expect(nav.getByRole("link", { name: "Welcome to Test Docs" })).not.toBeVisible();
+    await expect(nav.getByRole("button", { name: /Search with AI chat/ })).toBeVisible();
   });
 
   test("renders code blocks", async ({ page }) => {
