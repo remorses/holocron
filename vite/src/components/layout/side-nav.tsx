@@ -20,6 +20,7 @@ import { Icon, resolveIconColor } from '../icon.tsx'
 import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
 import { chatStore } from '../../chat/chat-store.ts'
 import { startNewChat } from '../../chat/chat-submit.ts'
+import { navStore } from '../../lib/nav-store.ts'
 
 const SEARCH_SHORTCUT_HINT = '/'
 
@@ -138,12 +139,36 @@ export function SideNav() {
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [])
 
+  const isSearchActive = searchState !== null
+  const noResults = isSearchActive && focusableHrefs.length === 0
+  const showSearchWithAi = isSearchActive && siteConfig.assistant.enabled
+
+  const handleSearchWithAi = useCallback(() => {
+    const q = query.trim()
+    if (!q) return
+    startNewChat()
+    // Close mobile nav drawer so it does not cover the chat drawer
+    // (both use z-index 200 portals). Harmless on desktop.
+    navStore.setState({ navDrawerOpen: false })
+    chatStore.setState({
+      draftText: `search for ${JSON.stringify(q)}. find all relevant information and show links of relevant pages. be concise.`,
+      pendingSubmit: true,
+      drawerState: 'open',
+    })
+  }, [query])
+
   const handleSearchKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault()
         handleQueryChange('')
         searchInputRef.current?.blur()
+        return
+      }
+      // No tree hits: Enter triggers the AI search action when available.
+      if (e.key === 'Enter' && showSearchWithAi && query.trim() && focusableHrefs.length === 0) {
+        e.preventDefault()
+        handleSearchWithAi()
         return
       }
       if (!focusableHrefs.length) return
@@ -169,12 +194,9 @@ export function SideNav() {
         }
       }
     },
-    [focusableHrefs, highlightedIndex, handleQueryChange],
+    [focusableHrefs, highlightedIndex, handleQueryChange, handleSearchWithAi, query, showSearchWithAi],
   )
 
-  const isSearchActive = searchState !== null
-  const noResults = isSearchActive && focusableHrefs.length === 0
-  const showSearchWithAi = isSearchActive && siteConfig.assistant.enabled
   const sidebarTreeContext = useMemo(() => {
     return {
       currentPageHref: effectiveCurrentPageHref,
@@ -187,17 +209,6 @@ export function SideNav() {
       animate: sidebarAnimate,
     }
   }, [activeId, effectiveCurrentPageHref, effectiveExpandedGroups, highlightedHref, searchState, sidebarAnimate, toggleGroup])
-
-  const handleSearchWithAi = useCallback(() => {
-    const q = query.trim()
-    if (!q) return
-    startNewChat()
-    chatStore.setState({
-      draftText: `search for "${q}". find all relevant information and show links of relevant pages. be concise.`,
-      pendingSubmit: true,
-      drawerState: 'open',
-    })
-  }, [query])
 
   return (
     <aside className='flex flex-col max-w-(--grid-nav-width) min-h-0 text-sm'>
@@ -297,8 +308,9 @@ export function SideNav() {
           <button
             type='button'
             onClick={handleSearchWithAi}
-            className='group flex items-center gap-1.5 no-underline w-full text-left cursor-pointer border-none bg-transparent p-0 font-inherit hover:[background:var(--accent)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--accent)]'
+            className='group flex items-center gap-1.5 no-underline w-full text-left cursor-pointer border-none bg-transparent p-0 hover:[background:var(--accent)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--accent)]'
             style={{
+              font: 'inherit',
               color: 'var(--sidebar-foreground)',
               transition: sidebarAnimate ? 'color 0.15s, opacity 0.15s ease' : 'none',
             }}
