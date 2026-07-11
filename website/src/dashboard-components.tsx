@@ -123,11 +123,29 @@ export function UpgradeBanner({ projectId, isBillingPage }: { projectId: string 
 
 // ── Theme toggle ────────────────────────────────────────────────────
 
+// Blocking script that runs before first paint to prevent flash of wrong theme.
+// Reads localStorage.theme; falls back to system preference (prefers-color-scheme).
+// Also registers a matchMedia listener so "system" mode reacts to OS changes.
+export const DASHBOARD_THEME_SCRIPT = `(function(){
+  var d=document.documentElement;
+  var t=localStorage.getItem("theme");
+  var dark;
+  if(t==="dark"){dark=true}
+  else if(t==="light"){dark=false}
+  else{dark=window.matchMedia("(prefers-color-scheme:dark)").matches}
+  if(dark)d.classList.add("dark");else d.classList.remove("dark");
+  window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",function(e){
+    if(!localStorage.getItem("theme")){
+      if(e.matches)d.classList.add("dark");else d.classList.remove("dark")
+    }
+  })
+})()`
+
 function setTheme(theme: 'light' | 'dark' | 'system') {
   if (theme === 'system') {
-    document.documentElement.classList.remove('dark')
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     if (prefersDark) document.documentElement.classList.add('dark')
+    else document.documentElement.classList.remove('dark')
     localStorage.removeItem('theme')
   } else if (theme === 'dark') {
     document.documentElement.classList.add('dark')
