@@ -1,0 +1,441 @@
+---
+title: Embed the AI Chat Widget on Any Website
+sidebarTitle: Chat Widget
+description: Drop-in React component that adds a docs-aware AI chat to any website.
+icon: message-square
+---
+
+# Chat Widget
+
+The `ChatWidget` component from `@holocron.so/vite/chat` adds a **docs-aware AI chat** to any React app. Point it at your holocron docs site and users get a floating textarea pill that opens into a full chat drawer, with streaming responses grounded in your documentation.
+
+```tsx
+import { ChatWidget } from '@holocron.so/vite/chat'
+
+<ChatWidget
+  domain="docs.myapp.com"
+  navigate={(path) => router.push(path)}
+/>
+```
+
+<Aside>
+<Note>
+This page covers the **standalone widget** for embedding on external sites. If you're looking for the built-in assistant that ships with every holocron docs site, see [AI Assistant](./assistant.mdx).
+</Note>
+</Aside>
+
+The widget renders in the page's **light DOM** (not shadow DOM) so view transitions work natively. CSS is scoped at build time under `.holocron-chat` to prevent style leakage.
+
+## Installation
+
+Install the holocron vite package:
+
+```bash
+npm install @holocron.so/vite
+```
+
+Import and render the widget in your app. The `domain` prop must point to a running holocron docs site:
+
+```tsx
+import { ChatWidget } from '@holocron.so/vite/chat'
+import { router } from 'your-framework/router'
+
+function App() {
+  return (
+    <>
+      {/* Your app content */}
+      <ChatWidget
+        domain="docs.myapp.com"
+        siteName="My App"
+        navigate={(path) => router.push(path)}
+      />
+    </>
+  )
+}
+```
+
+The widget fetches documentation from the site's `/holocron-api/chat` endpoint and streams responses back via RSC federation.
+
+## Props
+
+<ResponseField name="domain" type="string" required>
+Domain of the holocron docs site (e.g. `"docs.myapp.com"`). The widget connects to `https://{domain}/holocron-api/chat`.
+</ResponseField>
+
+<ResponseField name="navigate" type="(path: string) => void | Promise<void>" required>
+Client-side navigation function. Called by browser automation tools when the AI navigates the user to a page.
+
+- **Next.js**: `(path) => router.push(path)`
+- **React Router**: `(path) => navigate(path)`
+- **Spiceflow**: `(path) => router.push(path)`
+</ResponseField>
+
+<ResponseField name="trigger" type="React.ComponentType<{ onClick: () => void }>">
+Custom trigger component replacing the default textarea pill. Receives `onClick` to toggle the chat drawer.
+</ResponseField>
+
+<ResponseField name="siteName" type="string">
+Site name shown in the chat panel header. Defaults to empty string.
+</ResponseField>
+
+<ResponseField name="currentSlug" type="string">
+Current page slug for context (e.g. `"/quickstart"`). Tells the AI which page the user is on. Defaults to `"/"`.
+</ResponseField>
+
+<ResponseField name="theme" type="'light' | 'dark' | 'system'">
+Color theme for the widget.
+- `'light'` — always light mode
+- `'dark'` — always dark mode
+- `'system'` — follows OS `prefers-color-scheme` (default)
+</ResponseField>
+
+<ResponseField name="style" type="React.CSSProperties">
+CSS variable overrides applied on the widget container. Use this to customize colors.
+</ResponseField>
+
+<ResponseField name="className" type="string">
+Class name for the widget container element.
+</ResponseField>
+
+<ResponseField name="tools" type="ChatToolDefinition[]">
+Client-side tools that execute in the browser when the model calls them. See [Client-side Tools](#client-side-tools).
+</ResponseField>
+
+<ResponseField name="context" type="Record<string, unknown>">
+Arbitrary context object injected into the system prompt as XML. Use this to give the AI information about the current user, page, or app state.
+</ResponseField>
+
+## Theming
+
+The widget uses **CSS custom properties** for all colors. The `theme` prop toggles between light and dark palettes:
+
+```tsx
+// Always dark widget
+<ChatWidget domain="docs.myapp.com" theme="dark" navigate={navigate} />
+
+// Follow system preference (default)
+<ChatWidget domain="docs.myapp.com" theme="system" navigate={navigate} />
+```
+
+### CSS variable overrides
+
+Override individual tokens via the `style` prop. The widget uses zero-specificity defaults (`:where(.holocron-chat)`), so your overrides always win:
+
+```tsx
+<ChatWidget
+  domain="docs.myapp.com"
+  navigate={navigate}
+  style={{
+    '--background': '#1a1a2e',
+    '--foreground': '#eaeaea',
+    '--primary': '#6366f1',
+    '--border': '#2a2a4a',
+  } as React.CSSProperties}
+/>
+```
+
+<Aside>
+<Tip>
+Available tokens: `--background`, `--foreground`, `--muted`, `--muted-foreground`, `--accent`, `--card`, `--border`, `--border-subtle`, `--destructive`.
+</Tip>
+</Aside>
+
+### Pill size
+
+Control the pill width with the `--pill-width` and `--pill-expand` CSS variables via the `style` prop:
+
+```tsx
+<ChatWidget
+  domain="docs.myapp.com"
+  navigate={navigate}
+  style={{
+    '--pill-width': '240px',   // collapsed width (default: 300px)
+    '--pill-expand': '80px',   // extra width added on focus (default: 100px)
+  } as React.CSSProperties}
+/>
+```
+
+The expanded width is always `pill-width + pill-expand`, so expansion stays **relative** regardless of the base size. Both values are clamped to `100vw - 32px` on mobile so the pill never overflows the viewport.
+
+### Inverted theme for visibility
+
+The default pill uses `bg-background`, so it blends into pages with the same background color. To make the pill stand out, use the **opposite theme** of your page:
+
+```tsx
+function App() {
+  const isDark = useIsDarkMode() // your app's dark mode detection
+
+  return (
+    <ChatWidget
+      domain="docs.myapp.com"
+      theme={isDark ? 'light' : 'dark'}
+      navigate={navigate}
+    />
+  )
+}
+```
+
+This renders a dark pill on light pages and a light pill on dark pages, making the widget immediately visible.
+
+## Custom trigger
+
+Replace the default textarea pill with your own trigger component. The component receives an `onClick` prop to toggle the chat drawer:
+
+```tsx
+function MyTrigger({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        position: 'fixed',
+        bottom: 24,
+        right: 24,
+        padding: '12px 20px',
+        borderRadius: 12,
+        background: '#0a0a0a',
+        color: '#fff',
+        cursor: 'pointer',
+      }}
+    >
+      💬 Ask AI
+    </button>
+  )
+}
+
+<ChatWidget
+  domain="docs.myapp.com"
+  trigger={MyTrigger}
+  navigate={navigate}
+/>
+```
+
+Custom triggers render **outside** the `.holocron-chat` container so you can style them with your own page CSS. The default pill is hidden when a custom trigger is provided.
+
+## Programmatic control
+
+The `useChatWidget()` hook gives you full control over the chat from anywhere in your app:
+
+```tsx
+import { useChatWidget } from '@holocron.so/vite/chat'
+
+function ChatControls() {
+  const { isOpen, isGenerating, messages, open, close, toggle, clear } =
+    useChatWidget()
+
+  return (
+    <div>
+      <p>Chat is {isOpen ? 'open' : 'closed'}</p>
+      <p>{messages.length} messages</p>
+      <button onClick={toggle}>Toggle</button>
+      <button onClick={clear}>New chat</button>
+    </div>
+  )
+}
+```
+
+### Hook API
+
+<ResponseField name="isOpen" type="boolean">
+Whether the chat drawer is currently open.
+</ResponseField>
+
+<ResponseField name="isGenerating" type="boolean">
+Whether the AI is currently generating a response.
+</ResponseField>
+
+<ResponseField name="messages" type="ChatMessage[]">
+Array of all messages in the current conversation.
+</ResponseField>
+
+<ResponseField name="open" type="() => void">
+Open the chat drawer.
+</ResponseField>
+
+<ResponseField name="close" type="() => void">
+Close the chat drawer.
+</ResponseField>
+
+<ResponseField name="toggle" type="() => void">
+Toggle the chat drawer open/closed.
+</ResponseField>
+
+<ResponseField name="clear" type="() => void">
+Start a new conversation. The previous conversation stays in the session list and can be reopened from the session select dropdown.
+</ResponseField>
+
+## Client-side tools
+
+Tools let the AI **execute actions in the browser**. Define tools with a Zod input schema and a `run` function:
+
+```tsx
+import { defineTool } from '@holocron.so/vite/chat'
+import { z } from 'zod'
+
+const timeTool = defineTool({
+  name: 'get_time',
+  description: 'Get the current date and time.',
+  input: z.object({}),
+  async run() {
+    return { time: new Date().toISOString() }
+  },
+})
+```
+
+Pass tools to the widget via the `tools` prop:
+
+```tsx
+<ChatWidget
+  domain="docs.myapp.com"
+  tools={[timeTool]}
+  navigate={navigate}
+/>
+```
+
+<Aside>
+<Info>
+Tools are automatically registered on `document.modelContext` (the [WebMCP](https://purl.org/nickreserved/modelcontext) standard) so browser AI agents can discover them. Set `exposeToModelContext: false` to keep a tool internal to the holocron widget.
+</Info>
+</Aside>
+
+### Tool naming
+
+Tool names must be **1-64 characters**, alphanumeric, underscore, or hyphen. The name `bash` is reserved for the server-side docs search tool.
+
+### Human-readable labels
+
+A `description` string property is automatically added to every tool's input schema. The model fills it with a short summary like "Get the current time", which is shown as the tool call label in the chat UI. Your `run` function receives it inside `input` but can ignore it.
+
+### Browser automation tools
+
+`pageTools()` generates a set of browser automation tools from page declarations. These tools let the AI **navigate pages, fill inputs, and highlight elements** with an onboarding-style spotlight:
+
+```tsx
+import { pageTools } from '@holocron.so/vite/chat'
+
+const browserTools = pageTools([
+  {
+    path: '/settings',
+    description: 'User settings page with email, name, and notification preferences.',
+    actions: [
+      {
+        name: 'update_email',
+        description: 'Type into the email input',
+        selector: 'input[name=email]',
+      },
+      {
+        name: 'save',
+        description: 'Save settings',
+        selector: 'button[data-action=save]',
+      },
+    ],
+  },
+  {
+    path: '/billing',
+    description: 'Billing page with subscription management.',
+  },
+])
+
+<ChatWidget
+  domain="docs.myapp.com"
+  tools={browserTools}
+  navigate={navigate}
+/>
+```
+
+This generates five tools:
+
+| Tool | Description |
+|------|-------------|
+| `browser_navigate` | Navigate to a declared page path |
+| `browser_type` | Type text into an input or textarea |
+| `browser_select` | Select a value in a dropdown |
+| `browser_highlight` | Show a persistent spotlight overlay on an element with a description card |
+| `browser_read_page` | List all interactive elements on the current page |
+
+The AI uses `browser_highlight` to point users at elements instead of clicking them directly. This keeps the user in control. For example, if a user asks "change my email", the AI types the new value with `browser_type`, then highlights the Save button with a message like "Click here to save".
+
+## Tool approvals
+
+Protect sensitive actions by requiring user approval before a tool executes. The widget shows an **Approve/Deny prompt** with a description of the action.
+
+### Per-tool approval
+
+Set `needsApproval` on the tool definition:
+
+```tsx
+const deleteTool = defineTool({
+  name: 'delete_account',
+  description: 'Delete the user account.',
+  input: z.object({ confirm: z.boolean() }),
+  needsApproval: true, // always ask
+  async run({ input }) {
+    // only runs after user approves
+    await deleteAccount()
+    return { deleted: true }
+  },
+})
+```
+
+`needsApproval` can also be a function that returns `true`, `false`, or `{ message: string }` with a custom confirmation message:
+
+```tsx
+needsApproval: ({ input }) => {
+  if (input.force) return { message: 'This will permanently delete all data.' }
+  return false
+}
+```
+
+### DOM-based approval
+
+For browser automation tools (`browser_type`, `browser_select`), wrap sensitive elements with `data-holocron-requires-approval`:
+
+```html
+<div data-holocron-requires-approval="This will delete your account">
+  <button data-action="delete-account">Delete account</button>
+</div>
+```
+
+When the AI tries to interact with an element inside this container, the widget shows the approval prompt with the attribute's value as the confirmation message.
+
+## Context injection
+
+Pass contextual information to the AI via the `context` prop. The object is serialized as XML in the system prompt:
+
+```tsx
+<ChatWidget
+  domain="docs.myapp.com"
+  context={{
+    userId: 'u_123',
+    email: 'user@example.com',
+    plan: 'pro',
+    currentProject: { name: 'My App', id: 'prj_abc' },
+  }}
+  navigate={navigate}
+/>
+```
+
+The AI can reference this context when answering questions. For example, it knows the user's plan and can tailor responses about feature availability.
+
+## Session persistence
+
+Chat conversations **survive page refreshes**. The widget automatically persists and restores sessions:
+
+- **Same-origin** (widget on the same domain as the docs site): sessions are stored via a first-party cookie (`holocron_chat`).
+- **Cross-origin** (widget on a different domain): sessions are stored in `localStorage` and sent via the `x-holocron-chat-session` header.
+
+The **session select dropdown** in the chat drawer header lets users switch between past conversations. Session metadata (titles, timestamps) is stored client-side in `localStorage`; the server stores only the message history.
+
+### Session titles
+
+On the first message of a new conversation, the gateway generates a short title automatically. Until the title arrives, the session select shows a truncated preview of the first message. Starting a new chat via `clear()` rotates to a fresh session; the previous conversation stays in the list.
+
+## Default pill behavior
+
+When no custom `trigger` is provided, the widget shows a **textarea pill** at the bottom of the page:
+
+- **Desktop**: bottom-right corner, 300px wide
+- **Mobile**: bottom-center, full width minus padding
+
+On focus or when text is entered, the pill **expands** to 400px with a smooth width transition. Pressing Enter or clicking the send button submits the message and morphs the pill into the full chat drawer via a [view transition](https://developer.chrome.com/docs/web-platform/view-transitions).
+
+The pill uses a `backdrop-filter: blur(10px)` surface with layered shadows for depth, matching the design language of [fin.ai](https://fin.ai).

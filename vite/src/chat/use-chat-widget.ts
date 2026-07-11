@@ -11,10 +11,14 @@ import { chatStore } from './chat-store.ts'
 import { chatWidgetStore } from './chat-widget-store.ts'
 import { startNewChat } from './chat-submit.ts'
 
+// getServerSnapshot must return a CACHED value — a fresh `[]` per call
+// triggers React's "result of getServerSnapshot should be cached" warning.
+const emptyMessages: never[] = []
+
 export function useChatWidget() {
   const isOpen = useSyncExternalStore(chatStore.subscribe, () => chatStore.getState().drawerState === 'open', () => false)
   const isGenerating = useSyncExternalStore(chatStore.subscribe, () => chatStore.getState().isGenerating, () => false)
-  const messages = useSyncExternalStore(chatStore.subscribe, () => chatStore.getState().messages, () => [])
+  const messages = useSyncExternalStore(chatStore.subscribe, () => chatStore.getState().messages, () => emptyMessages)
   const config = useSyncExternalStore(chatWidgetStore.subscribe, () => chatWidgetStore.getState(), () => chatWidgetStore.getState())
 
   const open = useCallback(() => {

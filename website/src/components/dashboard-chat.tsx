@@ -7,9 +7,19 @@
 
 'use client'
 
+import { useSyncExternalStore } from 'react'
 import { ChatWidget, pageTools } from '@holocron.so/vite/chat'
 import type { ChatToolDefinition } from '@holocron.so/vite/chat'
 import { useLoaderData, router } from 'spiceflow/react'
+
+// Stable callbacks for useSyncExternalStore (see AGENTS.md rules)
+const darkQuery = typeof window !== 'undefined' ? window.matchMedia('(prefers-color-scheme: dark)') : null
+function subscribeDark(cb: () => void) {
+  darkQuery?.addEventListener('change', cb)
+  return () => darkQuery?.removeEventListener('change', cb)
+}
+function getIsDark() { return darkQuery?.matches ?? false }
+const getServerDark = () => false
 import type { dashboardApp } from '../dashboard.tsx'
 
 type DashboardApp = typeof dashboardApp
@@ -74,6 +84,7 @@ const dashboardPages = [
 const browserTools: ChatToolDefinition[] = pageTools(dashboardPages)
 
 export function DashboardChat() {
+  const isDark = useSyncExternalStore(subscribeDark, getIsDark, getServerDark)
   const { user, org, projects, hasSubscription } = useLoaderData<DashboardApp, '/dashboard/*'>('/dashboard/*')
 
   const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/dashboard'
@@ -101,7 +112,8 @@ export function DashboardChat() {
     <ChatWidget
       domain='holocron.so'
       siteName='Holocron'
-      theme='system'
+      theme={isDark ? 'light' : 'dark'}
+      style={{ '--pill-width': '260px' } as any}
       tools={browserTools}
       context={context}
       navigate={(path) => router.push(path)}

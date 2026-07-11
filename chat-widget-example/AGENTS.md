@@ -16,7 +16,7 @@ pnpm --dir example exec vite dev --port 7664
 pnpm --dir chat-widget-example exec vite dev
 ```
 
-Then open `http://localhost:5173/` and click the chat bubble.
+Then open `http://localhost:5173/` and type in the chat pill (bottom-right).
 
 The `domain` prop in `chat-demo.tsx` is set to `localhost:7664`. Change it to any running holocron site domain (e.g. `holocron.so`) to test against a different backend.
 

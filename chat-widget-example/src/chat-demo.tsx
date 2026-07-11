@@ -2,8 +2,9 @@
  * Client component that mounts the standalone ChatWidget and exposes
  * useChatWidget() controls for testing the full widget API surface.
  *
- * Validates: shadow DOM rendering, CSS injection, cross-origin RSC streaming,
- * portal targeting, default/custom trigger, and the hook API.
+ * Validates: scoped light-DOM rendering, CSS injection, cross-origin RSC
+ * streaming, portal targeting, pill/custom trigger, view transition morph,
+ * and the hook API.
  */
 
 'use client'
@@ -159,9 +160,9 @@ export function ChatDemo() {
         <h1 style={{ margin: 0, fontSize: 24 }}>ChatWidget standalone test</h1>
         <p style={{ margin: '8px 0 0', color: '#666' }}>
           This page tests the <code>{'<ChatWidget>'}</code> component from{' '}
-          <code>@holocron.so/vite/chat</code> in a plain spiceflow app. Click
-          the bubble (bottom-right) to open the chat drawer, or use the controls
-          below.
+          <code>@holocron.so/vite/chat</code> in a plain spiceflow app. Type in
+          the pill (bottom-right, bottom-center on mobile) to open the chat
+          drawer, or use the controls below.
         </p>
       </div>
 
@@ -294,10 +295,10 @@ export function ChatDemo() {
         }}
       >
         <p style={{ margin: 0 }}>
-          <strong>What this validates:</strong> shadow DOM rendering, CSS
+          <strong>What this validates:</strong> scoped light-DOM rendering, CSS
           injection, cross-origin RSC federation streaming from holocron.so,
-          portal targeting (drawer backdrop inside shadow root), default and
-          custom triggers, theme switching, the useChatWidget() hook API,
+          portal targeting, the pill → drawer view transition morph, default
+          pill and custom triggers, theme switching, the useChatWidget() hook API,
           client-side tool execution (get_time, browser_* tools), and user
           context injection.
         </p>
