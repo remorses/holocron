@@ -1,5 +1,42 @@
 # @holocron.so/vite
 
+## 0.24.0
+
+1. **Imageboard tab type** — render a folder of images and videos as a masonry moodboard page. Point a tab at a directory and Holocron walks it recursively, rendering every image and video in a responsive CSS-columns grid sorted newest-first by git history. Images get sharp dimensions, pixelated placeholders, and click-to-zoom. Videos get dimensions probed from container headers (no ffmpeg needed).
+
+   ```json
+   {
+     "navigation": {
+       "tabs": [
+         {
+           "tab": "Moodboard",
+           "icon": "images",
+           "imageboard": "./public/moodboard",
+           "columns": 3
+         }
+       ]
+     }
+   }
+   ```
+
+2. **Persistent AI chat sessions** — conversations now survive page refreshes. Every conversation gets a 256-bit session id stored as a cookie (same-origin) or in localStorage (cross-origin embeds). The full message history is persisted server-side and restored automatically on the next visit. New proxy endpoints: `GET /holocron-api/chat/session` (restore) and `POST /holocron-api/chat/session/clear` (delete). Sessions expire after 30 days.
+
+3. **Session switcher with AI-generated titles** — the chat drawer top bar now has a session select dropdown. Past conversations are listed with AI-generated titles (one-shot cheap model call on the first message). Picking a session restores it from the server snapshot. The "New chat" button rotates to a fresh session instead of deleting the old one.
+
+4. **WebMCP `document.modelContext` integration** — custom tools defined via `defineTool()` are auto-registered on `document.modelContext`, the emerging browser standard for AI agent tool discovery. Third-party tools already registered by other code on the page are automatically discovered and available in the chat. New exports: `unregisterTool()`, `getRegisteredTools()`, `registerToolOnModelContext()`, `getNativeModelContextTools()`.
+
+5. **Persistent highlight overlay for `browser_highlight`** — the spotlight overlay now stays visible until the user clicks the × button, clicks the highlighted element, or the element leaves the DOM. The dim is lighter (15%), an optional `message` renders as a description card, and the tool returns immediately so the model can keep responding while the highlight stays up. Brief pre-action highlights use a quick glow ring with no page dim.
+
+6. **Fin-style textarea pill trigger** — the standalone `ChatWidget` floating bubble is replaced by a fin.ai-style textarea pill (bottom-right on desktop, bottom-center on mobile). The pill expands on focus with a width transition and morphs into the chat drawer via a view transition. The widget now renders in light DOM (not shadow DOM) so view transitions work. CSS is scoped at build time under `.holocron-chat` via PostCSS. The `trigger` prop still works for custom triggers.
+
+7. **Human-readable tool call labels** — every tool input schema now carries a `description` field the model fills with a short action summary. The chat UI shows that description as the label, with the command/selector in a dimmer detail line. `defineTool` auto-injects the field. Also fixes a stream ordering bug where assistant text rendered below the tool call instead of above.
+
+8. **Tool approval prompts** — tools defined with `needsApproval` (boolean or per-call function) show an Approve/Deny card before executing. Browser automation tools auto-require approval when the target element has `data-holocron-requires-approval`. Browser tools gained a `description` input field for human-readable approval messages.
+
+9. **Fixed VideoBackgroundShader WebGL crash** — the shader component no longer crashes the entire site when WebGL is unavailable or the context is lost. Null returns from `createShader`/`createProgram` throw controlled errors, init failures are caught gracefully, and framebuffer texture type is probed for actual renderability with fallback chain (half-float → float → unsigned byte).
+
+10. **Fixed `getServerSnapshot should be cached` warning** — `useChatWidget()` now returns a cached empty array for the server snapshot instead of a fresh `[]` per call.
+
 ## 0.23.1
 
 1. **Fixed excess top padding when Above/Hero is present** — pages with an `above` section (hero content) no longer get 36px of dead space between the header and the hero. The `pt-(--layout-gap)` padding is now conditionally applied only when there is no above content.
