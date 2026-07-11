@@ -251,8 +251,8 @@ export function EditorialPage({
                     <Link
                       key={link.href}
                       href={link.href}
-                      target='_blank'
-                      rel='noopener noreferrer'
+                      target={link.href.startsWith('http') ? '_blank' : undefined}
+                      rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
                       aria-label={link.label}
                       className='no-underline flex items-center gap-1.5 text-muted-foreground transition-colors duration-150 hover:text-foreground'
                     >
