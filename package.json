@@ -6,7 +6,7 @@
         "build": "pnpm -r build"
     },
     "devDependencies": {
-        "spiceflow": "1.26.0-rsc.7",
+        "spiceflow": "1.26.0-rsc.8",
         "tsx": "^4.21.0",
         "tuistory": "^0.10.0",
         "typescript": "^6.0.2",
