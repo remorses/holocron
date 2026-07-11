@@ -1,7 +1,12 @@
-'use client'
-
 /**
  * Editorial markdown components — public barrel.
+ *
+ * NOTE: This barrel must NOT have 'use client'. Each leaf file already has its
+ * own 'use client' directive. Adding it here creates a single giant client
+ * boundary that @vitejs/plugin-rsc tracks in clientReferenceMetaMap. During
+ * HMR the plugin can emit a production-style opaque hash for this barrel
+ * instead of a dev-importable /@fs/... path, causing 404s and blank pages.
+ * See https://github.com/vitejs/vite-plugin-react/issues/790
  *
  * All components use CSS variables from globals.css (no prefix).
  * Uses shadcn standard token names: --primary, --foreground,

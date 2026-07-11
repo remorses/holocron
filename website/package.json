@@ -56,7 +56,7 @@
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",
     "ulid": "latest",
-    "vite": "^8.0.10",
+    "vite": "^8.1.4",
     "zod": "latest"
   },
   "devDependencies": {

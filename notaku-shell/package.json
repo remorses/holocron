@@ -13,7 +13,7 @@
     "@holocron.so/vite": "workspace:^",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "vite": "^8.0.10"
+    "vite": "^8.1.4"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",
