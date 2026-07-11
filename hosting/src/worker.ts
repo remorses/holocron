@@ -189,10 +189,30 @@ async function loadWorkerModules(
   return modules
 }
 
+// Hostnames that belong to the holocron website worker, not the hosting
+// worker. The */* catch-all route on the holocron.so zone intercepts
+// these before the website worker's custom_domain can handle them,
+// so we forward them manually via the .workers.dev URL.
+const WEBSITE_WORKER_HOSTNAMES: Record<string, string> = {
+  'preview.holocron.so': 'holocron-website-preview.remorses.workers.dev',
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     try {
       const url = new URL(request.url)
+
+      // Forward requests for holocron website hostnames that the */*
+      // catch-all route accidentally intercepts before the website
+      // worker's custom_domain route can handle them.
+      const workersDev = WEBSITE_WORKER_HOSTNAMES[url.hostname]
+      if (workersDev) {
+        const target = new URL(request.url)
+        target.hostname = workersDev
+        target.port = ''
+        return fetch(new Request(target, request))
+      }
+
       let subdomain = extractSubdomain(url.hostname)
 
       // Custom domain: look up hostname in KV to resolve the project subdomain.
