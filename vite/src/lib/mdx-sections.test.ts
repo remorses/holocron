@@ -25,7 +25,7 @@ Body
       Intro
 
       --- SECTION 1 ---
-      asideRowSpan: 1
+      asideRowSpan: 2
 
       [CONTENT]
       ## Section
@@ -55,7 +55,7 @@ Body
       Intro
 
       --- SECTION 1 ---
-      asideRowSpan: 1
+      asideRowSpan: 2
 
       [CONTENT]
       <Heading level="2">
@@ -87,7 +87,7 @@ Body
       Intro
 
       --- SECTION 1 ---
-      asideRowSpan: 1
+      asideRowSpan: 2
 
       [CONTENT]
       <h2>
@@ -119,7 +119,7 @@ Body
       Intro
 
       --- SECTION 1 ---
-      asideRowSpan: 1
+      asideRowSpan: 2
 
       [CONTENT]
       ## Section
@@ -530,7 +530,7 @@ Billing runs on Stripe.
       Every branch gets a preview URL.
 
       --- SECTION 4 ---
-      asideRowSpan: 4
+      asideRowSpan: 5
 
       [CONTENT]
       ## Subscribe
@@ -609,7 +609,7 @@ Generate instructions.
       Auth instructions.
 
       --- SECTION 3 ---
-      asideRowSpan: 3
+      asideRowSpan: 4
 
       [CONTENT]
       ## Generate
@@ -633,9 +633,8 @@ Generate instructions.
 
   test('heading-only first section with no asides anywhere spans all sections', () => {
     // When no per-section asides exist, the AI widget is <Aside full>.
-    // The full-aside range starts after section 0 (heading-only), so the
-    // aside spans sections 1-2 (the full-aside range). Section 0 is before
-    // the range and stays empty — no row inflation.
+    // The full-aside range now includes section 0 (heading-only), so the
+    // aside spans all sections. No "before" range is excluded.
     const mdx = `# Quickstart
 
 ## Install
@@ -660,12 +659,61 @@ Generate instructions.
       Install instructions.
 
       --- SECTION 2 ---
-      asideRowSpan: 2
+      asideRowSpan: 3
 
       [CONTENT]
       ## Generate
 
       Generate instructions.
+
+      [ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>"
+    `)
+  })
+
+  test('intro content + sub-headings (no aside) — AI widget spans from row 1', () => {
+    // Regression test: pages like debugging-workflows.mdx that have intro
+    // content (blockquote + paragraph) followed by ### sub-headings but no
+    // authored <Aside>. The synthetic <Aside full> must span from section 0
+    // so the AI widget starts at the top of the sidebar, not section 1.
+    const mdx = `> Reproduce failures and fix broken automations.
+
+There are two common debugging scenarios.
+
+### Remote debugging
+
+When a workflow fails remotely, connect directly.
+
+### Local debugging
+
+Reproduce from error logs locally.
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      > Reproduce failures and fix broken automations.
+
+      There are two common debugging scenarios.
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ### Remote debugging
+
+      When a workflow fails remotely, connect directly.
+
+      --- SECTION 2 ---
+      asideRowSpan: 3
+
+      [CONTENT]
+      ### Local debugging
+
+      Reproduce from error logs locally.
 
       [ASIDE]
       <Aside full>

@@ -158,9 +158,10 @@ export function buildSections(root: Root, { enableAssistant = true }: { enableAs
         attributes: [{ type: 'mdxJsxAttribute', name: 'full', value: null }],
         children: [...injectedNodes],
       }
-      // Insert at the end of the first section (after h1 + intro body) so
-      // the "before" range keeps heading + intro together in one section.
-      children.splice(firstSectionEnd, 0, syntheticAside)
+      // Insert at position 0 so there is no "before" range excluded from
+      // the full-aside's row span. This ensures the AI widget's grid-row
+      // starts at row 1 (aligned with the page top), not row 2.
+      children.splice(0, 0, syntheticAside)
     }
   }
 
