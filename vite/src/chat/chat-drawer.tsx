@@ -245,10 +245,11 @@ function ChatDrawerInner() {
         ref={drawerPanelRef}
         className='holocron-chat-drawer-panel'
         layoutId={CHAT_LAYOUT_ID}
-        layout
+        layout='position'
         layoutDependency={drawerState}
         initial={false}
         transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
+
         style={{
           position: 'fixed',
           right: 16,
@@ -258,6 +259,7 @@ function ChatDrawerInner() {
           pointerEvents: 'auto',
           background: 'var(--background)',
           borderRadius: 24,
+          border: '1px solid var(--border)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -362,8 +364,7 @@ function ChatDrawerInner() {
             style={{
               margin: '12px',
               borderRadius: '16px',
-              background: 'var(--accent)',
-              padding: '2px',
+              border: '1px solid var(--border)',
             }}
           >
             <ChatInput

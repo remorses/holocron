@@ -9,7 +9,7 @@
  * (visibility/display toggles do not produce a layout morph).
  */
 
-import React, { useRef, useState, useSyncExternalStore } from 'react'
+import React, { useCallback, useRef, useState, useSyncExternalStore } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import {
   chatStore,
@@ -72,14 +72,18 @@ export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: st
   const hasText = inputValue.trim().length > 0
   const expanded = focused || inputValue.length > 0
 
+  const pillRef = useRef<HTMLDivElement>(null)
+
   return (
     <motion.div
+      ref={pillRef}
       className='holocron-chat-pill'
       data-expanded={expanded ? '' : undefined}
       layoutId={CHAT_LAYOUT_ID}
-      layout
+      layout='position'
       layoutDependency={drawerState}
       transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
+
       style={{ borderRadius: 24 }}
     >
       <div className='holocron-chat-pill-surface flex items-end gap-2 rounded-[24px] bg-background py-1.5 pr-1.5 pl-5'>
