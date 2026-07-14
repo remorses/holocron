@@ -278,14 +278,14 @@ function NavPageLink({
       <Link
         ref={isHighlighted ? highlightedRef : undefined}
         href={page.href}
-        className={`group flex items-center gap-1.5 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
+        className={`group flex items-center gap-1.5 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
         style={{
+          borderRadius: 'var(--sidebar-link-radius)',
           opacity: isDimmed ? 0.45 : 1,
           color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
-          paddingLeft: depth > 0 ? `${depth * 12}px` : undefined,
+          paddingLeft: depth > 0 ? `calc(${depth} * var(--sidebar-indent))` : undefined,
           transition: animate ? 'color 0.15s, opacity 0.15s ease' : 'none',
           background: isHighlighted ? 'var(--accent)' : undefined,
-          borderRadius: isHighlighted ? 'var(--radius-sm)' : undefined,
           boxShadow: isHighlighted ? '0 0 0 4px var(--accent)' : undefined,
         }}
       >
@@ -382,8 +382,9 @@ export function NavGroupNode({
       <div className='flex flex-col gap-2.5'>
         {groupLabel && (
           <div
-            className='cursor-default mt-3 mb-0.5 flex items-center gap-1.5'
+            className='cursor-default mb-0.5 flex items-center gap-1.5'
             style={{
+              marginTop: 'var(--sidebar-group-margin-top)',
               opacity: isDimmed ? 0.45 : 1,
               fontVariationSettings: '"wght" 550',
               fontSize: 'var(--type-nav-group-size)',
@@ -410,13 +411,14 @@ export function NavGroupNode({
         type='button'
         onClick={() => onToggleGroup(groupKey)}
         aria-expanded={isExpanded}
-        className={`flex items-center gap-1 border-none bg-transparent cursor-pointer p-0 text-left ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
+        className={`flex items-center gap-1 border-none bg-transparent cursor-pointer p-0 text-left ${!isDimmed ? 'hover:[background:var(--accent)] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
         style={{
+          borderRadius: 'var(--sidebar-link-radius)',
           opacity: isDimmed ? 0.45 : 1,
           fontVariationSettings: '"wght" 500',
           fontSize: 'var(--type-nav-group-size)',
           color: 'var(--sidebar-foreground)',
-          paddingLeft: depth > 0 ? `${(depth - 1) * 12}px` : undefined,
+          paddingLeft: depth > 0 ? `calc(${depth - 1} * var(--sidebar-indent))` : undefined,
           transition: animate ? 'opacity 0.15s ease' : 'none',
         }}
       >

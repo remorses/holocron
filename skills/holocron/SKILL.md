@@ -705,6 +705,29 @@ Accordion apply `no-bleed` automatically to keep descendants inside their frame.
 
 See https://holocron.so/docs/customize/bleed.md for the full reference.
 
+## Custom CSS — prefer CSS variables over class selectors
+
+When customizing the look of a Holocron site, **always use CSS variable overrides** in `:root` instead of targeting internal class names, DOM structure, or aria labels. Holocron exposes a set of documented CSS variables for colors, typography, spacing, code blocks, blockquotes, and sidebar navigation. These are stable across Holocron updates; internal markup is not.
+
+```css
+/* style.css */
+:root {
+  --weight-heading: 700;
+  --code-block-background: var(--muted);
+  --code-block-border: 1px solid var(--border-subtle);
+  --sidebar-link-radius: var(--radius-sm);
+  --blockquote-border-color: var(--border-subtle);
+}
+```
+
+Fetch the full list of available tokens:
+
+```bash
+curl -fsSL https://holocron.so/docs/customize/theme.md
+```
+
+If a user wants to customize something that has no CSS variable, **do not hack it with fragile selectors**. Instead, open an issue on the Holocron repo (https://github.com/remorses/holocron/issues) requesting a new CSS variable for that use case. Holocron actively adds new variables based on user needs. Internal selectors like `.slot-sidebar-left nav > div:first-child > a` or `figure[class~='group/code'] button[aria-label='Copy code']` will break on any refactor and should never be used.
+
 ## Agent rules
 
 - **Always place MDX pages inside the Holocron `pagesDir`.** Before creating or

@@ -116,6 +116,24 @@
   --type-code-size: calc(var(--type-body-size) * 0.933);
   --type-nav-group-size: 12px;
 
+  /* Code block frame — override these to wrap code blocks in a visible
+     container (background, border, rounded corners). Defaults are invisible
+     so code blocks blend into the page surface.
+     The copy button auto-aligns to the top-right of the padded frame. */
+  --code-block-background: transparent;
+  --code-block-border: none;
+  --code-block-radius: 0px;
+  --code-block-padding-x: 0px;
+  --code-block-padding-y: 0.5rem;
+
+  /* Blockquote — override border width/color for `> quoted text`. */
+  --blockquote-border-width: 3px;
+  --blockquote-border-color: var(--border);
+
+  /* Sidebar nav — spacing and link styling */
+  --sidebar-group-margin-top: 12px;
+  --sidebar-link-radius: 0px;
+  --sidebar-indent: 12px;
 
   /* Bleed: mobile-first (0), enabled at lg where grid has room.
      Code blocks (.bleed class) and images (<Bleed> wrapper) extend by
