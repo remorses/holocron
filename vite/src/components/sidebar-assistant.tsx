@@ -101,6 +101,7 @@ export function SidebarAssistant() {
       className='hidden lg:block w-full rounded-2xl bg-accent px-0.5 pt-px pb-0.5'
       layoutId={CHAT_LAYOUT_ID}
       layout
+      layoutDependency={drawerState}
       transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
       style={{ borderRadius: 16 }}
     >

@@ -78,6 +78,7 @@ export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: st
       data-expanded={expanded ? '' : undefined}
       layoutId={CHAT_LAYOUT_ID}
       layout
+      layoutDependency={drawerState}
       transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
       style={{ borderRadius: 24 }}
     >
