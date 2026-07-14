@@ -20,6 +20,53 @@ import { parse as parseCookies } from 'cookie'
 import { holocronUrl } from './holocron-url.ts'
 import type { DialConfig } from 'dialkit'
 
+/* ── Iframe postMessage protocol ──────────────────────────────────────
+ *
+ * Typed messages exchanged between the notaku dashboard (parent) and the
+ * holocron docs site (iframe child) for live config preview.
+ *
+ * Parent → Child:
+ *   ConfigOverrideMessage      — apply a new override key
+ *   ConfigOverrideClearMessage  — revert to base deployed config
+ *
+ * Child → Parent (acks):
+ *   ConfigOverrideAckMessage       — confirms override was applied
+ *   ConfigOverrideClearAckMessage  — confirms override was cleared
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/** Parent → child: apply a config override by key. */
+export type ConfigOverrideMessage = {
+  type: 'config-override'
+  /** The `doId:hash` key returned by POST /api/config-override. */
+  key: string
+}
+
+/** Parent → child: clear the config override, revert to base config. */
+export type ConfigOverrideClearMessage = {
+  type: 'config-override-clear'
+}
+
+/** Child → parent: acknowledges the override was applied. */
+export type ConfigOverrideAckMessage = {
+  type: 'config-override-ack'
+  key: string
+}
+
+/** Child → parent: acknowledges the override was cleared. */
+export type ConfigOverrideClearAckMessage = {
+  type: 'config-override-clear-ack'
+}
+
+/** All messages the iframe child accepts from the parent. */
+export type ConfigOverrideInboundMessage =
+  | ConfigOverrideMessage
+  | ConfigOverrideClearMessage
+
+/** All messages the iframe child sends back to the parent. */
+export type ConfigOverrideOutboundMessage =
+  | ConfigOverrideAckMessage
+  | ConfigOverrideClearAckMessage
+
 /* ── Overridable subset ──────────────────────────────────────────────── */
 
 export type ConfigOverride = {
@@ -237,43 +284,25 @@ export function configOverrideToDocsJsonPartial(override: ConfigOverride): Recor
 
 /* ── Parse override key from query param ─────────────────────────────── */
 
-export const CONFIG_OVERRIDE_PARAM = 'configOverride'
-export const PREVIEW_PROPS_PARAM = 'previewProps'
-
-/** Parse a `doId:hash` key string into its parts. */
-export function parseOverrideKey(
-  value: string | null | undefined,
-): { doId: string; hash: string } | null {
-  if (!value) return null
-  const colonIdx = value.indexOf(':')
-  if (colonIdx <= 0) return null
-  const doId = value.slice(0, colonIdx)
-  const hash = value.slice(colonIdx + 1)
-  if (!doId || !hash) return null
-  return { doId, hash }
-}
-
-/** Parse the configOverride query parameter into doId + hash.
- *  Used by the notaku dashboard to pass the override key cross-origin
- *  via the iframe URL instead of cookies. */
-export function parseOverrideParam(
+/** Parse the `configOverride` query parameter into doId + hash.
+ *  Used by the notaku dashboard iframe.src approach: the parent sets
+ *  `?configOverride=doId:hash` on the iframe URL, and the loader
+ *  reads it here. No cookies or postMessage needed. */
+function parseOverrideParam(
   url: string,
 ): { doId: string; hash: string } | null {
   try {
     const u = new URL(url)
-    return parseOverrideKey(u.searchParams.get(CONFIG_OVERRIDE_PARAM))
+    const value = u.searchParams.get('configOverride')
+    if (!value) return null
+    const colonIdx = value.indexOf(':')
+    if (colonIdx <= 0) return null
+    const doId = value.slice(0, colonIdx)
+    const hash = value.slice(colonIdx + 1)
+    if (!doId || !hash) return null
+    return { doId, hash }
   } catch {
     return null
-  }
-}
-
-/** Whether the request has `previewProps=true`, indicating it's loaded
- *  inside the notaku dashboard iframe for live preview. */
-export function hasPreviewProps(url: string): boolean {
-  try {
-    return new URL(url).searchParams.get(PREVIEW_PROPS_PARAM) === 'true'
-  } catch {
-    return false
   }
 }
 
@@ -285,8 +314,11 @@ export function hasPreviewProps(url: string): boolean {
 const overrideCache = new Map<string, ConfigOverride | Record<string, unknown>>()
 
 /** Fetch the config override from the holocron.so DO and apply it to
- *  the base config. Checks the `configOverride` query param first, then
- *  falls back to the `holo-config-override` cookie.
+ *  the base config.
+ *
+ *  Checks two sources for the override key (first match wins):
+ *  1. `?configOverride=doId:hash` query param (notaku dashboard iframe)
+ *  2. `holo-config-override` cookie (DialKit config panel)
  *
  *  Full-mode overrides (marked with `_mode: 'full'`) are normalized
  *  from raw docs.json into a complete HolocronConfig, replacing the
@@ -296,7 +328,6 @@ export async function resolveConfigOverride(
   baseConfig: HolocronConfig,
   normalizeConfig?: (raw: Record<string, unknown>) => HolocronConfig,
 ): Promise<HolocronConfig> {
-  // Query param takes priority (used by notaku dashboard iframe)
   const parsed = parseOverrideParam(request.url)
     || parseOverrideCookie(request.headers.get('cookie'))
   if (!parsed) return baseConfig
