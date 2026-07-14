@@ -552,6 +552,43 @@
   background-color: var(--background);
 }
 
+/* ── View transition: sidebar widget ↔ drawer panel morph ──────────── */
+::view-transition-group(holocron-chat-container) {
+  animation-duration: 280ms;
+  animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  overflow: clip;
+}
+
+::view-transition-old(holocron-chat-container) {
+  width: 100%;
+  height: 100%;
+  animation: chat-morph-exit 200ms ease both;
+}
+
+::view-transition-new(holocron-chat-container) {
+  width: 100%;
+  height: 100%;
+  animation: chat-morph-enter 200ms ease both;
+}
+
+@keyframes chat-morph-exit {
+  from { opacity: 1; filter: blur(0); }
+  to   { opacity: 0; filter: blur(4px); }
+}
+
+@keyframes chat-morph-enter {
+  from { opacity: 0; filter: blur(4px); }
+  to   { opacity: 1; filter: blur(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(holocron-chat-container),
+  ::view-transition-old(holocron-chat-container),
+  ::view-transition-new(holocron-chat-container) {
+    animation-duration: 0ms;
+  }
+}
+
 /*
  * Left navigation scroll fade mask.
  *

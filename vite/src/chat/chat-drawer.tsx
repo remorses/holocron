@@ -17,7 +17,7 @@
 import React, { useEffect, useRef, useCallback, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, useReducedMotion } from 'motion/react'
-import { chatStore, CHAT_LAYOUT_ID, CHAT_LAYOUT_TRANSITION, transitionDrawer, clearMorph } from './chat-store.ts'
+import { chatStore, CHAT_LAYOUT_ID, CHAT_LAYOUT_TRANSITION } from './chat-store.ts'
 
 function useChatStore<T>(selector: (s: import('./chat-store.ts').ChatState) => T): T {
   return useSyncExternalStore(chatStore.subscribe, () => selector(chatStore.getState()), () => selector(chatStore.getState()))
@@ -52,7 +52,6 @@ export function ChatDrawer() {
 
 function ChatDrawerInner() {
   const drawerState = useChatStore((s) => s.drawerState)
-  const isMorphing = useChatStore((s) => s.isMorphing)
   const isGenerating = useChatStore((s) => s.isGenerating)
   const messages = useChatStore((s) => s.messages)
   const errorMessage = useChatStore((s) => s.errorMessage)
@@ -162,7 +161,7 @@ function ChatDrawerInner() {
   // ── Close ──────────────────────────────────────────────────────
 
   const handleClose = useCallback(() => {
-    transitionDrawer('closed')
+    chatStore.setState({ drawerState: 'closed' })
   }, [])
 
   // ── Draft auto-submit (sidebar → drawer handoff) ───────────────
@@ -208,7 +207,7 @@ function ChatDrawerInner() {
       if (!e.isTrusted) return
       const anchor = (e.target as HTMLElement)?.closest?.('a')
       if (!anchor) return
-      transitionDrawer('closed')
+      chatStore.setState({ drawerState: 'closed' })
     }
     document.addEventListener('click', onClickLink)
     return () => document.removeEventListener('click', onClickLink)
@@ -245,10 +244,10 @@ function ChatDrawerInner() {
       <motion.div
         ref={drawerPanelRef}
         className='holocron-chat-drawer-panel'
-        layoutId={isMorphing ? CHAT_LAYOUT_ID : undefined}
+        layoutId={CHAT_LAYOUT_ID}
+        layout
         initial={false}
         transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
-        onLayoutAnimationComplete={clearMorph}
         style={{
           position: 'fixed',
           right: 16,
