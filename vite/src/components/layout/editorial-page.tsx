@@ -25,7 +25,7 @@ import { NavSelect, type NavSelectItem } from './nav-select.tsx'
 import { Icon, resolveIconColor } from '../icon.tsx'
 import { NavTooltip } from '../sidebar-assistant.tsx'
 import { ThemeToggle } from '../theme-toggle.tsx'
-import { ConfigPanel } from '../config-panel.tsx'
+import { ConfigPanel, ConfigOverrideListener } from '../config-panel.tsx'
 import { Footer, Logo, PoweredBy } from './footer.tsx'
 import { BannerDismiss } from './banner-dismiss.tsx'
 import { HolocronChatBridge } from '../holocron-chat-bridge.tsx'
@@ -126,7 +126,7 @@ export function EditorialPage({
   /** Mintlify-compatible page mode from MDX frontmatter. */
   mode?: PageMode
 }) {
-  const { site, activeTabHref, activeVersionHref, activeDropdownHref, showConfigPanel, githubStars } = useHolocronData()
+  const { site, activeTabHref, activeVersionHref, activeDropdownHref, showConfigPanel, hasPreviewProps, githubStars } = useHolocronData()
   const siteConfig = site.config
   const enableAssistant = siteConfig.assistant.enabled
   const siteLogo = getResolvedLogo(site)
@@ -510,6 +510,7 @@ export function EditorialPage({
           Only mounted in dev mode and on preview subdomains. DialKit
           renders its own floating toggle button. */}
       {showConfigPanel && <ConfigPanel config={siteConfig} />}
+      {hasPreviewProps && <ConfigOverrideListener />}
     </div>
   )
 }
