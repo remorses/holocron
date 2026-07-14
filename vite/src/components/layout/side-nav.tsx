@@ -18,7 +18,7 @@ import { buildSearchEntries, buildSidebarAnchors, collectAncestorGroupKeys, coll
 import { SearchIcon } from '../markdown/icons.tsx'
 import { Icon, resolveIconColor } from '../icon.tsx'
 import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
-import { chatStore } from '../../chat/chat-store.ts'
+import { chatStore, transitionDrawer } from '../../chat/chat-store.ts'
 import { startNewChat } from '../../chat/chat-submit.ts'
 import { navStore } from '../../lib/nav-store.ts'
 
@@ -153,8 +153,8 @@ export function SideNav() {
     chatStore.setState({
       draftText: `search for ${JSON.stringify(q)}. find all relevant information and show links of relevant pages. be concise.`,
       pendingSubmit: true,
-      drawerState: 'open',
     })
+    transitionDrawer('open')
   }, [query])
 
   const handleSearchKeyDown = useCallback(

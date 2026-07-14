@@ -56,6 +56,10 @@ export type ChatMessage = {
 
 export type ChatState = {
   drawerState: DrawerState
+  /** True while the drawer is morphing open/closed. Controls whether Motion
+   *  layoutId is applied — when false, no layout tracking, so page navigation
+   *  and scroll don't cause position animations. */
+  isMorphing: boolean
   isGenerating: boolean
   messages: ChatMessage[]
   /** AI SDK ModelMessage history sent back verbatim on the next request. */
@@ -72,6 +76,7 @@ export type ChatState = {
 
 export const chatStore = createStore<ChatState>(() => ({
   drawerState: 'closed',
+  isMorphing: false,
   isGenerating: false,
   messages: [],
   modelMessages: [],
@@ -100,6 +105,28 @@ export function respondToApproval(toolCallId: string, approved: boolean): void {
     })),
   })
   resolve?.(approved)
+}
+
+/** Set drawerState with isMorphing=true so Motion layoutId activates for the
+ *  open/close morph. Call clearMorph() (or wait for the safety timeout) once
+ *  the animation completes. */
+export function transitionDrawer(target: DrawerState): void {
+  chatStore.setState({ drawerState: target, isMorphing: true })
+  // Safety timeout: if onLayoutAnimationComplete never fires (e.g. reduced
+  // motion, element never mounts, or Motion skips the animation), clear the
+  // flag after 600ms so layoutId doesn't stick forever.
+  clearTimeout(morphSafetyTimer)
+  morphSafetyTimer = setTimeout(() => {
+    chatStore.setState({ isMorphing: false })
+  }, 600)
+}
+
+let morphSafetyTimer: ReturnType<typeof setTimeout>
+
+/** Clear the morphing flag. Called from onLayoutAnimationComplete. */
+export function clearMorph(): void {
+  clearTimeout(morphSafetyTimer)
+  chatStore.setState({ isMorphing: false })
 }
 
 /**

@@ -15,6 +15,8 @@ import {
   chatStore,
   CHAT_LAYOUT_ID,
   CHAT_LAYOUT_TRANSITION,
+  transitionDrawer,
+  clearMorph,
 } from './chat-store.ts'
 import { ensureSessionRestored } from './chat-submit.ts'
 import { ArrowUpIcon } from './chat-icons.tsx'
@@ -25,6 +27,7 @@ export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: st
   const [inputValue, setInputValue] = useState('')
   const [focused, setFocused] = useState(false)
   const drawerState = useSyncExternalStore(chatStore.subscribe, getDrawerState, getDrawerState)
+  const isMorphing = useSyncExternalStore(chatStore.subscribe, () => chatStore.getState().isMorphing, () => false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const reduceMotion = useReducedMotion()
 
@@ -33,12 +36,13 @@ export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: st
     if (!text) return
     setInputValue('')
     textareaRef.current?.blur()
-    chatStore.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' })
+    chatStore.setState({ draftText: text, pendingSubmit: true })
+    transitionDrawer('open')
   }
 
   const openDrawerIfConversationExists = () => {
     if (chatStore.getState().messages.length > 0) {
-      chatStore.setState({ drawerState: 'open' })
+      transitionDrawer('open')
       return
     }
     void ensureSessionRestored().then(() => {
@@ -46,7 +50,7 @@ export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: st
         chatStore.getState().messages.length > 0 &&
         chatStore.getState().drawerState === 'closed'
       ) {
-        chatStore.setState({ drawerState: 'open' })
+        transitionDrawer('open')
       }
     })
   }
@@ -76,9 +80,9 @@ export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: st
     <motion.div
       className='holocron-chat-pill'
       data-expanded={expanded ? '' : undefined}
-      layoutId={CHAT_LAYOUT_ID}
-      layout
+      layoutId={isMorphing ? CHAT_LAYOUT_ID : undefined}
       transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
+      onLayoutAnimationComplete={clearMorph}
       style={{ borderRadius: 24 }}
     >
       <div className='holocron-chat-pill-surface flex items-end gap-2 rounded-[24px] bg-background py-1.5 pr-1.5 pl-5'>

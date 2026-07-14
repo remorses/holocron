@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { motion, useReducedMotion } from 'motion/react'
 import { Link } from './link.tsx'
 import { useSyncExternalStore } from 'react'
-import { chatStore, CHAT_LAYOUT_ID, CHAT_LAYOUT_TRANSITION, type ChatState } from '../chat/chat-store.ts'
+import { chatStore, CHAT_LAYOUT_ID, CHAT_LAYOUT_TRANSITION, transitionDrawer, clearMorph, type ChatState } from '../chat/chat-store.ts'
 
 function useChatStore<T>(selector: (s: ChatState) => T): T {
   return useSyncExternalStore(chatStore.subscribe, () => selector(chatStore.getState()), () => selector(chatStore.getState()))
@@ -35,6 +35,7 @@ export function SidebarAssistant() {
   // so the drawer can read it, but never read back from the store.
   const [inputValue, setInputValue] = useState('')
   const drawerState = useChatStore((s) => s.drawerState)
+  const isMorphing = useChatStore((s) => s.isMorphing)
   const reduceMotion = useReducedMotion()
 
   const {site } = useHolocronData()
@@ -46,7 +47,8 @@ export function SidebarAssistant() {
   const handleSubmit = () => {
     const text = inputValue.trim()
     if (!text) return
-    chatStore.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' })
+    chatStore.setState({ draftText: text, pendingSubmit: true })
+    transitionDrawer('open')
   }
 
   const handleFocus = () => {
@@ -54,7 +56,7 @@ export function SidebarAssistant() {
     // This keeps the sidebar input SSR-safe in the RSC page shell while
     // preserving the "reopen existing chat" behavior on the client.
     if (chatStore.getState().messages.length > 0) {
-      chatStore.setState({ drawerState: 'open' })
+      transitionDrawer('open')
       return
     }
     // After a page refresh the store is empty but a persisted conversation
@@ -65,7 +67,7 @@ export function SidebarAssistant() {
         chatStore.getState().messages.length > 0 &&
         chatStore.getState().drawerState === 'closed'
       ) {
-        chatStore.setState({ drawerState: 'open' })
+        transitionDrawer('open')
       }
     })
   }
@@ -99,9 +101,9 @@ export function SidebarAssistant() {
   return (
     <motion.div
       className='hidden lg:block w-full rounded-2xl bg-accent px-0.5 pt-px pb-0.5'
-      layoutId={CHAT_LAYOUT_ID}
-      layout
+      layoutId={isMorphing ? CHAT_LAYOUT_ID : undefined}
       transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
+      onLayoutAnimationComplete={clearMorph}
       style={{ borderRadius: 16 }}
     >
       <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
