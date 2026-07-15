@@ -1,5 +1,52 @@
 # @holocron.so/vite
 
+## 0.25.0
+
+1. **CSS variables for code blocks, blockquotes, and sidebar navigation** — customize these elements without targeting internal selectors. New variables:
+
+   **Code blocks:**
+   ```css
+   :root {
+     --code-block-background: var(--muted);
+     --code-block-border: 1px solid var(--border-subtle);
+     --code-block-radius: var(--radius-md);
+     --code-block-padding-x: 8px;
+     --code-block-padding-y: 12px;
+   }
+   ```
+
+   **Blockquotes:**
+   ```css
+   :root {
+     --blockquote-border-width: 2px;
+     --blockquote-border-color: var(--border-subtle);
+   }
+   ```
+
+   **Sidebar navigation:**
+   ```css
+   :root {
+     --sidebar-group-margin-top: 16px;
+     --sidebar-link-radius: var(--radius-sm);
+     --sidebar-indent: 8px;
+   }
+   ```
+
+2. **Search with AI chat** — sidebar search results now show a "Search with AI chat →" action at the bottom. Clicking it opens a new AI chat session with the current search query, so users can get deeper answers when keyword results aren't enough.
+
+3. **Shadow DOM isolation restored for ChatWidget** — the standalone `ChatWidget` renders inside a shadow root again (host page CSS can no longer paint chat text). The pill → drawer morph now uses Motion `layoutId` instead of CSS view transitions, which Chrome ignores inside shadow roots.
+
+   ```tsx
+   import { ChatWidget } from '@holocron.so/vite/chat'
+
+   // Unchanged public API
+   <ChatWidget domain="docs.myapp.com" navigate={navigate} />
+   ```
+
+4. **Chat drawer border and layout polish** — the drawer panel and textarea now have visible borders. The Motion layout morph uses `layout="position"` to prevent text stretching during the pill → drawer transition.
+
+5. **Live config override for dashboard preview** — Holocron sites embedded in the Notaku dashboard can receive live config overrides via query parameters, `postMessage`, or cookies. This enables real-time theme preview without rebuilding.
+
 ## 0.24.0
 
 1. **Imageboard tab type** — render a folder of images and videos as a masonry moodboard page. Point a tab at a directory and Holocron walks it recursively, rendering every image and video in a responsive CSS-columns grid sorted newest-first by git history. Images get sharp dimensions, pixelated placeholders, and click-to-zoom. Videos get dimensions probed from container headers (no ffmpeg needed).
