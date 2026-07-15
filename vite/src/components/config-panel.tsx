@@ -1,19 +1,42 @@
 'use client'
 
 // Loads the DialKit config panel asynchronously when the browser is idle.
-// Uses requestIdleCallback to defer the import until the page is not busy,
-// so the main bundle and first paint are unaffected. DialKit renders its
-// own toggle button in the top-right corner; we don't need a custom one.
 //
-// Also exports ConfigOverrideListener: listens for postMessage from a
-// parent iframe (notaku dashboard) to update the config override cookie
-// and trigger a spiceflow router.refresh(). This enables live preview of
-// docs.json changes made in the AI chat without a full page reload.
+// Also exports ConfigOverrideListener: listens for postMessage from the
+// notaku dashboard parent window. Sets a first-party cookie with the
+// override key and calls router.refresh() for smooth config updates
+// without a full page reload. The cookie also persists across internal
+// navigations so the override stays active when clicking sidebar links.
 
 import React, { useEffect, useState } from 'react'
 import type { HolocronConfig } from '../config.ts'
-import { configToDialConfig, CONFIG_OVERRIDE_PARAM } from '../lib/config-override.ts'
+import { configToDialConfig, CONFIG_OVERRIDE_COOKIE } from '../lib/config-override.ts'
 import { router } from 'spiceflow/react'
+
+// ── Iframe preview protocol ──────────────────────────────────────────
+//
+// Messages sent from the notaku dashboard (parent) to the holocron
+// iframe (child) via window.postMessage.
+
+/** Sent by the parent after storing a new config in the DO.
+ *  `key` is `doId:hash` referencing the ConfigOverrideDO record. */
+type ConfigOverrideMessage = {
+  type: 'config-override'
+  key: string
+}
+
+/** Sent by the parent when the user saves or clears edits.
+ *  The iframe removes the override cookie and refreshes. */
+type ConfigOverrideClearMessage = {
+  type: 'config-override-clear'
+}
+
+/** All inbound message types. */
+type ConfigOverrideInboundMessage =
+  | ConfigOverrideMessage
+  | ConfigOverrideClearMessage
+
+// ── Components ───────────────────────────────────────────────────────
 
 /** Schedule a callback for when the browser is idle, with a fallback
  *  to setTimeout for browsers that don't support requestIdleCallback. */
@@ -58,71 +81,37 @@ export function ConfigPanel({ config }: { config: HolocronConfig }) {
   return <ConfigPanelInner key={configKey} config={config} />
 }
 
-// Allowed parent origins for postMessage. Only the notaku dashboard
-// should be able to push config overrides into the iframe.
-const ALLOWED_PARENT_ORIGINS = new Set([
-  'https://notaku.so',
-  'https://www.notaku.so',
-  'http://localhost:7664',
-  'http://localhost:3000',
-])
-
-/** Listens for postMessage from a parent window (notaku dashboard iframe).
+/** Listens for postMessage from the parent window. On receiving an
+ *  override key, sets a cookie and calls router.refresh() for a
+ *  smooth in-place update without full page reload.
  *
- *  Messages:
- *  - `{ type: 'config-override', key: 'doId:hash' }` — update the
- *    configOverride query param and refresh the page with the new config.
- *  - `{ type: 'config-override-clear' }` — remove the override and
- *    refresh back to the base deployed config.
+ *  The cookie uses SameSite=None;Secure so it works in cross-site
+ *  iframes (notaku.so embedding *.holocron.so). The cookie persists
+ *  across internal page navigations inside the iframe.
  *
- *  Uses the query param as the source of truth (not cookies). This avoids
- *  third-party cookie issues and ensures router.refresh() always picks
- *  up the latest override via resolveConfigOverride reading the URL.
- *
- *  Mounted when previewProps=true (always present in the notaku dashboard
- *  iframe URL), so the listener is ready before any override key exists. */
+ *  Always mounted in the layout. Does nothing when not in an iframe
+ *  (no messages arrive, zero overhead). */
 export function ConfigOverrideListener() {
   useEffect(() => {
-    function onMessage(event: MessageEvent) {
-      // Validate origin: only accept messages from known notaku origins
-      if (!ALLOWED_PARENT_ORIGINS.has(event.origin)) {
-        return
-      }
-      // Validate source: only accept from the parent window
-      if (event.source !== window.parent) {
-        return
-      }
+    // Skip if not embedded in an iframe
+    if (window === window.parent) {
+      return
+    }
 
-      const data = event.data
+    function onMessage(event: MessageEvent) {
+      const data = event.data as ConfigOverrideInboundMessage | null
       if (!data) {
         return
       }
 
       if (data.type === 'config-override' && data.key) {
-        // Update the query param so resolveConfigOverride reads it
-        const url = new URL(window.location.href)
-        url.searchParams.set(CONFIG_OVERRIDE_PARAM, data.key)
-        // Use history.replaceState to update URL without navigation,
-        // then router.refresh() to re-run loaders with the new param
-        history.replaceState(null, '', url.toString())
+        document.cookie = `${CONFIG_OVERRIDE_COOKIE}=${data.key}; path=/; samesite=none; secure`
         router.refresh()
-
-        event.source?.postMessage(
-          { type: 'config-override-ack', key: data.key },
-          { targetOrigin: event.origin },
-        )
       }
 
       if (data.type === 'config-override-clear') {
-        const url = new URL(window.location.href)
-        url.searchParams.delete(CONFIG_OVERRIDE_PARAM)
-        history.replaceState(null, '', url.toString())
+        document.cookie = `${CONFIG_OVERRIDE_COOKIE}=; path=/; max-age=0; samesite=none; secure`
         router.refresh()
-
-        event.source?.postMessage(
-          { type: 'config-override-clear-ack' },
-          { targetOrigin: event.origin },
-        )
       }
     }
 

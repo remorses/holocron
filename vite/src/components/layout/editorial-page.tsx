@@ -126,7 +126,7 @@ export function EditorialPage({
   /** Mintlify-compatible page mode from MDX frontmatter. */
   mode?: PageMode
 }) {
-  const { site, activeTabHref, activeVersionHref, activeDropdownHref, showConfigPanel, hasPreviewProps, githubStars } = useHolocronData()
+  const { site, activeTabHref, activeVersionHref, activeDropdownHref, showConfigPanel, githubStars } = useHolocronData()
   const siteConfig = site.config
   const enableAssistant = siteConfig.assistant.enabled
   const siteLogo = getResolvedLogo(site)
@@ -510,7 +510,7 @@ export function EditorialPage({
           Only mounted in dev mode and on preview subdomains. DialKit
           renders its own floating toggle button. */}
       {showConfigPanel && <ConfigPanel config={siteConfig} />}
-      {hasPreviewProps && <ConfigOverrideListener />}
+      <ConfigOverrideListener />
     </div>
   )
 }

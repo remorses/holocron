@@ -75,7 +75,7 @@ import {
 } from './site-data.ts'
 import type { HolocronConfig, ConfigNavTab, ConfigNavGroup } from './config.ts'
 import { collectIconRefs, dedupeIconRefs, type IconRef } from './lib/collect-icons.ts'
-import { resolveConfigOverride, shouldShowConfigPanel, hasPreviewProps } from './lib/config-override.ts'
+import { resolveConfigOverride, shouldShowConfigPanel } from './lib/config-override.ts'
 import { normalize as normalizeConfig } from './lib/normalize-config.ts'
 import {
   type CustomTabProvider,
@@ -171,10 +171,7 @@ export type HolocronLoaderData = {
   currentPageFrontmatter: PageFrontmatter | undefined
   /** Whether the config customization panel should be shown. */
   showConfigPanel: boolean
-  /** Whether the page is loaded inside the notaku dashboard iframe
-   *  (previewProps=true). When true, the ConfigOverrideListener is
-   *  rendered to handle live config updates via postMessage. */
-  hasPreviewProps: boolean
+
   /**
    * Non-blocking promise that resolves to a map of GitHub repo URLs → star
    * counts. Passed as an unresolved promise so it streams via RSC flight
@@ -946,7 +943,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   const loaderFn = async ({ request }: { request: Request }): Promise<HolocronLoaderData> => {
     const slug = slugFromRequest(request)
     const showPanel = shouldShowConfigPanel(request)
-    const isPreview = hasPreviewProps(request.url)
     const origin = new URL(request.url).origin
 
     // Run page lookup, MDX source check, and config override fetch in parallel.
@@ -979,7 +975,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         headRobots: 'noindex',
         currentPageFrontmatter: undefined,
         showConfigPanel: showPanel,
-        hasPreviewProps: isPreview,
         githubStars: githubStarsPromise,
       }
     }
@@ -999,7 +994,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       headRobots: getPageRobots(currentPage.frontmatter),
       currentPageFrontmatter: currentPage.frontmatter,
       showConfigPanel: showPanel,
-      hasPreviewProps: isPreview,
       githubStars: githubStarsPromise,
     }
   }
@@ -1996,7 +1990,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         headRobots: getPageRobots(frontmatter),
         currentPageFrontmatter: frontmatter,
         showConfigPanel: shouldShowConfigPanel(request),
-        hasPreviewProps: hasPreviewProps(request.url),
+
         githubStars: githubStarsPromise,
       }
 
