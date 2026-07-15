@@ -6,7 +6,7 @@
  * "Menu" (right) opens the navigation drawer.
  */
 
-import { transitionDrawer } from '../chat/chat-store.ts'
+import { chatStore } from '../chat/chat-store.ts'
 import { navStore } from '../lib/nav-store.ts'
 import { MenuIcon } from '../chat/chat-icons.tsx'
 
@@ -16,7 +16,7 @@ export function MobileBar({ enableAssistant = true }: { enableAssistant?: boolea
       {enableAssistant ? (
         <button
           type='button'
-          onClick={() => transitionDrawer('open')}
+          onClick={() => chatStore.setState({ drawerState: 'open' })}
           style={{
             fontSize: '13px',
             fontWeight: 500,

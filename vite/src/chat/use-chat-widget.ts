@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useSyncExternalStore } from 'react'
-import { chatStore, transitionDrawer } from './chat-store.ts'
+import { chatStore } from './chat-store.ts'
 import { chatWidgetStore } from './chat-widget-store.ts'
 import { startNewChat } from './chat-submit.ts'
 
@@ -22,16 +22,16 @@ export function useChatWidget() {
   const config = useSyncExternalStore(chatWidgetStore.subscribe, () => chatWidgetStore.getState(), () => chatWidgetStore.getState())
 
   const open = useCallback(() => {
-    transitionDrawer('open')
+    chatStore.setState({ drawerState: 'open' })
   }, [])
 
   const close = useCallback(() => {
-    transitionDrawer('closed')
+    chatStore.setState({ drawerState: 'closed' })
   }, [])
 
   const toggle = useCallback(() => {
     const current = chatStore.getState().drawerState
-    transitionDrawer(current === 'open' ? 'closed' : 'open')
+    chatStore.setState({ drawerState: current === 'open' ? 'closed' : 'open' })
   }, [])
 
   const clear = useCallback(() => {

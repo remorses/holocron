@@ -17,7 +17,7 @@
 
 import React, { useEffect, useCallback, useSyncExternalStore } from 'react'
 import { chatWidgetStore } from './chat-widget-store.ts'
-import { chatStore, transitionDrawer } from './chat-store.ts'
+import { chatStore } from './chat-store.ts'
 import { ChatDrawer } from './chat-drawer.tsx'
 import { ChatPill } from './chat-pill.tsx'
 import { ChatShadowHost } from './chat-shadow-host.tsx'
@@ -143,7 +143,7 @@ export function ChatWidget({
 
   const handleToggle = useCallback(() => {
     const current = chatStore.getState().drawerState
-    transitionDrawer(current === 'open' ? 'closed' : 'open')
+    chatStore.setState({ drawerState: current === 'open' ? 'closed' : 'open' })
   }, [])
 
   return (
