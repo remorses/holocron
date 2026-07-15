@@ -88,3 +88,27 @@ Instead, use **`@reference`** to access Tailwind's theme variables, `@apply`, an
   }
 }
 ```
+
+## Best practices
+
+**Prefer CSS variables over class selectors.** Holocron exposes CSS variables for colors, typography, spacing, code blocks, and layout. Override these in `:root` for clean, stable customization that survives Holocron updates. See [Theme](/docs/customize/theme) for the full list.
+
+```css
+/* Stable — uses documented CSS variables */
+:root {
+  --code-block-background: var(--muted);
+  --code-block-border: 1px solid var(--border-subtle);
+  --weight-heading: 700;
+}
+```
+
+**Avoid targeting internal class names and DOM structure.** Selectors like `.slot-sidebar-left nav > div:first-child > a` or `figure[class~='group/code'] button[aria-label='Copy code']` are coupled to Holocron's internal markup. These will break when Holocron refactors its components; there is no stability guarantee for internal class names, DOM nesting, or aria labels.
+
+If you do need a class-based override as a last resort, keep it isolated and add a comment noting it may break on upgrade:
+
+```css
+/* FRAGILE: targets internal sidebar DOM, may break on Holocron updates */
+.slot-sidebar-left nav a {
+  border-radius: var(--radius-sm);
+}
+```

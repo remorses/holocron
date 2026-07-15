@@ -82,7 +82,81 @@ Use `@variant dark` instead of Tailwind's `dark:` for dark mode overrides. This 
 
 ## Available tokens
 
-The full token set includes: `--background`, `--foreground`, `--primary`, `--muted`, `--muted-foreground`, `--border`, `--accent`, `--card`, `--sidebar-foreground`, `--sidebar-primary`, and more. See the source `globals.css` for the complete list.
+### Colors
+
+Common color tokens include:
+
+| Token | Purpose |
+|-------|---------|
+| `--background` / `--foreground` | Page surface and default text |
+| `--card` / `--card-foreground` | Elevated surfaces |
+| `--primary` / `--primary-foreground` | Brand color and text on it |
+| `--muted` / `--muted-foreground` | Muted backgrounds and placeholder text |
+| `--accent` / `--accent-foreground` | Hover/active highlights |
+| `--border` | Default border color |
+| `--border-subtle` | Lighter border for subtle dividers |
+| `--sidebar-foreground` / `--sidebar-primary` | Sidebar text and active item |
+
+### Typography
+
+| Token | Default | Purpose |
+|-------|---------|---------|
+| `--type-body-size` | `14px` | Base body text size |
+| `--type-heading-1-size` | `16px` | H1 heading size |
+| `--type-heading-2-size` | `16px` | H2 heading size |
+| `--type-heading-3-size` | `16px` | H3 heading size |
+| `--type-small-size` | `13px` | Small text |
+| `--type-nav-group-size` | `12px` | Sidebar group labels |
+| `--weight-regular` | `400` | Normal text weight |
+| `--weight-prose` | `475` | Body prose weight |
+| `--weight-heading` | `560` | Heading weight |
+
+### Code blocks
+
+Style fenced code blocks without targeting internal selectors:
+
+| Token | Default | Purpose |
+|-------|---------|---------|
+| `--code-block-background` | `transparent` | Background color |
+| `--code-block-border` | `none` | Border (e.g. `1px solid var(--border-subtle)`) |
+| `--code-block-radius` | `0px` | Corner radius |
+| `--code-block-padding-x` | `0px` | Horizontal padding |
+| `--code-block-padding-y` | `0.5rem` | Vertical padding |
+
+The copy button automatically aligns to the top-right of the padded frame.
+
+```css
+:root {
+  --code-block-background: var(--muted);
+  --code-block-border: 1px solid var(--border-subtle);
+  --code-block-radius: var(--radius-md);
+  --code-block-padding-x: 8px;
+  --code-block-padding-y: 12px;
+}
+```
+
+### Blockquotes
+
+| Token | Default | Purpose |
+|-------|---------|---------|
+| `--blockquote-border-width` | `3px` | Left border thickness |
+| `--blockquote-border-color` | `var(--border)` | Left border color |
+
+### Sidebar navigation
+
+| Token | Default | Purpose |
+|-------|---------|---------|
+| `--sidebar-group-margin-top` | `12px` | Top margin above group labels |
+| `--sidebar-link-radius` | `0px` | Border radius on nav links |
+| `--sidebar-indent` | `12px` | Indentation per nesting level |
+
+### Spacing
+
+| Token | Default | Purpose |
+|-------|---------|---------|
+| `--prose-gap` | `20px` | Between elements inside a section |
+| `--section-gap` | `48px` | Between heading-delimited sections |
+| `--list-gap` | `8px` | Between list items |
 
 ## Semantic colors
 

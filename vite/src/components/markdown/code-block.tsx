@@ -111,8 +111,24 @@ export function CodeBlock({
   const bleedClassName = bleedClass(bleed)
   const leftBleed = hasLeftBleed(bleed)
 
+  /* The figure is the positioning context for the copy button so that
+     --code-block-padding-* is respected: the button sits in the top-right
+     of the padded frame, not relative to the inner code content.
+     The inner code div keeps `relative` for the highlight overlay so it
+     stays scoped to the code area (not offset by the title). */
   return (
-    <figure className={`group/code m-0 py-2${bleedClassName ? ` ${bleedClassName}` : ''}`}>
+    <figure
+      className={`group/code relative m-0${bleedClassName ? ` ${bleedClassName}` : ''}`}
+      style={{
+        background: 'var(--code-block-background)',
+        border: 'var(--code-block-border)',
+        borderRadius: 'var(--code-block-radius)',
+        paddingLeft: 'var(--code-block-padding-x)',
+        paddingRight: 'var(--code-block-padding-x)',
+        paddingTop: 'var(--code-block-padding-y)',
+        paddingBottom: 'var(--code-block-padding-y)',
+      }}
+    >
       {title && (
         <div
           className='font-mono pb-1'
@@ -122,6 +138,8 @@ export function CodeBlock({
             // Align title with code text start. With border-box the flex
             // item width equals the total gutter space (padding included).
             paddingLeft: showLineNumbers ? (leftBleed ? 'var(--bleed)' : '26px') : undefined,
+            // Reserve space for the copy button so long titles don't overlap it.
+            paddingRight: '36px',
           }}
         >
           {title}
@@ -137,10 +155,7 @@ export function CodeBlock({
       >
         <pre
           className='overflow-x-auto scrollbar-none'
-          style={{
-            // borderRadius: 'var(--border-radius-md)',
-            margin: 0,
-          }}
+          style={{ margin: 0 }}
         >
           <div
             className='flex'
@@ -189,18 +204,9 @@ export function CodeBlock({
             )}
           </div>
         </pre>
-        <button
-          type='button'
-          onClick={handleCopy}
-          aria-label='Copy code'
-          className='absolute -mt-2 right-1 top-1 z-10 flex size-[28px] cursor-pointer items-center justify-center rounded-md bg-background/80 text-muted-foreground opacity-0 backdrop-blur-sm transition-all hover:text-foreground group-hover/code:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-          style={{ opacity: copied ? 1 : undefined }}
-        >
-          {copied ? <CheckIcon /> : <CopyIcon />}
-        </button>
         {/* Highlight overlay: per-line background strips that dim non-highlighted
-            lines. Inherits font-size and line-height from the parent so each
-            strip at height=1lh aligns perfectly with one code line. */}
+            lines. Positioned relative to the inner code div (not the figure)
+            so the title height is excluded. */}
         {highlightLines && (
           <div
             aria-hidden='true'
@@ -219,6 +225,21 @@ export function CodeBlock({
           </div>
         )}
       </div>
+      {/* Copy button — positioned relative to the figure so it respects
+          --code-block-padding-*. Sits in the top-right of the padded frame. */}
+      <button
+        type='button'
+        onClick={handleCopy}
+        aria-label='Copy code'
+        className='absolute z-10 flex size-[28px] cursor-pointer items-center justify-center rounded-md bg-background/80 text-muted-foreground opacity-0 backdrop-blur-sm transition-all hover:text-foreground group-hover/code:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+        style={{
+          opacity: copied ? 1 : undefined,
+          top: 'var(--code-block-padding-y)',
+          right: 'calc(var(--code-block-padding-x) + 4px)',
+        }}
+      >
+        {copied ? <CheckIcon /> : <CopyIcon />}
+      </button>
     </figure>
   )
 }
