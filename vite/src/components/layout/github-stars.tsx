@@ -18,7 +18,7 @@ function StarCount({ starsPromise, href }: { starsPromise: Promise<Record<string
   const count = key ? starsMap[key] : undefined
   if (count === undefined) return null
   return (
-    <span className='inline-flex items-center gap-0.5 text-xs tabular-nums text-muted-foreground'>
+    <span className='inline-flex items-center gap-0.5 text-xs tabular-nums text-inherit transition-colors duration-150'>
       {formatStarCount(count)} stars
     </span>
   )
