@@ -246,6 +246,7 @@ function ChatDrawerInner() {
         className='holocron-chat-drawer-panel'
         layoutId={CHAT_LAYOUT_ID}
         layout
+        layoutDependency={drawerState}
         initial={false}
         transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
         style={{
