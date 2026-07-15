@@ -1310,7 +1310,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       spiceflowPlugin({
         entry: options.entry ?? VIRTUAL_APP,
         serveStaticImport: '@holocron.so/vite/src/serve-static',
-        externalizeShared: true,
+        // externalizeShared disabled until spiceflow fixes CJS require
+        // errors in federation shared entries (see spiceflow#rsc.9-10)
+        // externalizeShared: true,
       }),
     )
   }
