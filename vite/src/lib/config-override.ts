@@ -1,14 +1,18 @@
 /**
  * Config override — types, merge logic, and DialKit conversion.
  *
- * Supports live customization of visual docs.json fields via a DialKit panel.
- * Overrides are stored in a Durable Object on holocron.so and referenced by
- * a cookie containing `<doId>:<configHash>`. The merge is always a full
- * snapshot applied on top of the base config, not a diff, so it works
- * correctly regardless of base config changes between deployments.
+ * Supports live customization of docs.json fields. Two modes:
  *
- * Only visual/theming fields are overridable. Navigation, redirects,
- * knownPaths, seo, and integrations are excluded (structural/security-sensitive).
+ * 1. Visual override (DialKit panel): only colors, layout, fonts, etc.
+ *    Stored via cookie `holo-config-override=<doId>:<hash>`.
+ *
+ * 2. Full config override (notaku dashboard preview): any docs.json field.
+ *    Passed via `?configOverride=<doId>:<hash>` query param from parent
+ *    iframe, then set as cookie by a postMessage listener for subsequent
+ *    router.refresh() calls.
+ *
+ * Overrides are stored in a Durable Object on holocron.so. The merge is
+ * always a full snapshot applied on top of the base config, not a diff.
  */
 
 import type { HolocronConfig } from '../config.ts'
@@ -28,42 +32,45 @@ export type ConfigOverride = {
   fonts?: Partial<NonNullable<HolocronConfig['fonts']>>
 }
 
-/* ── Merge ───────────────────────────────────────────────────────────── */
+/* ── Merge (visual-only overrides) ────────────────────────────────────── */
 
-/** Deep-merge override fields into a base config. Returns a new object;
- *  never mutates `base`. Fields not present in `override` are left as-is. */
+/** Deep-merge visual override fields into a base config. Returns a new
+ *  object; never mutates `base`. Only handles the known visual/theming
+ *  fields from DialKit. Full-config overrides are handled separately
+ *  by normalizing the raw JSON via `applyOverride()`. */
 export function mergeConfigOverride(
   base: HolocronConfig,
-  override: ConfigOverride,
+  override: ConfigOverride | Record<string, unknown>,
 ): HolocronConfig {
   const merged = { ...base }
 
-  if (override.colors) {
-    merged.colors = { ...base.colors, ...override.colors, _hasUserColors: true }
+  const typedOverride = override as ConfigOverride
+  if (typedOverride.colors) {
+    merged.colors = { ...base.colors, ...typedOverride.colors, _hasUserColors: true }
   }
-  if (override.appearance) {
-    merged.appearance = { ...base.appearance, ...override.appearance }
+  if (typedOverride.appearance) {
+    merged.appearance = { ...base.appearance, ...typedOverride.appearance }
   }
-  if (override.decorativeLines !== undefined) {
-    merged.decorativeLines = override.decorativeLines
+  if (typedOverride.decorativeLines !== undefined) {
+    merged.decorativeLines = typedOverride.decorativeLines
   }
-  if (override.banner) {
+  if (typedOverride.banner) {
     merged.banner = base.banner
-      ? { ...base.banner, ...override.banner }
-      : { content: override.banner.content ?? '', dismissible: override.banner.dismissible ?? false }
+      ? { ...base.banner, ...typedOverride.banner }
+      : { content: typedOverride.banner.content ?? '', dismissible: typedOverride.banner.dismissible ?? false }
   }
-  if (override.assistant) {
-    merged.assistant = { ...base.assistant, ...override.assistant }
+  if (typedOverride.assistant) {
+    merged.assistant = { ...base.assistant, ...typedOverride.assistant }
   }
-  if (override.layout) {
-    merged.layout = { ...base.layout, ...override.layout }
+  if (typedOverride.layout) {
+    merged.layout = { ...base.layout, ...typedOverride.layout }
   }
-  if (override.fonts) {
+  if (typedOverride.fonts) {
     merged.fonts = {
       ...base.fonts,
-      ...override.fonts,
-      ...(override.fonts.heading && {
-        heading: { ...base.fonts?.heading, ...override.fonts.heading } as NonNullable<HolocronConfig['fonts']>['heading'],
+      ...typedOverride.fonts,
+      ...(typedOverride.fonts.heading && {
+        heading: { ...base.fonts?.heading, ...typedOverride.fonts.heading } as NonNullable<HolocronConfig['fonts']>['heading'],
       }),
     }
   }
@@ -228,39 +235,105 @@ export function configOverrideToDocsJsonPartial(override: ConfigOverride): Recor
   return result
 }
 
-/* ── Resolve override from cookie (server-side) ──────────────────────── */
+/* ── Parse override key from query param ─────────────────────────────── */
+
+export const CONFIG_OVERRIDE_PARAM = 'configOverride'
+export const PREVIEW_PROPS_PARAM = 'previewProps'
+
+/** Parse a `doId:hash` key string into its parts. */
+export function parseOverrideKey(
+  value: string | null | undefined,
+): { doId: string; hash: string } | null {
+  if (!value) return null
+  const colonIdx = value.indexOf(':')
+  if (colonIdx <= 0) return null
+  const doId = value.slice(0, colonIdx)
+  const hash = value.slice(colonIdx + 1)
+  if (!doId || !hash) return null
+  return { doId, hash }
+}
+
+/** Parse the configOverride query parameter into doId + hash.
+ *  Used by the notaku dashboard to pass the override key cross-origin
+ *  via the iframe URL instead of cookies. */
+export function parseOverrideParam(
+  url: string,
+): { doId: string; hash: string } | null {
+  try {
+    const u = new URL(url)
+    return parseOverrideKey(u.searchParams.get(CONFIG_OVERRIDE_PARAM))
+  } catch {
+    return null
+  }
+}
+
+/** Whether the request has `previewProps=true`, indicating it's loaded
+ *  inside the notaku dashboard iframe for live preview. */
+export function hasPreviewProps(url: string): boolean {
+  try {
+    return new URL(url).searchParams.get(PREVIEW_PROPS_PARAM) === 'true'
+  } catch {
+    return false
+  }
+}
+
+/* ── Resolve override from query param or cookie (server-side) ────────── */
 
 /** In-memory cache for resolved overrides. Keys are `doId:hash` strings.
  *  Since the hash is derived from the override content, same key = same
  *  config forever. Safe to cache indefinitely within a process lifetime. */
-const overrideCache = new Map<string, ConfigOverride>()
+const overrideCache = new Map<string, ConfigOverride | Record<string, unknown>>()
 
-/** Fetch the config override from the holocron.so DO and merge it into
- *  the base config. Returns the base config unchanged if no cookie is
- *  present or the fetch fails. Caches results in-process by key. */
+/** Fetch the config override from the holocron.so DO and apply it to
+ *  the base config. Checks the `configOverride` query param first, then
+ *  falls back to the `holo-config-override` cookie.
+ *
+ *  Full-mode overrides (marked with `_mode: 'full'`) are normalized
+ *  from raw docs.json into a complete HolocronConfig, replacing the
+ *  base config entirely. Visual-only overrides are merged on top. */
 export async function resolveConfigOverride(
   request: Request,
   baseConfig: HolocronConfig,
+  normalizeConfig?: (raw: Record<string, unknown>) => HolocronConfig,
 ): Promise<HolocronConfig> {
-  const parsed = parseOverrideCookie(request.headers.get('cookie'))
+  // Query param takes priority (used by notaku dashboard iframe)
+  const parsed = parseOverrideParam(request.url)
+    || parseOverrideCookie(request.headers.get('cookie'))
   if (!parsed) return baseConfig
 
   const cacheKey = `${parsed.doId}:${parsed.hash}`
 
   const cached = overrideCache.get(cacheKey)
-  if (cached) return mergeConfigOverride(baseConfig, cached)
+  if (cached) {
+    return applyOverride(baseConfig, cached, normalizeConfig)
+  }
 
   try {
     const res = await fetch(
       holocronUrl(`/api/config-override/${encodeURIComponent(parsed.doId)}/${encodeURIComponent(parsed.hash)}`),
     )
     if (!res.ok) return baseConfig
-    const override = (await res.json()) as ConfigOverride
+    const override = (await res.json()) as Record<string, unknown>
     overrideCache.set(cacheKey, override)
-    return mergeConfigOverride(baseConfig, override)
+    return applyOverride(baseConfig, override, normalizeConfig)
   } catch {
     return baseConfig
   }
+}
+
+/** Apply an override: full-mode overrides get normalized into a complete
+ *  config (replacing the base), visual overrides get merged on top. */
+function applyOverride(
+  baseConfig: HolocronConfig,
+  override: ConfigOverride | Record<string, unknown>,
+  normalizeConfig?: (raw: Record<string, unknown>) => HolocronConfig,
+): HolocronConfig {
+  // Full-mode overrides are stored with `_mode: 'full'` marker
+  if ((override as Record<string, unknown>)._mode === 'full' && normalizeConfig) {
+    const { _mode, ...rawConfig } = override as Record<string, unknown>
+    return normalizeConfig(rawConfig)
+  }
+  return mergeConfigOverride(baseConfig, override)
 }
 
 /* ── Preview subdomain detection ─────────────────────────────────────── */
