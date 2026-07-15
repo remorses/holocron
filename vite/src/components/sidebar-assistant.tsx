@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react'
+import React, { useState, useRef, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, useReducedMotion } from 'motion/react'
 import { Link } from './link.tsx'
@@ -38,6 +38,7 @@ export function SidebarAssistant() {
   const reduceMotion = useReducedMotion()
 
   const {site } = useHolocronData()
+  const sidebarRef = useRef<HTMLDivElement>(null)
   const handleChange = (value: string) => {
     setInputValue(value)
     chatStore.setState({ draftText: value })
@@ -98,11 +99,13 @@ export function SidebarAssistant() {
 
   return (
     <motion.div
+      ref={sidebarRef}
       className='hidden lg:block w-full rounded-2xl bg-accent px-0.5 pt-px pb-0.5'
       layoutId={CHAT_LAYOUT_ID}
-      layout
+      layout='position'
       layoutDependency={drawerState}
       transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
+
       style={{ borderRadius: 16 }}
     >
       <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
