@@ -7,12 +7,8 @@
 // The doId is a random unique ID (unguessable). The hash is SHA-256 of the
 // override JSON (content-addressable). Both are required to read an override.
 //
-// Two modes:
-// - Default (no mode field): strict visual-only schema, capped at 16 KB.
-//   Used by the DialKit config panel on preview subdomains.
-// - mode: 'full': accepts any JSON object as a full docs.json override,
-//   capped at 64 KB. Used by the notaku dashboard for live preview of
-//   AI-generated config changes before saving.
+// The override schema is strict: only visual/theming fields are accepted.
+// Arbitrary JSON is rejected. Payload is capped at 16 KB.
 
 import { env } from 'cloudflare:workers'
 import { json, Spiceflow } from 'spiceflow'
@@ -26,7 +22,6 @@ const CORS_HEADERS = {
 }
 
 const MAX_PAYLOAD_BYTES = 16 * 1024 // 16 KB
-const MAX_FULL_PAYLOAD_BYTES = 64 * 1024 // 64 KB for full config overrides
 
 const hexColor = z.string().regex(/^#([a-fA-F0-9]{3}|[a-fA-F0-9]{6})$/)
 
@@ -67,13 +62,6 @@ const storeBodySchema = z.object({
   doId: z.string().optional(),
 })
 
-// Full mode: accepts any JSON object as override (used by notaku dashboard)
-const storeBodyFullSchema = z.object({
-  override: z.record(z.string(), z.unknown()),
-  doId: z.string().optional(),
-  mode: z.literal('full'),
-})
-
 export const configOverrideApp = new Spiceflow()
   // CORS preflight for cross-origin POST from docs sites on other domains
   .use(async ({ request, response }, next) => {
@@ -100,32 +88,18 @@ export const configOverrideApp = new Spiceflow()
     }
   })
   .post('/api/config-override', async ({ request, response }) => {
-    // Reject obviously oversized payloads before reading the body
+    // Reject oversized payloads before parsing
     const contentLength = request.headers.get('content-length')
-    if (contentLength && parseInt(contentLength, 10) > MAX_FULL_PAYLOAD_BYTES) {
+    if (contentLength && parseInt(contentLength, 10) > MAX_PAYLOAD_BYTES) {
       throw json({ error: 'payload too large' }, { status: 413 })
     }
 
     const rawBody = await request.text()
-    let parsed: Record<string, unknown>
-    try {
-      parsed = JSON.parse(rawBody)
-    } catch {
-      throw json({ error: 'invalid JSON' }, { status: 400 })
-    }
-
-    // Determine mode: 'full' allows any JSON object with a higher size limit,
-    // default mode validates against the strict visual-only schema.
-    const isFullMode = parsed?.mode === 'full'
-    const maxBytes = isFullMode ? MAX_FULL_PAYLOAD_BYTES : MAX_PAYLOAD_BYTES
-
-    if (new TextEncoder().encode(rawBody).byteLength > maxBytes) {
+    if (rawBody.length > MAX_PAYLOAD_BYTES) {
       throw json({ error: 'payload too large' }, { status: 413 })
     }
 
-    const body = isFullMode
-      ? storeBodyFullSchema.parse(parsed)
-      : storeBodySchema.parse(parsed)
+    const body = storeBodySchema.parse(JSON.parse(rawBody))
 
     let id: ReturnType<typeof env.CONFIG_OVERRIDE.newUniqueId>
     if (body.doId) {
