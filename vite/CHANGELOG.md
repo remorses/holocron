@@ -1,5 +1,11 @@
 # @holocron.so/vite
 
+## 0.25.2
+
+1. **Disable `externalizeShared` by default** — shared dependency externalization is now opt-in. Set `externalizeShared: true` in the Holocron plugin options to re-enable it.
+
+2. **Improve AI chat drawer close animation** — the drawer now stays in the DOM while closing (via Motion `AnimatePresence`) so it visibly morphs back into the sidebar "Ask AI" widget or the chat pill with a crossfade, instead of vanishing instantly.
+
 ## 0.25.1
 
 1. **Fixed client hydration failure** — disabled `externalizeShared` which caused a circular import map cycle (`Detected cycle while resolving name 'default' in 'react/jsx-runtime'`). This broke all client-side interactivity on deployed sites. Will be re-enabled once spiceflow ships the fix for CJS require errors in federation shared entries.

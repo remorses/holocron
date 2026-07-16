@@ -1314,7 +1314,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     const spiceflowPlugins = spiceflowPlugin({
       entry: options.entry ?? VIRTUAL_APP,
       serveStaticImport: '@holocron.so/vite/src/serve-static',
-      externalizeShared: options.externalizeShared !== false,
+      externalizeShared: options.externalizeShared ?? false,
     })
     pluginsToReturn.push(
       ...(Array.isArray(spiceflowPlugins)
