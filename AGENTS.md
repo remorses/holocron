@@ -636,6 +636,8 @@ The `subscribe` command creates a Stripe Checkout session via `POST /api/v0/subs
 
 **Never deploy unless the user explicitly asks to deploy.** Do not deploy after making changes, fixing bugs, or finishing a task. Wait for the user to say "deploy" or similar.
 
+**Exception: always deploy after an npm release.** When publishing a new version of `@holocron.so/vite` or `@holocron.so/cli` via the `/changepub` workflow, deploy preview and production immediately after the npm publish + git tag + GitHub release steps. The website must always run the latest published version.
+
 When deploying, **always deploy preview first, then production.** Never go straight to production.
 
 ```bash
