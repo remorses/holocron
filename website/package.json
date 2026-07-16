@@ -12,7 +12,7 @@
     "generate-openapi": "tsx --import ./scripts/register-cf-stub.ts scripts/generate-openapi.ts",
     "generate-icon-schemas": "tsx scripts/generate-icon-schemas.ts",
     "build": "rm -rf dist && pnpm generate-openapi && pnpm generate-icon-schemas && vite build && tsc",
-    "start": "node dist/rsc/index.js",
+    "start": "vite preview --host 127.0.0.1 --port 7664",
     "test": "vitest run",
     "test:preview-ai-chat": "tsx scripts/test-preview-ai-chat.ts",
     "types": "wrangler types",
