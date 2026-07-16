@@ -10,6 +10,7 @@
         "default": "dark"
     },
     "icons": { "library": "lucide" },
+    "assistant": { "enabled": true },
     "knownPaths": ["/dashboard", "/login"],
     "navbar": {
         "links": [

@@ -49,7 +49,7 @@ import {
   CustomDomainsSection,
   DASHBOARD_THEME_SCRIPT,
 } from './dashboard-components.tsx'
-import { DashboardChat } from './components/dashboard-chat.tsx'
+// import { DashboardChat } from './components/dashboard-chat.tsx'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
 const CLI_CREATE_COMMAND = 'npx -y "@holocron.so/cli" create'
@@ -248,7 +248,7 @@ export const dashboardApp = new Spiceflow()
           </div>
         </header>
 
-        {/* Content area with sidebar — outer div is full-width with bg so it covers the sticky banner on scroll at the edges */}
+        {/* Content area with sidebar */}
         <div className="isolate grow relative z-10 bg-background flex flex-col">
         <div className="grow flex max-w-(--content-max-width) mx-auto w-full border-x border-border">
           <GridDot position="tl" />
@@ -259,10 +259,11 @@ export const dashboardApp = new Spiceflow()
           </div>
         </div>
         </div>
-        <DashboardChat />
+        {/* <DashboardChat /> */}
       </div>
     )
   })
+
 
   // ── Dashboard index → redirect to first project ────────────────────
 
