@@ -35,7 +35,7 @@ const analyzeBundle = process.env.ANALYZE_BUNDLE === "1";
 export default defineConfig(createE2EViteConfig({
   build: analyzeBundle ? { sourcemap: true } : undefined,
   plugins: [
-    holocron(),
+    holocron({ externalizeShared: true }),
     analyzeBundle
       ? visualizer({
           emitFile: true,

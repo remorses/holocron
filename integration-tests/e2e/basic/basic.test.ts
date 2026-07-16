@@ -177,6 +177,26 @@ test.describe("getting-started page", () => {
 });
 
 test.describe("navigation", () => {
+  test("loads one Spiceflow client runtime", async ({ page }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    const loadCount = await page.evaluate(() =>
+      Reflect.get(globalThis, "__SPICEFLOW_CLIENT_LOAD_COUNT__")
+    );
+    expect(loadCount).toBe(1);
+  });
+
+  test("internal docs links navigate to the destination page", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/", { waitUntil: "networkidle" });
+
+    const nav = page.getByRole("navigation", { name: "Navigation" });
+    await nav.getByRole("link", { name: "Getting Started" }).click();
+
+    await expect(page).toHaveURL(/\/getting-started$/);
+    await expect(page.getByRole("heading", { name: "Installation" })).toBeVisible();
+  });
+
   test("sidebar contains links to all pages", async ({ request }) => {
     const response = await request.get("/", {
       headers: { "sec-fetch-dest": "document" },
