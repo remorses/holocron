@@ -4,9 +4,9 @@
  * ChatPill — fin.ai-style textarea pill, the default trigger for the
  * standalone ChatWidget (widget mode only; docs mode keeps SidebarAssistant).
  *
- * Morphs into ChatDrawer via Motion layoutId. Unmounts while the drawer is
- * open so Motion can project the shared layout between the two shells
- * (visibility/display toggles do not produce a layout morph).
+ * Morphs into ChatDrawer via Motion layoutId. Stays mounted while the drawer
+ * is open — Motion promotes the drawer to lead and crossfades this shell,
+ * then morphs the drawer's exit clone back into it on close.
  */
 
 import React, { useCallback, useRef, useState, useSyncExternalStore } from 'react'
@@ -66,25 +66,28 @@ export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: st
     }
   }
 
-  // Unmount while drawer is open — required for layoutId shared-element morph.
-  if (drawerState === 'open') return null
+  const pillRef = useRef<HTMLDivElement>(null)
 
   const hasText = inputValue.trim().length > 0
   const expanded = focused || inputValue.length > 0
+  const isDrawerOpen = drawerState === 'open'
 
-  const pillRef = useRef<HTMLDivElement>(null)
-
+  // Stays mounted while the drawer is open so the drawer's exit clone can
+  // morph back into these bounds on close (motion.dev: "To animate an
+  // element back to its origin, use AnimatePresence to keep it in the DOM").
+  // visibility:hidden while open keeps it measurable for Motion but removes
+  // it from the a11y tree and tab order — drawerState flips to 'closed'
+  // before the exit morph starts, so it is visible again during the morph.
   return (
     <motion.div
       ref={pillRef}
       className='holocron-chat-pill'
       data-expanded={expanded ? '' : undefined}
       layoutId={CHAT_LAYOUT_ID}
-      layout='position'
       layoutDependency={drawerState}
       transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
 
-      style={{ borderRadius: 24 }}
+      style={{ borderRadius: 24, visibility: isDrawerOpen ? 'hidden' : 'visible' }}
     >
       <div className='holocron-chat-pill-surface flex items-end gap-2 rounded-[24px] bg-background py-1.5 pr-1.5 pl-5'>
         <textarea

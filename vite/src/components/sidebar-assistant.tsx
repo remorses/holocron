@@ -71,42 +71,21 @@ export function SidebarAssistant() {
     })
   }
 
-  // Unmount while drawer is open so layoutId can morph into the drawer shell.
-  // Keep a same-size placeholder so the aside does not jump.
-  if (drawerState === 'open') {
-    return (
-      <div
-        className='hidden lg:block w-full rounded-2xl bg-accent px-0.5 pt-px pb-0.5 opacity-0 pointer-events-none'
-        aria-hidden
-      >
-        <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
-          <span className='text-muted-foreground shrink-0'>
-            <InfoCircleIcon />
-          </span>
-          <span className='text-[11px] font-medium text-muted-foreground'>
-            Ask AI about this page
-          </span>
-        </div>
-        <ChatInput
-          value=''
-          onChange={() => {}}
-          onSubmit={() => {}}
-          placeholder={`what is ${site.config?.name || 'this page'}?`}
-        />
-      </div>
-    )
-  }
-
+  // Stays mounted while the drawer is open so the drawer's exit clone can
+  // morph back into these bounds on close, and the aside layout stays stable.
+  // visibility:hidden while open keeps it measurable for Motion but removes
+  // it from the a11y tree and tab order — drawerState flips to 'closed'
+  // before the exit morph starts, so it is visible again during the morph.
+  const isDrawerOpen = drawerState === 'open'
   return (
     <motion.div
       ref={sidebarRef}
       className='hidden lg:block w-full rounded-2xl bg-accent px-0.5 pt-px pb-0.5'
       layoutId={CHAT_LAYOUT_ID}
-      layout='position'
       layoutDependency={drawerState}
       transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
 
-      style={{ borderRadius: 16 }}
+      style={{ borderRadius: 16, visibility: isDrawerOpen ? 'hidden' : 'visible' }}
     >
       <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
         <span className='text-muted-foreground shrink-0'>

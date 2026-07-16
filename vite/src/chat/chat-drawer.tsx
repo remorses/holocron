@@ -16,7 +16,7 @@
 
 import React, { useEffect, useRef, useCallback, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
-import { motion, useReducedMotion } from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { chatStore, CHAT_LAYOUT_ID, CHAT_LAYOUT_TRANSITION } from './chat-store.ts'
 
 function useChatStore<T>(selector: (s: import('./chat-store.ts').ChatState) => T): T {
@@ -219,33 +219,38 @@ function ChatDrawerInner() {
   const portalTarget = useSyncExternalStore(chatWidgetStore.subscribe, getPortalTarget, getNull)
   if (!portalTarget) return null
 
-  // Only mount the shell while open. Shared layoutId morph requires the
-  // previous shell (pill/sidebar) to unmount and this one to mount — keeping
-  // a display:none / visibility:hidden twin does not animate.
-  if (!isOpen) return null
-
   return createPortal(
-    // Single wrapper — z-index 200 beats navbar's z-index 100
+    // Single wrapper — z-index 200 beats navbar's z-index 100.
+    // Always mounted so the AnimatePresence exit clone keeps its stacking
+    // context while the drawer morphs back into the pill/sidebar shell.
     <div style={{ position: 'relative', zIndex: 200 }}>
       {/* Click-catcher — fin.ai style: no dim, page stays visible behind
-       * the frosted glass panel. Clicking outside still closes. */}
-      <div
-        onClick={handleClose}
-        aria-hidden='true'
-        style={{
-          position: 'fixed',
-          inset: 0,
-          pointerEvents: 'auto',
-        }}
-      />
+       * the frosted glass panel. Clicking outside still closes. Rendered
+       * OUTSIDE AnimatePresence so it unmounts instantly on close and the
+       * page is clickable again while the exit morph plays. */}
+      {isOpen && (
+        <div
+          onClick={handleClose}
+          aria-hidden='true'
+          style={{
+            position: 'fixed',
+            inset: 0,
+            pointerEvents: 'auto',
+          }}
+        />
+      )}
 
       {/* Drawer panel — Motion layoutId morphs sidebar widget / pill into this
-       * panel. Frosted glass surface matching fin.ai's conversation panel. */}
+       * panel. AnimatePresence keeps the panel in the DOM while it exits so
+       * closing morphs it back into the pill/sidebar bounds (with crossfade)
+       * instead of vanishing instantly (motion.dev shared layout pattern). */}
+      <AnimatePresence>
+      {isOpen && (
       <motion.div
+        key='holocron-chat-drawer-panel'
         ref={drawerPanelRef}
         className='holocron-chat-drawer-panel'
         layoutId={CHAT_LAYOUT_ID}
-        layout='position'
         layoutDependency={drawerState}
         initial={false}
         transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
@@ -380,6 +385,8 @@ function ChatDrawerInner() {
           </div>
         </div>
       </motion.div>
+      )}
+      </AnimatePresence>
     </div>,
     portalTarget,
   )
