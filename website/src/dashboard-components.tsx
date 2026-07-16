@@ -124,18 +124,21 @@ export function UpgradeBanner({ projectId, isBillingPage }: { projectId: string 
 // ── Theme toggle ────────────────────────────────────────────────────
 
 // Blocking script that runs before first paint to prevent flash of wrong theme.
-// Reads localStorage.theme; falls back to system preference (prefers-color-scheme).
-// Also registers a matchMedia listener so "system" mode reacts to OS changes.
+// Reads the color-theme cookie (shared with holocron docs); falls back to system
+// preference. Uses the same cookie as holocron's theme toggle so dashboard and
+// docs pages always agree on the theme.
 export const DASHBOARD_THEME_SCRIPT = `(function(){
   var d=document.documentElement;
-  var t=localStorage.getItem("theme");
+  var m=document.cookie.match(/(?:^|;\\s*)color-theme=(\\w+)/);
+  var t=m&&m[1];
   var dark;
   if(t==="dark"){dark=true}
   else if(t==="light"){dark=false}
   else{dark=window.matchMedia("(prefers-color-scheme:dark)").matches}
   if(dark)d.classList.add("dark");else d.classList.remove("dark");
   window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",function(e){
-    if(!localStorage.getItem("theme")){
+    var c=document.cookie.match(/(?:^|;\\s*)color-theme=(\\w+)/);
+    if(!c){
       if(e.matches)d.classList.add("dark");else d.classList.remove("dark")
     }
   })
@@ -146,13 +149,13 @@ function setTheme(theme: 'light' | 'dark' | 'system') {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     if (prefersDark) document.documentElement.classList.add('dark')
     else document.documentElement.classList.remove('dark')
-    localStorage.removeItem('theme')
+    document.cookie = 'color-theme=; Path=/; Max-Age=0; SameSite=Lax'
   } else if (theme === 'dark') {
     document.documentElement.classList.add('dark')
-    localStorage.setItem('theme', 'dark')
+    document.cookie = `color-theme=dark; Path=/; Max-Age=31536000; SameSite=Lax`
   } else {
     document.documentElement.classList.remove('dark')
-    localStorage.setItem('theme', 'light')
+    document.cookie = `color-theme=light; Path=/; Max-Age=31536000; SameSite=Lax`
   }
 }
 
