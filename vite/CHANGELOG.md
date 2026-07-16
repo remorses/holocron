@@ -1,5 +1,9 @@
 # @holocron.so/vite
 
+## 0.25.1
+
+1. **Fixed client hydration failure** — disabled `externalizeShared` which caused a circular import map cycle (`Detected cycle while resolving name 'default' in 'react/jsx-runtime'`). This broke all client-side interactivity on deployed sites. Will be re-enabled once spiceflow ships the fix for CJS require errors in federation shared entries.
+
 ## 0.25.0
 
 1. **CSS variables for code blocks, blockquotes, and sidebar navigation** — customize these elements without targeting internal selectors. New variables:
