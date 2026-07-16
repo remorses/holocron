@@ -51,6 +51,11 @@ export type HolocronPluginOptions = {
    * Use this to mount holocron as a child of your own Spiceflow tree.
    */
   entry?: string
+  /**
+   * Share React and Spiceflow through an import map instead of bundling them
+   * into client chunks. Enabled by default. Set to false to bundle them.
+   */
+  externalizeShared?: boolean
   /** Override virtual module source code for runtime-backed experiments. */
   virtualModules?: HolocronVirtualModules
   /**
@@ -1306,14 +1311,15 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   // Custom entries must stay as filesystem entries so vite-rsc can walk their
   // imports and collect Holocron's global CSS under Cloudflare dev.
   if (!hasUserSpiceflowPlugin) {
+    const spiceflowPlugins = spiceflowPlugin({
+      entry: options.entry ?? VIRTUAL_APP,
+      serveStaticImport: '@holocron.so/vite/src/serve-static',
+      externalizeShared: options.externalizeShared !== false,
+    })
     pluginsToReturn.push(
-      spiceflowPlugin({
-        entry: options.entry ?? VIRTUAL_APP,
-        serveStaticImport: '@holocron.so/vite/src/serve-static',
-        // externalizeShared disabled until spiceflow fixes CJS require
-        // errors in federation shared entries (see spiceflow#rsc.9-10)
-        // externalizeShared: true,
-      }),
+      ...(Array.isArray(spiceflowPlugins)
+        ? spiceflowPlugins
+        : [spiceflowPlugins]),
     )
   }
   if (!hasUserTailwindPlugin) {
