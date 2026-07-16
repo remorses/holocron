@@ -16,7 +16,7 @@
 import { Spiceflow, redirect } from 'spiceflow'
 import { Link, ProgressBar, router } from 'spiceflow/react'
 import type * as React from 'react'
-import { getDb, getSession, getProjectSubscription, requireSession } from './db.ts'
+import { getBaseUrl, getDb, getSession, getProjectSubscription, requireSession } from './db.ts'
 import { normalizeAuthRedirectPath } from './auth-redirect.ts'
 import { cn, timeAgo } from './lib/utils.ts'
 import { Button } from './components/ui/button.tsx'
@@ -49,7 +49,7 @@ import {
   CustomDomainsSection,
   DASHBOARD_THEME_SCRIPT,
 } from './dashboard-components.tsx'
-// import { DashboardChat } from './components/dashboard-chat.tsx'
+import { DashboardChat } from './components/dashboard-chat.tsx'
 
 const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
 const CLI_CREATE_COMMAND = 'npx -y "@holocron.so/cli" create'
@@ -259,7 +259,7 @@ export const dashboardApp = new Spiceflow()
           </div>
         </div>
         </div>
-        {/* <DashboardChat /> */}
+        <DashboardChat domain={new URL(getBaseUrl()).host} />
       </div>
     )
   })
