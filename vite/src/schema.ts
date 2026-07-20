@@ -946,6 +946,18 @@ export const assistantSchema = z
           endpoint are all disabled. Defaults to \`true\`
         `,
       ),
+    suggestions: z
+      .array(z.string())
+      .optional()
+      .describe(
+        dedent`
+          Suggested prompts shown on the empty chat screen. Each string is
+          used as both the link label and the submitted prompt. Suggestions
+          ending with "..." fill the input instead of submitting, letting
+          the user complete the query. When omitted, three defaults based
+          on the site name are shown
+        `,
+      ),
   })
   .describe('AI chat assistant settings')
   .meta({ id: 'assistantSchema' })

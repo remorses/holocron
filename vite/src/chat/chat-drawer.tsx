@@ -29,7 +29,7 @@ import {
   ChatLoadingDots,
 } from './chat-message.tsx'
 import { ChatInput } from './chat-input.tsx'
-import { PlusIcon, CloseIcon } from './chat-icons.tsx'
+import { PlusIcon, CloseIcon, SparkleIcon, ArrowRightIcon } from './chat-icons.tsx'
 import { ChatSessionSelect } from './chat-session-select.tsx'
 
 // ── ChatDrawer ───────────────────────────────────────────────────────
@@ -341,7 +341,9 @@ function ChatDrawerInner() {
             gap: '24px',
           }}
         >
-          {!isGenerating && messages.length === 0 && <WelcomeMessage />}
+          {!isGenerating && messages.length === 0 && (
+            <WelcomeMessage onSubmit={handleSubmit} inputRef={drawerInputRef} />
+          )}
 
           {messages.length > 0 && (
             <ChatMessages
@@ -363,13 +365,14 @@ function ChatDrawerInner() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Footer — same muted frame as sidebar assistant. */}
+        {/* Footer — primary-tinted frame so the input reads as the main
+         * affordance of the panel (brightens further on focus). */}
         <div style={{ flexShrink: 0 }}>
           <div
+            className='holocron-chat-input-frame'
             style={{
               margin: '12px',
               borderRadius: '16px',
-              border: '1px solid var(--border)',
             }}
           >
             <ChatInput
@@ -407,29 +410,142 @@ function ChatErrorMessage({ message }: { message: string }) {
 }
 
 // ── Welcome message ──────────────────────────────────────────────────
+//
+// Empty-state screen: sparkle illustration, short pitch, and suggestion
+// links. Suggestions come from docs.json `assistant.suggestions` (via
+// chatWidgetStore); when absent, three site-name-based defaults are shown.
+// A suggestion ending with "..." fills the input instead of submitting.
 
-function WelcomeMessage() {
+// Module-level stable getters for useSyncExternalStore (see AGENTS.md rules)
+const getWidgetSiteName = () => chatWidgetStore.getState().siteName
+const getWidgetSuggestions = () => chatWidgetStore.getState().suggestions
+
+function WelcomeMessage({
+  onSubmit,
+  inputRef,
+}: {
+  onSubmit: (text: string) => void
+  inputRef: React.RefObject<HTMLTextAreaElement | null>
+}) {
+  const siteName = useSyncExternalStore(chatWidgetStore.subscribe, getWidgetSiteName, getWidgetSiteName)
+  const configured = useSyncExternalStore(chatWidgetStore.subscribe, getWidgetSuggestions, getWidgetSuggestions)
+  const reduceMotion = useReducedMotion()
+
+  const suggestions = configured.length > 0
+    ? configured
+    : [
+        siteName ? `What is ${siteName}?` : 'What is this project?',
+        'Guide me through the pages I should read first',
+        'Search the docs for ...',
+      ]
+
+  const handleSuggestion = (text: string) => {
+    // "..." suffix → open-ended prompt: fill the input and let the user
+    // complete the query instead of submitting a half sentence.
+    const openEnded = text.replace(/(\.\.\.|…)\s*$/, '')
+    if (openEnded !== text) {
+      const draft = openEnded.endsWith(' ') ? openEnded : `${openEnded} `
+      chatStore.setState({ draftText: draft })
+      inputRef.current?.focus()
+      return
+    }
+    onSubmit(text)
+  }
+
+  const enter = (delay: number) =>
+    reduceMotion
+      ? {}
+      : {
+          initial: { opacity: 0, y: 10, filter: 'blur(2px)' },
+          animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+          transition: { duration: 0.4, delay, ease: [0.22, 0.61, 0.36, 1] as const },
+        }
+
   return (
     <div
       style={{
         flex: 1,
         display: 'flex',
-        alignItems: 'center',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
         justifyContent: 'center',
-        textAlign: 'center',
-        padding: '40px 20px',
+        textAlign: 'left',
+        padding: '32px 12px',
+        gap: '10px',
       }}
     >
-      <div
+      <motion.div
+        {...enter(0)}
+        aria-hidden='true'
         style={{
-          fontSize: '18px',
-          fontWeight: 600,
-          color: 'var(--muted-foreground)',
-          lineHeight: '1.4',
+          width: '48px',
+          height: '48px',
+          borderRadius: '16px',
+          display: 'grid',
+          placeItems: 'center',
+          color: 'var(--primary)',
+          background: 'color-mix(in srgb, var(--primary) 10%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--primary) 18%, transparent)',
+          marginBottom: '6px',
         }}
       >
-        Hi, I can help you search and explain the docs
-      </div>
+        <SparkleIcon size={24} />
+      </motion.div>
+
+      <motion.div
+        {...enter(0.05)}
+        style={{
+          fontSize: '17px',
+          fontWeight: 600,
+          color: 'var(--foreground)',
+          lineHeight: 1.3,
+          letterSpacing: '-0.01em',
+        }}
+      >
+        {siteName ? `Ask AI about ${siteName}` : 'Ask AI about these docs'}
+      </motion.div>
+
+      <motion.div
+        {...enter(0.1)}
+        style={{
+          fontSize: '13px',
+          color: 'var(--muted-foreground)',
+          lineHeight: 1.5,
+          maxWidth: '300px',
+        }}
+      >
+        Answers come straight from the documentation. I can explain
+        concepts, find examples, and take you to the right page.
+      </motion.div>
+
+      <motion.div
+        {...enter(0.16)}
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          gap: '2px',
+          marginTop: '14px',
+          // Suggestion pills have 12px horizontal padding for the hover bg;
+          // pull the column left so their text aligns with the title above.
+          marginLeft: '-12px',
+        }}
+      >
+        {suggestions.slice(0, 4).map((text) => (
+          <button
+            key={text}
+            type='button'
+            onClick={(e) => {
+              e.stopPropagation()
+              handleSuggestion(text)
+            }}
+            className='holocron-chat-suggestion'
+          >
+            <span>{text.replace(/(\.\.\.|…)\s*$/, '…')}</span>
+            <ArrowRightIcon size={11} />
+          </button>
+        ))}
+      </motion.div>
     </div>
   )
 }

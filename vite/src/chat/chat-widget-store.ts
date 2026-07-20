@@ -18,6 +18,10 @@ export type ChatWidgetConfig = {
   currentSlug: string
   /** Site name shown in welcome message */
   siteName: string
+  /** Suggested prompts shown on the empty chat screen. Empty array → the
+   *  drawer renders default suggestions based on siteName. Suggestions
+   *  ending with "..." fill the input instead of submitting. */
+  suggestions: string[]
   /** Portal target for drawers/tooltips (shadow mount container or document.body) */
   portalTarget: HTMLElement | null
   /** Client-side tools that execute in the browser when the model calls them. */
@@ -40,12 +44,13 @@ export const chatWidgetStore = createStore<ChatWidgetConfig>(() => ({
   chatApiUrl: '',
   currentSlug: '/',
   siteName: '',
+  suggestions: [],
   portalTarget: null,
   tools: [],
   context: {},
   sessionId: null,
   sessions: [],
-  navigate: (path: string) => {
+  navigate: (path) => {
     // Default: pushState + popstate. Overridden by HolocronChatBridge
     // or ChatWidget's navigate prop with the framework's client-side router.
     history.pushState(null, '', path)

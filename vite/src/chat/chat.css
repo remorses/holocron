@@ -1,23 +1,25 @@
 /**
- * Chat widget CSS — single source for both paths:
+ * Chat widget CSS — standalone-widget entry only.
  *
- * 1. Holocron integration: imported by globals.css (@import '../chat/chat.css')
- *    Tailwind directives below are ignored because globals.css already has its
- *    own @import "tailwindcss" with full project scanning.
+ * Fed to the Tailwind CLI by scripts/bundle-chat-css.ts to produce the
+ * self-contained CSS bundle (chat-css-bundle.ts) that ChatShadowHost
+ * injects into the shadow root.
  *
- * 2. Standalone widget: fed to Tailwind CLI as input to produce a self-contained
- *    CSS bundle. scripts/bundle-chat-css.ts embeds the output into
- *    chat-css-bundle.ts for injection into the ChatShadowHost shadow root.
+ * Component classes shared with the embedded holocron path (drawer shadow,
+ * input frame, suggestions, dropdown animation, pill) live in
+ * chat-shared.css, which is imported both here AND by styles/globals.css.
+ * This file only adds the shadow-DOM-specific parts: Tailwind directives,
+ * token defaults, --tw-* fallbacks, and scrollbar styling.
  *
  * Pill ↔ drawer morph uses Motion layoutId (JS), so shadow isolation is fine.
  */
 
 /* ── Tailwind directives (for standalone widget CSS generation) ───────
- * source(none) disables auto-detection; @source "." scans only chat/ files.
- * When imported by globals.css these are harmless (already have tailwindcss). */
+ * @source "." scans only chat/ files. */
 @import "tailwindcss/preflight" layer(base);
 @import "tailwindcss/theme" layer(theme);
 @import "tailwindcss/utilities" layer(utilities);
+@import "./chat-shared.css";
 
 @source ".";
 
@@ -25,6 +27,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --color-card: var(--card);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -128,112 +132,18 @@
   color: var(--prose-text, var(--foreground));
 }
 
-/* ── Fin-style pill trigger (standalone widget mode) ─────────────────
- * Measured on fin.ai: collapsed 300×48px pill, expands on focus
- * with a width transition; surface has blur(10px) + layered shadow.
- * Bottom-center on mobile, bottom-right on desktop.
- *
- * --pill-width: collapsed width (default 300px). Override via ChatWidget
- *   style prop to make the pill narrower or wider.
- * --pill-expand: extra width added on focus (default 100px). The expanded
- *   width is pill-width + pill-expand, keeping expansion relative. */
-/* No CSS transform here — Motion layout morph uses transform, and a static
- * translateX(-50%) would fight the projection. Center on mobile with inset +
- * margin auto instead. */
-.holocron-chat-pill {
-  position: fixed;
-  bottom: 24px;
-  left: 16px;
-  right: 16px;
-  z-index: 199;
-  width: min(var(--pill-width, 300px), calc(100vw - 32px));
-  margin-inline: auto;
-  transition: width 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-.holocron-chat-pill[data-expanded] {
-  width: min(calc(var(--pill-width, 300px) + var(--pill-expand, 100px)), calc(100vw - 32px));
-}
-
-@media (min-width: 640px) {
-  .holocron-chat-pill {
-    left: auto;
-    right: 24px;
-    margin-inline: 0;
-  }
-}
-
-.holocron-chat-pill-surface {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  /* Soft lift: hairline edge + tight contact + wide ambient (low alpha) */
-  box-shadow:
-    0 0 0 1px rgb(0 0 0 / 0.05),
-    0 1px 2px rgb(0 0 0 / 0.04),
-    0 4px 12px rgb(0 0 0 / 0.06),
-    0 12px 28px rgb(0 0 0 / 0.05);
-}
-
-:host(.dark) .holocron-chat-pill-surface,
-:where(.holocron-chat.dark) .holocron-chat-pill-surface {
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.07),
-    0 1px 2px rgb(0 0 0 / 0.2),
-    0 6px 16px rgb(0 0 0 / 0.22),
-    0 16px 36px rgb(0 0 0 / 0.18);
-}
-
-/* Drawer shell elevation — soft, not a black blob */
-.holocron-chat-drawer-panel {
-  box-shadow:
-    0 0 0 1px rgb(0 0 0 / 0.05),
-    0 2px 8px rgb(0 0 0 / 0.04),
-    0 12px 32px rgb(0 0 0 / 0.08),
-    0 24px 48px rgb(0 0 0 / 0.04);
-}
-
-:host(.dark) .holocron-chat-drawer-panel,
-:where(.holocron-chat.dark) .holocron-chat-drawer-panel {
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.06),
-    0 2px 8px rgb(0 0 0 / 0.25),
-    0 16px 40px rgb(0 0 0 / 0.3),
-    0 32px 64px rgb(0 0 0 / 0.2);
-}
-
-/* ── Session dropdown open animation (subtle fade + scale) ───────────── */
-.holocron-dropdown-content {
-  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
-  animation: holocron-dropdown-in 120ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes holocron-dropdown-in {
-  from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .holocron-dropdown-content {
-    animation: none;
-  }
-}
-
-/* ── Loading dots animation ──────────────────────────────────────────── */
-@keyframes holocron-chat-dot {
-  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
-  40% { opacity: 1; transform: scale(1); }
-}
-
 /* ── Default CSS variable values for standalone widget ────────────────
- * :host applies inside shadow DOM; :where(.holocron-chat) applies when
- * imported via globals.css in the non-shadow holocron path. Both use
- * zero specificity so host/user overrides always win. */
+ * :host applies inside shadow DOM; :where(.holocron-chat) covers the
+ * non-shadow host element wrapper. Both use zero specificity so
+ * host/user overrides always win. */
 :host,
 :where(.holocron-chat) {
   color: var(--foreground);
   background-color: var(--background);
   --background: #ffffff;
   --foreground: #0a0a0a;
+  --primary: #0284c7;
+  --primary-foreground: #ffffff;
   --muted: #f5f5f5;
   --muted-foreground: #737373;
   --accent: #f5f5f5;
@@ -260,6 +170,8 @@
 :where(.holocron-chat.dark) {
   --background: #0a0a0a;
   --foreground: #fafafa;
+  --primary: #bae6fd;
+  --primary-foreground: #0a0a0a;
   --muted: #262626;
   --muted-foreground: #a3a3a3;
   --accent: #262626;

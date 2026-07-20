@@ -762,7 +762,13 @@ function normalizeSeo(raw: unknown): HolocronConfig['seo'] {
 function normalizeAssistant(raw: unknown): HolocronConfig['assistant'] {
   if (!raw || typeof raw !== 'object') return { enabled: true }
   const obj = raw as Record<string, unknown>
-  return { enabled: obj.enabled !== false }
+  const suggestions = Array.isArray(obj.suggestions)
+    ? obj.suggestions.filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
+    : undefined
+  return {
+    enabled: obj.enabled !== false,
+    ...(suggestions && suggestions.length > 0 ? { suggestions } : {}),
+  }
 }
 
 function normalizeIntegrations(raw: unknown): HolocronConfig['integrations'] {

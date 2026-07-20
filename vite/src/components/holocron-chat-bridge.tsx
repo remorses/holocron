@@ -26,11 +26,12 @@ export function HolocronChatBridge() {
       chatApiUrl: `${basePath}/holocron-api/chat`,
       currentSlug: currentPageHref || '/',
       siteName: site.config?.name || '',
+      suggestions: site.config?.assistant?.suggestions || [],
       // portalTarget stays null → ChatDrawer falls back to document.body
       // Use spiceflow's router.push for client-side navigation in chat tools
       navigate: (path: string) => router.push(path),
     })
-  }, [basePath, currentPageHref, site.config?.name])
+  }, [basePath, currentPageHref, site.config?.name, site.config?.assistant?.suggestions])
 
   // Eagerly restore the persisted conversation on page load when a session
   // cookie exists. This pre-populates chatStore so the sidebar and drawer

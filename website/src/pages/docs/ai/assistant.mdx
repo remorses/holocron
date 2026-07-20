@@ -24,6 +24,30 @@ The assistant is enabled by default. To disable it:
 
 When disabled, the sidebar widget, chat drawer, and mobile "Ask AI" button are hidden. The chat route still exists and returns `404 Assistant is disabled`.
 
+## Suggested prompts
+
+The empty chat screen shows a short pitch and up to three **suggestion links**. Clicking a suggestion submits it as a prompt. Customize them with `assistant.suggestions`:
+
+```json
+{
+  "assistant": {
+    "suggestions": [
+      "What is Acme?",
+      "Show me the quickstart",
+      "Search the docs for ..."
+    ]
+  }
+}
+```
+
+A suggestion ending with `...` is treated as **open-ended**: clicking it fills the chat input with the text (dots removed) and focuses it, so the user can complete the query before sending.
+
+When `suggestions` is omitted, three defaults based on the site name are shown:
+
+- `What is {site name}?`
+- `Guide me through the pages I should read first`
+- `Search the docs for ...`
+
 ## How it works
 
 The assistant uses the hosted Holocron AI gateway to process questions. When deployed, the docs app sends the current page plus either inline docs in local development or a `docs.zip` URL in production, then streams the answer back into the chat UI.

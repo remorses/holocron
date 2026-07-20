@@ -107,7 +107,7 @@ export function ChatInput({
             disabled={disabled || !value.trim()}
             className={`flex items-center justify-center size-7 rounded-full transition-colors ${
               value.trim()
-                ? 'bg-foreground text-background'
+                ? 'bg-primary text-primary-foreground'
                 : 'bg-foreground/[0.06] text-muted-foreground/50'
             }`}
             aria-label='Send message'

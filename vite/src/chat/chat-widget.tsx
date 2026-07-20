@@ -54,6 +54,10 @@ export type ChatWidgetProps = {
   trigger?: React.ComponentType<{ onClick: () => void }>
   /** Site name shown in the chat panel header */
   siteName?: string
+  /** Suggested prompts shown on the empty chat screen. Suggestions ending
+   *  with "..." fill the input instead of submitting. Defaults based on
+   *  siteName are shown when omitted. */
+  suggestions?: string[]
   /** Current page slug for context (e.g. "/quickstart") */
   currentSlug?: string
   /** Color theme for the chat widget.
@@ -82,6 +86,7 @@ export function ChatWidget({
   domain,
   trigger: TriggerComponent,
   siteName = '',
+  suggestions,
   currentSlug = '/',
   theme = 'system',
   style,
@@ -112,6 +117,7 @@ export function ChatWidget({
       chatApiUrl: `${protocol}://${domain}/holocron-api/chat`,
       currentSlug,
       siteName,
+      suggestions: suggestions ?? [],
       tools: propTools,
       context: context ?? {},
       navigate,
@@ -134,7 +140,7 @@ export function ChatWidget({
         unregisterTool(name)
       }
     }
-  }, [domain, currentSlug, siteName, tools, context, navigate])
+  }, [domain, currentSlug, siteName, suggestions, tools, context, navigate])
 
   // Portal target is set reactively via onMountPoint callback from ChatShadowHost.
   const handleMountPoint = useCallback((mount: HTMLElement) => {

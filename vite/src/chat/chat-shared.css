@@ -1,0 +1,159 @@
+/**
+ * Chat component styles shared by BOTH chat paths:
+ *
+ * 1. Embedded holocron: imported by styles/globals.css into layer(holocron).
+ *    The drawer portals into document.body, so these classes must exist in
+ *    the page stylesheet (they are custom classes, not Tailwind utilities).
+ * 2. Standalone widget: imported by chat.css, compiled into the shadow-DOM
+ *    CSS bundle by scripts/bundle-chat-css.ts.
+ *
+ * Plain CSS only — no Tailwind directives here. Dark variants must match
+ * both `:host(.dark)` (shadow) and `:where(.dark) …` (page `.dark` class,
+ * which also covers `.holocron-chat.dark`).
+ */
+
+/* ── Fin-style pill trigger (standalone widget mode) ─────────────────
+ * Measured on fin.ai: collapsed 300×48px pill, expands on focus
+ * with a width transition; surface has blur(10px) + layered shadow.
+ * Bottom-center on mobile, bottom-right on desktop.
+ *
+ * --pill-width: collapsed width (default 300px). Override via ChatWidget
+ *   style prop to make the pill narrower or wider.
+ * --pill-expand: extra width added on focus (default 100px). The expanded
+ *   width is pill-width + pill-expand, keeping expansion relative. */
+/* No CSS transform here — Motion layout morph uses transform, and a static
+ * translateX(-50%) would fight the projection. Center on mobile with inset +
+ * margin auto instead. */
+.holocron-chat-pill {
+  position: fixed;
+  bottom: 24px;
+  left: 16px;
+  right: 16px;
+  z-index: 199;
+  width: min(var(--pill-width, 300px), calc(100vw - 32px));
+  margin-inline: auto;
+  transition: width 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.holocron-chat-pill[data-expanded] {
+  width: min(calc(var(--pill-width, 300px) + var(--pill-expand, 100px)), calc(100vw - 32px));
+}
+
+@media (min-width: 640px) {
+  .holocron-chat-pill {
+    left: auto;
+    right: 24px;
+    margin-inline: 0;
+  }
+}
+
+.holocron-chat-pill-surface {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  /* Soft lift: hairline edge + tight contact + wide ambient (low alpha) */
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.05),
+    0 1px 2px rgb(0 0 0 / 0.04),
+    0 4px 12px rgb(0 0 0 / 0.06),
+    0 12px 28px rgb(0 0 0 / 0.05);
+}
+
+:host(.dark) .holocron-chat-pill-surface,
+:where(.dark) .holocron-chat-pill-surface {
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.07),
+    0 1px 2px rgb(0 0 0 / 0.2),
+    0 6px 16px rgb(0 0 0 / 0.22),
+    0 16px 36px rgb(0 0 0 / 0.18);
+}
+
+/* Drawer shell elevation — soft, not a black blob */
+.holocron-chat-drawer-panel {
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.05),
+    0 2px 8px rgb(0 0 0 / 0.04),
+    0 12px 32px rgb(0 0 0 / 0.08),
+    0 24px 48px rgb(0 0 0 / 0.04);
+}
+
+:host(.dark) .holocron-chat-drawer-panel,
+:where(.dark) .holocron-chat-drawer-panel {
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.06),
+    0 2px 8px rgb(0 0 0 / 0.25),
+    0 16px 40px rgb(0 0 0 / 0.3),
+    0 32px 64px rgb(0 0 0 / 0.2);
+}
+
+/* ── Chat input frame (drawer footer) ─────────────────────────────────
+ * Primary-tinted border so the input is the visual anchor of the panel.
+ * Brightens + gains a soft halo on focus. */
+.holocron-chat-input-frame {
+  border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.holocron-chat-input-frame:focus-within {
+  border-color: color-mix(in srgb, var(--primary) 60%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.holocron-chat-input-frame textarea {
+  caret-color: var(--primary);
+}
+
+/* ── Welcome screen suggestion links ─────────────────────────────────── */
+.holocron-chat-suggestion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.holocron-chat-suggestion:hover {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.holocron-chat-suggestion svg {
+  flex-shrink: 0;
+  opacity: 0.55;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.holocron-chat-suggestion:hover svg {
+  opacity: 1;
+  transform: translateX(2px);
+}
+
+/* ── Session dropdown open animation (subtle fade + scale) ───────────── */
+.holocron-dropdown-content {
+  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+  animation: holocron-dropdown-in 120ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes holocron-dropdown-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .holocron-dropdown-content {
+    animation: none;
+  }
+}
+
+/* ── Loading dots animation ──────────────────────────────────────────── */
+@keyframes holocron-chat-dot {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}

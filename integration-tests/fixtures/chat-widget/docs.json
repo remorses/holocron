@@ -4,7 +4,12 @@
     "primary": "#0969da"
   },
   "assistant": {
-    "enabled": true
+    "enabled": true,
+    "suggestions": [
+      "What is Chat Test Docs?",
+      "Show me the getting started guide",
+      "Search the docs for ..."
+    ]
   },
   "navigation": {
     "groups": [

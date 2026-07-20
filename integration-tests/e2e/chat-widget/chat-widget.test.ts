@@ -36,6 +36,45 @@ test("sidebar assistant widget is visible on desktop", async ({ page }) => {
   await expect(askAiText).toBeVisible({ timeout: 10000 });
 });
 
+test("welcome screen shows icon, pitch and configured suggestions", async ({ page }) => {
+  // Mobile viewport → "Ask AI" button in the mobile bar opens the drawer
+  // without submitting anything, so the empty welcome screen is visible.
+  await page.setViewportSize({ width: 480, height: 900 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  await page.getByText("Ask AI", { exact: true }).click();
+
+  await expect(page.getByText("Ask AI about Chat Test Docs")).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText("Answers come straight from the documentation", { exact: false })).toBeVisible();
+
+  // Suggestions from docs.json assistant.suggestions
+  const suggestions = page.locator("button.holocron-chat-suggestion");
+  await expect(suggestions).toHaveCount(3);
+  await expect(suggestions.nth(0)).toContainText("What is Chat Test Docs?");
+  await expect(suggestions.nth(1)).toContainText("Show me the getting started guide");
+  // Trailing "..." renders as an ellipsis character
+  await expect(suggestions.nth(2)).toContainText("Search the docs for …");
+});
+
+test("open-ended suggestion fills the input instead of submitting", async ({ page }) => {
+  await page.setViewportSize({ width: 480, height: 900 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  await page.getByText("Ask AI", { exact: true }).click();
+
+  const suggestion = page.locator("button.holocron-chat-suggestion", { hasText: "Search the docs for" });
+  await expect(suggestion).toBeVisible({ timeout: 10000 });
+  await suggestion.click();
+
+  // Input is pre-filled with the open-ended prompt (without the dots) and
+  // no message was submitted (welcome screen still visible).
+  const textarea = page.locator(".holocron-chat-input-frame textarea");
+  await expect(textarea).toHaveValue("Search the docs for ");
+  await expect(page.getByText("Ask AI about Chat Test Docs")).toBeVisible();
+});
+
 test("typing in sidebar input and pressing Enter opens the chat drawer", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");

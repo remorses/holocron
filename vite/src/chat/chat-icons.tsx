@@ -16,6 +16,37 @@ export function InfoCircleIcon({ size = 12 }: { size?: number }) {
   )
 }
 
+export function SparkleIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox='0 0 24 24'
+      fill='currentColor'
+    >
+      <path d='M11.06 3.63a1 1 0 011.88 0l1.62 4.42a1 1 0 00.59.6l4.42 1.61a1 1 0 010 1.88l-4.42 1.62a1 1 0 00-.6.59l-1.61 4.42a1 1 0 01-1.88 0l-1.62-4.42a1 1 0 00-.59-.6l-4.42-1.61a1 1 0 010-1.88l4.42-1.62a1 1 0 00.6-.59l1.61-4.42z' />
+      <path d='M19.3 15.8a.5.5 0 01.94 0l.53 1.43 1.43.53a.5.5 0 010 .94l-1.43.53-.53 1.43a.5.5 0 01-.94 0l-.53-1.43-1.43-.53a.5.5 0 010-.94l1.43-.53.53-1.43z' />
+    </svg>
+  )
+}
+
+export function ArrowRightIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox='0 0 16 16'
+      fill='none'
+      stroke='currentColor'
+      strokeWidth='1.75'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+    >
+      <path d='M3 8h10M9 4l4 4-4 4' />
+    </svg>
+  )
+}
+
 export function ArrowUpIcon({ size = 12 }: { size?: number }) {
   return (
     <svg

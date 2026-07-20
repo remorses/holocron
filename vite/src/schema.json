@@ -1646,6 +1646,13 @@
         "enabled": {
           "description": "Whether to show the AI chat assistant. When `false`, the sidebar\nwidget, chat drawer, mobile \"Ask AI\" button, and the chat API\nendpoint are all disabled. Defaults to `true`",
           "type": "boolean"
+        },
+        "suggestions": {
+          "description": "Suggested prompts shown on the empty chat screen. Each string is\nused as both the link label and the submitted prompt. Suggestions\nending with \"...\" fill the input instead of submitting, letting\nthe user complete the query. When omitted, three defaults based\non the site name are shown",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "additionalProperties": false,

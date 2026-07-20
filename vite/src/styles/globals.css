@@ -7,6 +7,11 @@
 @import '@fontsource-variable/jetbrains-mono';
 @import './editorial.css' layer(holocron);
 @import './editorial-prism.css' layer(holocron);
+/* Chat component classes (drawer shadow, input frame, suggestions, dropdown
+   animation). The chat drawer portals into document.body, so these custom
+   classes must live in the page stylesheet. Shared with the standalone
+   widget's shadow-DOM bundle via chat.css. */
+@import '../chat/chat-shared.css' layer(holocron);
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Scan holocron's own src/ for Tailwind class usage — without this,
