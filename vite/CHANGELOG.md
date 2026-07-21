@@ -1,5 +1,27 @@
 # @holocron.so/vite
 
+## 0.26.0
+
+1. **Redesigned AI chat welcome screen with configurable suggestions** — the empty chat drawer now shows a sparkle illustration, a short pitch of what the assistant can do, and suggestion links styled in the primary color. Suggestions are customizable via `assistant.suggestions` in `docs.json`:
+
+   ```jsonc
+   {
+     "assistant": {
+       "suggestions": [
+         "How do I deploy my site?",
+         "What MDX components are available?",
+         "Search the docs for ..."
+       ]
+     }
+   }
+   ```
+
+   The standalone `ChatWidget` accepts the same list via a `suggestions` prop. When omitted, three defaults based on the site name are shown. A suggestion ending with `...` fills the chat input and focuses it instead of submitting, so the user can complete the query.
+
+2. **Primary-colored chat input** — the drawer input frame and send button now use the primary color instead of gray, with a soft halo on focus.
+
+3. **Fixed missing chat styles in the embedded widget** — drawer shadow, dropdown animation, and pill styles were silently missing in the embedded holocron path (only the standalone shadow-DOM widget loaded them). Shared chat component styles are now loaded in both paths.
+
 ## 0.25.2
 
 1. **Disable `externalizeShared` by default** — shared dependency externalization is now opt-in. Set `externalizeShared: true` in the Holocron plugin options to re-enable it.
