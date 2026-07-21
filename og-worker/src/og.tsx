@@ -110,7 +110,7 @@ function OgTemplate({ iconUrl, title, description, siteName, pageLabel, backgrou
           <div
             style={{
               display: 'flex',
-              alignItems: 'center',
+              alignItems: 'flex-start',
               gap: 24,
             }}
           >
