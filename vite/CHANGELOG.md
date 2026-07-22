@@ -1,5 +1,23 @@
 # @holocron.so/vite
 
+## 0.28.0
+
+1. **New card, table, and blockquote theming tokens** — cards, tables, and blockquotes are now fully customizable from `global.css` via CSS variables:
+
+   ```css
+   :root {
+     --card-padding: 12px;          /* default 16px */
+     --card-border: none;           /* default 1px solid var(--border-subtle) */
+     --card-shadow: 0 0 0 1px ...;  /* default none */
+     --table-radius: 6px;           /* default 0px */
+     --blockquote-font-weight: 500; /* default inherit */
+   }
+   ```
+
+2. **Compact search input for all sites** — search input vertical padding reduced from 6px to 4px (~30px tall instead of ~38px). Focus state now shows a subtle ring glow using `--ring` at 25% opacity.
+
+3. **Fixed sidebar nav scrollbar overlapping items** — the scrollable nav uses padding + negative margin so the OS scrollbar gutter sits outside the content area. Sidebar hover and active pill spread reduced from 4px to 2px for a tighter feel.
+
 ## 0.27.1
 
 1. **Fixed broken logo and favicon on sites with a Vite `base` path** — `logo` and `favicon` paths in `docs.json` are now treated as site-root-relative (Mintlify convention) and the Vite `base` (e.g. `/docs/`) is prepended automatically at render time. Previously the raw path was emitted as-is, which 404'd whenever the built site was served from a different mount point than the hardcoded prefix. If your `docs.json` manually included the base prefix in logo/favicon paths (e.g. `"/docs/logos/logo.svg"` with `base: '/docs/'`), remove the prefix: write `"/logos/logo.svg"` instead.
