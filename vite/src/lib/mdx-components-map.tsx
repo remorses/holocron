@@ -315,7 +315,11 @@ export function renderNode(
     const lang = node.lang || 'bash'
     const isDiagram = lang === 'diagram'
     const meta = parseCodeMeta(node.meta)
-    const showLineNumbers = isDiagram ? false : metaBool(meta.attributes.lines)
+    // Wrapped code has no stable line grid (one logical line can span many
+    // visual lines), so line numbers and the highlight overlay are disabled:
+    // both allocate exactly 1lh per logical line and would misalign.
+    const wrap = metaBool(meta.attributes.wrap) ?? false
+    const showLineNumbers = isDiagram || wrap ? false : metaBool(meta.attributes.lines)
     // Fenced code blocks default to right-edge bleed so the code text lines up
     // with the prose left edge. `bleed=true` → both sides, `bleed=false`/`none`
     // → no bleed. The enum values (both/right/none) also pass through.
@@ -326,9 +330,9 @@ export function renderNode(
         : rawBleed === undefined
           ? 'right'
           : (metaBool(rawBleed) ?? 'right')
-    const highlight = meta.attributes.highlight
+    const highlight = wrap ? undefined : meta.attributes.highlight
     return (
-      <CodeBlock lang={lang} lineHeight={isDiagram ? '1.4' : '1.6'} showLineNumbers={showLineNumbers} bleed={bleed} title={meta.title} highlight={highlight}>
+      <CodeBlock lang={lang} lineHeight={isDiagram ? '1.4' : '1.6'} showLineNumbers={showLineNumbers} bleed={bleed} title={meta.title} highlight={highlight} wrap={wrap}>
         {node.value}
       </CodeBlock>
     )

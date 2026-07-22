@@ -101,6 +101,9 @@ export function SidebarAssistant() {
         onSubmit={handleSubmit}
         onFocus={handleFocus}
         placeholder={`what is ${site.config?.name || 'this page'}?`}
+        // Concentric radius: outer frame is 16px with a 2px gap → 14px keeps
+        // the accent ring visually uniform around the corners.
+        className='rounded-[14px]'
       />
     </motion.div>
   )

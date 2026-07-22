@@ -17,6 +17,7 @@ import {
   StopSquareIcon,
 } from './chat-icons.tsx'
 import { chatWidgetStore } from './chat-widget-store.ts'
+import { cn } from '../lib/css-vars.ts'
 
 // ── Reusable chat input (textarea + send/stop button) ────────────────
 //
@@ -77,7 +78,10 @@ export function ChatInput({
   }
 
   return (
-    <div className={`bg-background rounded-xl p-2 flex flex-col gap-1.5 ${className || ''}`}>
+    // rounded-xl is a fallback; parents that nest this card inside a tinted
+    // frame pass a concentric radius via className (outer radius − gap) so
+    // the frame ring keeps uniform thickness around the corners.
+    <div className={cn('bg-background rounded-xl p-2 flex flex-col gap-1.5', className)}>
       <textarea
         ref={inputRef}
         value={value}

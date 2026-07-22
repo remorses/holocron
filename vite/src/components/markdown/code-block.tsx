@@ -58,6 +58,7 @@ export function CodeBlock({
   bleed = false,
   title,
   highlight,
+  wrap = false,
 }: {
   children: string
   lang?: string
@@ -75,8 +76,17 @@ export function CodeBlock({
   title?: string
   /** Comma-separated line numbers/ranges to highlight, e.g. "1-3,7". */
   highlight?: string
+  /** Soft-wrap long lines instead of horizontal scrolling (Mintlify `wrap` flag). */
+  wrap?: boolean
 }) {
   const lineHeight = lineHeightProp ?? (lang === 'diagram' ? '1.3' : '1.6')
+  // Wrapped code has no stable line grid: one logical line can span several
+  // visual rows, while the number gutter and highlight overlay both allocate
+  // exactly 1lh per logical line. Disable both whenever wrap is on.
+  if (wrap) {
+    showLineNumbers = false
+    highlight = undefined
+  }
   const lines = children.split('\n')
   const [copied, setCopied] = useState(false)
   const handleCopy = useCallback(() => {
@@ -98,7 +108,7 @@ export function CodeBlock({
   const [highlightedHtml, setHighlightedHtml] = useState<string | undefined>(undefined)
   useEffect(() => {
     let cancelled = false
-    import('#prism').then(({ Prism }) => {
+    void import('#prism').then(({ Prism }) => {
       if (cancelled) return
       const prismLang = lang === 'mdx' ? 'markdown' : lang
       const grammar = prismLang ? Prism.languages[prismLang] : undefined
@@ -111,6 +121,13 @@ export function CodeBlock({
   const bleedClassName = bleedClass(bleed)
   const leftBleed = hasLeftBleed(bleed)
 
+  // `wrap` soft-wraps long lines instead of horizontal scrolling. The code
+  // element must be allowed to shrink inside the flex row (minWidth 0) or
+  // pre-wrap has no effect.
+  const codeStyle: React.CSSProperties = wrap
+    ? { whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', minWidth: 0, flex: '1 1 0', background: 'none', padding: 0, lineHeight }
+    : { whiteSpace: 'pre', background: 'none', padding: 0, lineHeight }
+
   /* The figure is the positioning context for the copy button so that
      --code-block-padding-* is respected: the button sits in the top-right
      of the padded frame, not relative to the inner code content.
@@ -122,6 +139,7 @@ export function CodeBlock({
       style={{
         background: 'var(--code-block-background)',
         border: 'var(--code-block-border)',
+        boxShadow: 'var(--code-block-shadow)',
         borderRadius: 'var(--code-block-radius)',
         paddingLeft: 'var(--code-block-padding-x)',
         paddingRight: 'var(--code-block-padding-x)',
@@ -191,13 +209,13 @@ export function CodeBlock({
             {highlightedHtml ? (
               <code
                 className={lang ? `language-${lang}` : undefined}
-                style={{ whiteSpace: 'pre', background: 'none', padding: 0, lineHeight }}
+                style={codeStyle}
                 dangerouslySetInnerHTML={{ __html: highlightedHtml }}
               />
             ) : (
               <code
                 className={lang ? `language-${lang}` : undefined}
-                style={{ whiteSpace: 'pre', background: 'none', padding: 0, lineHeight }}
+                style={codeStyle}
               >
                 {children}
               </code>

@@ -202,14 +202,14 @@ function TocInline({
                   data-active={isActive}
                   data-heading-id={heading.slug}
                   onClick={(e) => notifyHeadingClick(e)}
-                  className={`block leading-5 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
+                  className={`block leading-5 no-underline ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--sidebar-hover-background)]' : ''}`}
                   tabIndex={isDimmed ? -1 : 0}
                   style={{
                     color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
                     fontWeight: 400,
-                    background: isHighlighted ? 'var(--accent)' : undefined,
-                    borderRadius: isHighlighted ? 'var(--radius-sm)' : undefined,
-                    boxShadow: isHighlighted ? '0 0 0 4px var(--accent)' : undefined,
+                    background: isHighlighted ? 'var(--accent)' : isActive ? 'var(--sidebar-active-background)' : undefined,
+                    borderRadius: isHighlighted ? 'var(--radius-sm)' : isActive ? 'var(--sidebar-link-radius)' : undefined,
+                    boxShadow: isHighlighted ? '0 0 0 4px var(--accent)' : isActive ? '0 0 0 4px var(--sidebar-active-background)' : undefined,
                   }}
                 >
                   {heading.text}
@@ -224,7 +224,7 @@ function TocInline({
         <button
           type='button'
           onClick={() => setManuallyExpanded(true)}
-          className='border-none bg-transparent cursor-pointer text-left hover:[background:var(--accent)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--accent)]'
+          className='border-none bg-transparent cursor-pointer text-left hover:[background:var(--sidebar-hover-background)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--sidebar-hover-background)]'
           style={{
             padding: '2px 0',
             marginLeft: '12px',
@@ -273,20 +273,25 @@ function NavPageLink({
   // the sidebar width. Without a badge, text wraps normally.
   const hasBadge = typeof frontmatter.api === 'string' || frontmatter.deprecated || (frontmatter.tag && typeof frontmatter.api !== 'string')
 
+  // --sidebar-active-background marks only the DEEPEST active item: when the
+  // TOC is expanded under this page, the active heading inside it gets the
+  // pill instead of the page link, so there is never a double pill.
+  const showActivePill = isActive && !showToc
+
   return (
     <div className='flex flex-col'>
       <Link
         ref={isHighlighted ? highlightedRef : undefined}
         href={page.href}
-        className={`group flex items-center gap-1.5 no-underline ${!isDimmed ? 'hover:[background:var(--accent)] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
+        className={`group flex items-center gap-1.5 no-underline ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)] hover:[box-shadow:0_0_0_4px_var(--sidebar-hover-background)]' : ''}`}
         style={{
           borderRadius: 'var(--sidebar-link-radius)',
           opacity: isDimmed ? 0.45 : 1,
           color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
           paddingLeft: depth > 0 ? `calc(${depth} * var(--sidebar-indent))` : undefined,
           transition: animate ? 'color 0.15s, opacity 0.15s ease' : 'none',
-          background: isHighlighted ? 'var(--accent)' : undefined,
-          boxShadow: isHighlighted ? '0 0 0 4px var(--accent)' : undefined,
+          background: isHighlighted ? 'var(--accent)' : showActivePill ? 'var(--sidebar-active-background)' : undefined,
+          boxShadow: isHighlighted ? '0 0 0 4px var(--accent)' : showActivePill ? '0 0 0 4px var(--sidebar-active-background)' : undefined,
         }}
       >
         {page.icon && (() => {
@@ -411,7 +416,7 @@ export function NavGroupNode({
         type='button'
         onClick={() => onToggleGroup(groupKey)}
         aria-expanded={isExpanded}
-        className={`flex items-center gap-1 border-none bg-transparent cursor-pointer p-0 text-left ${!isDimmed ? 'hover:[background:var(--accent)] hover:[box-shadow:0_0_0_4px_var(--accent)]' : ''}`}
+        className={`flex items-center gap-1 border-none bg-transparent cursor-pointer p-0 text-left ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)] hover:[box-shadow:0_0_0_4px_var(--sidebar-hover-background)]' : ''}`}
         style={{
           borderRadius: 'var(--sidebar-link-radius)',
           opacity: isDimmed ? 0.45 : 1,

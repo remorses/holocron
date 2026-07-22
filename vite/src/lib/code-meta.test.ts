@@ -47,6 +47,26 @@ describe('parseCodeMeta', () => {
     `)
   })
 
+  test('bare wrap and lines are Mintlify boolean flags, not title words', () => {
+    expect(parseCodeMeta('Wrap example wrap')).toMatchInlineSnapshot(`
+      {
+        "attributes": {
+          "wrap": "true",
+        },
+        "title": "Wrap example",
+      }
+    `)
+    expect(parseCodeMeta('config.yaml lines wrap')).toMatchInlineSnapshot(`
+      {
+        "attributes": {
+          "lines": "true",
+          "wrap": "true",
+        },
+        "title": "config.yaml",
+      }
+    `)
+  })
+
   test('lines={false} keeps string value for consumer to interpret', () => {
     expect(parseCodeMeta('lines={false}')).toMatchInlineSnapshot(`
       {

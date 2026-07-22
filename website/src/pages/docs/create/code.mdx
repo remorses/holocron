@@ -70,6 +70,22 @@ npm install @holocron.so/vite
 ```
 ````
 
+### Wrap
+
+Long lines scroll horizontally by default. Add the bare `wrap` flag (Mintlify-compatible) to soft-wrap them instead — useful for prose-like content such as prompts:
+
+```text Example prompt wrap
+Use the Holocron skill. I have a docs site with a broken sidebar link and I want you to find the page, fix the slug in docs.json, and verify the navigation renders correctly.
+```
+
+````mdx
+```text Example prompt wrap
+Use the Holocron skill. I have a docs site with a broken sidebar link and ...
+```
+````
+
+Wrapped blocks always hide line numbers and ignore `highlight`: a wrapped logical line can span several visual rows, so a per-line number gutter or highlight overlay would misalign.
+
 ### Bleed
 
 Fenced code blocks bleed into the **right** margin by default so the code text lines up with the prose left edge. Set `bleed=true` (or `bleed=both`) to extend into both margins, or `bleed=none` (or `bleed=false`) to keep the block fully inside the content column:

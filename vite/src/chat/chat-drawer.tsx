@@ -384,6 +384,9 @@ function ChatDrawerInner() {
               placeholder='How can I help?'
               textClassName='text-sm'
               textareaRef={drawerInputRef}
+              // Concentric radius: 16px frame with a 1px border → 15px keeps
+              // the border ring uniform around the corners.
+              className='rounded-[15px]'
             />
           </div>
         </div>

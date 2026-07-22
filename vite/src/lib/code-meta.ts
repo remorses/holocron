@@ -5,8 +5,9 @@
  *   ```js title.ts bleed lines key="value" expr={false}
  *
  * All values are returned as strings. Braces are unwrapped: `{false}` → "false".
- * Bare words (no `=`) accumulate into a multi-word title (Mintlify convention).
- * Use key=value syntax for boolean flags: `bleed=true`, `lines=false`.
+ * Bare words (no `=`) accumulate into a multi-word title (Mintlify convention),
+ * except the exact tokens `wrap` and `lines` which are Mintlify boolean flags.
+ * Other boolean flags use key=value syntax: `bleed=true`, `lines=false`.
  *
  * Use `metaBool()` at the consumer level to interpret string values as booleans.
  */
@@ -161,8 +162,15 @@ export function parseCodeMeta(meta: string | null | undefined): ParsedCodeMeta {
       continue
     }
 
-    // All bare words (no `=`) are accumulated into the title.
-    // To set boolean flags use key=value syntax: `bleed=true`, `lines=true`.
+    // Mintlify-compatible bare boolean flags: ```text My title wrap
+    // The exact lowercase tokens `wrap` and `lines` are flags, not title words.
+    if (token.value === 'wrap' || token.value === 'lines') {
+      attributes[token.value] = 'true'
+      continue
+    }
+
+    // All other bare words (no `=`) are accumulated into the title.
+    // Boolean flags can also use key=value syntax: `bleed=true`, `lines=false`.
     titleParts.push(token.value)
   }
 

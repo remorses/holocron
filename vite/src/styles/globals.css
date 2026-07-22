@@ -127,6 +127,7 @@
      The copy button auto-aligns to the top-right of the padded frame. */
   --code-block-background: transparent;
   --code-block-border: none;
+  --code-block-shadow: none;
   --code-block-radius: 0px;
   --code-block-padding-x: 0px;
   --code-block-padding-y: 0.5rem;
@@ -139,6 +140,18 @@
   --sidebar-group-margin-top: 12px;
   --sidebar-link-radius: 0px;
   --sidebar-indent: 12px;
+  /* Background pill behind the deepest active sidebar item: the active TOC
+     heading when the current page's TOC is expanded, otherwise the page link
+     itself. Transparent by default (active state is color-only); override to
+     get a highlighted pill, e.g. rgba(6, 122, 34, 0.1). */
+  --sidebar-active-background: transparent;
+  /* Hover background on sidebar links, group toggles, and TOC headings.
+     Defaults to the global accent; override to decouple sidebar hover from
+     the brand accent, e.g. a neutral rgba(0, 0, 0, 0.06). */
+  --sidebar-hover-background: var(--accent);
+  /* Search input rounding. Default is the pill look; lower it for a
+     compact rectangular input. */
+  --search-input-radius: var(--radius-xl);
 
   /* Bleed: mobile-first (0), enabled at lg where grid has room.
      Code blocks (.bleed class) and images (<Bleed> wrapper) extend by
@@ -354,7 +367,7 @@
   /* Search input border + focus ring */
   .search-input {
     border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
+    border-radius: var(--search-input-radius);
     transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.1s ease;
   }
   .search-input:focus {
