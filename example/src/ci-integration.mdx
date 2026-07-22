@@ -1,0 +1,72 @@
+---
+title: CI integration
+description: Run Playwriter automations in GitHub Actions, GitLab CI, and other CI systems.
+icon: git-branch
+---
+
+Playwriter runs in CI without a display server by connecting to a headless Chrome instance.
+
+## GitHub Actions
+
+```yaml
+name: Browser tests
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npx playwright install chromium
+      - run: npx playwriter session new --headless
+      - run: npx playwriter -e "page.goto('https://example.com')"
+```
+
+## GitLab CI
+
+```yaml
+browser-tests:
+  image: node:20
+  script:
+    - npm ci
+    - npx playwright install chromium
+    - npx playwriter session new --headless
+    - npx playwriter -e "page.goto('https://example.com')"
+```
+
+## Docker
+
+```dockerfile
+FROM node:20-slim
+RUN npx playwright install --with-deps chromium
+COPY . .
+RUN npm ci
+CMD ["npx", "playwriter", "session", "new", "--headless"]
+```
+
+## Artifacts
+
+Save screenshots and traces as CI artifacts for failed runs.
+
+```yaml
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwriter-traces
+          path: /tmp/traces/
+```
+
+## Parallelism
+
+Run multiple sessions in parallel CI jobs. Each job gets its own headless browser.
+
+## Timeouts
+
+Set CI-appropriate timeouts to avoid hung jobs:
+
+```bash
+PLAYWRITER_TIMEOUT=60000 npx playwriter -e "page.goto('https://slow-site.com')"
+```

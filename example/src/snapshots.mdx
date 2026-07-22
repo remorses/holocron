@@ -1,0 +1,59 @@
+---
+title: Accessibility snapshots
+description: Capture a structured snapshot of interactive elements on the current page.
+icon: camera
+---
+
+Snapshots are the primary way agents understand page state. A snapshot lists every interactive element with its ARIA role, accessible name, bounding box, and a short ref ID for targeting.
+
+## Taking a snapshot
+
+```ts
+const snap = await snapshot({ page })
+console.log(snap)
+```
+
+## Snapshot format
+
+Each line describes one interactive element:
+
+```text wrap
+[e1] button "Menu" (32x32 at 16,16)
+[e2] link "Home" (48x20 at 80,18)
+[e3] input[type=search] "Search docs..." (240x36 at 200,14)
+```
+
+The `[e1]` ref ID is stable within a single snapshot but changes across snapshots.
+
+## Filtering by role
+
+Pass a role filter to reduce noise on complex pages.
+
+```ts
+const buttons = await snapshot({ page, role: 'button' })
+const links = await snapshot({ page, role: 'link' })
+```
+
+## Viewport-only mode
+
+By default, snapshots include all elements in the DOM, even those off-screen. Use `viewport: true` to limit to visible elements.
+
+```ts
+const visible = await snapshot({ page, viewport: true })
+```
+
+## Diffing snapshots
+
+Compare two snapshots to detect page changes after an action.
+
+```ts
+const before = await snapshot({ page })
+await page.locator('aria-ref=e4').click()
+const after = await snapshot({ page })
+const diff = diffSnapshots(before, after)
+console.log(diff.added, diff.removed, diff.changed)
+```
+
+## Snapshot in CI
+
+Snapshots are deterministic given the same page state. Use them in CI to verify UI structure without pixel-level screenshot comparisons.

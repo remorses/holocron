@@ -44,7 +44,7 @@
               {
                 "group": "Guides",
                 "icon": "map",
-                "pages": ["navigation", "theming", "search"]
+                "pages": ["navigation", "theming", "search", "selectors", "snapshots", "sessions", "network", "screenshots", "collaboration", "debugging", "ci-integration"]
               },
               {
                 "group": "Reference",

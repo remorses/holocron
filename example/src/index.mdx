@@ -494,3 +494,190 @@ accepts connections from the extension. No remote server, no account, no telemet
 - **Origin validation** — only the Playwriter extension origin is accepted. Browsers cannot spoof the Origin header, so malicious websites cannot connect.
 - **Explicit consent** — only tabs where you clicked the extension icon are controlled. No background access.
 - **Visible automation** — Chrome shows an automation banner on controlled tabs.
+
+## Authentication flows
+
+Playwriter excels at automating login flows because it uses your real browser with existing cookies and sessions. When an agent needs to interact with authenticated pages, it simply inherits whatever login state already exists in Chrome.
+
+For multi-account workflows, create separate Chrome profiles and connect each to a different Playwriter session. The extension manages CDP connections per-profile.
+
+```ts
+// already logged into GitHub in this Chrome profile
+await page.goto('https://github.com/settings/profile')
+const name = await page.locator('#user_profile_name').inputValue()
+console.log('Logged in as:', name)
+```
+
+## Form filling
+
+Playwriter handles all HTML form elements: text inputs, selects, checkboxes, radio buttons, file uploads, date pickers, and rich text editors.
+
+```ts
+await page.locator('#name').fill('Jane Doe')
+await page.locator('select#country').selectOption('US')
+await page.locator('input[type=checkbox]#terms').check()
+await page.locator('input[type=file]').setInputFiles('/tmp/resume.pdf')
+```
+
+For date pickers implemented as custom widgets (not native `<input type="date">`), use the calendar UI through click sequences or inject the value directly.
+
+## Keyboard shortcuts
+
+Send keyboard shortcuts to trigger app actions that have no clickable button.
+
+```ts
+await page.keyboard.press('Control+Shift+P') // open command palette
+await page.keyboard.type('format document')
+await page.keyboard.press('Enter')
+```
+
+Modifier keys: `Control`, `Shift`, `Alt`, `Meta` (Cmd on macOS).
+
+## Mouse interactions
+
+Beyond clicks, Playwriter supports hover, drag-and-drop, and scroll gestures.
+
+```ts
+// hover to reveal a tooltip
+await page.locator('.info-icon').hover()
+
+// drag and drop
+await page.locator('#item-3').dragTo(page.locator('#dropzone'))
+
+// scroll to bottom
+await page.mouse.wheel(0, 10000)
+```
+
+## File downloads
+
+Intercept and save file downloads triggered by clicking export buttons or download links.
+
+```ts
+const downloadPromise = page.waitForEvent('download')
+await page.locator('text=Export CSV').click()
+const download = await downloadPromise
+await download.saveAs('/tmp/report.csv')
+console.log('Downloaded:', download.suggestedFilename())
+```
+
+## Popup and dialog handling
+
+Handle `alert()`, `confirm()`, and `prompt()` dialogs automatically.
+
+```ts
+page.on('dialog', async (dialog) => {
+  console.log('Dialog:', dialog.type(), dialog.message())
+  if (dialog.type() === 'confirm') {
+    await dialog.accept()
+  } else {
+    await dialog.dismiss()
+  }
+})
+```
+
+New tabs opened by `window.open()` are captured as new pages in the same context.
+
+## Multi-tab workflows
+
+Some workflows span multiple tabs — OAuth flows, payment redirects, or "open in new tab" links.
+
+```ts
+const [newPage] = await Promise.all([
+  context.waitForEvent('page'),
+  page.locator('text=Open settings').click(), // opens new tab
+])
+await newPage.waitForLoadState()
+console.log('New tab URL:', newPage.url())
+```
+
+## Geolocation and permissions
+
+Override browser geolocation and permissions for testing location-aware features.
+
+```ts
+await context.setGeolocation({ latitude: 37.7749, longitude: -122.4194 })
+await context.grantPermissions(['geolocation'])
+await page.goto('https://maps.example.com')
+```
+
+## Mobile emulation
+
+Emulate mobile devices for responsive testing.
+
+```ts
+await page.setViewportSize({ width: 375, height: 812 }) // iPhone X
+await page.emulateMedia({ colorScheme: 'dark' })
+```
+
+## Performance metrics
+
+Collect Web Vitals and other performance metrics during automation.
+
+```ts
+const metrics = await page.evaluate(() => {
+  const entries = performance.getEntriesByType('navigation')
+  const nav = entries[0]
+  return {
+    domContentLoaded: nav.domContentLoadedEventEnd,
+    loadComplete: nav.loadEventEnd,
+    transferSize: nav.transferSize,
+  }
+})
+console.log('Page load metrics:', metrics)
+```
+
+## Cookie management
+
+Read, set, and clear cookies for session management.
+
+```ts
+// read all cookies
+const cookies = await context.cookies()
+console.log(cookies.map(c => `${c.name}=${c.value}`).join('; '))
+
+// set a cookie
+await context.addCookies([{
+  name: 'session', value: 'abc123',
+  domain: '.example.com', path: '/',
+}])
+
+// clear all cookies
+await context.clearCookies()
+```
+
+## Local storage
+
+Access and modify localStorage for debugging or test setup.
+
+```ts
+// read
+const token = await page.evaluate(() => localStorage.getItem('auth_token'))
+
+// write
+await page.evaluate(() => localStorage.setItem('feature_flag', 'true'))
+
+// clear
+await page.evaluate(() => localStorage.clear())
+```
+
+## Error recovery
+
+Build resilient automations that recover from transient failures.
+
+```ts
+async function withRetry(fn, maxAttempts = 3) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn()
+    } catch (err) {
+      if (attempt === maxAttempts) throw err
+      console.log(`Attempt ${attempt} failed, retrying...`)
+      await page.waitForTimeout(1000 * attempt)
+    }
+  }
+}
+
+await withRetry(async () => {
+  await page.locator('text=Submit').click()
+  await page.waitForResponse('**/api/submit')
+})

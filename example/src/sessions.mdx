@@ -1,0 +1,53 @@
+---
+title: Sessions
+description: Manage isolated browser sessions for parallel agent workflows.
+icon: layers
+---
+
+Each Playwriter session is an isolated sandbox with its own tab, cookies, and state. Multiple agents can run sessions in parallel without interference.
+
+## Creating a session
+
+```bash
+playwriter session new
+# outputs: Session 1 created
+```
+
+## Listing sessions
+
+```bash
+playwriter session list
+```
+
+## Running code in a session
+
+```bash
+playwriter -s 1 -e "page.goto('https://example.com')"
+```
+
+## Session lifecycle
+
+Sessions persist until explicitly closed or the browser restarts. The extension icon shows green when a session is active.
+
+## Parallel sessions
+
+Run multiple sessions simultaneously for parallel workflows:
+
+```bash
+playwriter session new  # Session 1
+playwriter session new  # Session 2
+playwriter -s 1 -e "page.goto('https://site-a.com')" &
+playwriter -s 2 -e "page.goto('https://site-b.com')" &
+wait
+```
+
+## Session isolation
+
+Each session has its own cookies, localStorage, and IndexedDB. Actions in one session never affect another.
+
+## Closing sessions
+
+```bash
+playwriter session close 1
+playwriter session close --all
+```

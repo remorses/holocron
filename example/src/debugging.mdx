@@ -1,0 +1,75 @@
+---
+title: Debugging
+description: Debug failing workflows with snapshots, traces, and the visual inspector.
+icon: bug
+---
+
+When a workflow fails, Playwriter gives you several tools to understand what went wrong.
+
+## Error snapshots
+
+When an action fails, Playwriter automatically captures a snapshot of the page state at the moment of failure.
+
+```text error output wrap
+ActionError: locator('aria-ref=e12') - element not found
+  Snapshot at failure:
+  [e1] button "Menu" (32x32 at 16,16)
+  [e2] link "Home" (48x20 at 80,18)
+  ...no element with ref e12 found
+```
+
+## Trace viewer
+
+Record a trace of every action, network request, and console log.
+
+```bash
+playwriter -s 1 --trace -e "
+  page.goto('https://example.com')
+  page.locator('text=Login').click()
+  page.locator('#email').fill('user@test.com')
+"
+```
+
+The trace file can be opened in Playwright's trace viewer:
+
+```bash
+npx playwright show-trace trace.zip
+```
+
+## Console logs
+
+Forward browser console output to the terminal.
+
+```ts
+page.on('console', (msg) => console.log(`[browser] ${msg.type()}: ${msg.text()}`))
+```
+
+## Network failures
+
+Listen for failed network requests to catch API errors.
+
+```ts
+page.on('requestfailed', (req) => {
+  console.error(`Failed: ${req.method()} ${req.url()} - ${req.failure()?.errorText}`)
+})
+```
+
+## Page crashes
+
+Detect and handle page crashes gracefully.
+
+```ts
+page.on('crash', () => {
+  console.error('Page crashed! Taking recovery snapshot...')
+})
+```
+
+## Step-by-step execution
+
+Add `pause()` calls to stop execution and inspect page state interactively.
+
+```ts
+await page.goto('https://example.com')
+await page.pause() // opens the Playwright inspector
+await page.locator('text=Submit').click()
+```

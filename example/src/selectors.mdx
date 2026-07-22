@@ -1,0 +1,137 @@
+---
+title: Selectors
+description: How to target elements on a page using CSS selectors, ARIA refs, and text matchers.
+icon: crosshair
+---
+
+Playwriter supports three selector strategies for targeting elements. Each has trade-offs between precision, readability, and resilience to DOM changes.
+
+## CSS selectors
+
+Standard CSS selectors work for any element. Use them when you have stable class names or data attributes.
+
+```ts
+await page.locator('button.submit-btn').click()
+await page.locator('[data-testid="login-form"]').fill('user@example.com')
+```
+
+CSS selectors are fast but brittle when class names change between deploys.
+
+## ARIA refs
+
+ARIA refs use the accessibility tree, which is more stable than DOM structure. Playwriter assigns short ref IDs to interactive elements in snapshots.
+
+```ts
+// from a snapshot: aria-ref=e5 points to the "Submit" button
+await page.locator('aria-ref=e5').click()
+```
+
+ARIA refs change between snapshots but are always correct within a single snapshot cycle.
+
+## Text matchers
+
+Match elements by their visible text content. Best for buttons and links with unique labels.
+
+```ts
+await page.locator('text=Sign In').click()
+await page.locator('text=Accept cookies').click()
+```
+
+Text matchers break when the UI is localized or the copy changes.
+
+## Combining strategies
+
+Chain selectors for precision when a single strategy is ambiguous.
+
+```ts
+// CSS + text: button inside a specific form
+await page.locator('form#login >> text=Submit').click()
+```
+
+## Waiting for elements
+
+All selectors auto-wait for the element to appear and become actionable (visible, enabled, not obscured). The default timeout is 30 seconds.
+
+```ts
+// explicit wait with custom timeout
+await page.locator('text=Dashboard').waitFor({ timeout: 10000 })
+```
+
+## Shadow DOM
+
+Playwriter pierces shadow DOM by default. Selectors reach into shadow roots without any special syntax.
+
+```ts
+// targets an element inside a web component's shadow root
+await page.locator('my-component >> button.inner').click()
+```
+
+## iframes
+
+Use `frame()` to switch into an iframe before selecting elements inside it.
+
+```ts
+const frame = page.frame({ url: /checkout/ })
+await frame.locator('input[name="card"]').fill('4242424242424242')
+```
+
+## Best practices
+
+1. Prefer ARIA refs from snapshots for agent-driven flows
+2. Use `data-testid` attributes for stable programmatic selectors
+3. Avoid selectors that depend on DOM depth or sibling order
+4. Combine text + CSS when text alone matches multiple elements
+
+## Debugging selectors
+
+Run `snapshot({ page })` to get a numbered list of interactive elements. Each element shows its ARIA ref, role, name, and bounding box.
+
+```bash
+playwriter -e "snapshot({ page })"
+```
+
+The snapshot output looks like this:
+
+```text snapshot output wrap
+[e1] button "Menu" (32x32 at 16,16)
+[e2] link "Home" (48x20 at 80,18)
+[e3] input[type=search] "Search docs..." (240x36 at 200,14)
+[e4] button "Sign In" (80x36 at 1200,14)
+[e5] link "Getting Started" (120x20 at 40,180)
+```
+
+## Performance tips
+
+Avoid broad selectors like `div > div > span` that force the engine to walk the entire DOM tree. Narrow selectors with IDs or data attributes are 10-100x faster on complex pages.
+
+## Selector priority
+
+When multiple elements match, Playwriter picks the first visible, actionable match in DOM order. Use `nth=` to disambiguate.
+
+```ts
+// click the second "Delete" button on the page
+await page.locator('text=Delete >> nth=1').click()
+```
+
+## XPath (escape hatch)
+
+XPath is supported as a last resort for legacy pages with no semantic markup.
+
+```ts
+await page.locator('xpath=//table/tbody/tr[3]/td[2]').click()
+```
+
+Avoid XPath in new code; it couples tests to exact DOM structure.
+
+## Custom selector engines
+
+Register custom selector engines for domain-specific targeting.
+
+```ts
+await page.addSelectorEngine('react', {
+  query: (root, selector) => root.querySelector(`[data-reactid="${selector}"]`),
+  queryAll: (root, selector) => [...root.querySelectorAll(`[data-reactid="${selector}"]`)],
+})
+
+await page.locator('react=component-42').click()
+```

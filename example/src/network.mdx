@@ -1,0 +1,62 @@
+---
+title: Network interception
+description: Intercept, modify, and mock network requests during automation.
+icon: wifi
+---
+
+Playwriter can intercept HTTP requests and responses, letting agents mock APIs, block resources, or inspect traffic.
+
+## Intercepting requests
+
+```ts
+await page.route('**/api/users', (route) => {
+  route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify([{ id: 1, name: 'Test User' }]),
+  })
+})
+```
+
+## Blocking resources
+
+Speed up page loads by blocking images, fonts, or analytics scripts.
+
+```ts
+await page.route('**/*.{png,jpg,gif}', (route) => route.abort())
+await page.route('**/analytics/**', (route) => route.abort())
+```
+
+## Modifying responses
+
+Transform response bodies before the page receives them.
+
+```ts
+await page.route('**/api/config', async (route) => {
+  const response = await route.fetch()
+  const json = await response.json()
+  json.featureFlags.darkMode = true
+  route.fulfill({ response, body: JSON.stringify(json) })
+})
+```
+
+## Recording HAR files
+
+Capture all network traffic to a HAR file for later analysis.
+
+```ts
+await page.routeFromHAR('traffic.har', { update: true })
+// ... run your workflow ...
+await page.close() // HAR is saved on close
+```
+
+## Waiting for responses
+
+Wait for a specific API call to complete before proceeding.
+
+```ts
+const responsePromise = page.waitForResponse('**/api/submit')
+await page.locator('text=Submit').click()
+const response = await responsePromise
+console.log(response.status(), await response.json())
+```

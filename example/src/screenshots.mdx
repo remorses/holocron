@@ -1,0 +1,51 @@
+---
+title: Screen recording
+description: Capture screenshots and record video during automation sessions.
+icon: monitor
+---
+
+Playwriter can capture screenshots of the current viewport or full page, and record video of the entire session for debugging.
+
+## Full-page screenshot
+
+```ts
+await page.screenshot({ path: '/tmp/full.png', fullPage: true })
+```
+
+## Element screenshot
+
+Capture a single element without the surrounding page.
+
+```ts
+const card = page.locator('.product-card').first()
+await card.screenshot({ path: '/tmp/card.png' })
+```
+
+## Clipped region
+
+Capture a specific rectangular area of the viewport.
+
+```ts
+await page.screenshot({
+  path: '/tmp/header.png',
+  clip: { x: 0, y: 0, width: 1440, height: 80 },
+})
+```
+
+## Video recording
+
+Enable video recording when creating a session.
+
+```ts
+const context = await browser.newContext({
+  recordVideo: { dir: '/tmp/videos/', size: { width: 1280, height: 720 } },
+})
+```
+
+## PDF export
+
+Export the current page as a PDF (Chromium only).
+
+```ts
+await page.pdf({ path: '/tmp/page.pdf', format: 'A4' })
+```

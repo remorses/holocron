@@ -1,0 +1,38 @@
+---
+title: Collaboration
+description: Share sessions between agents and human operators.
+icon: users
+---
+
+Multiple agents and humans can connect to the same browser session simultaneously. The relay multiplexes CDP commands so every participant sees the same live page.
+
+## Sharing a session
+
+The session ID is all you need. Any CLI instance or MCP client that knows the ID can send commands.
+
+```bash
+# Agent A creates the session
+playwriter session new  # Session 3
+
+# Agent B joins by ID
+playwriter -s 3 -e "snapshot({ page })"
+```
+
+## Human + agent pairing
+
+An agent can automate while a human watches in the same Chrome tab. The human can intervene at any point by clicking or typing; the agent sees the changes in the next snapshot.
+
+## Conflict resolution
+
+When two participants send commands simultaneously, the relay serializes them in arrival order. There is no locking mechanism; participants should coordinate via their own protocol.
+
+## Session transfer
+
+Transfer ownership of a session to another agent by passing the session ID. The original agent can disconnect without affecting the session.
+
+```bash
+# Agent A finishes setup, hands off to Agent B
+playwriter -s 3 -e "console.log('Setup complete, handing off')"
+# Agent B takes over
+playwriter -s 3 -e "page.goto('https://example.com/dashboard')"
+```
