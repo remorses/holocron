@@ -79,6 +79,7 @@ export function Blockquote({ children }: { children: React.ReactNode }) {
     <blockquote className='no-bleed flex flex-col gap-(--prose-gap) pl-4 italic' style={{
       borderLeft: 'var(--blockquote-border-width) solid var(--blockquote-border-color)',
       color: 'var(--muted-foreground)',
+      fontWeight: 'var(--blockquote-font-weight)',
     }}>
       {children}
     </blockquote>

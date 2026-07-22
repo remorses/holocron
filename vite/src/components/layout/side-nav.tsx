@@ -230,7 +230,7 @@ export function SideNav() {
           placeholder={siteConfig.search.prompt || 'Search...'}
           className={`w-full outline-none box-border search-input${query ? ' search-input-active' : ''}`}
           style={{
-            padding: '6px 34px 6px 28px',
+            padding: '4px 34px 4px 28px',
             fontFamily: 'var(--font-sans)',
             fontWeight: 'var(--weight-prose)',
             color: 'var(--foreground)',
@@ -308,7 +308,7 @@ export function SideNav() {
           <button
             type='button'
             onClick={handleSearchWithAi}
-            className='group flex items-center gap-1.5 no-underline w-full text-left cursor-pointer border-none bg-transparent p-0 hover:[background:var(--sidebar-hover-background)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--sidebar-hover-background)]'
+            className='group flex items-center gap-1.5 no-underline w-full text-left cursor-pointer border-none bg-transparent p-0 hover:[background:var(--sidebar-hover-background)] hover:rounded-sm hover:[box-shadow:0_0_0_2px_var(--sidebar-hover-background)]'
             style={{
               font: 'inherit',
               color: 'var(--sidebar-foreground)',
@@ -337,7 +337,7 @@ function SidebarAnchors({ anchors }: { anchors: SidebarAnchor[] }) {
             key={anchor.href}
             href={anchor.href}
             {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-            className='no-underline flex items-center gap-1.5 hover:[background:var(--sidebar-hover-background)] hover:rounded-sm hover:[box-shadow:0_0_0_4px_var(--sidebar-hover-background)]'
+            className='no-underline flex items-center gap-1.5 hover:[background:var(--sidebar-hover-background)] hover:rounded-sm hover:[box-shadow:0_0_0_2px_var(--sidebar-hover-background)]'
             style={{
               color: 'var(--sidebar-foreground)',
               fontVariationSettings: '"wght" 450',

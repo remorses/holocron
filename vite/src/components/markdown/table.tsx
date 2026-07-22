@@ -16,6 +16,7 @@ export function Table({ className, ...props }: ComponentProps<'table'>) {
           'w-full min-w-full caption-bottom text-left text-sm text-foreground',
           className,
         )}
+        style={{ borderRadius: 'var(--table-radius)' }}
         {...props}
       />
     </div>

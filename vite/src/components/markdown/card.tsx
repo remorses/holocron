@@ -49,7 +49,7 @@ export function Card({
   const external = isExternalHref(href, data?.site?.origin)
   const showArrow = arrow ?? external
   const content = (
-    <div className={cn('group/card relative flex h-full flex-col gap-2 rounded-lg border border-border-subtle bg-card p-4 transition-colors duration-150', href && !disabled && 'hover:bg-accent', horizontal && 'flex-row items-center', disabled && 'opacity-50', className)}>
+    <div className={cn('group/card relative flex h-full flex-col gap-2 rounded-lg bg-card transition-colors duration-150', href && !disabled && 'hover:bg-accent', horizontal && 'flex-row items-center', disabled && 'opacity-50', className)} style={{ padding: 'var(--card-padding)', border: 'var(--card-border)', boxShadow: 'var(--card-shadow)' }}>
       {img && <img src={img} alt='' className='w-full rounded-lg border border-border-subtle' style={{ maxWidth: '100%', height: 'auto' }} />}
       <div className='flex items-center gap-2'>
         {renderCompatIcon({ icon, iconType, size: 16, color })}

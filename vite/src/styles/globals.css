@@ -132,9 +132,18 @@
   --code-block-padding-x: 0px;
   --code-block-padding-y: 0.5rem;
 
-  /* Blockquote — override border width/color for `> quoted text`. */
+  /* Blockquote — override border width/color/weight for `> quoted text`. */
   --blockquote-border-width: 3px;
   --blockquote-border-color: var(--border);
+  --blockquote-font-weight: inherit;
+
+  /* Card — override frame styling for <Card> / <CardGroup> link cards. */
+  --card-padding: 16px;
+  --card-border: 1px solid var(--border-subtle);
+  --card-shadow: none;
+
+  /* Table — override corner rounding for markdown tables. */
+  --table-radius: 0px;
 
   /* Sidebar nav — spacing and link styling */
   --sidebar-group-margin-top: 12px;
@@ -371,7 +380,8 @@
     transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.1s ease;
   }
   .search-input:focus {
-    border-color: var(--muted-foreground);
+    border-color: var(--ring);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 25%, transparent);
   }
   .search-input-active {
     border-color: var(--primary);
