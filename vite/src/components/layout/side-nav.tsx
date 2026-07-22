@@ -278,8 +278,11 @@ export function SideNav() {
       </div>
 
       {/* `pl-1` gives the search-highlight box-shadow 4px of horizontal
-          clearance inside nav's overflow-y-auto clip. */}
-      <nav aria-label='Navigation' className='slot-sidebar-nav overflow-y-auto scrollbar-stable min-h-0 pl-1 pr-1 pb-6 flex flex-col gap-2'>
+          clearance inside nav's overflow-y-auto clip. `pr-3 -mr-2` pushes
+          content away from the OS scrollbar gutter (12px padding) while
+          pulling the nav edge back out (−8px margin) so the scrollbar sits
+          in the margin area instead of overlapping nav items. */}
+      <nav aria-label='Navigation' className='slot-sidebar-nav overflow-y-auto scrollbar-stable min-h-0 pl-1 pr-3 -mr-2 pb-6 flex flex-col gap-2'>
         {/* Sidebar anchors — external links like GitHub, Discord, etc.
             Rendered above the nav groups, matching Mintlify's sidebar anchor placement. */}
         {sidebarAnchors.length > 0 && (
