@@ -1,0 +1,86 @@
+---
+title: Table of Contents
+sidebarTitle: Table of Contents
+description: Show a "On this page" sidebar with heading links.
+icon: table-of-contents
+---
+
+# Table of Contents
+
+The `TableOfContentsPanel` component renders a vertical list of heading links in the right sidebar with active-state tracking. It highlights the currently visible section as the user scrolls.
+
+```mdx
+<Aside full>
+  <TableOfContentsPanel />
+</Aside>
+```
+
+<Aside>
+<Note>
+Wrap `TableOfContentsPanel` in `<Aside full>` so it spans the full page height and stays sticky while scrolling. Without the wrapper, the panel only spans one section.
+</Note>
+</Aside>
+
+## Why you might need this
+
+By default, Holocron shows the [AI Assistant](/docs/ai/assistant) widget in the right sidebar. If you prefer a traditional table of contents instead, add `TableOfContentsPanel` to any page. You can also use both: place the AI widget and the TOC panel in the same `<Aside full>` and they stack vertically.
+
+## Automatic headings
+
+When used without props, the component reads the current page's headings automatically. No configuration needed.
+
+```mdx
+<Aside full>
+  <TableOfContentsPanel />
+</Aside>
+```
+
+This picks up every `##`, `###`, and deeper heading on the page, indented by depth.
+
+## Custom title
+
+Change the label above the heading list with the `title` prop. Defaults to `"On this page"`.
+
+```mdx
+<Aside full>
+  <TableOfContentsPanel title="Contents" />
+</Aside>
+```
+
+## Adding it to every page
+
+To show a TOC on every page without repeating the MDX snippet, create a shared snippet file and import it:
+
+```mdx title="snippets/toc.md"
+<Aside full>
+  <TableOfContentsPanel />
+</Aside>
+```
+
+Then import it at the top of each page:
+
+```mdx title="getting-started.mdx"
+import Toc from '/snippets/toc.md'
+
+<Toc />
+
+## First heading
+
+Content here...
+```
+
+See [Local Imports](/docs/create/local-imports) for more on reusable snippets.
+
+## Props
+
+<ResponseField name="title" type="string" default="On this page">
+Label shown above the heading list.
+</ResponseField>
+
+<ResponseField name="headings" type="NavHeading[]">
+Custom list of headings to display. When omitted, the component reads the current page's headings automatically. Each entry has `slug`, `text`, and `depth` fields.
+</ResponseField>
+
+<ResponseField name="className" type="string">
+Additional CSS class name for the outer `<nav>` element.
+</ResponseField>

@@ -54,6 +54,20 @@ The assistant uses the hosted Holocron AI gateway to process questions. When dep
 
 Hosted chat uses Cloudflare Workers AI. Authenticated sites send `HOLOCRON_KEY`; unauthenticated requests use a temporary fallback with stricter IP rate limits. The default model is GLM 4.7 Flash.
 
+## Table of contents in the sidebar
+
+By default, the AI assistant widget occupies the right sidebar. If you prefer a traditional **table of contents** instead (or alongside the widget), add the `TableOfContentsPanel` component to your page:
+
+```mdx
+<Aside full>
+  <TableOfContentsPanel />
+</Aside>
+```
+
+This renders a sticky "On this page" panel with heading links and active-state highlighting as the user scrolls. When the AI widget is enabled, it appears above the TOC panel automatically. When disabled, the TOC panel takes the full sidebar.
+
+See the [Table of Contents component page](/docs/components/table-of-contents) for all props and usage patterns.
+
 ## What gets disabled
 
 Setting `enabled: false` removes:

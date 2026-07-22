@@ -166,6 +166,7 @@
                             "docs/components/prompt",
                             "docs/components/responses",
                             "docs/components/steps",
+                            "docs/components/table-of-contents",
                             "docs/components/tabs",
                             "docs/components/tiles",
                             "docs/components/tooltips",
