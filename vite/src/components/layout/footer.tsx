@@ -11,7 +11,7 @@ import { Link } from '../link.tsx'
 import { getDefaultTypeIcon, socialPlatformLabel } from '../../lib/collect-icons.ts'
 import { cn } from '../../lib/css-vars.ts'
 import { getGeneratedLogoUrl } from '../../lib/generated-logo.tsx'
-import { holocronUrl } from '../../lib/holocron-url.ts'
+import { holocronUrl, withBasePath } from '../../lib/holocron-url.ts'
 import { useHolocronData } from '../../router.ts'
 import { GitHubStars } from './github-stars.tsx'
 import { getResolvedLogo } from '../../site-data.ts'
@@ -27,9 +27,11 @@ export type LogoProps = Omit<React.ComponentProps<'img'>, 'src' | 'alt'> & {
 export function Logo({ className, alt, style, text, ...props }: LogoProps) {
   const { site } = useHolocronData()
   const siteConfig = site.config
-  const logo = text
+  const resolved = text
     ? { light: getGeneratedLogoUrl(text), dark: getGeneratedLogoUrl(text), generated: true as const }
     : getResolvedLogo(site)
+  // docs.json asset paths are site-root-relative; apply the Vite base here.
+  const logo = { ...resolved, light: withBasePath(resolved.light), dark: withBasePath(resolved.dark) }
   const label = (alt ?? text ?? siteConfig.name) || 'Logo'
   const baseStyle: React.CSSProperties = { width: 'auto', ...style }
 

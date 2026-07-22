@@ -1,5 +1,9 @@
 # @holocron.so/vite
 
+## 0.27.1
+
+1. **Fixed broken logo and favicon on sites with a Vite `base` path** — `logo` and `favicon` paths in `docs.json` are now treated as site-root-relative (Mintlify convention) and the Vite `base` (e.g. `/docs/`) is prepended automatically at render time. Previously the raw path was emitted as-is, which 404'd whenever the built site was served from a different mount point than the hardcoded prefix. If your `docs.json` manually included the base prefix in logo/favicon paths (e.g. `"/docs/logos/logo.svg"` with `base: '/docs/'`), remove the prefix: write `"/logos/logo.svg"` instead.
+
 ## 0.27.0
 
 1. **New sidebar theming tokens** — four new CSS variables let you restyle the sidebar and code blocks without touching internal selectors:

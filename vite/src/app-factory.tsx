@@ -62,7 +62,7 @@ import { modelMessagesToChatMessages, renderMarkdownTextPart } from './lib/chat-
 import dedent from 'string-dedent'
 import { buildOgImageUrl } from './lib/og-utils.ts'
 import { getPageRendering, getPageRobots, getPageSeoMeta, isIndexablePage, parsePageFrontmatter, serializeKeywords, type PageFrontmatter, type PageRendering } from './lib/page-frontmatter.ts'
-import { holocronUrl, getHolocronApiKey } from './lib/holocron-url.ts'
+import { holocronUrl, getHolocronApiKey, withBasePath } from './lib/holocron-url.ts'
 import { createGitHubStarsPromise } from './lib/github-stars.ts'
 import {
   buildVisibleSiteData,
@@ -1124,7 +1124,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       const effectiveConfig = loaderData.site.config
       const bannerJsx = getBannerJsx(loaderData.site, request)
       const requestUrl = new URL(request.url)
-      const faviconUrl = effectiveConfig.favicon.light || effectiveConfig.favicon.dark
+      const faviconUrl = withBasePath(effectiveConfig.favicon.light || effectiveConfig.favicon.dark)
       const ogImageUrl = buildOgImageUrl({
         title: loaderData.currentPageTitle ?? effectiveConfig.name,
         description: loaderData.currentPageDescription ?? effectiveConfig.description,

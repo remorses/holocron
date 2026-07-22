@@ -17,6 +17,7 @@
 import React from 'react'
 import { Head } from 'spiceflow/react'
 import type { HolocronConfig } from '../config.ts'
+import { withBasePath } from './holocron-url.ts'
 
 /* Blocking script that runs before paint. Sets `.dark` class on <html>
    based on cookie or config default. Must be synchronous and in <head>. */
@@ -128,7 +129,9 @@ export function buildColorStyles(config: HolocronConfig): string[] {
 }
 
 export function SiteHead({ config, titleOverride }: { config: HolocronConfig; titleOverride?: string }) {
-  const { light: faviconLight, dark: faviconDark } = config.favicon
+  // docs.json asset paths are site-root-relative; apply the Vite base here.
+  const faviconLight = withBasePath(config.favicon.light)
+  const faviconDark = withBasePath(config.favicon.dark)
   const hasBoth =
     Boolean(faviconLight) && Boolean(faviconDark) && faviconLight !== faviconDark
 

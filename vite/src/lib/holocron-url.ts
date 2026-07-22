@@ -52,3 +52,27 @@ export function getHolocronApiKey(): string {
 export function hasHolocronApiKey(): boolean {
   return getHolocronApiKey() !== ''
 }
+
+/**
+ * Prefix the Vite base path to a root-relative URL (logo, favicon, and other
+ * docs.json asset paths). External URLs, protocol-relative URLs, and
+ * non-root-relative paths pass through unchanged. Paths in docs.json are
+ * written relative to the site root (Mintlify convention) and must not
+ * include the base themselves — this helper applies it in one place so the
+ * same config works with any `base` (e.g. `/docs/`) or none.
+ */
+export function withBasePath(url: string): string
+export function withBasePath(url: string | undefined): string | undefined
+export function withBasePath(url: string | undefined): string | undefined {
+  if (!url) return url
+  if (!url.startsWith('/') || url.startsWith('//')) return url
+  let base = ''
+  try {
+    const raw = import.meta.env.BASE_URL
+    if (raw && raw !== '/') base = raw.replace(/\/$/, '')
+  } catch {
+    base = ''
+  }
+  if (!base) return url
+  return base + url
+}
