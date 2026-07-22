@@ -15,7 +15,7 @@
     "@holocron.so/vite": "workspace:^",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "spiceflow": "1.26.0-rsc.14",
+    "spiceflow": "1.26.0-rsc.16",
     "vite": "^8.1.4",
     "zod": "^4.4.3"
   },

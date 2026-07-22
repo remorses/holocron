@@ -1122,6 +1122,16 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // from bundling/optimization in every environment via regex.
       addNoExternal(config, holocronPackagePattern)
 
+      // motion/react re-exports framer-motion, which imports React hooks.
+      // Keep both packages in Vite's SSR dependency graph so their React
+      // imports share the optimizer's React instance instead of loading
+      // React natively via Node (which creates a second module evaluation
+      // with its own __currentDispatcher → "Invalid hook call" crash).
+      if (name === 'ssr') {
+        addNoExternal(config, 'motion')
+        addNoExternal(config, 'framer-motion')
+      }
+
       if (name === 'client') {
         config.optimizeDeps ??= {}
         config.optimizeDeps.exclude = mergeUnique(
