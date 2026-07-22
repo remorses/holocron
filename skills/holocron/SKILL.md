@@ -668,22 +668,23 @@ docs.jsonc ───►│  Vite Plugin  │──────► Build Output
 ```
 ````
 
-## Always run `diagrams fix` after editing diagrams
+## Always run `diagrams fix` after editing diagrams or tables
 
-LLMs cannot count characters reliably. Every time you create or edit a diagram in an MDX page, you **must** run the alignment fixer before committing. This is not optional.
+LLMs cannot count characters or pad table columns reliably. Every time you create or edit a **diagram** or a **GFM table** in an MDX page, you **must** run the fixer before committing. This is not optional.
 
 ```bash
 npx -y "@holocron.so/cli" diagrams fix path/to/file.mdx
 ```
 
 The command:
-- Fixes box alignment (padding, border widths, junctions) in-place
+- Fixes box-drawing diagram alignment (padding, border widths, junctions) in-place
+- Formats GFM tables (column padding, aligned pipes, blank lines above/below)
 - Reports how many lines were changed
-- Exits with code 1 if any lines exceed max width (94 cols by default)
+- Exits with code 1 if any diagram lines exceed max width (94 cols by default) or tables still need formatting (`--check`)
 
-If the output says "No changes", the diagram was already correct. If it reports width violations, shorten the offending lines manually and re-run.
+If the output says "No changes", the file was already correct. If it reports width violations, shorten the offending diagram lines manually and re-run.
 
-**Do not skip this step.** Even if the diagram looks correct in your editor, run the command. Off-by-one padding errors are invisible to LLMs but obvious to humans in monospace fonts.
+**Do not skip this step.** Even if a diagram or table looks fine in your editor, run the command. Off-by-one padding and uneven table columns are invisible to LLMs but obvious to humans in monospace fonts.
 
 ## OpenAPI summaries
 
@@ -741,7 +742,9 @@ If a user wants to customize something that has no CSS variable, **do not hack i
 - All ASCII diagrams in MDX pages must use the `diagram` language hint on the
   code fence (` ```diagram `). This renders them with proper styling on the
   website instead of plain monospace.
-- After creating or editing any diagram, run `npx -y "@holocron.so/cli" diagrams fix <file>`
-  to auto-fix alignment. LLMs cannot count characters reliably.
+- After creating or editing any diagram or GFM table, run
+  `npx -y "@holocron.so/cli" diagrams fix <file>` to auto-fix diagram
+  alignment and table column padding. LLMs cannot count characters or pad
+  columns reliably.
 - Never pipe curl or `--help` output through `head`, `tail`, or any truncation
   command. Always read the full output.

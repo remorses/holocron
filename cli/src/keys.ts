@@ -60,7 +60,7 @@ keysCli
         })),
       })
       if (clack.isCancel(selected)) return proc.exit(1)
-      projectId = selected as string
+      projectId = selected
     }
 
     const res = await safeFetch('/api/v0/keys', {

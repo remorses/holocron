@@ -11,6 +11,7 @@ import dedent from 'string-dedent'
 import {
   fixDiagramLines,
   fixDiagramsInText,
+  fixTablesInText,
   findBoxes,
   validateDiagram,
   validateDiagramsInText,
@@ -1838,5 +1839,454 @@ describe('validateDiagram — ambiguous char warnings', () => {
       i.message.includes('Ambiguous-width') || i.message.includes('should be replaced'),
     )
     expect(ambiguousIssues).toHaveLength(0)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────
+// GFM table formatting
+// ─────────────────────────────────────────────────────────────
+
+describe('fixTablesInText', () => {
+  test('pads columns and aligns pipes', () => {
+    const input = dedent`
+      # Title
+
+      |Name|Age|City|
+      |---|---|---|
+      |Alice|30|NYC|
+      |Bob|2|SF|
+
+      Done.
+    `
+
+    expect(fixTablesInText(input)).toMatchInlineSnapshot('\n' + `
+      "# Title
+
+      | Name  | Age | City |
+      | ----- | --- | ---- |
+      | Alice | 30  | NYC  |
+      | Bob   | 2   | SF   |
+
+      Done."
+    `)
+  })
+
+  test('adds blank lines above and below a table', () => {
+    const input = dedent`
+      Before
+      |a|b|
+      |-|-|
+      |1|2|
+      After
+    `
+
+    expect(fixTablesInText(input)).toMatchInlineSnapshot('\n' + `
+      "Before
+
+      | a | b |
+      | - | - |
+      | 1 | 2 |
+
+      After"
+    `)
+  })
+
+  test('formats multiple tables without touching surrounding prose', () => {
+    const input = dedent`
+      ## One
+
+      |x|y|
+      |-|-|
+      |1|22|
+
+      Middle paragraph stays put.
+
+      ## Two
+
+      | Feature | Status |
+      |---|---|
+      | Auth | done |
+      | Billing | wip |
+    `
+
+    expect(fixTablesInText(input)).toMatchInlineSnapshot('\n' + `
+      "## One
+
+      | x | y  |
+      | - | -- |
+      | 1 | 22 |
+
+      Middle paragraph stays put.
+
+      ## Two
+
+      | Feature | Status |
+      | ------- | ------ |
+      | Auth    | done   |
+      | Billing | wip    |"
+    `)
+  })
+
+  test('preserves alignment markers', () => {
+    const input = dedent`
+      | left | center | right |
+      |:-----|:------:|------:|
+      | a | b | c |
+    `
+
+    expect(fixTablesInText(input)).toMatchInlineSnapshot('\n' + `
+      "| left | center | right |
+      | :--- | :----: | ----: |
+      | a    |    b   |     c |"
+    `)
+  })
+
+  test('preserves inline markdown inside cells', () => {
+    const input = dedent`
+      | Feature | Link |
+      | --- | --- |
+      | Auth | [docs](/auth) |
+      | **Bold** | \`code\` |
+    `
+
+    expect(fixTablesInText(input)).toMatchInlineSnapshot('\n' + `
+      "| Feature  | Link          |
+      | -------- | ------------- |
+      | Auth     | [docs](/auth) |
+      | **Bold** | \`code\`        |"
+    `)
+  })
+
+  test('does not rewrite tables inside fenced code blocks', () => {
+    const input = dedent`
+      Example:
+
+      ${'```'}md
+      |a|b|
+      |-|-|
+      |1|2|
+      ${'```'}
+    `
+
+    expect(fixTablesInText(input)).toBe(input)
+  })
+
+  test('leaves already-formatted tables unchanged', () => {
+    const input = dedent`
+      # Title
+
+      | Name  | Age | City |
+      | ----- | --- | ---- |
+      | Alice | 30  | NYC  |
+      | Bob   | 2   | SF   |
+
+      Done.
+    `
+
+    expect(fixTablesInText(input)).toBe(input)
+  })
+
+  test('works in MDX with JSX siblings', () => {
+    const input = dedent`
+      ---
+      title: Test
+      ---
+
+      <Note>
+      Hello
+      </Note>
+
+      |a|bb|
+      |-|-|
+      |1|22|
+
+      <Card title="x">
+      body
+      </Card>
+    `
+
+    expect(fixTablesInText(input)).toMatchInlineSnapshot('\n' + `
+      "---
+      title: Test
+      ---
+
+      <Note>
+      Hello
+      </Note>
+
+      | a | bb |
+      | - | -- |
+      | 1 | 22 |
+
+      <Card title="x">
+      body
+      </Card>"
+    `)
+  })
+
+  test('peels absorbed trailing prose back out of the table', () => {
+    // GFM absorbs the next line when there is no blank line after the table.
+    // Fixer must not turn that prose into a fake table row.
+    const input = 'Intro\n|a|b|\n|-|-|\n|1|2|\nMore text\n'
+
+    expect(fixTablesInText(input)).toMatchInlineSnapshot('\n' + `
+      "Intro
+
+      | a | b |
+      | - | - |
+      | 1 | 2 |
+
+      More text
+      "
+    `)
+  })
+
+  test('preserves MDX expressions inside cells', () => {
+    const input = dedent`
+      | Value | Status |
+      |---|---|
+      | {value} | ok |
+    `
+
+    expect(fixTablesInText(input)).toMatchInlineSnapshot('\n' + `
+      "| Value   | Status |
+      | ------- | ------ |
+      | {value} | ok     |"
+    `)
+  })
+
+  test('skips indented list-nested tables (would lose container indent)', () => {
+    const input = dedent`
+      - Intro
+
+        |a|b|
+        |-|-|
+        |1|2|
+
+        After
+    `
+
+    expect(fixTablesInText(input)).toMatchInlineSnapshot('\n' + `
+      "- Intro
+
+        |a|b|
+        |-|-|
+        |1|2|
+
+        After"
+    `)
+  })
+
+  test('preserves CRLF line endings', () => {
+    const input = 'Before\r\n|a|b|\r\n|-|-|\r\n|1|2|\r\nAfter\r\n'
+    // JSON snapshot so CR characters stay visible and stable.
+    expect(JSON.stringify(fixTablesInText(input))).toMatchInlineSnapshot(
+      `"\"Before\\r\\n\\r\\n| a | b |\\r\\n| - | - |\\r\\n| 1 | 2 |\\r\\n\\r\\nAfter\\r\\n\""`,
+    )
+  })
+
+  test('formats tables after HTML comments via markdown fallback', () => {
+    const input = dedent`
+      <!-- note -->
+
+      |a|b|
+      |-|-|
+      |1|2|
+    `
+
+    expect(fixTablesInText(input)).toMatchInlineSnapshot('\n' + `
+      "<!-- note -->
+
+      | a | b |
+      | - | - |
+      | 1 | 2 |"
+    `)
+  })
+
+  test('preserves missing final newline when table is whole file', () => {
+    const input = '|a|b|\n|-|-|\n|1|2|'
+    expect(fixTablesInText(input)).toMatchInlineSnapshot('\n' + `
+      "| a | b |
+      | - | - |
+      | 1 | 2 |"
+    `)
+  })
+
+  test('preserves missing final newline when table is at EOF after prose', () => {
+    const input = 'Before\n|a|b|\n|-|-|\n|1|2|'
+    expect(fixTablesInText(input)).toMatchInlineSnapshot('\n' + `
+      "Before
+
+      | a | b |
+      | - | - |
+      | 1 | 2 |"
+    `)
+  })
+})
+
+describe('fixDiagramsInText — tables + diagrams together', () => {
+  test('fixes a misaligned diagram and formats tables in one pass', () => {
+    const input = dedent`
+      # Architecture
+
+      Overview table:
+
+      |Layer|Role|
+      |---|---|
+      |Edge|routing|
+      |Worker|render|
+
+      ${'```'}
+      ┌──────────┐
+      │ Server     │
+      └──────────┘
+      ${'```'}
+
+      Details:
+
+      |Name|Age|
+      |-|-|
+      |Alice|30|
+      |Bob|2|
+    `
+
+    expect(fixDiagramsInText(input)).toMatchInlineSnapshot('\n' + `
+      "# Architecture
+
+      Overview table:
+
+      | Layer  | Role    |
+      | ------ | ------- |
+      | Edge   | routing |
+      | Worker | render  |
+
+      \`\`\`
+      ┌──────────┐
+      │ Server   │
+      └──────────┘
+      \`\`\`
+
+      Details:
+
+      | Name  | Age |
+      | ----- | --- |
+      | Alice | 30  |
+      | Bob   | 2   |"
+    `)
+  })
+
+  test('multiple tables and multiple diagrams in one file', () => {
+    const input = dedent`
+      ## A
+
+      |x|yy|
+      |-|-|
+      |1|2|
+
+      ${'```'}
+      ┌─────┐
+      │ A     │
+      └─────┘
+      ${'```'}
+
+      ## B
+
+      ${'```'}
+      ┌─────┐
+      │ B     │
+      └─────┘
+      ${'```'}
+
+      |foo|bar|
+      |---|---|
+      |a|bb|
+    `
+
+    expect(fixDiagramsInText(input)).toMatchInlineSnapshot('\n' + `
+      "## A
+
+      | x | yy |
+      | - | -- |
+      | 1 | 2  |
+
+      \`\`\`
+      ┌─────┐
+      │ A   │
+      └─────┘
+      \`\`\`
+
+      ## B
+
+      \`\`\`
+      ┌─────┐
+      │ B   │
+      └─────┘
+      \`\`\`
+
+      | foo | bar |
+      | --- | --- |
+      | a   | bb  |"
+    `)
+  })
+
+  test('does not touch non-diagram code or JSX while fixing tables', () => {
+    const input = dedent`
+      ${'```'}js
+      const x = 1
+      ${'```'}
+
+      |a|b|
+      |-|-|
+      |1|2|
+
+      <Steps>
+      <Step>One</Step>
+      </Steps>
+    `
+
+    expect(fixDiagramsInText(input)).toMatchInlineSnapshot('\n' + `
+      "\`\`\`js
+      const x = 1
+      \`\`\`
+
+      | a | b |
+      | - | - |
+      | 1 | 2 |
+
+      <Steps>
+      <Step>One</Step>
+      </Steps>"
+    `)
+  })
+})
+
+describe('validateDiagramsInText — table issues', () => {
+  test('reports unformatted tables', () => {
+    const input = dedent`
+      |Name|Age|
+      |---|---|
+      |Alice|30|
+    `
+    expect(validateDiagramsInText(input)).toMatchInlineSnapshot('\n' + `
+      [
+        {
+          "col": 1,
+          "line": 1,
+          "message": "Table needs formatting (column padding and/or blank-line spacing)",
+        },
+      ]
+    `)
+  })
+
+  test('no table issues after fix', () => {
+    const input = dedent`
+      |Name|Age|
+      |---|---|
+      |Alice|30|
+    `
+    const fixed = fixDiagramsInText(input)
+    expect(validateDiagramsInText(fixed)).toMatchInlineSnapshot('\n' + `
+      []
+    `)
   })
 })

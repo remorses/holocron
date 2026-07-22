@@ -76,7 +76,7 @@ projectsCli
           })),
         })
         if (clack.isCancel(selected)) return proc.exit(1)
-        orgId = selected as string
+        orgId = selected
       }
     }
 

@@ -4,4 +4,4 @@
 
 import { cli } from './cli.ts'
 
-cli.parse()
+void cli.parse()

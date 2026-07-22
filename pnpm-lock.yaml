@@ -72,12 +72,39 @@ importers:
       goke:
         specifier: ^6.14.0
         version: 6.14.0
+      mdast-util-frontmatter:
+        specifier: ^2.0.1
+        version: 2.0.1
+      mdast-util-gfm:
+        specifier: ^3.1.0
+        version: 3.1.0
+      mdast-util-mdx:
+        specifier: ^3.0.0
+        version: 3.0.0
+      mdast-util-to-markdown:
+        specifier: ^2.1.2
+        version: 2.1.2
+      remark:
+        specifier: ^15.0.1
+        version: 15.0.1
+      remark-frontmatter:
+        specifier: ^5.0.0
+        version: 5.0.0
+      remark-gfm:
+        specifier: ^4.0.1
+        version: 4.0.1
+      remark-mdx:
+        specifier: ^3.1.1
+        version: 3.1.1
       spiceflow:
         specifier: 1.26.0-rsc.16
         version: 1.26.0-rsc.16(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
       string-dedent:
         specifier: ^3.0.2
         version: 3.0.2
+      unist-util-visit:
+        specifier: ^5.1.0
+        version: 5.1.0
       yaml:
         specifier: ^2.8.0
         version: 2.9.0
@@ -85,6 +112,9 @@ importers:
         specifier: latest
         version: 4.4.3
     devDependencies:
+      '@types/mdast':
+        specifier: ^4.0.4
+        version: 4.0.4
       '@types/node':
         specifier: ^25.9.2
         version: 25.9.5
