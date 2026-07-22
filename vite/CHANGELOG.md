@@ -1,5 +1,42 @@
 # @holocron.so/vite
 
+## 0.27.0
+
+1. **New sidebar theming tokens** — four new CSS variables let you restyle the sidebar and code blocks without touching internal selectors:
+
+   ```css
+   :root {
+     /* Pill behind the deepest active sidebar item — the active TOC heading
+        when the current page's TOC is expanded, otherwise the page link */
+     --sidebar-active-background: rgba(6, 122, 34, 0.1);
+
+     /* Hover background on sidebar links, group toggles, and TOC headings.
+        Defaults to var(--accent); override to decouple sidebar hover from
+        the brand accent */
+     --sidebar-hover-background: rgba(0, 0, 0, 0.06);
+
+     /* Corner radius of the sidebar search input (default var(--radius-xl)).
+        Lower it for a compact rectangular input */
+     --search-input-radius: 4px;
+
+     /* Box shadow around the code block frame, alongside the existing
+        --code-block-* tokens (default none) */
+     --code-block-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+   }
+   ```
+
+2. **Mintlify-compatible `wrap` code fence flag** — add the bare `wrap` flag after the language (and optional title) to soft-wrap long lines instead of horizontal scrolling, useful for prose-like content such as prompts:
+
+   ````mdx
+   ```text Example prompt wrap
+   Use the Holocron skill. I have a docs site with a broken sidebar link and ...
+   ```
+   ````
+
+   Wrapped blocks always hide line numbers and ignore `highlight`, since a wrapped logical line spans several visual rows and per-line decorations would misalign. The bare `lines` flag is also recognized now (equivalent to `lines=true`).
+
+3. **Fixed chat input corner radius to be concentric with its frame** — the "Ask AI about this page" sidebar widget and the chat drawer footer now follow the concentric radius rule (outer radius minus gap), so the tinted frame ring keeps uniform thickness around the corners.
+
 ## 0.26.0
 
 1. **Redesigned AI chat welcome screen with configurable suggestions** — the empty chat drawer now shows a sparkle illustration, a short pitch of what the assistant can do, and suggestion links styled in the primary color. Suggestions are customizable via `assistant.suggestions` in `docs.json`:
