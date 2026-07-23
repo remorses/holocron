@@ -149,10 +149,10 @@ function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
 /* ── Main ─────────────────────────────────────────────────────────────── */
 
 export function OpenAPIEndpoint(props: OpenAPIEndpointProps) {
-  const path = props.parameters.filter((p) => p.in === 'path')
+  // Only query params get their own section. Path params are already visible
+  // in the endpoint path shown above; header/cookie params are internal
+  // plumbing that belongs in the endpoint description if worth documenting.
   const query = props.parameters.filter((p) => p.in === 'query')
-  const header = props.parameters.filter((p) => p.in === 'header')
-  const cookie = props.parameters.filter((p) => p.in === 'cookie')
 
   return (
     <div className='flex flex-col gap-(--prose-gap) text-sm'>
@@ -165,10 +165,7 @@ export function OpenAPIEndpoint(props: OpenAPIEndpointProps) {
         {props.description && <Desc>{props.description}</Desc>}
       </div>
       <AuthSection security={props.security} />
-      <ParameterGroup title='Path Parameters' params={path} />
       <ParameterGroup title='Query Parameters' params={query} />
-      <ParameterGroup title='Header Parameters' params={header} />
-      <ParameterGroup title='Cookie Parameters' params={cookie} />
       {props.requestBody && <RequestBodySection body={props.requestBody} />}
       <ResponseSection responses={props.responses} />
     </div>
