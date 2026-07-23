@@ -101,12 +101,30 @@ export function Tabs({
 
   return (
     <div className={cn('rounded-2xl bg-accent px-0.5 pb-0.5 pt-px', className)}>
-      <div className='flex items-center gap-2 pr-1'>
-        {title && (
-          <span className='shrink-0 truncate pl-3 text-xs font-medium text-muted-foreground'>{title}</span>
+      {/*
+        Full-width hairline + active primary underline both anchor to bottom-0
+        of the header so the indicator sits on the content seam (Mintlify-style).
+        Pseudo-element underline stays inside the tab box → not clipped by
+        overflow-x-auto. borderBottom=false keeps plain title-only shells.
+      */}
+      <div className='relative flex items-stretch gap-2 pr-1'>
+        {borderBottom && (
+          <div
+            aria-hidden
+            className='pointer-events-none absolute inset-x-0 bottom-0 z-0 h-px bg-border/60'
+          />
         )}
-        <div className='min-w-0 flex-1 overflow-x-auto scrollbar-none px-2.5 py-1'>
-          <div role='tablist' aria-label={ariaLabel} className='flex min-w-max gap-3'>
+        {title && (
+          <span className='relative z-10 shrink-0 self-center truncate pl-3 text-xs font-medium text-muted-foreground'>
+            {title}
+          </span>
+        )}
+        <div className='relative z-10 min-w-0 flex-1 overflow-x-auto scrollbar-none px-2.5'>
+          <div
+            role='tablist'
+            aria-label={ariaLabel}
+            className='flex h-full min-w-max items-stretch gap-3'
+          >
           {labels.map((label, index) => {
             const active = index === activeIndex
             const tabIcon = tabs[index]?.props.icon
@@ -142,10 +160,11 @@ export function Tabs({
                     selectTab(index)
                   }
                 }}
-                className='cursor-pointer select-none py-1 text-xs font-medium transition-colors [-webkit-tap-highlight-color:transparent] focus:outline-none focus-visible:outline-none'
-                style={{
-                  color: active ? 'var(--primary)' : 'var(--muted-foreground)',
-                }}
+                className={cn(
+                  'relative flex cursor-pointer select-none items-center py-1.5 text-xs font-medium transition-colors duration-150 ease-out [-webkit-tap-highlight-color:transparent] focus:outline-none focus-visible:outline-none',
+                  active ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
+                  borderBottom && active && 'after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-primary after:content-[""]',
+                )}
               >
                 <span className='inline-flex items-center gap-1.5'>
                   {tabIcon && <Icon icon={tabIcon} iconType={tabIconType} size={12} />}
@@ -161,7 +180,7 @@ export function Tabs({
             type='button'
             onClick={handleCopy}
             aria-label='Copy code'
-            className='flex size-[26px] shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground'
+            className='relative z-10 my-0.5 flex size-[26px] shrink-0 cursor-pointer items-center justify-center self-center rounded-md text-muted-foreground transition-colors hover:text-foreground'
           >
             {copied ? <CheckIcon /> : <CopyIcon />}
           </button>
