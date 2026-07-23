@@ -439,7 +439,8 @@ export function EditorialPage({
                       {/* Aside column: per-section aside */}
                       {hasPerSectionAside && (
                         <div
-                            className={`slot-aside flex flex-col gap-3 text-(length:--type-small-size) leading-[1.5] lg:col-[2] lg:sticky lg:top-(--sticky-top) lg:self-start`}
+                            className={`slot-aside flex flex-col gap-3 text-(length:--type-small-size) leading-[1.5] lg:col-[2] lg:sticky lg:self-start`}
+                            style={{ top: hasTabBar ? 'var(--sticky-top)' : 'calc(var(--header-row-height) + var(--layout-gap))' }}
                         >
                           {section.aside}
                         </div>
@@ -452,8 +453,12 @@ export function EditorialPage({
                         column in grid-cols-1. */}
                     {hasSharedAside && (
                       <div
-                        className={`${asideClass} lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:top-(--sticky-top) lg:self-start lg:max-h-[calc(100vh-var(--header-height))] lg:overflow-y-auto`}
-                        style={sharedAsideStyle}
+                        className={`${asideClass} lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:self-start lg:overflow-y-auto`}
+                        style={{
+                          ...sharedAsideStyle,
+                          top: hasTabBar ? 'var(--sticky-top)' : 'calc(var(--header-row-height) + var(--layout-gap))',
+                          maxHeight: hasTabBar ? 'calc(100vh - var(--sticky-top))' : 'calc(100vh - var(--header-row-height) - var(--layout-gap))',
+                        }}
                       >
                         {section.aside}
                       </div>
