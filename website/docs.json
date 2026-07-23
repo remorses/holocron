@@ -105,6 +105,7 @@
                             "docs/api-docs/openapi",
                             "docs/api-docs/generated-pages",
                             "docs/api-docs/request-response-examples",
+                            "docs/api-docs/sdk-examples",
                             "docs/api-docs/troubleshooting"
                         ]
                     },

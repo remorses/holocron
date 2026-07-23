@@ -196,6 +196,73 @@ paths:
     }
   })
 
+  test('renders x-codeSamples as RequestExample tabs after cURL', async () => {
+    const SPEC_SDK = `
+openapi: "3.0.3"
+info: { title: SDK API, version: "1.0.0" }
+tags: [{ name: users }]
+paths:
+  /users:
+    get:
+      tags: [users]
+      summary: List users
+      x-codeSamples:
+        - lang: TypeScript
+          label: TypeScript SDK
+          source: |
+            import { Acme } from '@acme/sdk'
+            const client = new Acme()
+            await client.users.list()
+        - lang: python
+          source: |
+            from acme import Acme
+            client = Acme()
+            client.users.list()
+        - lang: bash
+          label: CLI
+          source: acme users list
+      responses:
+        "200": { description: ok }
+`
+    const exDir = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-openapi-sdk-'))
+    fs.writeFileSync(path.join(exDir, 'api.yaml'), SPEC_SDK)
+    try {
+      const config = {
+        navigation: {
+          tabs: [{ tab: 'API', openapi: 'api.yaml', groups: [{ group: '', pages: ['...'] }] } as ConfigNavTab],
+        },
+      }
+      const mdxContent: Record<string, string> = {}
+      await processVirtualTabs({
+        config,
+        projectRoot: exDir,
+        pagesDir: exDir,
+        publicDir: path.join(exDir, 'public'),
+        mdxContent,
+        providers: [openapiProvider],
+      })
+      const mdx = mdxContent['api/get-users']
+      expect(mdx).toBeDefined()
+      expect(mdx).toContain('<RequestExample>')
+      expect(mdx).toContain('title="cURL"')
+      expect(mdx).toContain('title="TypeScript SDK"')
+      expect(mdx).toContain('title="python"')
+      expect(mdx).toContain('title="CLI"')
+      expect(mdx).toContain('```typescript title="TypeScript SDK" lines=false')
+      expect(mdx).toContain('```python title="python" lines=false')
+      expect(mdx).toContain("import { Acme } from '@acme/sdk'")
+      expect(mdx).toContain('from acme import Acme')
+      expect(mdx).toContain('acme users list')
+      // cURL tab still first: title="cURL" appears before the first SDK sample.
+      const curlIdx = mdx!.indexOf('title="cURL"')
+      const tsIdx = mdx!.indexOf('title="TypeScript SDK"')
+      expect(curlIdx).toBeGreaterThan(-1)
+      expect(tsIdx).toBeGreaterThan(curlIdx)
+    } finally {
+      fs.rmSync(exDir, { recursive: true, force: true })
+    }
+  })
+
   test('skips externalValue-only examples and escapes fence titles', async () => {
     const SPEC_EX = `
 openapi: "3.0.3"

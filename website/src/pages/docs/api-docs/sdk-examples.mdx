@@ -1,0 +1,183 @@
+---
+title: SDK code samples in OpenAPI
+sidebarTitle: SDK examples
+description: Show TypeScript, Python, and other SDK snippets on API pages with x-codeSamples.
+icon: lucide:code-2
+---
+
+# SDK code samples in OpenAPI
+
+If users call your API through an **SDK** instead of raw HTTP, add samples with the OpenAPI extension **`x-codeSamples`**. Holocron shows them as extra tabs in the **Request example** panel next to the generated cURL snippet.
+
+This is the same extension [Mintlify](https://www.mintlify.com/docs/api-playground/adding-sdk-examples), Stainless, Speakeasy, and hey-api use.
+
+## Where samples appear
+
+On each generated endpoint page, the right aside **Request example** panel lists tabs in this order:
+
+1. **cURL** (always generated)
+2. Each **`x-codeSamples`** entry (your SDK snippets)
+3. Named **request body** `examples` from the spec (JSON payloads)
+
+```diagram
+  OpenAPI operation
+        │
+        ▼
+  ┌─────────────────────────────────────────┐
+  │ Request example                         │
+  │  cURL  │  TypeScript  │  Python  │  …   │
+  │  ┌───────────────────────────────────┐  │
+  │  │  await client.users.list()        │  │
+  │  └───────────────────────────────────┘  │
+  └─────────────────────────────────────────┘
+```
+
+SDK tabs are **copy-only**. Live try-it still uses HTTP.
+
+## Hand-written samples
+
+Add `x-codeSamples` on any path method:
+
+```yaml
+paths:
+  /users:
+    get:
+      summary: List users
+      x-codeSamples:
+        - lang: TypeScript
+          label: TypeScript
+          source: |
+            import { Acme } from '@acme/sdk'
+            const client = new Acme()
+            await client.users.list({ role: 'editor' })
+        - lang: Python
+          label: Python
+          source: |
+            from acme import Acme
+            client = Acme()
+            client.users.list(role="editor")
+        - lang: bash
+          label: CLI
+          source: |
+            acme users list --role editor
+```
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| **`lang`** | yes | Language id for highlighting (`TypeScript`, `python`, `bash`, …) |
+| **`source`** | yes | Inline snippet body (string). Use a string, not a `$ref`; external refs are not resolved for samples. |
+| **`label`** | no | Tab title. Defaults to `lang`. |
+
+Multiple samples can share a language with different labels (for example two TypeScript flows).
+
+<Aside>
+<Tip>
+Keep **`label`** short. The Request example tab bar is narrow; long labels force horizontal scroll.
+</Tip>
+</Aside>
+
+## Stainless and Speakeasy
+
+Point Holocron at a **decorated** OpenAPI file (or URL once remote specs are supported) that already includes `x-codeSamples`.
+
+**Stainless:** set `openapi.code_samples: 'mintlify'` in `stainless.yml`, publish the OpenAPI URL from the Release tab, and set that file or path as your tab `openapi` value.
+
+**Speakeasy:** use the registry **combined spec** entry (`*-with-code-samples`) and point `openapi` at that document.
+
+No Holocron-specific config beyond loading the decorated spec.
+
+## Generate samples with hey-api
+
+[hey-api](https://heyapi.dev) (`@hey-api/openapi-ts`) can generate a typed SDK and **write `x-codeSamples` back into a source OpenAPI JSON**. Point Holocron at that decorated file.
+
+### 1. Install
+
+```bash
+npm install -D @hey-api/openapi-ts
+```
+
+### 2. Config
+
+```ts
+// openapi-ts.config.ts
+import { defineConfig } from '@hey-api/openapi-ts'
+
+export default defineConfig({
+  input: './openapi.yaml',
+  output: {
+    path: './src/client',
+    // Writes a decorated copy of the input spec after intents run.
+    // Path is resolved as path.resolve(output.path, source.path, fileName + '.json')
+    source: {
+      path: '../..', // project root when output is ./src/client
+      fileName: 'openapi.with-samples',
+    },
+  },
+  plugins: [
+    '@hey-api/client-fetch',
+    {
+      name: '@hey-api/sdk',
+      // Generate TypeScript usage snippets and attach them via x-codeSamples
+      examples: {
+        language: 'TypeScript',
+      },
+    },
+  ],
+})
+```
+
+`output.source` writes the **input** document after intents run. The SDK plugin’s `examples` option appends each generated snippet to that operation’s `x-codeSamples`.
+
+The file lands at `path.resolve(output.path, source.path, fileName + '.json')`. With the config above that is **`openapi.with-samples.json`** at the project root. If `source.path` is `'..'` instead, the file would be `src/openapi.with-samples.json`.
+
+### 3. Script
+
+```json
+// package.json
+{
+  "scripts": {
+    "openapi:sdk": "openapi-ts"
+  }
+}
+```
+
+```bash
+npm run openapi:sdk
+```
+
+### 4. Point Holocron at the decorated file
+
+```json
+{
+  "tab": "API Reference",
+  "openapi": "openapi.with-samples.json"
+}
+```
+
+Regenerate the decorated file in CI whenever the base OpenAPI or SDK config changes, then build docs.
+
+```diagram
+  openapi.yaml ──► openapi-ts (sdk.examples) ──► openapi.with-samples.json
+                                                         │
+                                                         ▼
+                                              docs.json openapi field
+                                                         │
+                                                         ▼
+                                              Request example tabs
+```
+
+<Aside>
+<Note>
+You can also hand-edit `x-codeSamples` on a few important endpoints and leave the rest as cURL only. Mixed specs work fine.
+</Note>
+</Aside>
+
+## Example in this monorepo
+
+The Holocron **example** site ships `example/api.yaml` with `x-codeSamples` on **List users** and **Create user**. Open the API Reference tab locally and switch the Request example tabs between cURL and the SDK languages.
+
+## Related
+
+- [OpenAPI setup](./openapi.mdx)
+- [Request and response examples](./request-response-examples.mdx)
+- [Generated pages](./generated-pages.mdx)

@@ -15,6 +15,7 @@ import type { VirtualTabProvider, VirtualTabResult } from '../virtual-tab-provid
 import type { ExtractedOperation, DereferencedDocument } from './process.ts'
 import { buildVirtualPageMdx } from '../virtual-page-mdx.ts'
 import { parseEndpointRef, endpointKey } from './endpoint-ref.ts'
+import { codeSampleFenceBlocks, extractCodeSamples, fenceTitle } from './code-samples.ts'
 
 type OpWithDoc = { op: ExtractedOperation; doc: DereferencedDocument }
 
@@ -358,14 +359,15 @@ function buildEndpointMdx({
     deprecated: op.operation.deprecated,
   })
 
-  // Request example: the curl block (first tab), plus any named request-body
-  // examples. RequestExample renders each titled code fence as a switchable
-  // tab itself (like <Tabs>), so we emit the fences directly — no <CodeGroup>
-  // wrapper and no double framing. `lines=false` hides line numbers.
+  // Request example tabs: cURL first, then x-codeSamples (SDK snippets from
+  // Stainless / Speakeasy / hey-api / hand-written), then named request-body
+  // JSON examples. RequestExample renders each titled fence as a switchable
+  // tab — no <CodeGroup> wrapper. `lines=false` hides line numbers.
   const requestExampleBlocks: string[] = [
     '```bash title="cURL" lines=false',
     curl,
     '```',
+    ...codeSampleFenceBlocks(extractCodeSamples(op.operation)),
   ]
   if (requestBody?.examples && requestBody.examples.length > 0) {
     requestExampleBlocks.push(...exampleCodeBlocks(requestBody.examples))
@@ -493,17 +495,6 @@ function collectExamples(
     out.push({ name: 'Example', value: media.example })
   }
   return out
-}
-
-/** Escape an example name for use inside a code-fence `title="..."` meta.
- *  Backslashes and quotes are escaped for parseCodeMeta; backticks and
- *  newlines would break the fence info line, so they are neutralized. */
-function fenceTitle(name: string): string {
-  return name
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
-    .replace(/`/g, "'")
-    .replace(/[\r\n]+/g, ' ')
 }
 
 /** Render named examples as titled ```json fences for an <CodeGroup>. */

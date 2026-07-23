@@ -22,6 +22,7 @@ import type { ConfigNavGroup } from '../../config.ts'
 import type { DereferencedDocument, ExtractedOperation } from './process.ts'
 import { buildVirtualPageMdx } from '../virtual-page-mdx.ts'
 import { endpointKey } from './endpoint-ref.ts'
+import { codeSampleFenceBlocks, extractCodeSamples, fenceTitle } from './code-samples.ts'
 
 type OpWithDoc = { op: ExtractedOperation; doc: DereferencedDocument }
 
@@ -194,10 +195,12 @@ function buildEndpointMdx({
     deprecated: op.operation.deprecated,
   })
 
+  // cURL → x-codeSamples (SDK) → request-body JSON examples
   const requestExampleBlocks: string[] = [
     '```bash title="cURL" lines=false',
     curl,
     '```',
+    ...codeSampleFenceBlocks(extractCodeSamples(op.operation)),
   ]
   if (requestBody?.examples && requestBody.examples.length > 0) {
     requestExampleBlocks.push(...exampleCodeBlocks(requestBody.examples))
@@ -298,14 +301,6 @@ function collectExamples(
     out.push({ name: 'Example', value: media.example })
   }
   return out
-}
-
-function fenceTitle(name: string): string {
-  return name
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
-    .replace(/`/g, "'")
-    .replace(/[\r\n]+/g, ' ')
 }
 
 function exampleCodeBlocks(examples: NamedExample[]): string[] {

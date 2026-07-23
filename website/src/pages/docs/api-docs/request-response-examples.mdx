@@ -22,7 +22,12 @@ Each response status code (200, 201, 400, etc.) is rendered with its schema. Mul
 
 ## Examples in the spec
 
-Holocron renders a generated cURL request and the first JSON response `example` or `examples` entry in the right-side aside. Schema and parameter examples are still useful context, but they are not rendered as separate aside code blocks today.
+Holocron renders a generated **cURL** request in the right-side aside, plus:
+
+- **`x-codeSamples`** on the operation (SDK / CLI snippets) as extra Request example tabs. See [SDK examples](./sdk-examples.mdx).
+- Named request-body and response **`example` / `examples`** as JSON tabs.
+
+Schema and parameter examples are still useful context in the field list, but they are not separate aside code blocks.
 
 ```yaml
 paths:

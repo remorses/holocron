@@ -234,6 +234,34 @@ paths:
       tags: [users]
       summary: List users
       description: Retrieve a paginated list of users. Supports filtering by role and searching by name or email.
+      x-codeSamples:
+        - lang: TypeScript
+          label: TypeScript
+          source: |
+            import { Acme } from '@acme/sdk'
+
+            const client = new Acme({ apiKey: process.env.ACME_API_KEY })
+            const users = await client.users.list({
+              page: 1,
+              limit: 20,
+              role: 'editor',
+            })
+        - lang: Python
+          label: Python
+          source: |
+            from acme import Acme
+
+            client = Acme(api_key=os.environ["ACME_API_KEY"])
+            users = client.users.list(page=1, limit=20, role="editor")
+        - lang: Go
+          label: Go
+          source: |
+            client := acme.NewClient(os.Getenv("ACME_API_KEY"))
+            users, err := client.Users.List(ctx, &acme.ListUsersParams{
+              Page:  acme.Int(1),
+              Limit: acme.Int(20),
+              Role:  acme.String("editor"),
+            })
       parameters:
         - name: page
           in: query
@@ -298,6 +326,29 @@ paths:
       tags: [users]
       summary: Create user
       description: Create a new user account. Requires admin role.
+      x-codeSamples:
+        - lang: TypeScript
+          label: TypeScript
+          source: |
+            import { Acme } from '@acme/sdk'
+
+            const client = new Acme({ apiKey: process.env.ACME_API_KEY })
+            const user = await client.users.create({
+              email: 'bob@example.com',
+              name: 'Bob',
+              role: 'editor',
+            })
+        - lang: Python
+          label: Python
+          source: |
+            from acme import Acme
+
+            client = Acme(api_key=os.environ["ACME_API_KEY"])
+            user = client.users.create(
+                email="bob@example.com",
+                name="Bob",
+                role="editor",
+            )
       requestBody:
         required: true
         content:
