@@ -63,10 +63,32 @@ deployCli
     }
 
     // ── Build ─────────────────────────────────────────────────────────────
+    // Remove any stale deploy metadata so base path detection below only ever
+    // sees the file written by THIS build (older plugin versions don't write it).
+    fs.rmSync(path.join(cwd, 'dist/.holocron/holocron-deploy.json'), { force: true })
     const buildErr = await runBuild(cwd)
     if (buildErr instanceof Error) {
       output.error(logger.error('Build failed'))
       return proc.exit(1)
+    }
+
+    // ── Detect base path from the build output ───────────────────────────
+    // If the user set `base: '/docs'` in vite.config.ts (instead of passing
+    // --base-path), the built HTML references /docs/assets/* but the hosting
+    // worker stores assets at root. The Vite plugin writes the resolved base
+    // to dist/.holocron/holocron-deploy.json during deploy builds; forward it
+    // as basePath so the hosting worker strips the prefix on asset lookups.
+    if (!basePath) {
+      const detected = readBuiltBasePath(cwd)
+      if (detected && !DEPLOY_BASE_PATH_RE.test(detected)) {
+        output.error(logger.error(`Vite base ${JSON.stringify(detected)} cannot be used for Holocron subpath hosting.`))
+        output.error(logger.error('Base paths may only contain lowercase letters, numbers, hyphens, underscores, and slashes (e.g. /docs). Change `base` in vite.config.ts or pass --base-path.'))
+        return proc.exit(1)
+      }
+      if (detected) {
+        basePath = detected
+        output.log(logger.step(`Base path: ${c.bold(basePath)} ${c.dim('(detected from Vite base in vite.config.ts)')}`))
+      }
     }
 
     // ── Resolve project (only needed for session auth) ────────────
@@ -200,6 +222,35 @@ async function runBuild(cwd: string): Promise<Error | void> {
     return new Error('Build failed')
   }
 
+}
+
+/** Base path shape accepted by the deploy API (must match the server-side
+ *  Zod regex in website/src/deploy-api.ts). */
+export const DEPLOY_BASE_PATH_RE = /^\/[a-z0-9\-_/]*\/$/
+
+/** Read the resolved Vite base from dist/.holocron/holocron-deploy.json,
+ *  written by the Vite plugin during deploy builds. Returns the normalized
+ *  base path (leading + trailing slash) or undefined for root builds and
+ *  full-URL bases (external asset origins never hit the hosting worker, so
+ *  no basePath is needed for them). The returned value may still fail
+ *  DEPLOY_BASE_PATH_RE (e.g. uppercase) — callers must validate. */
+export function readBuiltBasePath(cwd: string): string | undefined {
+  const metaPath = path.join(cwd, 'dist/.holocron/holocron-deploy.json')
+  if (!fs.existsSync(metaPath)) return undefined
+  try {
+    const parsed = JSON.parse(fs.readFileSync(metaPath, 'utf-8')) as { base?: unknown }
+    let base = typeof parsed.base === 'string' ? parsed.base : undefined
+    if (!base || base === '/' || base === './' || base === '') return undefined
+    // Vite supports full-URL bases (assets served from an external CDN).
+    // Those asset requests never reach the hosting worker, so there is no
+    // prefix to strip — deploy as a root site.
+    if (/^(https?:)?\/\//.test(base)) return undefined
+    if (!base.startsWith('/')) base = '/' + base
+    if (!base.endsWith('/')) base = base + '/'
+    return base
+  } catch {
+    return undefined
+  }
 }
 
 type BuildFile = { relativePath: string; absPath: string; size: number; hash: string }

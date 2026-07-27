@@ -502,6 +502,21 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       publicDirPath = resolved.publicDir || path.resolve(root, 'public')
       viteBase = resolved.base || '/'
 
+      // During deploy builds, record the resolved Vite base so the CLI can
+      // include it in the deployment metadata. Without this, a user-set
+      // `base: '/docs'` in vite.config.ts produces HTML referencing
+      // /docs/assets/* while the hosting worker stores assets at root,
+      // 404ing every asset on the deployed site. The CLI reads this file
+      // after the build and forwards the base as `basePath` so the hosting
+      // worker strips the prefix on asset lookups.
+      if (isBuild && process.env.HOLOCRON_DEPLOY === '1') {
+        fs.mkdirSync(distDirPath, { recursive: true })
+        fs.writeFileSync(
+          path.join(distDirPath, 'holocron-deploy.json'),
+          JSON.stringify({ base: viteBase }, null, 2),
+        )
+      }
+
       config = readConfig({ root, configPath: options.configPath })
       configFilePath = resolveConfigPath({ root, configPath: options.configPath })
 
