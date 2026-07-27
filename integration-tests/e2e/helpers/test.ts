@@ -43,6 +43,44 @@ async function waitForPort(port: number): Promise<void> {
   throw new Error(`Timed out waiting for fixture server on port ${port}`);
 }
 
+/** Warm up the dev server so the first real test requests don't hit Vite's
+ *  transient "There is a new version of the pre-bundle" 500. The first page
+ *  render can discover new SSR deps (e.g. motion/react), triggering a
+ *  re-optimize that invalidates the pre-bundle AFTER that render succeeded —
+ *  so the NEXT request 500s. A browser would auto-reload; API tests just see
+ *  a 500. Follows the root redirect so base-path fixtures still exercise an
+ *  actual page render. Requires several consecutive OK responses so we don't
+ *  return between the first successful render and the optimizer invalidation.
+ *  Only the optimize-deps 500 is retried — genuine 500s surface in tests.
+ *  Best-effort only: fixtures whose root legitimately 404s (e.g. dev servers
+ *  with a Vite base, where `/` is outside the base) exit the loop quickly
+ *  without exercising SSR. The real fix for the pre-bundle churn is the
+ *  optimizeDeps pre-include in the holocron vite plugin; this warmup is
+ *  defense-in-depth for future late-discovered deps. */
+async function warmupServer(port: number): Promise<void> {
+  const deadline = Date.now() + 30_000;
+  let consecutiveOk = 0;
+  while (Date.now() <= deadline) {
+    try {
+      const res = await fetch(`http://localhost:${port}/`, { redirect: "follow" });
+      if (res.status < 500) {
+        consecutiveOk += 1;
+        if (consecutiveOk >= 3) return;
+      } else {
+        const body = await res.text();
+        const isOutdatedPrebundle = body.includes("new version of the pre-bundle")
+          || body.includes("Outdated Optimize Dep");
+        if (!isOutdatedPrebundle) return;
+        consecutiveOk = 0;
+      }
+    } catch {
+      // Connection hiccup while the server restarts its optimizer — retry.
+      consecutiveOk = 0;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+}
+
 function startFixtureServer(fixtureName: string): { child: ChildProcess; logPath: string } {
   const fixture = discoverFixtures().find((candidate) => candidate.name === fixtureName);
   if (!fixture) throw new Error(`Unknown fixture: ${fixtureName}`);
@@ -85,7 +123,9 @@ export const test = base.extend<object, { fixtureServer: void }>({
   fixtureServer: [async ({}, use, workerInfo) => {
     const { child, logPath } = startFixtureServer(workerInfo.project.name);
     try {
-      await waitForPort(getFixturePort(workerInfo.project.name));
+      const port = getFixturePort(workerInfo.project.name);
+      await waitForPort(port);
+      await warmupServer(port);
       await use();
     } catch (error) {
       console.error(`[fixture-server] log: ${logPath}`);

@@ -1145,6 +1145,16 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       if (name === 'ssr') {
         addNoExternal(config, 'motion')
         addNoExternal(config, 'framer-motion')
+        // Pre-include motion/react so the SSR optimizer doesn't discover it
+        // mid-request on the first page render. Late discovery re-optimizes
+        // the SSR pre-bundle and invalidates in-flight module graphs, making
+        // the NEXT request fail with "There is a new version of the
+        // pre-bundle" (browsers auto-reload; API/tests see a raw 500).
+        config.optimizeDeps ??= {}
+        config.optimizeDeps.include = mergeUnique(
+          config.optimizeDeps.include,
+          ['@holocron.so/vite > motion/react'],
+        )
       }
 
       if (name === 'client') {
@@ -1165,6 +1175,12 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             '@holocron.so/vite > react-medium-image-zoom',
             '@holocron.so/vite > zustand',
             '@holocron.so/vite > tailwind-merge',
+            // Pre-include deps discovered on first page render so the client
+            // optimizer doesn't churn ("optimized dependencies changed.
+            // reloading") right after dev server startup.
+            '@holocron.so/vite > motion/react',
+            '@holocron.so/vite > github-slugger',
+            '@holocron.so/vite > @radix-ui/react-dropdown-menu',
           ],
         )
       }
