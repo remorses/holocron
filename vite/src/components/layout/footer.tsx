@@ -163,7 +163,7 @@ export function Footer() {
 
 export function PoweredBy() {
   return (
-    <div className='flex items-center justify-center pt-6 pb-12'>
+    <div className='flex items-center justify-center py-6'>
       <Link
         href={holocronUrl('/?utm_source=powered-by')}
         target='_blank'
