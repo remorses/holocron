@@ -1105,6 +1105,23 @@ const footerLinkColumnSchema = z.object({
   items: z.array(footerLinkItemSchema).describe('Links in the column'),
 })
 
+/* ── Sidebar ──────────────────────────────────────────────────────────── */
+
+export const sidebarSchema = z
+  .object({
+    animate: z
+      .boolean()
+      .optional()
+      .describe(
+        dedent`
+          Enable expand/collapse and hover transitions in the left
+          navigation sidebar. Defaults to \`false\`
+        `,
+      ),
+  })
+  .describe('Left navigation sidebar behavior and appearance')
+  .meta({ id: 'sidebarSchema' })
+
 /* ── Layout ───────────────────────────────────────────────────────────── */
 
 export const layoutSchema = z
@@ -1343,6 +1360,7 @@ export const holocronConfigSchema = z
     seo: seoSchema.optional(),
     assistant: assistantSchema.optional(),
     decorativeLines: decorativeLinesSchema.optional(),
+    sidebar: sidebarSchema.optional(),
     layout: layoutSchema.optional(),
     integrations: integrationsSchema.optional(),
     customCss: z

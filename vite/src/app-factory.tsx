@@ -1037,7 +1037,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     return (
       <html
         lang='en'
-        className={isDark ? 'dark' : undefined}
+        className={[isDark ? 'dark' : '', effectiveConfig.sidebar.animate ? 'sidebar-animate' : ''].filter(Boolean).join(' ') || undefined}
         data-default-theme={effectiveConfig.appearance.default}
         suppressHydrationWarning
         {...(effectiveConfig.appearance.strict ? { 'data-strict-theme': '' } : {})}

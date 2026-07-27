@@ -183,6 +183,7 @@ export type HolocronConfig = {
   seo: { indexing?: 'navigable' | 'all'; metatags?: Record<string, string> }
   assistant: { enabled: boolean; suggestions?: string[] }
   decorativeLines: 'none' | 'lines' | 'dashed' | 'lines-with-dots'
+  sidebar: { animate: boolean }
   layout: { maxWidth: number; sidebarWidth: number; columnGap: number; radius: number }
   integrations: z.output<typeof integrationsSchema>
   /** Raw CSS injected as a <style> tag. For multi-tenant sites that cannot

@@ -136,6 +136,7 @@ export function normalize(raw: Record<string, unknown>): HolocronConfig {
     seo: normalizeSeo(raw.seo),
     assistant: normalizeAssistant(raw.assistant),
     decorativeLines: normalizeDecorativeLines(raw.decorativeLines),
+    sidebar: normalizeSidebar(raw.sidebar),
     layout: normalizeLayout(raw.layout),
     integrations: normalizeIntegrations(raw.integrations),
     ...(typeof raw.customCss === 'string' && raw.customCss
@@ -783,6 +784,15 @@ function normalizeDecorativeLines(raw: unknown): HolocronConfig['decorativeLines
     return raw as HolocronConfig['decorativeLines']
   }
   return 'lines-with-dots'
+}
+
+function normalizeSidebar(raw: unknown): HolocronConfig['sidebar'] {
+  const defaults: HolocronConfig['sidebar'] = { animate: false }
+  if (!raw || typeof raw !== 'object') return defaults
+  const obj = raw as Record<string, unknown>
+  return {
+    animate: typeof obj.animate === 'boolean' ? obj.animate : defaults.animate,
+  }
 }
 
 function normalizeLayout(raw: unknown): HolocronConfig['layout'] {
