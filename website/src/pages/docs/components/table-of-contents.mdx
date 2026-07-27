@@ -37,6 +37,23 @@ When used without props, the component reads the current page's headings automat
 
 This picks up every `##`, `###`, and deeper heading on the page, indented by depth.
 
+## Sidebar headings are hidden automatically
+
+Normally the left sidebar shows the current page's section headings inline, under the active page entry. When a page renders a `TableOfContentsPanel`, Holocron **detects it at build time** and hides that inline list — the same headings would otherwise appear twice, once in each sidebar.
+
+No configuration is needed. To override the behavior, set the `sidebarToc` frontmatter field:
+
+```mdx
+---
+title: My Page
+# true: show sidebar headings even with a TableOfContentsPanel present
+# false: hide sidebar headings on any page, panel or not
+sidebarToc: true
+---
+```
+
+Sidebar search still matches and shows headings regardless of this setting, so heading results stay reachable.
+
 ## Custom title
 
 Change the label above the heading list with the `title` prop. Defaults to `"On this page"`.

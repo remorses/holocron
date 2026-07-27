@@ -73,6 +73,10 @@ export type ProcessedMdx = {
    *  element names back to their import source for merging imported MDX
    *  headings into the page's TOC. */
   importBindings: ImportBinding[]
+  /** True when the page renders a `<TableOfContentsPanel />` (usually inside
+   *  `<Aside full>`). The left sidebar skips the inline heading list for such
+   *  pages since the TOC is already visible in the right sidebar. */
+  hasTocPanel: boolean
   /** The parsed mdast tree (reused for image rewriting without re-parsing) */
   mdast: Root
 }
@@ -158,8 +162,20 @@ export function processMdx(
     internalLinks,
     importSources,
     importBindings,
+    hasTocPanel: mdastHasJsxComponent(mdast.children, 'TableOfContentsPanel'),
     mdast,
   }
+}
+
+/** Deep-scan mdast for a JSX element with the given name (flow or text).
+ *  Used to detect `<TableOfContentsPanel />` nested inside `<Aside full>`. */
+function mdastHasJsxComponent(nodes: RootContent[], name: string): boolean {
+  for (const node of nodes) {
+    if (isJsxElement(node) && node.name === name) return true
+    const children = Reflect.get(node, 'children')
+    if (Array.isArray(children) && mdastHasJsxComponent(children, name)) return true
+  }
+  return false
 }
 
 function collectIconRefsFromMdast({

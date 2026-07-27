@@ -53,6 +53,10 @@ export type NavPage = {
   headings: NavHeading[]
   icon?: NavIcon
   frontmatter: PageFrontmatter
+  /** True when the page renders `<TableOfContentsPanel />` — the left sidebar
+   *  skips the inline heading list since the TOC is already in the right aside.
+   *  Omitted (not false) in the common case to keep the serialized tree slim. */
+  hasTocPanel?: true
 }
 
 /** A heading extracted from the MDX content */

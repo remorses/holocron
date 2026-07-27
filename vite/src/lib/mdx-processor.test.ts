@@ -28,6 +28,34 @@ icon: rocket
     ])
   })
 
+  test('detects TableOfContentsPanel nested inside Aside', () => {
+    const result = processMdx(`# Title
+
+<Aside full>
+  <TableOfContentsPanel />
+</Aside>
+
+## Section one
+
+Body text.
+`)
+    expect(result.hasTocPanel).toBe(true)
+  })
+
+  test('hasTocPanel is false for pages without the panel', () => {
+    const result = processMdx(`# Title
+
+<Aside full>
+  <Note>
+  Some aside content.
+  </Note>
+</Aside>
+
+## Section one
+`)
+    expect(result.hasTocPanel).toBe(false)
+  })
+
   test('extracts frontmatter', () => {
     const result = processMdx(`---
 title: Hello World

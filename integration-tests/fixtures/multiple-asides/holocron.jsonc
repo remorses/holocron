@@ -9,7 +9,7 @@
     "groups": [
       {
         "group": "Guides",
-        "pages": ["index"]
+        "pages": ["index", "toc-panel", "sidebar-toc-false"]
       }
     ]
   }

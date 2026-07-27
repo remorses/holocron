@@ -43,6 +43,7 @@ export async function buildNavigationData({
       headings: processed.headings,
       ...(processed.icon && { icon: processed.icon }),
       frontmatter: processed.frontmatter,
+      ...(processed.hasTocPanel && { hasTocPanel: true as const }),
     }
   }
   return await buildEnrichedNavigation({ config, enrichPage })

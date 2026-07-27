@@ -303,6 +303,7 @@ export async function syncNavigation({
         gitSha: `virtual:${slug}`,
         headings: processed.headings,
         frontmatter: processed.frontmatter,
+        ...(processed.hasTocPanel && { hasTocPanel: true as const }),
       }
     }
 
@@ -472,6 +473,7 @@ export async function syncNavigation({
       // Icon comes from MDX frontmatter (Mintlify convention: `icon: rocket`)
       ...(processed.icon && { icon: processed.icon }),
       frontmatter: processed.frontmatter,
+      ...(processed.hasTocPanel && { hasTocPanel: true as const }),
     }
   }
 
@@ -902,6 +904,7 @@ export async function processDeferredProviders({
       gitSha: isRealFile ? gitBlobSha(mdxSource) : `virtual:${slug}`,
       headings: processed.headings,
       frontmatter: processed.frontmatter,
+      ...(processed.hasTocPanel && { hasTocPanel: true as const }),
     }
   }
 

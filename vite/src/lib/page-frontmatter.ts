@@ -39,6 +39,12 @@ export const pageFrontmatterSchema = z.object({
       'Page layout mode. "default" keeps the full layout (left navigation sidebar, right table of contents, footer). "center" hides the left navigation sidebar and centers the content. "custom" gives full control over the page content — only navbar and footer are rendered, no editorial grid, no sections, no prose styling. Useful for landing pages and custom layouts. "wide" and "frame" alias to the default layout.',
     ),
   deprecated: z.boolean().optional().describe('Mark the page as deprecated'),
+  sidebarToc: z
+    .boolean()
+    .optional()
+    .describe(
+      'Show or hide this page\'s section headings under its entry in the left sidebar. By default headings are shown, unless the page renders a <TableOfContentsPanel /> (the TOC is already visible in the right sidebar). Set to false to always hide, or true to always show and override the auto-detection.',
+    ),
   rendering: z
     .enum(['ssr', 'static'])
     .optional()

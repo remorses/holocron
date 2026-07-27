@@ -45,6 +45,10 @@
       "description": "Mark the page as deprecated",
       "type": "boolean"
     },
+    "sidebarToc": {
+      "description": "Show or hide this page's section headings under its entry in the left sidebar. By default headings are shown, unless the page renders a <TableOfContentsPanel /> (the TOC is already visible in the right sidebar). Set to false to always hide, or true to always show and override the auto-detection.",
+      "type": "boolean"
+    },
     "rendering": {
       "description": "Rendering strategy for this page. \"ssr\" (default) renders the page on every request, so it can react to per-request data like cookies. \"static\" prerenders the page to static HTML at build time for faster delivery and cheaper hosting — use it for pages whose content never depends on the incoming request.",
       "type": "string",

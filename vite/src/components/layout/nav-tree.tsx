@@ -265,9 +265,16 @@ function NavPageLink({
   // only the current page gets --sidebar-primary; all others use --sidebar-foreground.
   const isEmphasized = isActive || (isSearchActive && isMatched)
 
+  // Pages that render <TableOfContentsPanel /> already show their TOC in the
+  // right aside — skip the inline sidebar heading list for those. Frontmatter
+  // `sidebarToc` overrides in either direction. Search keeps showing headings
+  // so matched heading results stay reachable.
+  const tocSuppressed = frontmatter.sidebarToc === false
+    || (frontmatter.sidebarToc !== true && page.hasTocPanel === true)
+
   // Show TOC when: search is active (so matched headings are visible), or page is the current page.
   // A single heading is not useful as a TOC — treat it like a page without sections.
-  const showToc = page.headings.length > 1 && (isSearchActive || isActive)
+  const showToc = page.headings.length > 1 && (isSearchActive || (isActive && !tocSuppressed))
 
   // When a badge is present, truncate the title so the badge + title never overflow
   // the sidebar width. Without a badge, text wraps normally.
@@ -318,7 +325,9 @@ function NavPageLink({
         </span>
       </Link>
       <ExpandableContainer open={showToc} animate={animate}>
-        {page.headings.length > 1 && (
+        {/* Skip mounting heading links entirely on suppressed pages (unless
+            search needs them) — keeps the DOM slim for TOC-panel pages. */}
+        {page.headings.length > 1 && (isSearchActive || !tocSuppressed) && (
           <TocInline
             headings={page.headings}
             pageHref={page.href}
