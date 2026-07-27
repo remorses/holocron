@@ -87,10 +87,40 @@ export function CodeCard({
  * `CodeCard` shell wrapped a separate `Tabs` shell. A single child renders a
  * one-tab panel. The panel carries a persistent copy button.
  */
-export function RequestExample({ children, dropdown }: { children: React.ReactNode; dropdown?: boolean }) {
-  return <Tabs title='Request example' copyable ariaLabel='Request example'>{children}</Tabs>
+/**
+ * Request example panel. `sync` defaults to true so language tabs (cURL,
+ * TypeScript, …) stay aligned across OpenAPI pages and multiple panels.
+ */
+export function RequestExample({
+  children,
+  dropdown,
+  sync = true,
+}: {
+  children: React.ReactNode
+  dropdown?: boolean
+  /** Sync selection by tab title with other synced Tabs. Default true. */
+  sync?: boolean
+}) {
+  return (
+    <Tabs title='Request example' copyable sync={sync} ariaLabel='Request example'>
+      {children}
+    </Tabs>
+  )
 }
 
-export function ResponseExample({ children, dropdown }: { children: React.ReactNode; dropdown?: boolean }) {
-  return <Tabs title='Response example' copyable ariaLabel='Response example'>{children}</Tabs>
+export function ResponseExample({
+  children,
+  dropdown,
+  sync = false,
+}: {
+  children: React.ReactNode
+  dropdown?: boolean
+  /** Response status tabs rarely share titles across pages; default off. */
+  sync?: boolean
+}) {
+  return (
+    <Tabs title='Response example' copyable sync={sync} ariaLabel='Response example'>
+      {children}
+    </Tabs>
+  )
 }

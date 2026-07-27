@@ -1,8 +1,112 @@
 'use client'
 
-import React, { Children, isValidElement, useId, useMemo, useRef, useState } from 'react'
+import React, {
+  Children,
+  isValidElement,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react'
 import { cn } from '../../lib/css-vars.ts'
 import { Icon } from '../icon.tsx'
+
+/* ── Tab title sync (Mintlify-compatible) ───────────────────────────────
+ * When sync is on, selecting a tab publishes its title. Other synced Tabs
+ * that have a matching title switch to it. Preference is kept in memory +
+ * localStorage so it survives navigation. useSyncExternalStore keeps SSR
+ * and the first client paint on defaultTabIndex, then applies the stored
+ * title after hydration (no useEffect flash pattern).
+ */
+
+const TAB_SYNC_STORAGE_KEY = 'holocron-tab-sync'
+
+const tabSyncListeners = new Set<() => void>()
+/** undefined = not yet read from localStorage on this client. */
+let tabSyncMemory: string | null | undefined
+
+function readTabSyncStorage(): string | null {
+  try {
+    return localStorage.getItem(TAB_SYNC_STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
+/** Client snapshot — stable module fn for useSyncExternalStore. */
+export function getSyncedTabTitle(): string | null {
+  if (tabSyncMemory === undefined) {
+    tabSyncMemory = typeof localStorage !== 'undefined' ? readTabSyncStorage() : null
+  }
+  return tabSyncMemory ?? null
+}
+
+/** Server + first-paint snapshot — always no preference. */
+export function getServerSyncedTabTitle(): string | null {
+  return null
+}
+
+export function subscribeSyncedTabTitle(cb: () => void): () => void {
+  tabSyncListeners.add(cb)
+  const onStorage = (event: StorageEvent) => {
+    if (event.key !== TAB_SYNC_STORAGE_KEY) return
+    tabSyncMemory = event.newValue
+    cb()
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', onStorage)
+  }
+  return () => {
+    tabSyncListeners.delete(cb)
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('storage', onStorage)
+    }
+  }
+}
+
+export function setSyncedTabTitle(title: string): void {
+  if (!title) return
+  if (tabSyncMemory === title) return
+  tabSyncMemory = title
+  try {
+    localStorage.setItem(TAB_SYNC_STORAGE_KEY, title)
+  } catch {
+    /* private mode / quota — in-memory sync still works this session */
+  }
+  for (const listener of tabSyncListeners) listener()
+}
+
+/** Test-only: clear in-memory + storage preference. */
+export function resetTabSyncForTests(): void {
+  tabSyncMemory = undefined
+  try {
+    localStorage.removeItem(TAB_SYNC_STORAGE_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Resolve active index from a synced title, or fall back. Exact match first, then case-insensitive. */
+export function resolveSyncedTabIndex(
+  labels: string[],
+  syncedTitle: string | null,
+  fallbackIndex: number,
+): number {
+  if (!syncedTitle || labels.length === 0) return fallbackIndex
+  const exact = labels.indexOf(syncedTitle)
+  if (exact >= 0) return exact
+  const lower = syncedTitle.toLowerCase()
+  const loose = labels.findIndex((label) => label.toLowerCase() === lower)
+  if (loose >= 0) return loose
+  return fallbackIndex
+}
+
+function emptySubscribe(): () => void {
+  return () => {}
+}
+
+const getNullTitle = (): string | null => null
 
 function CopyIcon() {
   return (
@@ -54,6 +158,8 @@ export function Tabs({
   children,
   items,
   defaultTabIndex = 0,
+  /** When true, selection syncs with other Tabs that share a matching title. */
+  sync = false,
   borderBottom = true,
   className = '',
   ariaLabel = 'Tabs',
@@ -69,7 +175,16 @@ export function Tabs({
     : tabs.map((tab, index) => tab.props.title ?? tab.props.value ?? tab.props.lang ?? `Tab ${index + 1}`)
   const maxIndex = Math.max(labels.length - 1, 0)
   const initialIndex = Math.min(defaultTabIndex, maxIndex)
-  const [activeIndex, setActiveIndex] = useState(initialIndex)
+  const [localIndex, setLocalIndex] = useState(initialIndex)
+
+  // Hydration-safe preference: server always null → defaultTabIndex; client
+  // may pick up localStorage after hydrate without a useEffect race.
+  const syncedTitle = useSyncExternalStore(
+    sync ? subscribeSyncedTabTitle : emptySubscribe,
+    sync ? getSyncedTabTitle : getNullTitle,
+    getServerSyncedTabTitle,
+  )
+  const activeIndex = resolveSyncedTabIndex(labels, sync ? syncedTitle : null, localIndex)
   const activeTab = tabs[activeIndex]
   const uniqueId = useId()
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
@@ -79,7 +194,11 @@ export function Tabs({
 
   const selectTab = (index: number) => {
     if (index === activeIndex) return
-    setActiveIndex(index)
+    setLocalIndex(index)
+    if (sync) {
+      const label = labels[index]
+      if (label) setSyncedTabTitle(label)
+    }
     onTabChange?.(index)
   }
 

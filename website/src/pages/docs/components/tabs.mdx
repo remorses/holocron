@@ -43,9 +43,37 @@ pnpm add @holocron.so/vite react react-dom vite
 
 ## Supported props
 
-- `Tabs` supports `defaultTabIndex` and nested `Tab` children.
+- `Tabs` supports `defaultTabIndex`, `sync`, and nested `Tab` children.
 - `Tab` supports `title`, `value`, and `icon`.
+
+### Default tab
+
+```mdx
+<Tabs defaultTabIndex={1}>
+  <Tab title='First'>...</Tab>
+  <Tab title='Second'>Opens by default.</Tab>
+</Tabs>
+```
+
+### Sync by title
+
+When **`sync`** is true, selecting a tab publishes its **title**. Other synced
+`<Tabs>` on the site that include the same title switch to it. The choice is
+stored in `localStorage` so it survives navigation.
+
+```mdx
+<Tabs sync>
+  <Tab title='TypeScript'>...</Tab>
+  <Tab title='Python'>...</Tab>
+</Tabs>
+```
+
+OpenAPI **Request example** panels enable `sync` by default, so picking
+TypeScript on one endpoint keeps TypeScript on the next. Use `sync={false}` to
+opt out of a single group.
 
 ## Holocron differences
 
-- Mintlify documents tab synchronization across components. Holocron does **not** currently sync tab groups by title.
+- Sync matches by **tab title** (exact, then case-insensitive), same idea as Mintlify.
+- Preference is hydration-safe: the server always renders `defaultTabIndex`; the
+  stored title applies after the client hydrates.
