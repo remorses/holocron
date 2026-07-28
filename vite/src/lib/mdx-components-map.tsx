@@ -261,6 +261,36 @@ export const mdxComponents = {
 } satisfies Record<SafeMdxComponentName | `${string}.${string}`, unknown>
 
 
+export interface RenderNodeOptions {
+  /**
+   * Force fenced code blocks to render without the line-number gutter,
+   * ignoring the `lines` meta flag. Used by the AI chat panel, where the
+   * narrow column makes numbers pure noise.
+   */
+  forceNoLineNumbers?: boolean
+  /**
+   * Default bleed mode for fenced code blocks when the `bleed` meta flag is
+   * absent. Docs pages bleed right so code text lines up with the prose left
+   * edge; narrow surfaces like the chat panel pass `'none'`.
+   */
+  defaultCodeBleed?: boolean | BleedMode
+}
+
+/**
+ * Build a safe-mdx `renderNode` transformer. Options let non-docs surfaces
+ * (currently the AI chat panel) tweak code block chrome without duplicating
+ * the whole mdast → JSX mapping.
+ */
+export function createRenderNode(options: RenderNodeOptions) {
+  return (node: MyRootContent, transform: (node: MyRootContent) => ReactNode) => {
+    // Only fenced code blocks are configurable; everything else falls through
+    // to the shared docs mapping.
+    if (node.type === 'code') return renderCodeBlock(node, options)
+    return renderNode(node, transform)
+  }
+}
+
+/** Default transformer used by docs pages. */
 export function renderNode(
   node: MyRootContent,
   transform: (node: MyRootContent) => ReactNode,
@@ -311,33 +341,41 @@ export function renderNode(
     )
   }
 
-  if (node.type === 'code') {
-    const lang = node.lang || 'bash'
-    const isDiagram = lang === 'diagram'
-    const meta = parseCodeMeta(node.meta)
-    // Wrapped code has no stable line grid (one logical line can span many
-    // visual lines), so line numbers and the highlight overlay are disabled:
-    // both allocate exactly 1lh per logical line and would misalign.
-    const wrap = metaBool(meta.attributes.wrap) ?? false
-    const showLineNumbers = isDiagram || wrap ? false : metaBool(meta.attributes.lines)
-    // Fenced code blocks default to right-edge bleed so the code text lines up
-    // with the prose left edge. `bleed=true` → both sides, `bleed=false`/`none`
-    // → no bleed. The enum values (both/right/none) also pass through.
-    const rawBleed = meta.attributes.bleed
-    const bleed: boolean | BleedMode =
-      rawBleed === 'both' || rawBleed === 'right' || rawBleed === 'none'
-        ? rawBleed
-        : rawBleed === undefined
-          ? 'right'
-          : (metaBool(rawBleed) ?? 'right')
-    const highlight = wrap ? undefined : meta.attributes.highlight
-    return (
-      <CodeBlock lang={lang} lineHeight={isDiagram ? '1.4' : '1.6'} showLineNumbers={showLineNumbers} bleed={bleed} title={meta.title} highlight={highlight} wrap={wrap}>
-        {node.value}
-      </CodeBlock>
-    )
-  }
+  if (node.type === 'code') return renderCodeBlock(node, {})
   return undefined
+}
+
+function renderCodeBlock(
+  node: Extract<MyRootContent, { type: 'code' }>,
+  options: RenderNodeOptions,
+): ReactNode {
+  const lang = node.lang || 'bash'
+  const isDiagram = lang === 'diagram'
+  const meta = parseCodeMeta(node.meta)
+  // Wrapped code has no stable line grid (one logical line can span many
+  // visual lines), so line numbers and the highlight overlay are disabled:
+  // both allocate exactly 1lh per logical line and would misalign.
+  const wrap = metaBool(meta.attributes.wrap) ?? false
+  const showLineNumbers = isDiagram || wrap || options.forceNoLineNumbers
+    ? false
+    : metaBool(meta.attributes.lines)
+  // Fenced code blocks default to right-edge bleed so the code text lines up
+  // with the prose left edge. `bleed=true` → both sides, `bleed=false`/`none`
+  // → no bleed. The enum values (both/right/none) also pass through.
+  const defaultBleed = options.defaultCodeBleed ?? 'right'
+  const rawBleed = meta.attributes.bleed
+  const bleed: boolean | BleedMode =
+    rawBleed === 'both' || rawBleed === 'right' || rawBleed === 'none'
+      ? rawBleed
+      : rawBleed === undefined
+        ? defaultBleed
+        : (metaBool(rawBleed) ?? defaultBleed)
+  const highlight = wrap ? undefined : meta.attributes.highlight
+  return (
+    <CodeBlock lang={lang} lineHeight={isDiagram ? '1.4' : '1.6'} showLineNumbers={showLineNumbers} bleed={bleed} title={meta.title} highlight={highlight} wrap={wrap}>
+      {node.value}
+    </CodeBlock>
+  )
 }
 
 /** Render an array of mdast nodes through safe-mdx with the editorial

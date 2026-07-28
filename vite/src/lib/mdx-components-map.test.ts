@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { mdxComponents } from './mdx-components-map.tsx'
+import { createRenderNode, mdxComponents, renderNode } from './mdx-components-map.tsx'
 import { buildCodeFrame, formatMdxError, HolocronMdxParseError } from './logger.ts'
 import { normalizeMdx } from './normalize-mdx.ts'
 import { RenderNodes } from './mdx-components-map.tsx'
+import { SafeMdxRenderer } from 'safe-mdx'
 import { mdxParse } from 'safe-mdx/parse'
 import type { Root, RootContent } from 'mdast'
 import { createElement } from 'react'
@@ -259,5 +260,52 @@ describe('MDX paragraph rendering — full production pipeline', () => {
       </div>
     `)
     expect(html).toMatchInlineSnapshot(`"<div><h2 class="text-3xl" id="section-title">Section Title</h2></div>"`)
+  })
+})
+
+describe('createRenderNode code block options', () => {
+  const md = dedent`
+    \`\`\`ts
+    const a = 1
+    \`\`\`
+  `
+
+  function renderWith(renderNode: ReturnType<typeof createRenderNode>) {
+    const mdast = mdxParse(md)
+    return renderToStaticMarkup(
+      createElement(SafeMdxRenderer, {
+        markdown: md,
+        mdast,
+        components: mdxComponents,
+        renderNode,
+      }),
+    )
+  }
+
+  it('docs default: line-number gutter + right bleed', () => {
+    const html = renderWith(renderNode)
+    expect(html.includes('aria-hidden="true"')).toBe(true)
+    expect(html.includes('bleed-right')).toBe(true)
+  })
+
+  it('chat options: no gutter, no bleed', () => {
+    const html = renderWith(
+      createRenderNode({ forceNoLineNumbers: true, defaultCodeBleed: 'none' }),
+    )
+    expect(html.includes('aria-hidden="true"')).toBe(false)
+    expect(html.includes('bleed-right')).toBe(false)
+  })
+
+  it('forceNoLineNumbers wins over an explicit `lines` meta flag', () => {
+    const withMeta = '```ts lines\nconst a = 1\n```'
+    const html = renderToStaticMarkup(
+      createElement(SafeMdxRenderer, {
+        markdown: withMeta,
+        mdast: mdxParse(withMeta),
+        components: mdxComponents,
+        renderNode: createRenderNode({ forceNoLineNumbers: true }),
+      }),
+    )
+    expect(html.includes('aria-hidden="true"')).toBe(false)
   })
 })
