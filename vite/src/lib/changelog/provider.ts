@@ -269,7 +269,15 @@ function escapeOutsideInlineCode(line: string): string {
   return result
 }
 
-/** Format an ISO timestamp as a short human date (e.g. "Jan 5, 2026"). */
+/**
+ * Format an ISO timestamp as a short human date (e.g. "Jan 5, 2026").
+ *
+ * Always formatted in UTC. GitHub's `published_at` is a UTC instant, and a
+ * release published at `2026-01-05T00:00:00Z` must read "Jan 5, 2026" for
+ * everyone. Formatting in the machine's local zone would shift the calendar
+ * day backwards at negative UTC offsets, so the generated changelog page (and
+ * its cache entry) would differ depending on which machine ran the build.
+ */
 function formatDate(iso: string | null): string | undefined {
   if (!iso) return undefined
   const ms = Date.parse(iso)
@@ -278,5 +286,6 @@ function formatDate(iso: string | null): string | undefined {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
+    timeZone: 'UTC',
   })
 }
