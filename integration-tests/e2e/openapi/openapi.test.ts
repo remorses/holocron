@@ -219,13 +219,28 @@ test.describe('OpenAPI tab', () => {
     expect(html).toContain('DELETE')
   })
 
-  test('path parameters appear in parameter section', async ({ request }) => {
-    // GET /users/{userId} has a path param
+  test('path params show in the endpoint path, without a Path Parameters section', async ({ request }) => {
+    // GET /users/{userId} has a single path param. Only Query Parameters and
+    // Request Body get their own sections — a path param is already visible in
+    // the endpoint path rendered at the top of the page.
     const res = await request.get('/api/get-users-userid')
     expect(res.ok()).toBe(true)
     const html = await res.text()
-    expect(html).toContain('userId')
-    expect(html).toContain('Path Parameters')
+    expect(html).toContain('/users/{userId}')
+    expect(html).not.toContain('Path Parameters')
+  })
+
+  test('query params get a section while header params stay hidden', async ({ request }) => {
+    // GET /users has query params (role, search) plus an X-Request-ID header param.
+    const res = await request.get('/api/get-users')
+    expect(res.ok()).toBe(true)
+    const html = await res.text()
+    expect(html).toContain('Query Parameters')
+    expect(html).toContain('search')
+    expect(html).not.toContain('Header Parameters')
+    // The header param itself is not gone — it still shows up in the generated
+    // curl sample, it just does not get a dedicated parameter section.
+    expect(html).toContain('X-Request-ID')
   })
 })
 
