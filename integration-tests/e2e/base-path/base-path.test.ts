@@ -22,6 +22,39 @@ test.describe("pages under base path", () => {
   });
 });
 
+test.describe("images under base path", () => {
+  test("publicDir image src gets the base prefix and loads", async ({
+    page,
+    request,
+  }) => {
+    await page.goto("/docs/intro", { waitUntil: "domcontentloaded" });
+    const img = page.locator('img[alt="Public image"]');
+    await expect(img).toBeVisible();
+    const src = await img.getAttribute("src");
+    expect(src).toBe("/docs/images/test.png");
+    const res = await request.get(src!);
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("image/png");
+    // The <Card img="/images/test.png"> renders a second img with the same
+    // base-prefixed src — both must carry the base.
+    await expect(page.locator('img[src="/docs/images/test.png"]')).toHaveCount(2);
+  });
+
+  test("copied image src gets the base prefix and loads", async ({
+    page,
+    request,
+  }) => {
+    await page.goto("/docs/intro", { waitUntil: "domcontentloaded" });
+    const img = page.locator('img[alt="Copied image"]');
+    await expect(img).toBeVisible();
+    const src = await img.getAttribute("src");
+    expect(src).toMatch(/^\/docs\/_holocron\/images\/[0-9a-f]{8}-photo\.png$/);
+    const res = await request.get(src!);
+    expect(res.status()).toBe(200);
+    expect(res.headers()["content-type"]).toContain("image/png");
+  });
+});
+
 test.describe("raw markdown under base path", () => {
   test("GET /docs/intro.md returns raw markdown", async ({ request }) => {
     const res = await request.get("/docs/intro.md");

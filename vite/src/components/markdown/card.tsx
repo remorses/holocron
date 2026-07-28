@@ -5,6 +5,7 @@
 import React from 'react'
 import { Link } from '../link.tsx'
 import { cn } from '../../lib/css-vars.ts'
+import { withBasePath } from '../../lib/holocron-url.ts'
 import { useHolocronDataSafe } from '../../router.ts'
 import { isExternalHref, renderCompatIcon, stripOriginIfSameHost } from './shared.tsx'
 
@@ -50,7 +51,7 @@ export function Card({
   const showArrow = arrow ?? external
   const content = (
     <div className={cn('group/card relative flex h-full flex-col gap-2 rounded-lg bg-card transition-colors duration-150', href && !disabled && 'hover:bg-accent', horizontal && 'flex-row items-center', disabled && 'opacity-50', className)} style={{ padding: 'var(--card-padding)', border: 'var(--card-border)', boxShadow: 'var(--card-shadow)' }}>
-      {img && <img src={img} alt='' className='w-full rounded-lg border border-border-subtle' style={{ maxWidth: '100%', height: 'auto' }} />}
+      {img && <img src={withBasePath(img)} alt='' className='w-full rounded-lg border border-border-subtle' style={{ maxWidth: '100%', height: 'auto' }} />}
       <div className='flex items-center gap-2'>
         {renderCompatIcon({ icon, iconType, size: 16, color })}
         {title ? <div className='text-sm font-semibold text-foreground'>{title}</div> : null}

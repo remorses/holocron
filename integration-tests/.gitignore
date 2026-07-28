@@ -7,3 +7,8 @@ test-results/
 playwright-report/
 .playwright-logs/
 .deploy-preview-runs/
+# Fixture test images must be committable despite the root *.png ignore
+!fixtures/**/*.png
+# ...except the real-world docs mirrors, whose screenshots are tens of MB and
+# are not needed by any assertion (those fixtures only exercise config shape).
+fixtures/realworld-*/**/*.png

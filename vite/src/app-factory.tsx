@@ -291,8 +291,11 @@ function renderMdxPage({
   const pageKeywords = serializeKeywords(loaderData.currentPageFrontmatter?.keywords)
   // Resolve relative image URLs to absolute — social crawlers need full URLs
   const resolveUrl = (url: string) => /^https?:\/\//.test(url) ? url : new URL(url, requestUrl.origin).toString()
-  const pageOgImage = resolveUrl(pageSeoMeta['og:image'] ?? ogImageUrl)
-  const pageTwitterImage = resolveUrl(pageSeoMeta['twitter:image'] ?? pageOgImage)
+  // Frontmatter image paths are site-root-relative (Mintlify convention) —
+  // apply the Vite base before resolving to an absolute URL. The ogImageUrl
+  // fallback is already absolute (external OG service), so it's left as-is.
+  const pageOgImage = resolveUrl(withBasePath(pageSeoMeta['og:image']) ?? ogImageUrl)
+  const pageTwitterImage = resolveUrl(withBasePath(pageSeoMeta['twitter:image']) ?? pageOgImage)
   const pageOgDescription = pageSeoMeta['og:description'] ?? loaderData.currentPageDescription
   const pageTwitterDescription = pageSeoMeta['twitter:description'] ?? loaderData.currentPageDescription
   const pageOgTitle = pageSeoMeta['og:title'] ?? loaderData.headTitle

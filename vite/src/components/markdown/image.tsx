@@ -23,6 +23,7 @@ import React, { useCallback, useState } from 'react'
 import Zoom from 'react-medium-image-zoom'
 import 'react-medium-image-zoom/dist/styles.css'
 import { cn } from '../../lib/css-vars.ts'
+import { withBasePath } from '../../lib/holocron-url.ts'
 
 /**
  * Mintlify-compatible image with a pixelated placeholder. Uses a tiny pre-generated image with CSS
@@ -73,6 +74,11 @@ export function Image({
   const sourceWidth = readNumericAttr(width)
   const sourceHeight = readNumericAttr(height)
 
+  // Root-relative srcs (publicDir files like /images/x.png and copied
+  // /_holocron/images/<hash> paths) must be served under the Vite base
+  // path. Applied at render time so cached MDX stays base-agnostic.
+  const resolvedSrc = withBasePath(src)
+
   // SVGs are vector and load instantly — a 16px rasterized WebP placeholder
   // looks terrible (blocky pixelated text/shapes). Skip the placeholder system
   // entirely for SVG sources.
@@ -88,7 +94,7 @@ export function Image({
   }, [])
 
   if (!sourceWidth || !sourceHeight) {
-    return <img src={src} alt={alt} loading={loading} className={className} style={{ maxWidth: '100%', height: 'auto', ...style }} />
+    return <img src={resolvedSrc} alt={alt} loading={loading} className={className} style={{ maxWidth: '100%', height: 'auto', ...style }} />
   }
 
   const frameStyle = buildImageFrameStyle({
@@ -101,7 +107,7 @@ export function Image({
   const realImage = (
     <img
       ref={imgRef}
-      src={src}
+      src={resolvedSrc}
       alt={alt}
       width={imgWidth}
       height={imgHeight}
@@ -288,7 +294,7 @@ export function LazyVideo({
       {/* Real poster: fades in and sharpens over the pixelated placeholder */}
       <img
         ref={posterRef}
-        src={poster}
+        src={withBasePath(poster)}
         alt=''
         aria-hidden
         width={width}
@@ -313,7 +319,7 @@ export function LazyVideo({
           because the img layers handle the visual placeholder.
           loading="lazy" is passed through for browsers that support it. */}
       <video {...videoAttrs}>
-        <source src={src} type={type} />
+        <source src={withBasePath(src)} type={type} />
       </video>
     </div>
   )

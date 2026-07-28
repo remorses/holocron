@@ -685,6 +685,132 @@ title: Updated Title
     `)
   })
 
+  test('cache invalidation when image moves from project root to publicDir', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Image Page
+---
+
+<img src="/images/dot.svg" />`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4" viewBox="0 0 8 4"><rect width="8" height="4" fill="#38bdf8" /></svg>`
+
+    // Image starts at projectRoot/images/ — needsCopy=true → hashed path
+    const rootImagesDir = path.join(project.root, 'images')
+    fs.mkdirSync(rootImagesDir, { recursive: true })
+    fs.writeFileSync(path.join(rootImagesDir, 'dot.svg'), svg)
+
+    const first = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(first.parsedCount).toBe(1)
+    expect(first.mdxContent.page).toMatch(/src="\/_holocron\/images\/[0-9a-f]{8}-dot\.svg"/)
+
+    // Move the image into publicDir — same MDX content, different resolution
+    const publicImagesDir = path.join(project.publicDir, 'images')
+    fs.mkdirSync(publicImagesDir, { recursive: true })
+    fs.renameSync(path.join(rootImagesDir, 'dot.svg'), path.join(publicImagesDir, 'dot.svg'))
+
+    // Second sync — cache must invalidate and serve the unhashed public path
+    const second = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(second.parsedCount).toBe(1)
+    expect(second.cachedCount).toBe(0)
+    expect(second.mdxContent.page).toContain('src="/images/dot.svg"')
+
+    // Third sync — nothing changed, the stored gitSha (computed from fresh
+    // asset refs) must match the new candidate so the cache hits again.
+    const third = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(third.parsedCount).toBe(0)
+    expect(third.cachedCount).toBe(1)
+    expect(third.mdxContent.page).toContain('src="/images/dot.svg"')
+  })
+
+  test('cache invalidation when image content changes in place', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Image Page
+---
+
+<img src="./art.svg" />`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const svgPath = path.join(project.pagesDir, 'art.svg')
+    fs.writeFileSync(
+      svgPath,
+      `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4" viewBox="0 0 8 4"><rect width="8" height="4" fill="#38bdf8" /></svg>`,
+    )
+
+    const first = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(first.parsedCount).toBe(1)
+    const firstSrc = first.mdxContent.page!.match(/src="([^"]+)"/)?.[1]
+    expect(firstSrc).toMatch(/^\/_holocron\/images\/[0-9a-f]{8}-art\.svg$/)
+
+    // Replace the image content without touching the MDX — different pixels
+    // AND different dimensions, so the rewritten width/height must refresh.
+    fs.writeFileSync(
+      svgPath,
+      `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8" fill="#f43f5e" /></svg>`,
+    )
+
+    const second = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(second.parsedCount).toBe(1)
+    expect(second.cachedCount).toBe(0)
+    const secondSrc = second.mdxContent.page!.match(/src="([^"]+)"/)?.[1]
+    expect(secondSrc).toMatch(/^\/_holocron\/images\/[0-9a-f]{8}-art\.svg$/)
+    expect(secondSrc).not.toBe(firstSrc)
+    expect(second.mdxContent.page).toContain('width="16"')
+
+    // Unchanged third sync hits the cache
+    const third = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(third.parsedCount).toBe(0)
+    expect(third.cachedCount).toBe(1)
+  })
+
   test('cache invalidation when image cache version is stale', async () => {
     const project = tracked(createProject(
       {

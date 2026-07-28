@@ -211,6 +211,22 @@ export async function syncNavigation({
   const pageAssetRefs: Record<string, AssetRef[]> = {}
   /** Image files referenced by imported .md/.mdx (for HMR watching) */
   const allImportedImageDepPaths = new Set<string>()
+  /** Per-sync memo of asset file content hashes for cache-key computation.
+   *  Each referenced image is read at most once per sync, even when the
+   *  same file appears on many pages. */
+  const assetFileShaCache = new Map<string, string>()
+  function assetFileSha(filePath: string): string {
+    const cached = assetFileShaCache.get(filePath)
+    if (cached) return cached
+    let sha: string
+    try {
+      sha = crypto.createHash('sha1').update(fs.readFileSync(filePath)).digest('hex')
+    } catch {
+      sha = 'unreadable'
+    }
+    assetFileShaCache.set(filePath, sha)
+    return sha
+  }
   const mdxContentErrors = new Set<string>()
   const mdxParseErrors: Record<string, HolocronMdxParseError> = {}
   const redirectBackedPageSlugs = new Set(
@@ -341,7 +357,7 @@ export async function syncNavigation({
       }
     }
 
-    let sha = gitBlobSha(content)
+    const contentSha = gitBlobSha(content)
     const shaParts: string[] = []
     if (inlineImportMap.size > 0) {
       // Combine page SHA with imported file SHAs + image dep SHAs so
@@ -362,9 +378,34 @@ export async function syncNavigation({
         shaParts.push(`fm-img:${imgPath}:${crypto.createHash('sha1').update(fs.readFileSync(imgPath)).digest('hex')}`)
       } catch { /* ignore missing files */ }
     }
-    if (shaParts.length > 0) {
-      sha = gitBlobSha(sha + '\n' + shaParts.sort().join('\n'))
+    // Image resolution fingerprint: WHERE each local asset src resolves
+    // (publicDir → served as-is vs projectRoot/relative → copied to
+    // /_holocron/images/<hash>) determines the rewritten src baked into the
+    // cached MDX. Moving an image between public/ and the project root
+    // changes the rendered path without changing the MDX content, so the
+    // resolution state must be part of the cache key. The cache-hit
+    // candidate uses the asset refs cached from the previous sync (if the
+    // content changed, the content SHA differs anyway; if it didn't, the
+    // cached refs are identical to what a fresh parse would produce). On a
+    // cache miss the stored gitSha is recomputed from the FRESH refs so the
+    // next sync's candidate matches it.
+    function computeSha(assetRefs: AssetRef[] | undefined): string {
+      const parts = [...shaParts]
+      for (const ref of assetRefs ?? []) {
+        if (isNonLocalAssetSrc(ref.src)) continue
+        const resolved = resolveImagePath({ src: ref.src, mdxDir, publicDir, projectRoot })
+        // Include the file content hash so replacing an image in place
+        // (same path, new pixels) also invalidates — copied images get a
+        // new /_holocron/images/<hash> name and public images get fresh
+        // dimensions/placeholder.
+        parts.push(resolved
+          ? `asset:${ref.src}:${path.relative(projectRoot, resolved.filePath)}:${resolved.needsCopy}:${assetFileSha(resolved.filePath)}`
+          : `asset:${ref.src}:missing`)
+      }
+      if (parts.length === 0) return contentSha
+      return gitBlobSha(contentSha + '\n' + parts.sort().join('\n'))
     }
+    const sha = computeSha(oldPageAssetRefs[slug])
 
     // Cache hit — MDX unchanged and all imported files unchanged
     const cached = oldPages.get(slug)
@@ -468,7 +509,11 @@ export async function syncNavigation({
       href: slugToHref(slug),
       title: processed.title,
       description: processed.description,
-      gitSha: sha,
+      // Recompute from the fresh asset refs — the pre-parse candidate `sha`
+      // was derived from the PREVIOUS sync's cached refs, which may be stale
+      // when the content changed. Storing the fresh-refs SHA keeps the next
+      // sync's candidate (computed from these now-cached refs) consistent.
+      gitSha: computeSha(mergedAssetRefs),
       headings: processed.headings,
       // Icon comes from MDX frontmatter (Mintlify convention: `icon: rocket`)
       ...(processed.icon && { icon: processed.icon }),
