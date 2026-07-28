@@ -1,3 +1,33 @@
+## 0.21.0
+
+1. **`holocron diagrams fix` now formats GFM tables in place**, not just box-drawing diagrams:
+
+   ```bash
+   npx -y "@holocron.so/cli" diagrams fix docs/**/*.mdx
+   ```
+
+   Before:
+
+   ```md
+   |Name|Age|City|
+   |---|---|---|
+   |Alice|30|NYC|
+   |Bob|2|SF|
+   ```
+
+   After:
+
+   ```md
+   | Name  | Age | City |
+   | ----- | --- | ---- |
+   | Alice | 30  | NYC  |
+   | Bob   | 2   | SF   |
+   ```
+
+   Each table is found via the mdast AST, stringified with the same `mdast-util-gfm` path used by Holocron `.md` / `.mdx` handlers (padded columns, aligned pipes), then spliced back into the original source. The full MDX document is never re-serialized, so prose, JSX, and code fences stay untouched. It also normalizes a blank line above and below each table, and peels trailing prose that GFM would otherwise absorb when a table is missing its closing blank line. `--check` fails on unformatted tables the same way it does for misaligned diagrams.
+
+2. **`holocron deploy` auto-detects the Vite `base` path** — previously a site built with `base: '/docs'` emitted HTML referencing `/docs/assets/*`, but the deployment metadata had no base path, so the hosting worker looked up assets at root and every CSS/JS request 404ed. The base is now read from the build output and forwarded as the deployment `basePath` (equivalent to passing `--base-path`). An explicit `--base-path` flag still takes precedence.
+
 ## 0.20.1
 
 1. **Diagram fixer handles cross junctions and mixed borders** — `holocron diagrams fix` now correctly detects boxes with cross junctions (`┼`, `╬`, `╋`, `╪`, `╫`) on borders, mixed single/double corners (`╒`, `╓`, `╕`, `╖`, `╘`, `╙`, `╛`, `╜`), and mixed junctions (`╤`, `╥`, `╧`, `╨`, `╞`, `╟`, `╡`, `╢`). Previously these characters broke border scanning and prevented box detection entirely.

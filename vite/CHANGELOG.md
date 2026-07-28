@@ -1,5 +1,59 @@
 # @holocron.so/vite
 
+## 0.29.0
+
+1. **Render OpenAPI `x-codeSamples` as Request example tabs** — SDK snippets from Stainless, Speakeasy, hey-api, or hand-written samples now show up next to the generated cURL block on endpoint pages.
+
+2. **Tab selection syncs by title across panels** — a new `sync` prop makes `<Tabs>` publish the active tab title so other synced tab groups follow along:
+
+   ```mdx
+   <Tabs sync>
+     <Tab title="npm">...</Tab>
+     <Tab title="pnpm">...</Tab>
+   </Tabs>
+   ```
+
+   OpenAPI Request example panels enable it by default, so a language choice sticks while browsing between endpoints.
+
+3. **New `sidebar.animate` config field** — enables expand/collapse and hover transitions on the left navigation tree:
+
+   ```json
+   {
+     "sidebar": {
+       "animate": true
+     }
+   }
+   ```
+
+   The `sidebar` object is extensible for future sidebar settings.
+
+4. **Sidebar heading list hidden on pages with `<TableOfContentsPanel />`** — the table of contents is already visible in the right aside, so repeating it under the active page entry was redundant. Detection is automatic at build time. A new `sidebarToc` frontmatter field overrides the behavior in either direction:
+
+   ```yaml
+   ---
+   title: My Page
+   # false: always hide sidebar headings for this page
+   # true: always show them, even with a TableOfContentsPanel present
+   sidebarToc: false
+   ---
+   ```
+
+   Search results still show matched headings regardless of suppression, so heading hits stay reachable.
+
+5. **OpenAPI endpoint pages no longer render Path, Header, and Cookie Parameters sections** — path params are already visible in the endpoint path shown at the top of the page, and header/cookie params are internal plumbing better documented in the endpoint description. Only Query Parameters and Request Body keep dedicated sections.
+
+6. **Fixed images breaking when a Vite `base` path is configured** — images resolved from `public/` (e.g. `/images/inbox.png`) and copied `/_holocron/images/<hash>` paths are now prefixed with the Vite base at render time (`Image`, `LazyVideo`, `Card img`, and frontmatter `og:image`/`twitter:image` meta tags), so a site served under `base: '/docs'` no longer 404s on images. The page cache key now also includes each image's resolution state (resolved file path, whether it needs copying, and content hash), so moving an image between the project root and `public/` — or replacing its pixels in place — invalidates the cache instead of serving stale paths until `dist/` is deleted.
+
+7. **Fixed Cloudflare Workers deploys 404ing every asset when `base` is set** — a site built with `base: '/docs'` emits HTML referencing `/docs/assets/app.js`, but Cloudflare's Asset Worker resolves requests against the uploaded directory tree and deliberately does not strip the base ([cloudflare/workers-sdk#11857](https://github.com/cloudflare/workers-sdk/issues/11857)), so it only had `assets/app.js`. Every script, stylesheet, font, and image failed and the deployed site rendered unstyled. The client build output is now nested under a folder named after the base whenever the Cloudflare plugin is in use, which is the layout Cloudflare documents for serving a subdirectory. Node deploys and `holocron deploy` are unchanged.
+
+8. **Fixed hosted deploys breaking when `base` is set in `vite.config.ts`** — the Vite plugin now records the resolved base in `dist/.holocron/holocron-deploy.json` during deploy builds, so `holocron deploy` can detect it and forward it as the deployment `basePath`. Previously the deployment metadata had no base path, the hosting worker looked up assets at root, and every CSS/JS request 404ed.
+
+9. **Fixed transient 500 ("There is a new version of the pre-bundle") on the first dev server requests** — the SSR optimizer discovered `motion/react` mid-request on the first page render, re-optimized, and invalidated in-flight module graphs. The dep is now pre-included in `optimizeDeps` for the SSR and client environments (along with `github-slugger` and `@radix-ui/react-dropdown-menu`), eliminating the post-startup "optimized dependencies changed. reloading" churn.
+
+10. **Changelog release dates are formatted in UTC** — a release published at `2026-01-05T00:00:00Z` was labelled with the build machine's local calendar day, so the same GitHub release rendered as `Jan 5, 2026` in Europe and `Jan 4, 2026` in the US. The generated page (and its cache entry) now reads the same everywhere.
+
+11. **Code blocks in the AI chat panel drop line numbers and right-edge bleed** — the chat column is much narrower than a docs page, so the number gutter ate horizontal space and the bleed pushed code past the panel padding. Docs pages are unchanged.
+
 ## 0.28.0
 
 1. **New card, table, and blockquote theming tokens** — cards, tables, and blockquotes are now fully customizable from `global.css` via CSS variables:
