@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       spiceflow:
-        specifier: 1.26.0-rsc.16
-        version: 1.26.0-rsc.16(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
+        specifier: 1.26.0-rsc.17
+        version: 1.26.0-rsc.17(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -39,8 +39,8 @@ importers:
         specifier: ^19.2.7
         version: 19.2.7(react@19.2.7)
       spiceflow:
-        specifier: 1.26.0-rsc.16
-        version: 1.26.0-rsc.16(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
+        specifier: 1.26.0-rsc.17
+        version: 1.26.0-rsc.17(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
       vite:
         specifier: ^8.1.4
         version: 8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -97,8 +97,8 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1
       spiceflow:
-        specifier: 1.26.0-rsc.16
-        version: 1.26.0-rsc.16(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
+        specifier: 1.26.0-rsc.17
+        version: 1.26.0-rsc.17(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
       string-dedent:
         specifier: ^3.0.2
         version: 3.0.2
@@ -251,8 +251,8 @@ importers:
         specifier: ^19.2.7
         version: 19.2.7(react@19.2.7)
       spiceflow:
-        specifier: 1.26.0-rsc.16
-        version: 1.26.0-rsc.16(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
+        specifier: 1.26.0-rsc.17
+        version: 1.26.0-rsc.17(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
       tailwindcss:
         specifier: ^4.2.2
         version: 4.3.0
@@ -307,8 +307,8 @@ importers:
         specifier: ^19.2.7
         version: 19.2.7(react@19.2.7)
       spiceflow:
-        specifier: 1.26.0-rsc.16
-        version: 1.26.0-rsc.16(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
+        specifier: 1.26.0-rsc.17
+        version: 1.26.0-rsc.17(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
       takumi-js:
         specifier: 1.0.0-rc.15
         version: 1.0.0-rc.15(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -465,8 +465,8 @@ importers:
         specifier: ^1.11.5
         version: 1.11.5(react@19.2.7)
       spiceflow:
-        specifier: 1.26.0-rsc.16
-        version: 1.26.0-rsc.16(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
+        specifier: 1.26.0-rsc.17
+        version: 1.26.0-rsc.17(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
       string-dedent:
         specifier: ^3.0.2
         version: 3.0.2
@@ -596,8 +596,8 @@ importers:
         specifier: ^19.2.7
         version: 19.2.7(react@19.2.7)
       spiceflow:
-        specifier: 1.26.0-rsc.16
-        version: 1.26.0-rsc.16(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
+        specifier: 1.26.0-rsc.17
+        version: 1.26.0-rsc.17(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3)
       string-dedent:
         specifier: ^3.0.2
         version: 3.0.2
@@ -6116,8 +6116,8 @@ packages:
     resolution: {integrity: sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ==}
     engines: {node: '>= 12'}
 
-  spiceflow@1.26.0-rsc.16:
-    resolution: {integrity: sha512-EHHBB9V8qWkuyvBTbHVp8xoQ37AscGltAUwSZv5vS93yYjTQzs1kZVnPQvXfRODR+/ZzDYRBj6Pdi7esmAqHcg==}
+  spiceflow@1.26.0-rsc.17:
+    resolution: {integrity: sha512-rcdvqpwUTgt3sCCwlUmV+B9SkCAYqXQPXwAT/e94MdxA74PnbS86a3my+JbDwnKDn/qY/VEcX50/PVuh3K8plg==}
     peerDependencies:
       '@modelcontextprotocol/sdk': '*'
       hono: ^4.0.0
@@ -12126,7 +12126,7 @@ snapshots:
 
   source-map@0.7.6: {}
 
-  spiceflow@1.26.0-rsc.16(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3):
+  spiceflow@1.26.0-rsc.17(@modelcontextprotocol/sdk@1.29.0(zod@4.4.3))(@types/react@19.2.17)(hono@4.12.23)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.4.3):
     dependencies:
       '@vitejs/plugin-rsc': 0.5.27(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vite@8.1.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))
       eventsource-parser: 3.1.0
