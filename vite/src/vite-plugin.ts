@@ -17,6 +17,7 @@ import { spiceflowPlugin } from 'spiceflow/vite'
 import tailwindcss from '@tailwindcss/vite'
 import { readConfig, resolveConfigPath, type HolocronConfig } from './config.ts'
 import { syncNavigation, processDeferredProviders, type SyncResult } from './lib/sync.ts'
+import { nestClientOutputUnderBase } from './lib/cloudflare-base-assets.ts'
 import { colors, formatHolocronStep, formatHolocronSuccess, formatHolocronWarning, logger } from './lib/logger.ts'
 import { hasHolocronApiKey, HOLOCRON_API_KEY_ENV_NAMES } from './lib/holocron-url.ts'
 
@@ -287,6 +288,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   let pagesDir: string
   let publicDirPath: string
   let distDirPath: string
+  let clientOutDirPath: string
   let viteBase = '/'
   let hasUserReactPlugin = false
   let hasUserSpiceflowPlugin = false
@@ -501,6 +503,11 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
       publicDirPath = resolved.publicDir || path.resolve(root, 'public')
       viteBase = resolved.base || '/'
+
+      const clientOutDir = resolved.environments?.client?.build?.outDir
+      clientOutDirPath = clientOutDir
+        ? path.resolve(root, clientOutDir)
+        : path.join(distDirPath, 'client')
 
       // During deploy builds, record the resolved Vite base so the CLI can
       // include it in the deployment metadata. Without this, a user-set
@@ -1328,6 +1335,52 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     },
   }
 
+  // Nest the client build output under the Vite `base` for Cloudflare deploys.
+  //
+  // Cloudflare's Asset Worker resolves a request by looking the pathname up in
+  // the uploaded directory tree, and it never strips Vite's `base`. A site
+  // built with `base: '/docs'` emits HTML referencing `/docs/assets/app.js`
+  // while the asset store holds `assets/app.js`, so every script, stylesheet,
+  // font, and image 404s once deployed. Cloudflare confirmed this is
+  // intentional for now (cloudflare/workers-sdk#11857) and documents nesting
+  // files under a matching folder as the supported way to serve a
+  // subdirectory.
+  //
+  // Moving the files means `/docs/assets/app.js` resolves to
+  // `client/docs/assets/app.js` straight from the CDN, with no extra Worker
+  // invocation and no `ASSETS` binding to configure.
+  //
+  // Node deploys are unaffected: spiceflow injects `serveStatic` with a
+  // `rewriteRequestPath` that strips the base, and it is only injected when the
+  // Cloudflare runtime is NOT in use.
+  const cloudflareBaseNestingPlugin: Plugin = {
+    name: 'holocron:cloudflare-base-nesting',
+    writeBundle: {
+      // Run last so the Cloudflare plugin has already emitted `.assetsignore`
+      // into the client output directory.
+      order: 'post',
+      handler() {
+        if (this.environment.name !== 'client') return
+        if (!hasUserCloudflarePlugin) return
+        // `holocron deploy` builds are served by the Holocron hosting worker,
+        // which strips the base prefix itself and expects the flat layout.
+        if (process.env.HOLOCRON_DEPLOY === '1') return
+
+        const nestedDir = nestClientOutputUnderBase({
+          clientOutDir: clientOutDirPath,
+          base: viteBase,
+        })
+        if (!nestedDir) return
+
+        logger.info(
+          formatHolocronSuccess(
+            `nested client assets under ${colors.cyan(`${nestedDir}/`)} so Cloudflare serves them at ${colors.cyan(viteBase)}`,
+          ),
+        )
+      },
+    },
+  }
+
   const pluginsToReturn: PluginOption[] = [
     rawImportPlugin(),
     tailwindHmrOwnerPlugin,
@@ -1335,6 +1388,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
     holocronRscPackagePlugin,
     dynamicWorkerModulePlugin,
     listenGuardPlugin,
+    cloudflareBaseNestingPlugin,
   ]
 
   // Auto-inject the Cloudflare plugin for deploy builds. Added before

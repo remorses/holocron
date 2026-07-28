@@ -54,6 +54,35 @@ npx vite build
 npx wrangler deploy
 ```
 
+## Serving docs under a subpath
+
+Set **`base`** in `vite.config.ts` to mount the whole site under a path prefix, for example when the docs live at `example.com/docs` behind a route:
+
+```ts
+export default defineConfig({
+  base: '/docs',
+  plugins: [holocron(), cloudflare({ /* ... */ })],
+})
+```
+
+Holocron nests the client build output under a folder matching the base, so Cloudflare serves `/docs/assets/app.js` from `dist/client/docs/assets/app.js`:
+
+```diagram
+  vite.config.ts                build output                        request
+  ┌───────────────────┐        ┌───────────────────────────┐       ┌────────────────────────┐
+  │ base: '/docs'     │───────>│ dist/client/              │       │ GET /docs/assets/app.js│
+  │                   │        │   .assetsignore           │       └───────────┬────────────┘
+  │ HTML references   │        │   docs/assets/app.js  <───┼───────────────────┘
+  │ /docs/assets/*    │        │   docs/icons/logo.svg     │        served by the CDN,
+  └───────────────────┘        └───────────────────────────┘        no Worker invocation
+```
+
+<Aside>
+<Note>
+Cloudflare's Asset Worker looks paths up in the uploaded directory tree and never strips Vite's `base`, so this nesting is what makes subpath hosting work. It happens automatically; no `ASSETS` binding or extra config needed.
+</Note>
+</Aside>
+
 ## Custom entry with Workers
 
 If you use a [custom entry](/docs/custom-entry), your Spiceflow app runs as the Worker entry point. You can add Cloudflare-specific bindings (KV, D1, AI) alongside your docs.
