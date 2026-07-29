@@ -13,6 +13,12 @@
  *
  * First run with OPENAI_API_KEY hits the real API and caches responses.
  * Subsequent runs replay from the .aicache/ directory instantly.
+ *
+ * Scripted failure modes: a user message starting with `SCRIPT:<name>`
+ * bypasses the model and emits canned chunks instead. These reproduce the
+ * ways an answer used to disappear silently (stream cut before text-end,
+ * provider error chunk, answer wrapped in <think> tags) without needing an
+ * API key, so the regressions stay covered on every run.
  */
 
 import { createServer } from "node:http";
@@ -27,6 +33,70 @@ function sessionKey(req: IncomingMessage): string | null {
   if (typeof sessionId !== "string" || !sessionId) return null;
   const site = req.headers["x-holocron-site"];
   return `${typeof site === "string" ? site : ""}:${sessionId}`;
+}
+
+/** Canned chunk streams keyed by the `SCRIPT:<name>` message prefix. */
+const SCRIPTED_STREAMS: Record<string, unknown[]> = {
+  // Provider closes the connection mid-text: no text-end ever arrives.
+  // The buffered answer must still be flushed by the proxy.
+  truncated: [
+    { type: "text-start", id: "s1" },
+    { type: "text-delta", id: "s1", delta: "Truncated answer body" },
+  ],
+  // AI SDK reports provider failures as chunks, never as throws.
+  error: [
+    { type: "text-start", id: "s1" },
+    { type: "text-delta", id: "s1", delta: "Partial answer" },
+    { type: "error", errorText: "upstream provider exploded" },
+  ],
+  // Reasoning models sometimes wrap output in think tags; MDX would render
+  // the unknown component as null and delete the whole answer.
+  think: [
+    { type: "text-start", id: "s1" },
+    { type: "text-delta", id: "s1", delta: "<think>grep the docs first</think>" },
+    { type: "text-delta", id: "s1", delta: "\nThink tag answer body" },
+    { type: "text-end", id: "s1" },
+  ],
+  // Model finishes without emitting anything renderable.
+  empty: [
+    { type: "start" },
+    { type: "finish", finishReason: "stop" },
+  ],
+  // Rate/credit limits answer with a notice and nothing else. That IS the
+  // answer — no "AI model unavailable" error may be appended on top.
+  limit: [
+    {
+      type: "notice",
+      code: "HOLOCRON_RATE_LIMIT_REACHED",
+      title: "Rate limit reached",
+      message: "Too many AI chat requests. Wait a minute and try again.",
+    },
+  ],
+  // The standing upgrade advisory must not hide the failure that follows it.
+  nagThenError: [
+    {
+      type: "notice",
+      display: "once",
+      code: "HOLOCRON_TEMPORARY_AI_MODEL",
+      title: "Temporary AI model",
+      message: "Add HOLOCRON_KEY before deploying for reliable AI chat.",
+    },
+    { type: "error", errorText: "upstream provider exploded" },
+  ],
+};
+
+function getScriptName(messages: any[]): string | null {
+  const lastUser = [...messages].reverse().find((m) => m?.role === "user");
+  const content = lastUser?.content;
+  const text =
+    typeof content === "string"
+      ? content
+      : Array.isArray(content)
+        ? content.filter((p: any) => p?.type === "text").map((p: any) => p.text).join(" ")
+        : "";
+  const match = /^SCRIPT:(\w+)/.exec(text.trim());
+  const name = match?.[1];
+  return name && name in SCRIPTED_STREAMS ? name : null;
 }
 
 export async function startMockChatServer(): Promise<number> {
@@ -101,6 +171,21 @@ export async function startMockChatServer(): Promise<number> {
             }),
           ]),
         );
+
+        // Scripted failure mode — canned chunks, no model call.
+        const scriptName = getScriptName(messages);
+        if (scriptName) {
+          res.writeHead(200, {
+            "content-type": "text/event-stream",
+            "cache-control": "no-cache",
+            "access-control-allow-origin": "*",
+          });
+          for (const chunk of SCRIPTED_STREAMS[scriptName]!) {
+            res.write(`event: message\ndata: ${JSON.stringify(chunk)}\n\n`);
+          }
+          res.end();
+          return;
+        }
 
         const result = streamText({
           model,
