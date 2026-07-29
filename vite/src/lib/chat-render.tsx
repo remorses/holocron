@@ -21,6 +21,24 @@ const chatRenderNode = createRenderNode({
   defaultCodeBleed: 'none',
 })
 
+/**
+ * Wrapper tags models emit around their scratchpad. They are registered as
+ * components that render nothing, which is the whole handling: the tag and
+ * its contents disappear and the real answer around it renders normally.
+ *
+ * Registering them beats stripping them from the text: no regex, no
+ * code-fence carve-outs, and an answer that *documents* `<think>` inside a
+ * code block is untouched because fenced code is never parsed as JSX.
+ *
+ * Chat-only — docs pages keep the plain component map.
+ */
+export const DROPPED_CHAT_TAGS = ['think', 'thinking', 'thought', 'reasoning', 'scratchpad', 'antml'] as const
+
+const chatComponents = {
+  ...mdxComponents,
+  ...Object.fromEntries(DROPPED_CHAT_TAGS.map((tag) => [tag, () => null])),
+}
+
 /** Render an array of mdast nodes through safe-mdx with the editorial
  *  component map. Used server-side to render AI chat response text. */
 export function ChatRenderNodes({
@@ -35,7 +53,7 @@ export function ChatRenderNodes({
     <SafeMdxRenderer
       markdown={markdown}
       mdast={syntheticRoot}
-      components={mdxComponents}
+      components={chatComponents}
       renderNode={chatRenderNode}
       onError={(error) => logMdxError(error, 'AI chat response')}
     />

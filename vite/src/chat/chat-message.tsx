@@ -20,6 +20,7 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { cn } from '../lib/css-vars.ts'
 import type { ChatMessage, ChatPart } from './chat-store.ts'
 import { respondToApproval } from './chat-store.ts'
 import { CopyIcon, CheckIcon, RefreshIcon } from './chat-icons.tsx'
@@ -61,7 +62,11 @@ export function ChatMessages({
   onRegenerate?: (messageIndex: number) => void
 }) {
   if (messages.length === 0) return null
-  let noticeRendered = false
+  // Standing advisories (`display: 'once'`, e.g. the temporary-model nag) are
+  // re-sent on every turn and render only the first time. Everything else —
+  // rate limits, credit limits, errors — is a per-turn outcome and must render
+  // every time, otherwise that turn looks like it silently hung.
+  const seenNoticeCodes = new Set<string>()
   return (
     <div className='text-[14px]' style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {messages.map((message, i) => {
@@ -74,9 +79,9 @@ export function ChatMessages({
                     className='flex flex-col gap-4'
                   >
                     {message.parts.map((part, partIndex) => {
-                      if (part.type === 'notice') {
-                        if (noticeRendered) return null
-                        noticeRendered = true
+                      if (part.type === 'notice' && part.display === 'once') {
+                        if (seenNoticeCodes.has(part.code)) return null
+                        seenNoticeCodes.add(part.code)
                       }
                       return <ChatPartRenderer key={partIndex} part={part} allParts={message.parts} />
                     })}
@@ -171,6 +176,10 @@ function ChatPartRenderer({
     )
   }
 
+  if (part.type === 'reasoning') {
+    return <ReasoningPreview text={part.text} />
+  }
+
   if (part.type === 'tool-call') {
     return <ToolCallStarted part={part} allParts={allParts} />
   }
@@ -234,10 +243,20 @@ function ToolApprovalRequest({
 }
 
 function ChatNotice({ part }: { part: Extract<ChatPart, { type: 'notice' }> }) {
+  const isError = part.severity === 'error'
   return (
     <div>
-      <div className='no-bleed flex items-start gap-2.5 rounded-lg bg-[color-mix(in_srgb,var(--background)_93%,var(--yellow))] p-2 text-foreground'>
-        <svg viewBox='0 0 16 16' width='16' height='16' fill='currentColor' aria-hidden='true' className='mt-0.5 size-4 shrink-0 text-yellow'>
+      <div
+        data-notice-code={part.code}
+        data-notice-severity={isError ? 'error' : 'info'}
+        className={cn(
+          'no-bleed flex items-start gap-2.5 rounded-lg p-2 text-foreground',
+          isError
+            ? 'bg-[color-mix(in_srgb,var(--background)_92%,var(--red))]'
+            : 'bg-[color-mix(in_srgb,var(--background)_93%,var(--yellow))]',
+        )}
+      >
+        <svg viewBox='0 0 16 16' width='16' height='16' fill='currentColor' aria-hidden='true' className={cn('mt-0.5 size-4 shrink-0', isError ? 'text-red' : 'text-yellow')}>
           <path d='M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575L6.457 1.047ZM8 5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 0 1.5 0v-2.5A.75.75 0 0 0 8 5Zm1 7a1 1 0 1 0-2 0 1 1 0 0 0 2 0Z' />
         </svg>
         <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
@@ -257,6 +276,26 @@ function ChatNotice({ part }: { part: Extract<ChatPart, { type: 'notice' }> }) {
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+// ── Reasoning (thinking) preview ─────────────────────────────────────
+
+/** Model reasoning, collapsed behind ShowMore. Rendered as plain text on
+ *  purpose: reasoning is often half-formed markdown, and running it through
+ *  the MDX renderer would drop unknown tags. */
+function ReasoningPreview({ text }: { text: string }) {
+  return (
+    <div data-reasoning=''>
+      <ShowMore>
+        <ToolPreviewContainer>
+          <div className='flex flex-row gap-2'>
+            <div className='shrink-0 text-muted-foreground'>✻</div>
+            <span className='whitespace-pre-wrap text-[12px] text-muted-foreground'>{text}</span>
+          </div>
+        </ToolPreviewContainer>
+      </ShowMore>
     </div>
   )
 }

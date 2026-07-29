@@ -538,6 +538,11 @@ export async function submitChat(
       ...(contextPayload ? { context: contextPayload } : {}),
     }
 
+    // Set when the loop exits with tool results the model never got to see.
+    // Those results are useless on their own, so the user is told rather than
+    // left staring at a tool row with no answer under it.
+    let toolLimitHit = false
+
     for (let iteration = 0; iteration < MAX_CLIENT_TOOL_ITERATIONS; iteration++) {
       const { pendingToolCalls, requestSessionId } = await streamChatRequest(
         chatApiUrl,
@@ -549,6 +554,13 @@ export async function submitChat(
 
       // No client tool calls pending: conversation turn is complete
       if (pendingToolCalls.length === 0) break
+
+      // Last allowed round: executing the tools now would produce results the
+      // model can never read, so stop before running them.
+      if (iteration === MAX_CLIENT_TOOL_ITERATIONS - 1) {
+        toolLimitHit = true
+        break
+      }
 
       // Execute each pending client tool call locally and collect results.
       // Each result tracks toolName + error flag for AI SDK v6 ToolResultPart.
@@ -616,6 +628,25 @@ export async function submitChat(
         currentSlug: currentSlug || '/',
         ...(toolSchemas ? { toolSchemas } : {}),
         ...(contextPayload ? { context: contextPayload } : {}),
+      }
+    }
+
+    // Backstop: a turn that ends without a single renderable assistant part
+    // means the answer was lost in transit. Never leave an empty bubble and
+    // no explanation — that is indistinguishable from a hang.
+    if (!controller.signal.aborted && !chatStore.getState().errorMessage) {
+      const lastMessage = chatStore.getState().messages.at(-1)
+      const hasContent =
+        lastMessage?.role === 'assistant' &&
+        lastMessage.parts.some((part) => part.type !== 'tool-call')
+      if (toolLimitHit) {
+        chatStore.setState({
+          errorMessage: 'The assistant made too many tool calls in one turn. Try rephrasing your question.',
+        })
+      } else if (!hasContent) {
+        chatStore.setState({
+          errorMessage: 'No response received. Please try again.',
+        })
       }
     }
   } catch (error) {

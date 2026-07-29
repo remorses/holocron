@@ -58,7 +58,8 @@ import { visit } from 'unist-util-visit'
 import { RenderNodes, mdxComponents, renderNode } from './lib/mdx-components-map.tsx'
 import { SiteHead, THEME_SCRIPT, GtmNoscript } from './lib/site-head.tsx'
 import { encodeFederationPayload } from 'spiceflow/federation'
-import { modelMessagesToChatMessages, renderMarkdownTextPart } from './lib/chat-restore.tsx'
+import { modelMessagesToChatMessages } from './lib/chat-restore.tsx'
+import { convertChunksToParts } from './lib/chat-stream.ts'
 import dedent from 'string-dedent'
 import { buildOgImageUrl } from './lib/og-utils.ts'
 import { getPageRendering, getPageRobots, getPageSeoMeta, isIndexablePage, parsePageFrontmatter, serializeKeywords, type PageFrontmatter, type PageRendering } from './lib/page-frontmatter.ts'
@@ -619,20 +620,6 @@ function chatSessionCookie(args: {
 }): string {
   const secure = args.requestUrl.startsWith('https:') ? '; Secure' : ''
   return `${CHAT_SESSION_COOKIE}=${args.sessionId}; Path=${args.path}; Max-Age=${args.maxAgeSeconds}; SameSite=Lax${secure}`
-}
-
-function getToolArgs(input: unknown): Record<string, unknown> {
-  return isRecord(input) ? input : {}
-}
-
-function getToolOutput(output: unknown): { stdout?: string; stderr?: string } {
-  if (!isRecord(output)) {
-    return {}
-  }
-  return {
-    ...(typeof output.stdout === 'string' ? { stdout: output.stdout } : {}),
-    ...(typeof output.stderr === 'string' ? { stderr: output.stderr } : {}),
-  }
 }
 
 function isHolocronLoaderData(value: unknown): value is HolocronLoaderData {
@@ -1680,91 +1667,12 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         ...(body.message ? [{ role: 'user' as const, content: body.message }] : []),
       ]
 
-      let textBuffer = ''
-      const toolNames = new Map<string, string>()
-
-      /** Yield any buffered text as a rendered part. Called on text-end AND
-       *  before tool parts: some providers only close the text part (text-end)
-       *  after the tool input chunk, so without this flush a tool call that
-       *  the model announced with text would render ABOVE that text. */
-      function flushTextBuffer() {
-        if (!textBuffer.trim()) {
-          textBuffer = ''
-          return null
-        }
-        // Shared with the session restore path (chat-restore.tsx) so
-        // restored and streamed messages render identically.
-        const part = renderMarkdownTextPart(textBuffer)
-        textBuffer = ''
-        return part
-      }
-
-      /** Convert a UIMessageStream-like async iterable into ChatPart stream. */
-      async function* convertChunksToParts(uiStream: AsyncIterable<any>) {
-        for await (const chunk of uiStream) {
-          if (chunk.type === 'notice') {
-            yield chunk
-            continue
-          }
-
-          // AI-generated conversation title (first turn) — forwarded so the
-          // widget can label this session in its local session list.
-          if (chunk.type === 'title') {
-            yield chunk
-            continue
-          }
-
-          if (chunk.type === 'text-delta') {
-            textBuffer += chunk.delta
-            continue
-          }
-
-          if (chunk.type === 'text-end') {
-            const text = flushTextBuffer()
-            if (text) yield text
-            continue
-          }
-
-          if (chunk.type === 'tool-input-available') {
-            const text = flushTextBuffer()
-            if (text) yield text
-            toolNames.set(chunk.toolCallId, chunk.toolName)
-            yield {
-              type: 'tool-call' as const,
-              toolCallId: chunk.toolCallId,
-              toolName: chunk.toolName,
-              args: getToolArgs(chunk.input),
-            }
-            continue
-          }
-
-          if (chunk.type === 'tool-output-available') {
-            const text = flushTextBuffer()
-            if (text) yield text
-            const rawOutput = getToolOutput(chunk.output)
-            yield {
-              type: 'tool-result' as const,
-              toolCallId: chunk.toolCallId,
-              toolName: toolNames.get(chunk.toolCallId) || 'bash',
-              output: (rawOutput.stdout || '').slice(0, 500),
-              ...(rawOutput.stderr ? { error: rawOutput.stderr } : {}),
-            }
-            continue
-          }
-
-          if (chunk.type === 'model-messages') {
-            yield {
-              type: 'model-messages' as const,
-              messages: [
-                ...body.modelMessages,
-                ...(body.message ? [{ role: 'user', content: body.message }] : []),
-                ...chunk.messages,
-              ],
-            }
-            continue
-          }
-        }
-      }
+      // Conversation history the client keeps in sync — prepended to the
+      // gateway's response messages when forwarding `model-messages`.
+      const priorMessages = [
+        ...body.modelMessages,
+        ...(body.message ? [{ role: 'user', content: body.message }] : []),
+      ]
 
       async function* generateParts() {
         // Announce a freshly minted session id so the widget can persist it
@@ -1809,11 +1717,52 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         })
 
         if (uiStream instanceof Error) {
-          yield { type: 'tool-result' as const, toolCallId: 'holocron-chat', toolName: 'holocron-chat', output: '', error: uiStream.message }
+          logger.error(`[holocron:chat] gateway request failed: ${uiStream.message}`)
+          yield {
+            type: 'notice' as const,
+            severity: 'error' as const,
+            code: 'HOLOCRON_CHAT_UNREACHABLE',
+            title: 'Could not reach the AI service',
+            message: uiStream.message,
+          }
           return
         }
 
-        yield* convertChunksToParts(uiStream)
+        // Every turn logs its outcome. `textChars: 0` is the signature of the
+        // "response never arrived" failure — grep for it in worker logs.
+        yield* convertChunksToParts(uiStream, {
+          priorMessages,
+          onOutcome: (outcome) => {
+            // A turn is fine when the user got text, reasoning, a tool call,
+            // or a notice. Intermediate client-tool turns legitimately carry
+            // no text, so keying the warning on text alone would cry wolf.
+            const renderable =
+              outcome.textParts > 0 ||
+              outcome.reasoningChars > 0 ||
+              outcome.toolCalls > 0 ||
+              outcome.notices > 0
+            const summary = [
+              `slug=${body.currentSlug || '/'}`,
+              `ms=${outcome.durationMs}`,
+              `ttft=${outcome.ttftMs ?? '-'}`,
+              `textChars=${outcome.textChars}`,
+              `textParts=${outcome.textParts}`,
+              `reasoningChars=${outcome.reasoningChars}`,
+              `toolCalls=${outcome.toolCalls}`,
+              `notices=${outcome.notices}`,
+              `sawTextEnd=${outcome.sawTextEnd}`,
+              `flushedAtEnd=${outcome.flushedAtEnd}`,
+              `aborted=${outcome.aborted}`,
+              outcome.errorText ? `error=${JSON.stringify(outcome.errorText)}` : '',
+              outcome.streamError ? `streamError=${JSON.stringify(outcome.streamError)}` : '',
+            ].filter(Boolean).join(' ')
+            if (outcome.errorText || outcome.streamError || !renderable) {
+              logger.warn(`[holocron:chat] turn produced no answer ${summary}`)
+            } else {
+              logger.debug(`[holocron:chat] turn ok ${summary}`)
+            }
+          },
+        })
       }
 
       const response = await encodeFederationPayload({ stream: generateParts() })

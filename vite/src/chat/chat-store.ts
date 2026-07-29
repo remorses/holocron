@@ -22,7 +22,25 @@ export type ChatModelMessage = Record<string, unknown>
  *  `text` field remains serializable and is sent back in future requests. */
 export type ChatPart =
   | { type: 'text'; text: string; jsx?: ReactNode }
-  | { type: 'notice'; code: string; title: string; message: string; command?: string }
+  /** Model reasoning (thinking) — rendered as a collapsed muted preview.
+   *  Kept as a part so a turn whose answer lands entirely in reasoning is
+   *  still visible instead of rendering an empty bubble. */
+  | { type: 'reasoning'; text: string }
+  | {
+      type: 'notice'
+      code: string
+      title: string
+      message: string
+      command?: string
+      /** Visual weight only. `error` renders red, `info` (default) yellow. */
+      severity?: 'info' | 'error'
+      /** Repetition policy, independent of severity. `once` is for standing
+       *  advisories re-sent on every turn (the temporary-model nag) and is
+       *  de-duplicated by code across the conversation. `always` (default)
+       *  is for per-turn outcomes — rate limits, credit limits, errors —
+       *  which must render every time or the turn looks like it hung. */
+      display?: 'once' | 'always'
+    }
   | {
       type: 'tool-call'
       toolCallId: string

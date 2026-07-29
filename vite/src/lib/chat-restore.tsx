@@ -11,23 +11,57 @@
  * restored and streamed messages render identically.
  */
 
-import React from 'react'
+import type { Root, RootContent } from 'mdast'
 import { mdxParse } from 'safe-mdx/parse'
 import { P } from '../components/markdown/typography.tsx'
-import { ChatRenderNodes } from './chat-render.tsx'
+import { ChatRenderNodes, DROPPED_CHAT_TAGS } from './chat-render.tsx'
+import { mdxComponents } from './mdx-components-map.tsx'
 import type { ChatMessage, ChatPart } from '../chat/chat-store.ts'
 
-/** Render assistant markdown text into a ChatPart with server-rendered JSX.
- *  Falls back to preformatted plain text when the markdown fails to parse. */
-export function renderMarkdownTextPart(text: string): ChatPart {
-  let jsx: React.ReactNode
+const droppedTags = new Set<string>(DROPPED_CHAT_TAGS)
+
+/** True when this node renders nothing: a scratchpad tag, or a capitalized
+ *  component safe-mdx has no entry for. Lowercase names are assumed to render
+ *  because safe-mdx accepts every valid HTML element. */
+function rendersNothing(node: RootContent): boolean {
+  if (node.type !== 'mdxJsxFlowElement' && node.type !== 'mdxJsxTextElement') return false
+  const name = node.name?.split('.')[0]
+  if (!name) return true
+  if (Object.hasOwn(mdxComponents, name)) return false
+  return droppedTags.has(name.toLowerCase()) || /^[A-Z]/.test(name)
+}
+
+/** True when safe-mdx would render at least something for these nodes. Errs
+ *  toward visible: only a tree that renders nothing at all must be caught. */
+function hasVisibleContent(nodes: RootContent[]): boolean {
+  return nodes.some((node) => {
+    if (rendersNothing(node)) return false
+    if (node.type === 'text') return !!node.value.trim()
+    // Paragraphs have no frame of their own — one holding only a dropped
+    // inline element renders nothing.
+    if (node.type === 'paragraph') return hasVisibleContent(node.children as RootContent[])
+    return true
+  })
+}
+
+/**
+ * Render assistant markdown into a ChatPart with server-rendered JSX.
+ *
+ * Returns null when the text renders nothing (a whole answer inside a
+ * `<think>` wrapper). Callers treat that as "no answer", which surfaces an
+ * explicit notice instead of an empty bubble.
+ *
+ * Unparseable MDX still returns a part: showing the raw text beats losing it.
+ */
+export function renderMarkdownTextPart(text: string): ChatPart | null {
+  let mdast: Root
   try {
-    const mdast = mdxParse(text)
-    jsx = <ChatRenderNodes markdown={text} nodes={mdast.children} />
+    mdast = mdxParse(text)
   } catch {
-    jsx = <P className='whitespace-pre-wrap'>{text}</P>
+    return { type: 'text', text, jsx: <P className='whitespace-pre-wrap'>{text}</P> }
   }
-  return { type: 'text', text, jsx }
+  if (!hasVisibleContent(mdast.children)) return null
+  return { type: 'text', text, jsx: <ChatRenderNodes markdown={text} nodes={mdast.children} /> }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -70,7 +104,10 @@ function formatToolOutput(output: unknown): { output: string; error?: string } {
   return { output: String(output ?? '').slice(0, 500) }
 }
 
-function appendAssistantPart(messages: ChatMessage[], part: ChatPart): void {
+/** Appends a part, ignoring the null renderMarkdownTextPart returns for text
+ *  that renders nothing. */
+function appendAssistantPart(messages: ChatMessage[], part: ChatPart | null): void {
+  if (!part) return
   const last = messages.at(-1)
   if (last?.role === 'assistant') {
     last.parts.push(part)
@@ -112,6 +149,10 @@ export function modelMessagesToChatMessages(modelMessages: unknown[]): ChatMessa
         if (!isRecord(part)) continue
         if (part.type === 'text' && typeof part.text === 'string' && part.text.trim()) {
           appendAssistantPart(messages, renderMarkdownTextPart(part.text))
+        }
+        // Keeps restored turns identical to live ones for reasoning models.
+        if (part.type === 'reasoning' && typeof part.text === 'string' && part.text.trim()) {
+          appendAssistantPart(messages, { type: 'reasoning', text: part.text.trim() })
         }
         if (part.type === 'tool-call' && typeof part.toolCallId === 'string') {
           const toolName = typeof part.toolName === 'string' ? part.toolName : 'tool'
