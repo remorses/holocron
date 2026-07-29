@@ -21,7 +21,7 @@
 import { streamText, generateText, jsonSchema, tool as aiTool, type LanguageModelUsage, type ModelMessage, type UIMessageChunk } from 'ai'
 import { createGateway } from '@ai-sdk/gateway'
 import { createFallback } from 'ai-fallback'
-import { captureException } from '@strada.sh/sdk'
+import { captureException, getLogger } from '@strada.sh/sdk'
 import { env, waitUntil } from 'cloudflare:workers'
 import { unzipSync, strFromU8 } from 'fflate'
 import { Spiceflow } from 'spiceflow'
@@ -32,6 +32,8 @@ import { ALLOWED_MODELS, computeUsdCost, creditsToUsd, monthlyCreditBudget, MODE
 import { createChatBashTool } from './chat-bash-tool.ts'
 import { NOTICE_USAGE_LIMIT_REACHED, type UsageCounter } from './usage-counter-do.ts'
 import { MAX_SNAPSHOT_BYTES, type ChatSessionDO } from './chat-session-do.ts'
+
+const chatLogger = getLogger('chat')
 
 const DEFAULT_MODEL = 'deepseek-v4-flash'
 const TEMPORARY_MODEL = 'deepseek-v4-flash'
@@ -45,12 +47,58 @@ const DOCS_ZIP_CACHE_MS = 5 * 60 * 1000
 // (rate limits, timeouts, 5xx) and resets to the primary after 60s.
 const FALLBACK_MODEL_NAMES = Object.keys(ALLOWED_MODELS)
 
+// Mirrors the `notice` ChatPart in @holocron.so/vite (chat/chat-store.ts).
+// Both sides must stay in sync — this crosses a network boundary.
 export type HolocronChatNoticeChunk = {
   type: 'notice'
   code: string
   title: string
   message: string
   command?: string
+  /** Visual weight only: `error` renders red, `info` (default) yellow. */
+  severity?: 'info' | 'error'
+  /** Repetition policy, independent of severity. `once` is for standing
+   *  advisories re-sent every turn (the temporary-model nag). `always`
+   *  (default) is for per-turn outcomes — limits and errors — which must
+   *  render every time or the turn looks like it silently hung. */
+  display?: 'once' | 'always'
+}
+
+/**
+ * User-facing text for a provider failure.
+ *
+ * Raw provider errors can carry internal URLs, request ids and response body
+ * excerpts, and they are streamed to visitors of customer docs sites. The AI
+ * SDK masks them by default for exactly this reason. The real message always
+ * goes to Strada; only these curated strings are sent to the browser.
+ */
+function safeProviderMessage(raw: string): string {
+  if (/no output generated/i.test(raw)) {
+    return 'The AI model did not return a response. This usually means the provider is temporarily unavailable. Please try again.'
+  }
+  if (/rate.?limit|429|too many requests/i.test(raw)) {
+    return 'The AI provider is rate limited right now. Please try again in a moment.'
+  }
+  if (/timeout|timed out|etimedout/i.test(raw)) {
+    return 'The AI provider timed out. Please try again.'
+  }
+  if (/abort/i.test(raw)) {
+    return 'The response was interrupted before it finished.'
+  }
+  return 'The AI provider failed to return a response. Please try again.'
+}
+
+/** Error notice shown in the chat UI when a turn fails. */
+function streamErrorNotice(rawMessage: string): HolocronChatNoticeChunk {
+  const isNoOutput = /no output generated/i.test(rawMessage)
+  return {
+    type: 'notice',
+    severity: 'error',
+    display: 'always',
+    code: 'HOLOCRON_STREAM_ERROR',
+    title: isNoOutput ? 'AI model unavailable' : 'Something went wrong',
+    message: safeProviderMessage(rawMessage),
+  }
 }
 
 // Usage for THIS turn, yielded just before the stream closes. Cost is computed
@@ -352,6 +400,8 @@ export const gatewayApp = new Spiceflow()
       if (showTempNotice) {
         yield {
           type: 'notice',
+          // Standing advisory re-sent every turn — shown once per conversation.
+          display: 'once',
           code: 'HOLOCRON_TEMPORARY_AI_MODEL',
           title: 'Temporary AI model',
           message: 'Add HOLOCRON_KEY before deploying for reliable AI chat.',
@@ -395,33 +445,74 @@ export const gatewayApp = new Spiceflow()
         })
       }
 
-      let streamError: Error | undefined
-      try {
-        for await (const chunk of result.toUIMessageStream()) {
-          yield chunk
-        }
-      } catch (error) {
-        streamError = error instanceof Error ? error : new Error(String(error))
-        // Surface a human-readable error as a notice chunk so the user
-        // sees the actual failure reason instead of a generic "An unexpected
-        // error occurred". The AI SDK throws NoOutputGeneratedError when
-        // the model stream ends without producing output (provider timeout,
-        // empty response, upstream 5xx that exhausted fallbacks, etc.).
-        const isNoOutput = streamError.message.includes('No output generated')
-        yield {
-          type: 'notice',
-          code: 'HOLOCRON_STREAM_ERROR',
-          title: isNoOutput ? 'AI model unavailable' : 'Something went wrong',
-          message: isNoOutput
-            ? 'The AI model did not return a response. This usually means the provider is temporarily unavailable. Please try again.'
-            : streamError.message,
-        } as const satisfies HolocronChatNoticeChunk
-        captureException(streamError, {
-          tags: { route: 'gateway', model: modelName, reason: 'stream-error' },
-        })
+      // ── Per-turn outcome tracking ─────────────────────────────────
+      // Chat turns stream, so the request span ends long before the answer
+      // does and tells us nothing. This counter block is the only signal
+      // that says whether the user actually received text. A turn with
+      // `textChars: 0` is the "the response never arrived" failure.
+      const turnStartedAt = Date.now()
+      const turn = {
+        textChars: 0,
+        textParts: 0,
+        reasoningChars: 0,
+        toolCalls: 0,
+        /** Time to first text delta; -1 when the turn produced no text. */
+        ttftMs: -1,
+        sawTextEnd: false,
+        /** An `error` chunk already told the user. Used to avoid a second
+         *  notice when result.usage/result.response reject for the same
+         *  failure right after. */
+        sawErrorChunk: false,
+        finishReason: '',
+        errorText: '',
       }
 
-      if (!streamError) {
+      // One try covers streaming AND the post-stream bookkeeping. The finally
+      // guarantees the turn is logged and billed even when the consumer
+      // abandons the generator mid-stream (browser disconnect, stop button) —
+      // exactly the turns worth observing. Nothing is yielded from finally:
+      // after a `return()` the generator can no longer produce values.
+      let phase: 'stream' | 'post-stream' = 'stream'
+      try {
+        for await (const chunk of result.toUIMessageStream({
+          // The AI SDK masks provider errors as "An error occurred." by
+          // default and converts them into `error` CHUNKS instead of
+          // throwing — so without this hook a failed turn reached the user
+          // as an unexplained empty answer and never reached Strada.
+          onError: (error) => {
+            const err = error instanceof Error ? error : new Error(String(error))
+            turn.errorText = err.message
+            turn.sawErrorChunk = true
+            captureException(err, {
+              tags: { route: 'gateway', model: modelName, reason: 'ui-stream-error' },
+            })
+            // Curated text only — the raw message is streamed to visitors of
+            // customer docs sites and can leak provider internals.
+            return safeProviderMessage(err.message)
+          },
+        })) {
+          if (chunk.type === 'text-delta') {
+            if (turn.ttftMs < 0) turn.ttftMs = Date.now() - turnStartedAt
+            turn.textChars += chunk.delta?.length ?? 0
+          } else if (chunk.type === 'text-end') {
+            turn.sawTextEnd = true
+            turn.textParts += 1
+          } else if (chunk.type === 'reasoning-delta') {
+            turn.reasoningChars += chunk.delta?.length ?? 0
+          } else if (chunk.type === 'tool-input-available') {
+            turn.toolCalls += 1
+          } else if (chunk.type === 'finish') {
+            turn.finishReason = chunk.finishReason ?? ''
+          }
+          yield chunk
+        }
+
+        // Everything below runs AFTER the model finished. A rejection here
+        // (result.response, the session DO, the title model) must never take
+        // down a turn whose text already streamed — it would look exactly
+        // like a lost answer to the user.
+        phase = 'post-stream'
+
         // Emit this turn's exact usage (authenticated only). Cost is tokens ×
         // the per-model rate table — synchronous, no gateway.
         if (authResult) {
@@ -466,11 +557,74 @@ export const gatewayApp = new Spiceflow()
         if (title) {
           yield { type: 'title', title } satisfies HolocronChatTitleChunk
         }
-      }
+      } catch (error) {
+        const err = error instanceof Error ? error : new Error(String(error))
+        turn.errorText ||= err.message
+        captureException(err, {
+          tags: { route: 'gateway', model: modelName, reason: `${phase}-error` },
+        })
+        // Tell the user only when nothing rendered AND the failure was not
+        // already reported as an error chunk: result.usage and result.response
+        // reject for the same provider failure, which would otherwise show the
+        // identical notice twice.
+        //
+        // The AI SDK throws NoOutputGeneratedError when the model stream ends
+        // without producing output (provider timeout, empty response, upstream
+        // 5xx that exhausted fallbacks).
+        if (turn.textChars === 0 && !turn.sawErrorChunk) {
+          yield streamErrorNotice(err.message)
+        }
+      } finally {
+        // ── One log line per turn (queryable in Strada) ────────────────
+        // SELECT … FROM otel_logs WHERE LogAttributes['event'] = 'ai.chat.turn'
+        //   AND LogAttributes['renderable'] = 'false'
+        //
+        // A turn is "renderable" when the user got text, reasoning, or a tool
+        // call. Intermediate client-tool turns legitimately have no text, so
+        // keying the failure signal on textChars alone would flood Strada.
+        const hasRenderableOutput = turn.textChars > 0 || turn.reasoningChars > 0 || turn.toolCalls > 0
+        const turnLog = {
+          event: 'ai.chat.turn',
+          model: modelName,
+          projectId: chatProjectId ?? '',
+          sessionId: body.sessionId ?? '',
+          pageSlug,
+          authenticated: !!authResult,
+          durationMs: Date.now() - turnStartedAt,
+          ttftMs: turn.ttftMs,
+          textChars: turn.textChars,
+          textParts: turn.textParts,
+          reasoningChars: turn.reasoningChars,
+          toolCalls: turn.toolCalls,
+          sawTextEnd: turn.sawTextEnd,
+          renderable: hasRenderableOutput,
+          finishReason: turn.finishReason,
+          clientTools: Object.keys(clientTools).length,
+          errorText: turn.errorText,
+        }
+        if (!hasRenderableOutput) {
+          chatLogger.error({ message: 'chat turn produced nothing renderable', ...turnLog })
+          // Not covered by the error paths above: the model finished
+          // "successfully" but emitted nothing at all.
+          if (!turn.errorText) {
+            captureException(
+              new Error(`chat turn produced nothing renderable (model ${modelName}, finishReason ${turn.finishReason || 'none'})`),
+              {
+                tags: {
+                  route: 'gateway',
+                  model: modelName,
+                  reason: 'empty-answer',
+                  finishReason: turn.finishReason || 'none',
+                },
+              },
+            )
+          }
+        } else {
+          chatLogger.info({ message: 'chat turn', ...turnLog })
+        }
 
-      // Usage recording runs unconditionally (even on stream error/abort)
-      // because the model already cost money. waitUntil survives the response.
-      {
+        // Usage recording runs on every path (stream error, abort, disconnect)
+        // because the model already cost money. waitUntil survives the response.
         if (authResult && chatProjectId) {
           const projectId = chatProjectId
           const orgId = authResult.orgId
