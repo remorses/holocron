@@ -861,11 +861,34 @@ The AI chat runs entirely via the **Vercel AI SDK** (`ai` package) + **Cloudflar
 | **UI** | `vite/src/chat/chat-message.tsx` | Message/part rendering, tool previews |
 | **Integration** | `vite/src/components/holocron-chat-bridge.tsx` | Connects to holocron's app data |
 | **Rendering** | `vite/src/lib/chat-render.tsx` | mdast to JSX via editorial components |
+| **Stream** | `vite/src/lib/chat-stream.ts` | UIMessageChunks → ChatParts, error/abort handling, turn outcome |
 | **Gateway** | `website/src/gateway.ts` | Main chat route: auth, rate limit, AI SDK streaming |
 | **Tool** | `website/src/chat-bash-tool.ts` | Creates bash tool + skill filesystem |
 | **Proxy** | `vite/src/app-factory.tsx` (lines ~1515-1710) | Holocron's `/holocron-api/chat` endpoint |
 | **Persistence** | `website/src/chat-session-do.ts` | ChatSessionDO: one DO per site, one row per conversation |
 | **Restore** | `vite/src/lib/chat-restore.tsx` | Stored ModelMessages → ChatMessages with server-rendered JSX |
+
+### Stream conversion — never lose an answer
+
+`vite/src/lib/chat-stream.ts` converts the gateway's UIMessageChunk stream into ChatParts. It is deliberately defensive because every failure here looks identical to the user: an empty assistant bubble.
+
+- **Text is buffered** and rendered as one markdown block, so it MUST be flushed on every exit path (normal end of stream and the catch). A stream that ends without `text-end` used to discard the whole answer. It cannot be flushed in the `finally`: once a consumer calls `return()` the generator can no longer yield, which is also why a real Stop button cannot be rescued.
+- **The AI SDK never throws on provider failures.** `toUIMessageStream()` converts them into `{ type: 'error', errorText }` chunks and masks the message as "An error occurred." unless you pass `onError`. Ignoring unknown chunk types therefore swallowed every provider error.
+- **Notices carry `severity` AND `display`, and they are independent.** `severity` is color only (`error` red, `info` yellow). `display` is the repetition policy: `once` is for standing advisories re-sent every turn (the temporary-model nag) and de-duplicates by code; `always` (the default) is for per-turn outcomes — rate limits, credit limits, errors — which must render every time or that turn looks like it hung. Never de-duplicate by severity: the upgrade nag then hides real failures.
+- **A notice counts as output.** A rate-limited or credit-limited turn answers with a notice and nothing else; treating that as "empty" appends a bogus "AI model unavailable" error on top of it.
+- **Reasoning is kept** as a `reasoning` part.
+- **Scratchpad tags models emit (`<think>`, `<thinking>`, …) are registered as null-rendering components** in `chat-render.tsx` (`DROPPED_CHAT_TAGS`). Never strip them from the text with regexes: MDX already parses them, so a component that renders nothing needs no code-fence carve-outs and cannot eat a real answer. When the whole text renders to nothing, `renderMarkdownTextPart` returns `null` and the turn is reported as having no answer.
+- Each turn logs `[holocron:chat] turn …` with `textChars`, `sawTextEnd`, tool counts and timings. `textChars=0` is the signature of a lost answer.
+
+On the gateway side (`website/src/gateway.ts`) every turn emits one Strada log with `event: 'ai.chat.turn'` from an outer `finally` (so browser disconnects — the turns worth seeing — are logged and billed too), and a turn with nothing renderable calls `captureException`. Raw provider messages go to Strada only; the browser gets curated text from `safeProviderMessage()`. Query lost answers with:
+
+```sql
+SELECT Timestamp, LogAttributes['model'], LogAttributes['finishReason'], LogAttributes['errorText']
+FROM otel_logs
+WHERE LogAttributes['event'] = 'ai.chat.turn'
+  AND LogAttributes['renderable'] = 'false'
+ORDER BY Timestamp DESC LIMIT 50
+```
 
 ### Bash tool
 
