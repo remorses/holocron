@@ -6,6 +6,7 @@
  * chrome that only makes sense in a wide docs column.
  */
 
+import type React from 'react'
 import type { Root, RootContent } from 'mdast'
 import { SafeMdxRenderer } from 'safe-mdx'
 import { createRenderNode, mdxComponents } from './mdx-components-map.tsx'
@@ -34,9 +35,21 @@ const chatRenderNode = createRenderNode({
  */
 export const DROPPED_CHAT_TAGS = ['think', 'thinking', 'thought', 'reasoning', 'scratchpad', 'antml'] as const
 
+/**
+ * Wrapper tags models put AROUND the answer. Unlike the scratchpad tags these
+ * must keep their contents, so they render as a passthrough.
+ *
+ * Without this, safe-mdx has no component for them (they are not valid HTML
+ * elements either) and renders them as null — deleting the answer.
+ */
+export const PASSTHROUGH_CHAT_TAGS = ['answer', 'response', 'final_answer', 'solution'] as const
+
 const chatComponents = {
   ...mdxComponents,
   ...Object.fromEntries(DROPPED_CHAT_TAGS.map((tag) => [tag, () => null])),
+  ...Object.fromEntries(
+    PASSTHROUGH_CHAT_TAGS.map((tag) => [tag, ({ children }: { children?: React.ReactNode }) => children]),
+  ),
 }
 
 /** Render an array of mdast nodes through safe-mdx with the editorial

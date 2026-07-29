@@ -72,6 +72,20 @@ const SCRIPTED_STREAMS: Record<string, unknown[]> = {
       message: "Too many AI chat requests. Wait a minute and try again.",
     },
   ],
+  // The standing advisory is re-sent every turn for free sites. It must not
+  // count as an answer, or an empty turn shows nothing but the nag — and on a
+  // repeat turn the nag is de-duplicated, so it shows nothing at all.
+  nagThenEmpty: [
+    {
+      type: "notice",
+      display: "once",
+      code: "HOLOCRON_TEMPORARY_AI_MODEL",
+      title: "Temporary AI model",
+      message: "Add HOLOCRON_KEY before deploying for reliable AI chat.",
+    },
+    { type: "start" },
+    { type: "finish", finishReason: "stop" },
+  ],
   // The standing upgrade advisory must not hide the failure that follows it.
   nagThenError: [
     {

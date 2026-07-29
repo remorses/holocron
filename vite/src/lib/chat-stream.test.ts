@@ -9,7 +9,7 @@
 
 import { describe, expect, test } from 'vitest'
 import { convertChunksToParts, type ChatStreamOutcome } from './chat-stream.ts'
-import { renderMarkdownTextPart } from './chat-restore.tsx'
+import { modelMessagesToChatMessages, renderMarkdownTextPart } from './chat-restore.tsx'
 
 const renderText = (text: string) => ({ type: 'text' as const, text })
 
@@ -59,6 +59,7 @@ describe('convertChunksToParts', () => {
     expect(stableOutcome(outcome)).toMatchInlineSnapshot(`
       {
         "aborted": false,
+        "answerNotices": 0,
         "chunkTypes": {
           "finish": 1,
           "text-delta": 2,
@@ -66,7 +67,6 @@ describe('convertChunksToParts', () => {
           "text-start": 1,
         },
         "flushedAtEnd": false,
-        "notices": 0,
         "reasoningChars": 0,
         "sawTextEnd": true,
         "textChars": 27,
@@ -344,8 +344,36 @@ describe('convertChunksToParts', () => {
         },
       ]
     `)
-    expect(outcome.notices).toBe(1)
+    expect(outcome.answerNotices).toBe(1)
     expect(outcome.errorText).toBeUndefined()
+  })
+
+  test('the standing advisory does not count as an answer', async () => {
+    // The gateway re-sends this nag on EVERY turn for free sites. Counting it
+    // as output would mark every empty turn as answered — and since the widget
+    // renders it only once, the second empty turn would show nothing at all.
+    const { parts, outcome } = await collect([
+      {
+        type: 'notice',
+        display: 'once',
+        code: 'HOLOCRON_TEMPORARY_AI_MODEL',
+        title: 'Temporary AI model',
+        message: 'Add HOLOCRON_KEY before deploying.',
+      },
+      { type: 'start' },
+      { type: 'finish', finishReason: 'stop' },
+    ])
+    expect(outcome.answerNotices).toBe(0)
+    expect(parts.at(-1)).toMatchInlineSnapshot(`
+      {
+        "code": "HOLOCRON_STREAM_ERROR",
+        "display": "always",
+        "message": "The AI model did not return a response. This usually means the provider is temporarily unavailable. Please try again.",
+        "severity": "error",
+        "title": "AI model unavailable",
+        "type": "notice",
+      }
+    `)
   })
 
   test('keeps partial text when the turn is aborted', async () => {
@@ -394,8 +422,20 @@ describe('renderMarkdownTextPart', () => {
     expect(rendersMarkdown(renderMarkdownTextPart('```md\n<think>example</think>\n```'))).toBe(true)
   })
 
-  test('a known holocron component renders even with dropped children', () => {
-    expect(rendersMarkdown(renderMarkdownTextPart('<Note>\n<think>hidden</think>\n</Note>'))).toBe(true)
+  test('a wrapper whose contents were all dropped is not an answer', () => {
+    // An empty Note frame reads as a hung answer, so it counts as nothing.
+    expect(renderMarkdownTextPart('<Note>\n<think>hidden</think>\n</Note>')).toBeNull()
+  })
+
+  test('a known component with real content still renders', () => {
+    expect(rendersMarkdown(renderMarkdownTextPart('<Note>\nRead the quickstart.\n</Note>'))).toBe(true)
+  })
+
+  test('answer wrappers keep their contents', () => {
+    // Not valid HTML, so safe-mdx would drop them without the passthrough.
+    const part = renderMarkdownTextPart('<answer>The whole answer</answer>')
+    expect(rendersMarkdown(part)).toBe(true)
+    expect(part?.text).toContain('The whole answer')
   })
 
   test('an answer entirely inside a think wrapper renders nothing', () => {
@@ -410,5 +450,81 @@ describe('renderMarkdownTextPart', () => {
     const part = renderMarkdownTextPart('<div unclosed')
     expect(part?.text).toBe('<div unclosed')
     expect(rendersMarkdown(part)).toBe(false)
+  })
+})
+
+// The "no answer" notice is UI-only and never persisted, so the restore path
+// has to recreate it. Without that, reloading a conversation whose last turn
+// rendered nothing drops the assistant message entirely and leaves a question
+// with no reply.
+describe('modelMessagesToChatMessages', () => {
+  test('restores text, tool calls and tool results in order', () => {
+    const messages = modelMessagesToChatMessages([
+      { role: 'user', content: 'where is nav configured?' },
+      {
+        role: 'assistant',
+        content: [
+          { type: 'text', text: 'Let me look.' },
+          { type: 'tool-call', toolCallId: 't1', toolName: 'bash', input: { command: 'grep -rn nav' } },
+        ],
+      },
+      {
+        role: 'tool',
+        content: [{ type: 'tool-result', toolCallId: 't1', output: { stdout: 'docs.json:12' } }],
+      },
+      { role: 'assistant', content: 'In `docs.json`.' },
+    ])
+    expect(messages.map((m) => [m.role, m.parts.map((p) => p.type)])).toMatchInlineSnapshot(`
+      [
+        [
+          "user",
+          [
+            "text",
+          ],
+        ],
+        [
+          "assistant",
+          [
+            "text",
+            "tool-call",
+            "tool-result",
+            "text",
+          ],
+        ],
+      ]
+    `)
+  })
+
+  test('a stored answer that renders nothing becomes a notice, not a hole', () => {
+    const messages = modelMessagesToChatMessages([
+      { role: 'user', content: 'hi' },
+      { role: 'assistant', content: '<think>never produced an answer</think>' },
+    ])
+    expect(messages.at(-1)).toMatchInlineSnapshot(`
+      {
+        "parts": [
+          {
+            "code": "HOLOCRON_STREAM_ERROR",
+            "display": "always",
+            "message": "The AI model did not return a response. This usually means the provider is temporarily unavailable. Please try again.",
+            "severity": "error",
+            "title": "AI model unavailable",
+            "type": "notice",
+          },
+        ],
+        "role": "assistant",
+      }
+    `)
+  })
+
+  test('a turn with only tool calls is not turned into a notice', () => {
+    const messages = modelMessagesToChatMessages([
+      { role: 'user', content: 'hi' },
+      {
+        role: 'assistant',
+        content: [{ type: 'tool-call', toolCallId: 't1', toolName: 'bash', input: {} }],
+      },
+    ])
+    expect(messages.at(-1)?.parts.map((p) => p.type)).toEqual(['tool-call'])
   })
 })

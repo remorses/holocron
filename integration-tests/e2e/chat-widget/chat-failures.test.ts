@@ -40,9 +40,10 @@ test("provider error chunk renders an error notice", async ({ page }) => {
   await expect(notice).toContainText("upstream provider exploded");
 });
 
-test("answer wrapped in think tags is still visible", async ({ page }) => {
+test("think tag contents are dropped and the answer around them survives", async ({ page }) => {
   const assistant = await askScripted(page, "think");
   await expect(assistant).toContainText("Think tag answer body", { timeout: 30000 });
+  await expect(assistant).not.toContainText("grep the docs first");
 });
 
 test("turn with no output shows an error notice, never an empty bubble", async ({ page }) => {
@@ -58,6 +59,14 @@ test("a notice-only turn is the answer, with no error stacked on top", async ({ 
     assistant.locator("[data-notice-code='HOLOCRON_RATE_LIMIT_REACHED']"),
   ).toBeVisible({ timeout: 30000 });
   await expect(assistant.locator("[data-notice-severity='error']")).toHaveCount(0);
+});
+
+test("an empty turn still reports itself when the upgrade advisory is present", async ({ page }) => {
+  const assistant = await askScripted(page, "nagThenEmpty");
+  await expect(
+    assistant.locator("[data-notice-code='HOLOCRON_TEMPORARY_AI_MODEL']"),
+  ).toBeVisible({ timeout: 30000 });
+  await expect(assistant.locator("[data-notice-severity='error']")).toBeVisible();
 });
 
 test("the standing upgrade advisory does not hide the error that follows it", async ({ page }) => {

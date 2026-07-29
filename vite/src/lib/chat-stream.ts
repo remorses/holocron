@@ -25,12 +25,15 @@
  * 4. Text that renders to nothing (the model wrapped its whole answer in a
  *    `<think>` tag, which chat-render.tsx maps to a null component) is
  *    reported as "no answer" rather than emitted as a blank part.
- * 5. Notices count as output. A rate-limited turn answers with a notice and
- *    nothing else; treating that as empty stacks a bogus error on top of it.
+ * 5. Terminal notices count as output. A rate-limited turn answers with a
+ *    notice and nothing else; treating that as empty stacks a bogus error on
+ *    top of it. Standing advisories (`display: 'once'`) do NOT count: that
+ *    one is re-sent every turn, so counting it would mark every empty turn
+ *    as answered.
  */
 
 import type { ChatPart } from '../chat/chat-store.ts'
-import { renderMarkdownTextPart } from './chat-restore.tsx'
+import { NO_ANSWER_NOTICE, renderMarkdownTextPart } from './chat-restore.tsx'
 
 /** Chunks the widget consumes. Superset of ChatPart with the control
  *  messages the proxy forwards verbatim. */
@@ -50,10 +53,14 @@ export type ChatStreamOutcome = {
   textParts: number
   reasoningChars: number
   toolCalls: number
-  /** Notices forwarded from the gateway (rate limit, credit limit, upgrade
-   *  nag). A notice-only turn is a complete, intentional answer — counting
-   *  them prevents appending a bogus "no output" error on top. */
-  notices: number
+  /** Notices that ARE the answer: rate limit, credit limit reached. Counted
+   *  so a notice-only turn is not reported as empty.
+   *
+   *  Standing advisories (`display: 'once'`, the temporary-model nag) are
+   *  excluded on purpose — the gateway re-sends that one on every turn for
+   *  free sites, so counting it would mark every empty turn as answered and
+   *  bring back the silent empty bubble. */
+  answerNotices: number
   /** False when the provider ended the stream mid-text. */
   sawTextEnd: boolean
   /** True when buffered text had to be rescued by the final flush. */
@@ -85,16 +92,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /** Human readable error notice. `display: 'always'` because a failure is a
  *  per-turn outcome — de-duplicating it would hide the second failure. */
 function errorNotice(message: string): ChatPart {
-  const isNoOutput = message.includes('No output generated')
+  // Shared with the restore path so a reloaded conversation shows the same
+  // notice for a turn that produced nothing.
+  if (message.includes('No output generated')) return { ...NO_ANSWER_NOTICE }
   return {
     type: 'notice',
     severity: 'error',
     display: 'always',
     code: 'HOLOCRON_STREAM_ERROR',
-    title: isNoOutput ? 'AI model unavailable' : 'Something went wrong',
-    message: isNoOutput
-      ? 'The AI model did not return a response. This usually means the provider is temporarily unavailable. Please try again.'
-      : message,
+    title: 'Something went wrong',
+    message,
   }
 }
 
@@ -124,7 +131,7 @@ export async function* convertChunksToParts(
     textParts: 0,
     reasoningChars: 0,
     toolCalls: 0,
-    notices: 0,
+    answerNotices: 0,
     sawTextEnd: false,
     flushedAtEnd: false,
     aborted: false,
@@ -159,10 +166,10 @@ export async function* convertChunksToParts(
       outcome.chunkTypes[type] = (outcome.chunkTypes[type] ?? 0) + 1
 
       switch (type) {
-        // Forwarded verbatim to the widget. A notice is a real answer (rate
-        // limit, credit limit, upgrade nag), so it counts as output.
+        // Forwarded verbatim to the widget. A terminal notice (rate limit,
+        // credit limit) IS the answer; a standing advisory is not.
         case 'notice':
-          outcome.notices += 1
+          if (chunk.display !== 'once') outcome.answerNotices += 1
           yield chunk
           continue
 
@@ -272,7 +279,7 @@ export async function* convertChunksToParts(
       outcome.textParts === 0 &&
       outcome.reasoningChars === 0 &&
       outcome.toolCalls === 0 &&
-      outcome.notices === 0 &&
+      outcome.answerNotices === 0 &&
       !outcome.errorText &&
       !outcome.aborted
     ) {

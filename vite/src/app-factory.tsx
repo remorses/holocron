@@ -1734,13 +1734,13 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
           priorMessages,
           onOutcome: (outcome) => {
             // A turn is fine when the user got text, reasoning, a tool call,
-            // or a notice. Intermediate client-tool turns legitimately carry
-            // no text, so keying the warning on text alone would cry wolf.
+            // or a terminal notice. Intermediate client-tool turns carry no
+            // text, so keying the warning on text alone would cry wolf.
             const renderable =
               outcome.textParts > 0 ||
               outcome.reasoningChars > 0 ||
               outcome.toolCalls > 0 ||
-              outcome.notices > 0
+              outcome.answerNotices > 0
             const summary = [
               `slug=${body.currentSlug || '/'}`,
               `ms=${outcome.durationMs}`,
@@ -1749,7 +1749,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
               `textParts=${outcome.textParts}`,
               `reasoningChars=${outcome.reasoningChars}`,
               `toolCalls=${outcome.toolCalls}`,
-              `notices=${outcome.notices}`,
+              `answerNotices=${outcome.answerNotices}`,
               `sawTextEnd=${outcome.sawTextEnd}`,
               `flushedAtEnd=${outcome.flushedAtEnd}`,
               `aborted=${outcome.aborted}`,

@@ -20,10 +20,20 @@ import type { ChatMessage, ChatPart } from '../chat/chat-store.ts'
 
 const droppedTags = new Set<string>(DROPPED_CHAT_TAGS)
 
-/** True when this node renders nothing: a scratchpad tag, or a capitalized
- *  component safe-mdx has no entry for. Lowercase names are assumed to render
- *  because safe-mdx accepts every valid HTML element. */
-function rendersNothing(node: RootContent): boolean {
+/**
+ * True when safe-mdx drops this JSX node and everything inside it.
+ *
+ * Two cases: a scratchpad tag (registered as a null component in
+ * chat-render.tsx) and an unknown CAPITALIZED name, which can never resolve.
+ *
+ * Unknown lowercase names are assumed to render, because safe-mdx merges its
+ * own `nativeTags` list of every valid HTML element on top of the component
+ * map — and that list is not exported from the package, so it cannot be
+ * consulted here. The gap is an invented lowercase wrapper that is not valid
+ * HTML; the common ones are handled by PASSTHROUGH_CHAT_TAGS. Exporting
+ * `nativeTags` from safe-mdx would make this exact.
+ */
+function isDropped(node: RootContent): boolean {
   if (node.type !== 'mdxJsxFlowElement' && node.type !== 'mdxJsxTextElement') return false
   const name = node.name?.split('.')[0]
   if (!name) return true
@@ -31,15 +41,20 @@ function rendersNothing(node: RootContent): boolean {
   return droppedTags.has(name.toLowerCase()) || /^[A-Z]/.test(name)
 }
 
-/** True when safe-mdx would render at least something for these nodes. Errs
- *  toward visible: only a tree that renders nothing at all must be caught. */
+/**
+ * True when safe-mdx would render at least something for these nodes.
+ *
+ * One rule: a node with children is visible only if its children are. A
+ * wrapper whose entire contents were dropped renders an empty frame, which
+ * reads as a hung answer, so it counts as nothing. Childless nodes (images,
+ * thematic breaks, prop-only components) are visible.
+ */
 function hasVisibleContent(nodes: RootContent[]): boolean {
   return nodes.some((node) => {
-    if (rendersNothing(node)) return false
+    if (isDropped(node)) return false
     if (node.type === 'text') return !!node.value.trim()
-    // Paragraphs have no frame of their own — one holding only a dropped
-    // inline element renders nothing.
-    if (node.type === 'paragraph') return hasVisibleContent(node.children as RootContent[])
+    const children = 'children' in node ? (node.children as RootContent[]) : undefined
+    if (children?.length) return hasVisibleContent(children)
     return true
   })
 }
@@ -104,6 +119,22 @@ function formatToolOutput(output: unknown): { output: string; error?: string } {
   return { output: String(output ?? '').slice(0, 500) }
 }
 
+/**
+ * Shown when a turn produced nothing renderable. Shared by the live stream
+ * (chat-stream.ts) and the restore path, because this notice is UI-only and
+ * is never persisted in the stored ModelMessages — without it a reloaded
+ * conversation would end with a question and no reply at all.
+ */
+export const NO_ANSWER_NOTICE: ChatPart = {
+  type: 'notice',
+  severity: 'error',
+  display: 'always',
+  code: 'HOLOCRON_STREAM_ERROR',
+  title: 'AI model unavailable',
+  message:
+    'The AI model did not return a response. This usually means the provider is temporarily unavailable. Please try again.',
+}
+
 /** Appends a part, ignoring the null renderMarkdownTextPart returns for text
  *  that renders nothing. */
 function appendAssistantPart(messages: ChatMessage[], part: ChatPart | null): void {
@@ -140,31 +171,49 @@ export function modelMessagesToChatMessages(modelMessages: unknown[]): ChatMessa
 
     if (raw.role === 'assistant') {
       const content = raw.content
+      // Collected first so a turn whose only text renders to nothing can be
+      // detected before anything is appended.
+      const parts: ChatPart[] = []
+      let hadStoredText = false
+
       if (typeof content === 'string') {
-        if (content.trim()) appendAssistantPart(messages, renderMarkdownTextPart(content))
-        continue
+        if (content.trim()) {
+          hadStoredText = true
+          const part = renderMarkdownTextPart(content)
+          if (part) parts.push(part)
+        }
+      } else if (Array.isArray(content)) {
+        for (const part of content) {
+          if (!isRecord(part)) continue
+          if (part.type === 'text' && typeof part.text === 'string' && part.text.trim()) {
+            hadStoredText = true
+            const rendered = renderMarkdownTextPart(part.text)
+            if (rendered) parts.push(rendered)
+          }
+          // Keeps restored turns identical to live ones for reasoning models.
+          if (part.type === 'reasoning' && typeof part.text === 'string' && part.text.trim()) {
+            parts.push({ type: 'reasoning', text: part.text.trim() })
+          }
+          if (part.type === 'tool-call' && typeof part.toolCallId === 'string') {
+            const toolName = typeof part.toolName === 'string' ? part.toolName : 'tool'
+            toolNames.set(part.toolCallId, toolName)
+            parts.push({
+              type: 'tool-call',
+              toolCallId: part.toolCallId,
+              toolName,
+              args: isRecord(part.input) ? part.input : {},
+            })
+          }
+        }
       }
-      if (!Array.isArray(content)) continue
-      for (const part of content) {
-        if (!isRecord(part)) continue
-        if (part.type === 'text' && typeof part.text === 'string' && part.text.trim()) {
-          appendAssistantPart(messages, renderMarkdownTextPart(part.text))
-        }
-        // Keeps restored turns identical to live ones for reasoning models.
-        if (part.type === 'reasoning' && typeof part.text === 'string' && part.text.trim()) {
-          appendAssistantPart(messages, { type: 'reasoning', text: part.text.trim() })
-        }
-        if (part.type === 'tool-call' && typeof part.toolCallId === 'string') {
-          const toolName = typeof part.toolName === 'string' ? part.toolName : 'tool'
-          toolNames.set(part.toolCallId, toolName)
-          appendAssistantPart(messages, {
-            type: 'tool-call',
-            toolCallId: part.toolCallId,
-            toolName,
-            args: isRecord(part.input) ? part.input : {},
-          })
-        }
-      }
+
+      // The model answered, but everything it wrote renders to nothing (a
+      // whole answer inside a <think> wrapper). The live stream shows a
+      // notice there; without this the turn would silently disappear on
+      // reload, leaving a question with no reply.
+      if (hadStoredText && parts.length === 0) parts.push({ ...NO_ANSWER_NOTICE })
+
+      for (const part of parts) appendAssistantPart(messages, part)
       continue
     }
 

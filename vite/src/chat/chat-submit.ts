@@ -638,7 +638,14 @@ export async function submitChat(
       const lastMessage = chatStore.getState().messages.at(-1)
       const hasContent =
         lastMessage?.role === 'assistant' &&
-        lastMessage.parts.some((part) => part.type !== 'tool-call')
+        lastMessage.parts.some((part) => {
+          // A pending tool call is not an answer, and neither is the standing
+          // upgrade advisory: the gateway re-sends that one every turn for
+          // free sites, and the message list renders it only once.
+          if (part.type === 'tool-call') return false
+          if (part.type === 'notice' && part.display === 'once') return false
+          return true
+        })
       if (toolLimitHit) {
         chatStore.setState({
           errorMessage: 'The assistant made too many tool calls in one turn. Try rephrasing your question.',
