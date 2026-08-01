@@ -147,8 +147,26 @@
 
   /* Sidebar nav — spacing and link styling */
   --sidebar-group-margin-top: 12px;
-  --sidebar-link-radius: 0px;
-  --sidebar-indent: 12px;
+  --sidebar-link-radius: 6px;
+  /* Horizontal padding inside every sidebar row (page link, group toggle, TOC
+     heading) so the hover/active pill has breathing room around the text.
+     Rows cancel it with an equal negative inline margin, so text alignment is
+     unchanged.
+
+     The point is that the pill is painted INSIDE the row's border box. An
+     `overflow-y-auto` scroll container also clips horizontally (per spec the
+     other axis cannot stay `visible`), so anything painted OUTSIDE a row —
+     a `box-shadow` spread, the browser's focus ring — gets its rounded
+     corners sliced flat at the clip edge. Every clipping ancestor of a row
+     (the scroll `<nav>`, `ExpandableContainer`) reserves exactly this amount
+     so a row can sit flush with the clip edge and still render whole. */
+  --sidebar-row-padding-x: 6px;
+  /* One nesting step in the sidebar tree. Defaults to the width of a row's
+     leading slot (12px icon/chevron + 6px gap) so a nested group's label
+     lands exactly where its children's icons start — the file-tree look,
+     where a folder's twisty sits in the gutter and its contents align under
+     the folder name. Lower it for a tighter tree. */
+  --sidebar-indent: 18px;
   /* Background pill behind the deepest active sidebar item: the active TOC
      heading when the current page's TOC is expanded, otherwise the page link
      itself. Transparent by default (active state is color-only); override to
@@ -371,6 +389,15 @@
   }
   .scrollbar-none::-webkit-scrollbar {
     display: none; /* Chrome/Safari */
+  }
+
+  /* Sidebar rows sit flush with the nav's horizontal clip edge (see
+     --sidebar-row-padding-x), so the browser's default focus ring — painted
+     OUTSIDE the border box — would get its left corners sliced flat. Pull it
+     inside. It still follows --sidebar-link-radius, so a focused row reads as
+     the same rounded pill as a hovered one. */
+  .slot-sidebar-nav :focus-visible {
+    outline-offset: -2px;
   }
 
   /* Search input border + focus ring */

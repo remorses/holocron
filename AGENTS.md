@@ -90,6 +90,18 @@ Types are intentionally kept close to docs.json to minimize transformations. Uti
 
 The left sidebar (`SideNav` / `nav-tree.tsx`) must never overflow horizontally. When a `NavPageLink` has a badge (API method, deprecated, custom tag), the title `<span>` gets `truncate min-w-0` so it ellipsizes instead of pushing the sidebar wider. Without a badge, the title wraps normally. Never remove this truncation guard; it prevents the sidebar from scrolling horizontally on long titles with badges.
 
+### Nested group rows are page rows
+
+A collapsible nested group (`NavGroupNode` at `depth > 0`) must render with the **same type and rhythm as a page link**: inherited font-size, `font-medium`, `gap-1.5` leading slot, and the standard `gap-2.5` row spacing (including `pt-2.5` on its children container). The chevron occupies the same 12px slot a page icon would, so group labels land in the same column as sibling page labels. Never give a nested group its own `font-size` — `--type-nav-group-size` is only for the uppercase top-level section label.
+
+`--sidebar-indent` defaults to `18px` because that is the leading slot width (12px icon/chevron + 6px gap). One nesting step therefore aligns a group's children under the group's own label, giving a file-tree look that works with or without page icons. Changing the slot width means changing this token too. The `fixtures/deep-nesting/` fixture exercises both cases: the Documentation tab has an icon on every page, the No Icons tab has none.
+
+### Sidebar highlights must be painted INSIDE the row's border box
+
+Never use a `box-shadow` spread (or anything else painted outside the border box) for a sidebar row's hover, active, or search highlight. The scroll `<nav>` is `overflow-y-auto`, which per spec also clips horizontally, and every `ExpandableContainer` between the nav and a nested row is `overflow: hidden`. Anything drawn outside a row gets its left rounded corners sliced flat against that clip edge.
+
+Instead, every row (page link, group toggle, TOC heading, sidebar anchor, "Search with AI chat") carries `rowSpacing()` from `nav-tree.tsx`: `padding-inline: var(--sidebar-row-padding-x)` cancelled by an equal negative `margin-inline`, plus `border-radius: var(--sidebar-link-radius)`. The highlight is then just `background`, which can never be clipped. Every clipping ancestor reserves the same `--sidebar-row-padding-x`. The browser's focus ring is also painted outside, so `.slot-sidebar-nav :focus-visible` sets `outline-offset: -2px` to pull it inside.
+
 ## Styling
 
 ### CSS variable convention — shadcn superset

@@ -31,6 +31,34 @@ type SidebarTreeContextValue = {
 
 const sidebarTreeContext = createContext<SidebarTreeContextValue | null>(null)
 
+/**
+ * Horizontal breathing room around a sidebar row's label, cancelled by an
+ * equal negative inline margin so the text column is unchanged.
+ *
+ * Why not a `box-shadow` spread (what this replaced)? The scroll `<nav>` is
+ * `overflow-y-auto`, which per spec also clips horizontally, and so does every
+ * `ExpandableContainer` between the nav and a nested row. Anything painted
+ * outside a row's border box — a shadow spread, the browser's focus ring —
+ * gets its left rounded corners sliced flat at that clip edge. Real padding
+ * keeps the whole pill inside the border box, which can never be clipped.
+ *
+ * `indent` is the nesting offset, added on top of the padding.
+ */
+function rowSpacing(indent?: string): React.CSSProperties {
+  return {
+    paddingInlineStart: indent
+      ? `calc(var(--sidebar-row-padding-x) + ${indent})`
+      : 'var(--sidebar-row-padding-x)',
+    paddingInlineEnd: 'var(--sidebar-row-padding-x)',
+    marginInline: 'calc(-1 * var(--sidebar-row-padding-x))',
+    borderRadius: 'var(--sidebar-link-radius)',
+  }
+}
+
+/** Row spacing for flat sidebar rows that never nest — sidebar anchors and the
+ *  "Search with AI chat" row in `side-nav.tsx`. */
+export const sidebarRowSpacing = rowSpacing()
+
 function useSidebarTreeContext(): SidebarTreeContextValue {
   const value = useContext(sidebarTreeContext)
   if (!value) {
@@ -202,14 +230,13 @@ function TocInline({
                   data-active={isActive}
                   data-heading-id={heading.slug}
                   onClick={(e) => notifyHeadingClick(e)}
-                  className={`block leading-5 no-underline ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)] hover:rounded-sm hover:[box-shadow:0_0_0_2px_var(--sidebar-hover-background)]' : ''}`}
+                  className={`block leading-5 no-underline ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)]' : ''}`}
                   tabIndex={isDimmed ? -1 : 0}
                   style={{
+                    ...rowSpacing(),
                     color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
                     fontWeight: 400,
                     background: isHighlighted ? 'var(--accent)' : isActive ? 'var(--sidebar-active-background)' : undefined,
-                    borderRadius: isHighlighted ? 'var(--radius-sm)' : isActive ? 'var(--sidebar-link-radius)' : undefined,
-                    boxShadow: isHighlighted ? '0 0 0 4px var(--accent)' : isActive ? '0 0 0 2px var(--sidebar-active-background)' : undefined,
                   }}
                 >
                   {heading.text}
@@ -224,10 +251,11 @@ function TocInline({
         <button
           type='button'
           onClick={() => setManuallyExpanded(true)}
-          className='border-none bg-transparent cursor-pointer text-left hover:[background:var(--sidebar-hover-background)] hover:rounded-sm hover:[box-shadow:0_0_0_2px_var(--sidebar-hover-background)]'
+          className='border-none bg-transparent cursor-pointer text-left hover:[background:var(--sidebar-hover-background)]'
           style={{
-            padding: '2px 0',
-            marginLeft: '12px',
+            ...rowSpacing(),
+            paddingBlock: '2px',
+            marginInlineStart: 'calc(12px - var(--sidebar-row-padding-x))',
             marginTop: '4px',
             fontSize: 'var(--type-small-size, 13px)',
             fontWeight: 500,
@@ -290,15 +318,13 @@ function NavPageLink({
       <Link
         ref={isHighlighted ? highlightedRef : undefined}
         href={page.href}
-        className={`group flex items-center gap-1.5 no-underline ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)] hover:[box-shadow:0_0_0_2px_var(--sidebar-hover-background)]' : ''}`}
+        className={`group flex items-center gap-1.5 no-underline ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)]' : ''}`}
         style={{
-          borderRadius: 'var(--sidebar-link-radius)',
+          ...rowSpacing(depth > 0 ? `${depth} * var(--sidebar-indent)` : undefined),
           opacity: isDimmed ? 0.45 : 1,
           color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
-          paddingLeft: depth > 0 ? `calc(${depth} * var(--sidebar-indent))` : undefined,
           transition: animate ? 'color 0.15s, opacity 0.15s ease' : 'none',
           background: isHighlighted ? 'var(--accent)' : showActivePill ? 'var(--sidebar-active-background)' : undefined,
-          boxShadow: isHighlighted ? '0 0 0 4px var(--accent)' : showActivePill ? '0 0 0 2px var(--sidebar-active-background)' : undefined,
         }}
       >
         {page.icon && (() => {
@@ -419,20 +445,24 @@ export function NavGroupNode({
   // Nested groups (depth > 0) are collapsible. Search force-opens them via expandGroupKeys.
   const isExpanded = expandedGroups.has(groupKey) || (searchState?.expandGroupKeys.has(groupKey) ?? false)
 
+  // A nested group row is visually a page row whose leading icon slot holds the
+  // chevron: same inherited font-size, same `font-medium` weight, same
+  // `gap-1.5` between slot and label, same indent math (a group at `depth`
+  // renders its own children pages at `depth`, so `depth - 1` puts the chevron
+  // exactly where a sibling page's icon sits). Never give this row its own
+  // font-size — that is what made nested folders read as a different, smaller
+  // tier than the pages around them.
   return (
     <div className='flex flex-col'>
       <button
         type='button'
         onClick={() => onToggleGroup(groupKey)}
         aria-expanded={isExpanded}
-        className={`flex items-center gap-1 border-none bg-transparent cursor-pointer p-0 text-left ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)] hover:[box-shadow:0_0_0_2px_var(--sidebar-hover-background)]' : ''}`}
+        className={`flex items-center gap-1.5 border-none bg-transparent cursor-pointer text-left font-medium ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)]' : ''}`}
         style={{
-          borderRadius: 'var(--sidebar-link-radius)',
+          ...rowSpacing(depth > 1 ? `${depth - 1} * var(--sidebar-indent)` : undefined),
           opacity: isDimmed ? 0.45 : 1,
-          fontVariationSettings: '"wght" 500',
-          fontSize: 'var(--type-nav-group-size)',
           color: 'var(--sidebar-foreground)',
-          paddingLeft: depth > 0 ? `calc(${depth - 1} * var(--sidebar-indent))` : undefined,
           transition: animate ? 'opacity 0.15s ease' : 'none',
         }}
       >
@@ -440,7 +470,9 @@ export function NavGroupNode({
         {group.group}
       </button>
       <ExpandableContainer open={isExpanded} animate={animate}>
-        <div className='flex flex-col gap-2.5 pt-2'>
+        {/* `pt-2.5` matches the `gap-2.5` rhythm between sibling rows so the
+            first child sits exactly one row-gap under its group label. */}
+        <div className='flex flex-col gap-2.5 pt-2.5'>
           {renderChildren(false)}
         </div>
       </ExpandableContainer>

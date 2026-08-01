@@ -17,7 +17,7 @@ import { useHolocronData } from '../../router.ts'
 import { buildSearchEntries, buildSidebarAnchors, collectAncestorGroupKeys, collectDefaultExpandedKeys, type SidebarAnchor } from '../../site-data.ts'
 import { SearchIcon } from '../markdown/icons.tsx'
 import { Icon, resolveIconColor } from '../icon.tsx'
-import { NavGroupNode, SidebarTreeProvider } from './nav-tree.tsx'
+import { NavGroupNode, SidebarTreeProvider, sidebarRowSpacing } from './nav-tree.tsx'
 import { chatStore } from '../../chat/chat-store.ts'
 import { startNewChat } from '../../chat/chat-submit.ts'
 import { navStore } from '../../lib/nav-store.ts'
@@ -212,8 +212,10 @@ export function SideNav() {
 
   return (
     <aside className='flex flex-col max-w-(--grid-nav-width) min-h-0 text-sm'>
-      {/* Search input — leading magnifier icon + "/" hotkey kbd on the right. */}
-      <div className='pb-3 pl-1 pr-1 flex items-center relative shrink-0'>
+      {/* Search input — leading magnifier icon + "/" hotkey kbd on the right.
+          No horizontal padding: the input's border box then starts and ends
+          exactly where the nav rows' hover pills do. */}
+      <div className='pb-3 flex items-center relative shrink-0'>
         <span
           aria-hidden='true'
           className='absolute left-3.5 pointer-events-none inline-flex items-center justify-center'
@@ -277,12 +279,18 @@ export function SideNav() {
         )}
       </div>
 
-      {/* `pl-1` gives the search-highlight box-shadow 4px of horizontal
-          clearance inside nav's overflow-y-auto clip. `pr-3 -mr-2` pushes
-          content away from the OS scrollbar gutter (12px padding) while
-          pulling the nav edge back out (−8px margin) so the scrollbar sits
-          in the margin area instead of overlapping nav items. */}
-      <nav aria-label='Navigation' className='slot-sidebar-nav overflow-y-auto scrollbar-stable min-h-0 pl-1 pr-3 -mr-2 pb-6 flex flex-col gap-2'>
+      {/* Rows cancel their own `--sidebar-row-padding-x` with a negative inline
+          margin, so the nav reserves exactly that much padding: a row's hover
+          pill then sits flush with this element's horizontal clip edge and
+          keeps all four rounded corners. `-mr-2` pulls the nav edge back out
+          (−8px) so the reserved scrollbar gutter sits outside the aside
+          instead of eating row width; padding stays symmetric so a pill ends
+          flush against that gutter. */}
+      <nav
+        aria-label='Navigation'
+        className='slot-sidebar-nav overflow-y-auto scrollbar-stable min-h-0 -mr-2 pb-6 flex flex-col gap-2'
+        style={{ paddingInline: 'var(--sidebar-row-padding-x)' }}
+      >
         {/* Sidebar anchors — external links like GitHub, Discord, etc.
             Rendered above the nav groups, matching Mintlify's sidebar anchor placement. */}
         {sidebarAnchors.length > 0 && (
@@ -311,15 +319,16 @@ export function SideNav() {
           <button
             type='button'
             onClick={handleSearchWithAi}
-            className='group flex items-center gap-1.5 no-underline w-full text-left cursor-pointer border-none bg-transparent p-0 hover:[background:var(--sidebar-hover-background)] hover:rounded-sm hover:[box-shadow:0_0_0_2px_var(--sidebar-hover-background)]'
+            className='group flex items-center gap-1.5 no-underline w-full text-left cursor-pointer border-none bg-transparent hover:[background:var(--sidebar-hover-background)]'
             style={{
+              ...sidebarRowSpacing,
               font: 'inherit',
               color: 'var(--sidebar-foreground)',
               transition: sidebarAnimate ? 'color 0.15s, opacity 0.15s ease' : 'none',
             }}
           >
             <span className='font-medium'>Search with AI chat</span>
-            <span className='ml-auto mr-1 opacity-50' aria-hidden='true'>→</span>
+            <span className='ml-auto opacity-50' aria-hidden='true'>→</span>
           </button>
         )}
       </nav>
@@ -340,8 +349,9 @@ function SidebarAnchors({ anchors }: { anchors: SidebarAnchor[] }) {
             key={anchor.href}
             href={anchor.href}
             {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-            className='no-underline flex items-center gap-1.5 hover:[background:var(--sidebar-hover-background)] hover:rounded-sm hover:[box-shadow:0_0_0_2px_var(--sidebar-hover-background)]'
+            className='no-underline flex items-center gap-1.5 hover:[background:var(--sidebar-hover-background)]'
             style={{
+              ...sidebarRowSpacing,
               color: 'var(--sidebar-foreground)',
               fontVariationSettings: '"wght" 450',
               transition: 'color 0.15s',
@@ -349,7 +359,7 @@ function SidebarAnchors({ anchors }: { anchors: SidebarAnchor[] }) {
           >
             <Icon icon={anchor.icon} size={12} color={resolveIconColor(anchor.iconColor)} />
             <span>{anchor.label}</span>
-            {isExternal && <span className='ml-auto mr-3 opacity-50'>↗</span>}
+            {isExternal && <span className='ml-auto opacity-50'>↗</span>}
           </Link>
         )
       })}

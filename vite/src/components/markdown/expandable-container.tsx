@@ -76,16 +76,17 @@ export function ExpandableContainer({ open, children, animate }: { open: boolean
       }}
     >
       {/* Inner clip. `overflow: hidden` + `min-height: 0` makes the grid
-        * track collapsible. `paddingInline: 4px` + `marginInline: -4px`
-        * creates 4px of horizontal clearance INSIDE the clip so children's
-        * search-highlight box-shadow (4px spread) renders without being
-        * cut off. See MEMORY.md "box-shadow for 'bleed' highlight outlines"
-        * for context. */}
+        * track collapsible, but it also clips horizontally. Sidebar rows
+        * cancel their own horizontal padding with a negative inline margin
+        * (see --sidebar-row-padding-x), so reserve exactly that much
+        * clearance inside the clip — otherwise a nested row's hover pill
+        * loses its left rounded corners. See MEMORY.md "box-shadow for
+        * 'bleed' highlight outlines" for the history of this trap. */}
       <div style={{
         overflow: 'hidden',
         minHeight: 0,
-        paddingInline: '4px',
-        marginInline: '-4px',
+        paddingInline: 'var(--sidebar-row-padding-x, 6px)',
+        marginInline: 'calc(-1 * var(--sidebar-row-padding-x, 6px))',
       }}>{children}</div>
     </div>
   )

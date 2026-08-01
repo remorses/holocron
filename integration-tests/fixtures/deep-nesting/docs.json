@@ -116,6 +116,32 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "No Icons",
+        "groups": [
+          {
+            "group": "Plain",
+            "pages": [
+              "no-icons/overview",
+              {
+                "group": "Basics",
+                "expanded": true,
+                "pages": [
+                  "no-icons/install",
+                  "no-icons/configure",
+                  {
+                    "group": "Tuning",
+                    "expanded": true,
+                    "pages": [
+                      "no-icons/tuning"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       }
     ]
   }
