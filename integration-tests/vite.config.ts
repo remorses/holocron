@@ -31,11 +31,14 @@ import {
 cleanupFixtureRunPaths(resolveFixtureRunPaths());
 
 const analyzeBundle = process.env.ANALYZE_BUNDLE === "1";
+// The basic production fixture verifies Holocron's deterministic deploy chunks.
+const testDeployChunks = process.env.E2E_START === "1"
+  && /[/\\]basic$/.test(process.env.E2E_FIXTURE_ROOT ?? "");
 
 export default defineConfig(createE2EViteConfig({
   build: analyzeBundle ? { sourcemap: true } : undefined,
   plugins: [
-    holocron({ externalizeShared: true }),
+    holocron({ externalizeShared: true, codeSplitting: testDeployChunks }),
     analyzeBundle
       ? visualizer({
           emitFile: true,

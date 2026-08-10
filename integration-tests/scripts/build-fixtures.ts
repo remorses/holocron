@@ -73,6 +73,10 @@ function buildFixture(rootRel: string): Promise<void> {
           ...process.env,
           E2E_RUN_ID: runId,
           E2E_FIXTURE_ROOT: path.join(integrationTestsDir, rootRel),
+          // This upstream snapshot deliberately includes incomplete routes and icons.
+          ...(rootRel === "fixtures/realworld-polar"
+            ? { HOLOCRON_SKIP_BUILD_ERRORS: "true" }
+            : {}),
         },
       },
     );

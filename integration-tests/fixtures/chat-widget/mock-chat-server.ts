@@ -110,10 +110,15 @@ function getScriptName(messages: any[]): string | null {
         : "";
   const match = /^SCRIPT:(\w+)/.exec(text.trim());
   const name = match?.[1];
-  return name && name in SCRIPTED_STREAMS ? name : null;
+  return name && Object.hasOwn(SCRIPTED_STREAMS, name) ? name : null;
 }
 
-export async function startMockChatServer(): Promise<number> {
+export type MockChatServer = {
+  port: number;
+  close: () => Promise<void>;
+};
+
+export async function startMockChatServer(): Promise<MockChatServer> {
   const cacheDir = path.join(import.meta.dirname, ".aicache");
   const middleware = createAiCacheMiddleware({ cacheDir });
   const model = wrapLanguageModel({
@@ -271,7 +276,12 @@ export async function startMockChatServer(): Promise<number> {
       const addr = server.address();
       const port = typeof addr === "object" ? addr!.port : 0;
       console.log(`[mock-chat-server] listening on port ${port}`);
-      resolve(port);
+      resolve({
+        port,
+        close: () => new Promise<void>((resolveClose, rejectClose) => {
+          server.close((error) => error ? rejectClose(error) : resolveClose());
+        }),
+      });
     });
   });
 }

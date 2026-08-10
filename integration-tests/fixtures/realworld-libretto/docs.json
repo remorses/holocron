@@ -102,19 +102,19 @@
         {
           "anchor": "npm",
           "href": "https://www.npmjs.com/package/libretto",
-          "icon": "npm",
+          "icon": "package",
           "placement": "tabs"
         },
         {
           "anchor": "Changelog",
           "href": "https://github.com/saffron-health/libretto/releases",
-          "icon": "clock-rotate-left",
+          "icon": "history",
           "placement": "tabs"
         },
         {
           "anchor": "Discord",
           "href": "https://discord.gg/NYrG56hVDt",
-          "icon": "discord",
+          "icon": "message-circle",
           "placement": "tabs"
         }
       ]

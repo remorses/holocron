@@ -18,9 +18,14 @@ import { startMockChatServer } from "./mock-chat-server.ts";
 
 cleanupFixtureRunPaths(resolveFixtureRunPaths());
 
-export default defineConfig(async () => {
-  const port = await startMockChatServer();
-  process.env.HOLOCRON_URL = `http://localhost:${port}`;
+export default defineConfig(async ({ command }) => {
+  if (command === "serve") {
+    const server = await startMockChatServer();
+    process.env.HOLOCRON_URL = `http://localhost:${server.port}`;
+  } else if (process.env.E2E_CHAT_URL) {
+    // The production test parent owns this server so it survives the build.
+    process.env.HOLOCRON_URL = process.env.E2E_CHAT_URL;
+  }
   return createE2EViteConfig({
     plugins: [holocron()],
   });

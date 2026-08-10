@@ -4,6 +4,7 @@ import {
   integrationTestsDir,
 } from "./fixtures.ts";
 import { cleanupCurrentRunArtifacts } from "./cleanup-e2e.ts";
+import { startMockChatServer } from "../fixtures/chat-widget/mock-chat-server.ts";
 
 function runStep({
   command,
@@ -46,10 +47,17 @@ const requestedProject = (() => {
 
 console.log(`[test-e2e-start] run ${runId}`);
 
+// Keep the mock alive across both the chat fixture build and its built server tests.
+const mockChatServer = !requestedProject || requestedProject === "chat-widget"
+  ? await startMockChatServer()
+  : undefined;
 const env = {
   ...process.env,
   E2E_RUN_ID: runId,
   E2E_START: "1",
+  ...(mockChatServer
+    ? { E2E_CHAT_URL: `http://localhost:${mockChatServer.port}` }
+    : {}),
   ...(requestedProject ? { E2E_FIXTURES: requestedProject } : {}),
 };
 
@@ -58,4 +66,5 @@ try {
   await runStep({ command: "pnpm", args: ["exec", "playwright", "test", ...forwardedArgs], env });
 } finally {
   cleanupCurrentRunArtifacts();
+  await mockChatServer?.close();
 }

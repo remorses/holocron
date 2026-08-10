@@ -115,6 +115,8 @@ import { buildNavigationData } from "@holocron.so/vite/src/build-navigation-data
 import { getConfig } from "virtual:holocron-config"
 import { getMdxSource } from "virtual:holocron-mdx"
 
+export const runtimeTabEntries = []
+
 export async function getNavigationData() {
   const config = await getConfig()
   return await buildNavigationData({ config, getMdxSource })
