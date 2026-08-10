@@ -128,6 +128,10 @@ export function buildColorStyles(config: HolocronConfig): string[] {
   return colorStyles
 }
 
+export function buildPageTitle(pageTitle: string, siteName: string): string {
+  return pageTitle.startsWith(siteName) ? pageTitle : `${pageTitle} — ${siteName}`
+}
+
 export function SiteHead({ config, titleOverride }: { config: HolocronConfig; titleOverride?: string }) {
   // docs.json asset paths are site-root-relative; apply the Vite base here.
   const faviconLight = withBasePath(config.favicon.light)

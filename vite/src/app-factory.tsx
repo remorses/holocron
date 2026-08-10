@@ -56,7 +56,7 @@ import { buildSections, isAboveNode } from './lib/mdx-sections.ts'
 import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
 import { visit } from 'unist-util-visit'
 import { RenderNodes, mdxComponents, renderNode } from './lib/mdx-components-map.tsx'
-import { SiteHead, THEME_SCRIPT, GtmNoscript } from './lib/site-head.tsx'
+import { SiteHead, THEME_SCRIPT, GtmNoscript, buildPageTitle } from './lib/site-head.tsx'
 import { encodeFederationPayload } from 'spiceflow/federation'
 import { modelMessagesToChatMessages } from './lib/chat-restore.tsx'
 import { convertChunksToParts } from './lib/chat-stream.ts'
@@ -980,7 +980,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       activeVersionHref: resolveActiveVersionHref(enrichedSite, currentPage.href),
       activeDropdownHref: resolveActiveDropdownHref(enrichedSite, currentPage.href),
       notFoundPath: undefined,
-      headTitle: `${currentPage.title} — ${effectiveConfig.name}`,
+      headTitle: buildPageTitle(currentPage.title, effectiveConfig.name),
       headRobots: getPageRobots(currentPage.frontmatter),
       currentPageFrontmatter: currentPage.frontmatter,
       showConfigPanel: showPanel,
@@ -1938,7 +1938,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         activeVersionHref: resolveActiveVersionHref(enrichedSite, pageHref),
         activeDropdownHref: resolveActiveDropdownHref(enrichedSite, pageHref),
         notFoundPath: undefined,
-        headTitle: `${pageTitle} — ${effectiveConfig.name}`,
+        headTitle: buildPageTitle(pageTitle, effectiveConfig.name),
         headRobots: getPageRobots(frontmatter),
         currentPageFrontmatter: frontmatter,
         showConfigPanel: shouldShowConfigPanel(request),

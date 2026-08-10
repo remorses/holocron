@@ -4,7 +4,21 @@
 
 import { describe, expect, test } from 'vitest'
 import { normalize } from './normalize-config.ts'
-import { buildFontHeadState, buildAnalyticsScripts, buildColorStyles } from './site-head.tsx'
+import { buildFontHeadState, buildAnalyticsScripts, buildColorStyles, buildPageTitle } from './site-head.tsx'
+
+describe('buildPageTitle', () => {
+  test('adds the site name unless the page title already starts with it', () => {
+    expect([
+      buildPageTitle('Quickstart', 'Holocron'),
+      buildPageTitle('Holocron - Quickstart', 'Holocron'),
+    ]).toMatchInlineSnapshot(`
+      [
+        "Quickstart — Holocron",
+        "Holocron - Quickstart",
+      ]
+    `)
+  })
+})
 
 describe('SiteHead fonts', () => {
   test('does not emit third-party font links for the default font stack', () => {
