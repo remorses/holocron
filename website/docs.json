@@ -12,6 +12,9 @@
     "icons": { "library": "lucide" },
     "assistant": { "enabled": true },
     "knownPaths": ["/dashboard", "/login"],
+    "redirects": [
+        { "source": "/markdown-editor", "destination": "/", "permanent": true }
+    ],
     "navbar": {
         "links": [
             {
