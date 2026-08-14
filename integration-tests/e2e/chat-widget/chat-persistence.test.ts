@@ -91,11 +91,12 @@ test("conversation persists across page reload", async ({ page }) => {
   expect(assistantTextBefore?.length).toBeGreaterThan(0);
 
   // Full reload — in-memory zustand stores are wiped; only the JS-readable
-  // cookie survives. Eager restore fires on page load; focusing the sidebar
-  // input detects the restored messages and reopens the drawer.
+  // cookie survives. The sidebar heading becomes "Open existing chat";
+  // clicking it reopens the restored conversation.
   await page.reload();
   await page.waitForLoadState("networkidle");
-  await page.locator("textarea").first().focus();
+  await expect(page.getByText("Open existing chat")).toBeVisible({ timeout: 15000 });
+  await page.getByText("Open existing chat").click();
 
   const newChatButton = page.locator("button[aria-label='New chat']");
   await expect(newChatButton).toBeVisible({ timeout: 15000 });
@@ -125,10 +126,10 @@ test("submit after reload includes the restored history in the request", async (
   await page.reload();
   await page.waitForLoadState("networkidle");
 
-  // Eager restore fires on page load (cookie is JS-readable). Focusing the
-  // sidebar input detects restored messages and opens the drawer. Wait for
-  // the drawer to appear with the previous conversation visible.
-  await page.locator("textarea").first().focus();
+  // Eager restore fires on page load (cookie is JS-readable). Click the
+  // heading to reopen the drawer with the previous conversation visible.
+  await expect(page.getByText("Open existing chat")).toBeVisible({ timeout: 15000 });
+  await page.getByText("Open existing chat").click();
   await expect(page.locator("button[aria-label='New chat']")).toBeVisible({ timeout: 15000 });
   await waitForMessages(page, 2);
 

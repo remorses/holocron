@@ -6,8 +6,9 @@
  * with disk-based caching so responses are deterministic after the first run.
  *
  * The sidebar assistant shows "Ask AI about this page" in the right aside
- * on desktop viewports. Clicking the input or focusing it opens the chat
- * drawer. The drawer contains the full chat UI with messages and input.
+ * on desktop viewports. Typing and submitting opens the chat drawer. When
+ * a past chat exists, the heading becomes "Open existing chat" and the
+ * textarea stays a normal input.
  */
 
 import { test, expect } from "../helpers/test.ts";
@@ -91,6 +92,32 @@ test("typing in sidebar input and pressing Enter opens the chat drawer", async (
 
   // The drawer should open — it has a "New chat" button with aria-label
   const newChatButton = page.locator("button[aria-label='New chat']");
+  await expect(newChatButton).toBeVisible({ timeout: 10000 });
+});
+
+test("existing chat keeps the textarea normal and opens from the heading", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  const chatInput = page.locator("textarea").first();
+  await chatInput.fill("hello");
+  await chatInput.press("Enter");
+
+  const newChatButton = page.locator("button[aria-label='New chat']");
+  await expect(newChatButton).toBeVisible({ timeout: 10000 });
+  await expect(page.locator("[data-message-id]")).not.toHaveCount(0, { timeout: 10000 });
+
+  await page.locator("button[aria-label='Close']").click();
+  await expect(newChatButton).not.toBeVisible({ timeout: 5000 });
+
+  await expect(page.getByText("Open existing chat")).toBeVisible();
+  await expect(page.getByText("Ask AI about this page")).toHaveCount(0);
+
+  await page.locator("textarea").first().focus();
+  await expect(newChatButton).not.toBeVisible({ timeout: 2000 });
+
+  await page.getByText("Open existing chat").click();
   await expect(newChatButton).toBeVisible({ timeout: 10000 });
 });
 
@@ -321,11 +348,10 @@ test("chat messages survive client-side navigation while drawer is open", async 
   await navLink.click();
   await expect(page).toHaveURL(/getting-started/, { timeout: 5000 });
 
-  // Re-open the drawer — messages from the previous page should persist
-  // because the zustand store survives client-side navigation.
+  // Re-open the drawer via the heading — messages from the previous page
+  // should persist because the zustand store survives client-side navigation.
   await page.waitForLoadState("networkidle");
-  const reopenInput = page.locator("textarea").first();
-  await reopenInput.focus();
+  await page.getByText("Open existing chat").click();
   await expect(newChatButton).toBeVisible({ timeout: 10000 });
 
   await expect(async () => {
@@ -372,11 +398,11 @@ test("chat state persists after client-side navigation", async ({ page }) => {
   await navLink.click();
   await expect(page).toHaveURL(/getting-started/, { timeout: 5000 });
 
-  // Re-open the drawer by clicking the sidebar assistant input.
-  // Type something and press Enter to open the drawer.
+  // Re-open the drawer by submitting a new question from the sidebar
+  // textarea. The heading now says "Open existing chat"; the input
+  // itself stays a normal textarea.
   await page.waitForLoadState("networkidle");
-  const sidebar = page.getByText("Ask AI about this page");
-  await expect(sidebar).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText("Open existing chat")).toBeVisible({ timeout: 10000 });
   const reopenInput = page.locator("textarea").first();
   await reopenInput.fill("hi");
   await reopenInput.press("Enter");

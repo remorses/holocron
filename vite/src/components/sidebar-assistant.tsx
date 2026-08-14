@@ -15,6 +15,7 @@ import { collectAllPages, isVisibleNavPage } from '../navigation.ts'
 import { cn } from '../lib/css-vars.ts'
 import {
   InfoCircleIcon,
+  MessageCircleIcon,
   CopyIcon,
   CheckIcon,
 } from '../chat/chat-icons.tsx'
@@ -25,7 +26,19 @@ export type { ChatInputProps } from '../chat/chat-input.tsx'
 
 // Import for local use
 import { ChatInput } from '../chat/chat-input.tsx'
-import { ensureSessionRestored } from '../chat/chat-submit.ts'
+import { chatWidgetStore } from '../chat/chat-widget-store.ts'
+import { ensureSessionRestored, hasPersistedChat } from '../chat/chat-submit.ts'
+
+const getServerHasExistingChat = () => false
+
+function subscribeExistingChat(cb: () => void) {
+  const unsubChat = chatStore.subscribe(cb)
+  const unsubWidget = chatWidgetStore.subscribe(cb)
+  return () => {
+    unsubChat()
+    unsubWidget()
+  }
+}
 
 // ── Sidebar assistant (wraps ChatInput with muted header) ────────────
 
@@ -35,6 +48,11 @@ export function SidebarAssistant() {
   // so the drawer can read it, but never read back from the store.
   const [inputValue, setInputValue] = useState('')
   const drawerState = useChatStore((s) => s.drawerState)
+  const hasExistingChat = useSyncExternalStore(
+    subscribeExistingChat,
+    hasPersistedChat,
+    getServerHasExistingChat,
+  )
   const reduceMotion = useReducedMotion()
 
   const {site } = useHolocronData()
@@ -50,25 +68,9 @@ export function SidebarAssistant() {
     chatStore.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' })
   }
 
-  const handleFocus = () => {
-    // Read the store lazily on focus instead of subscribing during render.
-    // This keeps the sidebar input SSR-safe in the RSC page shell while
-    // preserving the "reopen existing chat" behavior on the client.
-    if (chatStore.getState().messages.length > 0) {
-      chatStore.setState({ drawerState: 'open' })
-      return
-    }
-    // After a page refresh the store is empty but a persisted conversation
-    // may exist server-side. Restore lazily on first focus and reopen the
-    // drawer if a conversation came back (mirrors the in-memory behavior).
-    void ensureSessionRestored().then(() => {
-      if (
-        chatStore.getState().messages.length > 0 &&
-        chatStore.getState().drawerState === 'closed'
-      ) {
-        chatStore.setState({ drawerState: 'open' })
-      }
-    })
+  const openExistingChat = () => {
+    chatStore.setState({ drawerState: 'open' })
+    void ensureSessionRestored()
   }
 
   // Stays mounted while the drawer is open so the drawer's exit clone can
@@ -88,18 +90,32 @@ export function SidebarAssistant() {
       style={{ borderRadius: 16, visibility: isDrawerOpen ? 'hidden' : 'visible' }}
     >
       <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
-        <span className='text-muted-foreground shrink-0'>
-          <InfoCircleIcon />
-        </span>
-        <span className='text-[11px] font-medium text-muted-foreground'>
-          Ask AI about this page
-        </span>
+        {hasExistingChat ? (
+          <button
+            type='button'
+            onClick={openExistingChat}
+            className='flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer'
+          >
+            <span className='shrink-0'>
+              <MessageCircleIcon />
+            </span>
+            Open existing chat
+          </button>
+        ) : (
+          <>
+            <span className='text-muted-foreground shrink-0'>
+              <InfoCircleIcon />
+            </span>
+            <span className='text-[11px] font-medium text-muted-foreground'>
+              Ask AI about this page
+            </span>
+          </>
+        )}
       </div>
       <ChatInput
         value={inputValue}
         onChange={handleChange}
         onSubmit={handleSubmit}
-        onFocus={handleFocus}
         placeholder={`what is ${site.config?.name || 'this page'}?`}
         // Concentric radius: outer frame is 16px with a 2px gap → 14px keeps
         // the accent ring visually uniform around the corners.

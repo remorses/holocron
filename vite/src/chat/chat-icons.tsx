@@ -16,6 +16,19 @@ export function InfoCircleIcon({ size = 12 }: { size?: number }) {
   )
 }
 
+export function MessageCircleIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox='0 0 16 16'
+      fill='currentColor'
+    >
+      <path d='M8 1.5a6.5 6.5 0 00-4.88 10.92L1.8 14.6a.5.5 0 00.62.65l2.4-.8A6.5 6.5 0 108 1.5z' />
+    </svg>
+  )
+}
+
 export function SparkleIcon({ size = 20 }: { size?: number }) {
   return (
     <svg

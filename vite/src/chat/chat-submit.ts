@@ -228,6 +228,16 @@ export function hasExistingSession(): boolean {
   return getSessionId(chatApiUrl) !== null
 }
 
+/** Pure check for an active conversation. Safe during render: no store writes.
+ *  True when messages are already in memory, the widget store has a session
+ *  id, or the first-party session cookie is present (post-reload, pre-restore). */
+export function hasPersistedChat(): boolean {
+  if (chatStore.getState().messages.length > 0) return true
+  if (chatWidgetStore.getState().sessionId) return true
+  if (typeof document === 'undefined') return false
+  return CHAT_SESSION_COOKIE_RE.test(document.cookie)
+}
+
 // Restore runs at most once per page load (singleton promise). Replaced by
 // startNewChat() (resolved no-op, so a fresh chat can't resurrect the old
 // conversation) and by switchChatSession() (new restore for the chosen id).
