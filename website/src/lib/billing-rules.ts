@@ -102,14 +102,10 @@ export function canAddDomain(opts: {
   }
 }
 
-/** The AI chat shows a "temporary model" nag to push users toward a paid plan.
- *  Subscribed or partner-entitled projects never see it. Unauthenticated callers
- *  (no API key → no project to bill) still see it. */
-export function shouldShowTempAiNotice(opts: {
-  authenticated: boolean
+/** Free sites promote Holocron in AI chat. Subscribed and partner projects do not. */
+export function shouldShowHolocronPromotion(opts: {
   hasActiveSubscription: boolean
   orgPlan?: OrgPlan | null
 }): boolean {
-  if (hasDeployEntitlement(opts)) return false
-  return !opts.authenticated
+  return !hasDeployEntitlement(opts)
 }

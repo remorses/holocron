@@ -23,9 +23,10 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { cn } from '../lib/css-vars.ts'
 import type { ChatMessage, ChatPart } from './chat-store.ts'
 import { respondToApproval } from './chat-store.ts'
-import { CopyIcon, CheckIcon, RefreshIcon } from './chat-icons.tsx'
+import { ArrowRightIcon, CopyIcon, CheckIcon, RefreshIcon, SparkleIcon } from './chat-icons.tsx'
 import { NavTooltip } from './chat-input.tsx'
 import { ShowMore } from './show-more.tsx'
+import { Link } from '../components/link.tsx'
 
 // ── User message ─────────────────────────────────────────────────────
 
@@ -62,7 +63,7 @@ export function ChatMessages({
   onRegenerate?: (messageIndex: number) => void
 }) {
   if (messages.length === 0) return null
-  // Standing advisories (`display: 'once'`, e.g. the temporary-model nag) are
+  // Standing content (`display: 'once'`, e.g. the Holocron promotion) is
   // re-sent on every turn and render only the first time. Everything else —
   // rate limits, credit limits, errors — is a per-turn outcome and must render
   // every time, otherwise that turn looks like it silently hung.
@@ -244,37 +245,58 @@ function ToolApprovalRequest({
 
 function ChatNotice({ part }: { part: Extract<ChatPart, { type: 'notice' }> }) {
   const isError = part.severity === 'error'
+  const isPromotion = part.severity === 'promotion'
   return (
-    <div>
-      <div
-        data-notice-code={part.code}
-        data-notice-severity={isError ? 'error' : 'info'}
-        className={cn(
-          'no-bleed flex items-start gap-2.5 rounded-lg p-2 text-foreground',
-          isError
-            ? 'bg-[color-mix(in_srgb,var(--background)_92%,var(--red))]'
-            : 'bg-[color-mix(in_srgb,var(--background)_93%,var(--yellow))]',
-        )}
-      >
+    <div
+      data-notice-code={part.code}
+      data-notice-severity={part.severity ?? 'info'}
+      className={cn(
+        'no-bleed flex items-start gap-2.5 rounded-lg p-2 text-foreground',
+        isError && 'bg-[color-mix(in_srgb,var(--background)_92%,var(--red))]',
+        !isError && !isPromotion && 'bg-[color-mix(in_srgb,var(--background)_93%,var(--yellow))]',
+        isPromotion && 'border border-primary/15 bg-primary/5',
+      )}
+    >
+      {isPromotion ? (
+        <span aria-hidden='true' className='mt-0.5 shrink-0 text-primary'>
+          <SparkleIcon size={16} />
+        </span>
+      ) : (
         <svg viewBox='0 0 16 16' width='16' height='16' fill='currentColor' aria-hidden='true' className={cn('mt-0.5 size-4 shrink-0', isError ? 'text-red' : 'text-yellow')}>
           <path d='M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575L6.457 1.047ZM8 5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 0 1.5 0v-2.5A.75.75 0 0 0 8 5Zm1 7a1 1 0 1 0-2 0 1 1 0 0 0 2 0Z' />
         </svg>
-        <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
-          <div className='flex flex-col gap-0.5'>
-            <div className='text-xs font-semibold text-foreground'>
-              {part.title}
-            </div>
-            <div className='text-xs leading-[1.45] text-muted-foreground'>
-              {part.message}
-            </div>
+      )}
+      <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
+        <div className='flex flex-col gap-0.5'>
+          <div className='text-xs font-semibold text-foreground'>
+            {part.title}
           </div>
-
-          {part.command && (
-            <code className='code-font-size block whitespace-pre-wrap rounded-md bg-foreground/6 px-2 py-1.5 font-mono text-foreground'>
-              {part.command}
-            </code>
-          )}
+          <div className='text-xs leading-[1.45] text-muted-foreground'>
+            {part.message}
+          </div>
         </div>
+
+        {part.cta && (
+          <Link href={part.cta.href} target='_blank' rel='noopener noreferrer' className='inline-flex w-fit items-center gap-1 text-xs font-medium text-primary hover:underline'>
+            {part.cta.label}
+            <ArrowRightIcon />
+          </Link>
+        )}
+
+        {part.command && (
+          <code className='code-font-size block whitespace-pre-wrap rounded-md bg-foreground/6 px-2 py-1.5 font-mono text-foreground'>
+            {part.command}
+          </code>
+        )}
+
+        {part.ownerNote && (
+          <div className='flex flex-wrap gap-x-1 border-t border-border/70 pt-1.5 text-[10px] leading-[1.4] text-muted-foreground'>
+            <span>{part.ownerNote.text}</span>
+            <Link href={part.ownerNote.href} target='_blank' rel='noopener noreferrer' className='underline decoration-foreground/25 underline-offset-2 hover:text-foreground'>
+              {part.ownerNote.linkLabel}
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   )

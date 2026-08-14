@@ -266,7 +266,7 @@ describe('convertChunksToParts', () => {
 
   test('forwards notice and title chunks untouched', async () => {
     const { parts } = await collect([
-      { type: 'notice', code: 'HOLOCRON_TEMPORARY_AI_MODEL', title: 'Temporary AI model', message: 'Add a key.' },
+      { type: 'notice', code: 'HOLOCRON_PROMOTION', title: 'Delightful docs, built with Holocron', message: 'Build with Holocron.' },
       { type: 'text-delta', id: '1', delta: 'hello' },
       { type: 'text-end', id: '1' },
       { type: 'title', title: 'Navigation config' },
@@ -274,9 +274,9 @@ describe('convertChunksToParts', () => {
     expect(parts).toMatchInlineSnapshot(`
       [
         {
-          "code": "HOLOCRON_TEMPORARY_AI_MODEL",
-          "message": "Add a key.",
-          "title": "Temporary AI model",
+          "code": "HOLOCRON_PROMOTION",
+          "message": "Build with Holocron.",
+          "title": "Delightful docs, built with Holocron",
           "type": "notice",
         },
         {
@@ -349,16 +349,16 @@ describe('convertChunksToParts', () => {
   })
 
   test('the standing advisory does not count as an answer', async () => {
-    // The gateway re-sends this nag on EVERY turn for free sites. Counting it
+    // The gateway re-sends this promotion on EVERY turn for free sites. Counting it
     // as output would mark every empty turn as answered — and since the widget
     // renders it only once, the second empty turn would show nothing at all.
     const { parts, outcome } = await collect([
       {
         type: 'notice',
         display: 'once',
-        code: 'HOLOCRON_TEMPORARY_AI_MODEL',
-        title: 'Temporary AI model',
-        message: 'Add HOLOCRON_KEY before deploying.',
+        code: 'HOLOCRON_PROMOTION',
+        title: 'Delightful docs, built with Holocron',
+        message: 'Build with Holocron.',
       },
       { type: 'start' },
       { type: 'finish', finishReason: 'stop' },

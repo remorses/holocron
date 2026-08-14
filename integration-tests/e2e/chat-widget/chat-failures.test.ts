@@ -62,17 +62,26 @@ test("a notice-only turn is the answer, with no error stacked on top", async ({ 
 });
 
 test("an empty turn still reports itself when the upgrade advisory is present", async ({ page }) => {
-  const assistant = await askScripted(page, "nagThenEmpty");
-  await expect(
-    assistant.locator("[data-notice-code='HOLOCRON_TEMPORARY_AI_MODEL']"),
-  ).toBeVisible({ timeout: 30000 });
+  const assistant = await askScripted(page, "promotionThenEmpty");
+  const promotion = assistant.locator("[data-notice-code='HOLOCRON_PROMOTION']");
+  await expect(promotion).toBeVisible({ timeout: 30000 });
+  await expect(promotion).toContainText("Delightful docs, built with Holocron");
+  await expect(promotion.getByRole("link", { name: "Create your docs" })).toHaveAttribute(
+    "href",
+    "https://holocron.so/docs/quickstart",
+  );
+  await expect(promotion.getByText("Website owner?", { exact: true })).toBeVisible();
+  await expect(promotion.getByRole("link", { name: "Upgrade Holocron to remove this message." })).toHaveAttribute(
+    "href",
+    "https://holocron.so/docs/pricing",
+  );
   await expect(assistant.locator("[data-notice-severity='error']")).toBeVisible();
 });
 
 test("the standing upgrade advisory does not hide the error that follows it", async ({ page }) => {
-  const assistant = await askScripted(page, "nagThenError");
+  const assistant = await askScripted(page, "promotionThenError");
   await expect(
-    assistant.locator("[data-notice-code='HOLOCRON_TEMPORARY_AI_MODEL']"),
+    assistant.locator("[data-notice-code='HOLOCRON_PROMOTION']"),
   ).toBeVisible({ timeout: 30000 });
   await expect(assistant.locator("[data-notice-severity='error']")).toBeVisible();
 });

@@ -5,7 +5,7 @@ import {
   canDeploy,
   FREE_PRODUCTION_DEPLOY_LIMIT,
   hasDeployEntitlement,
-  shouldShowTempAiNotice,
+  shouldShowHolocronPromotion,
 } from './billing-rules.ts'
 
 describe('hasDeployEntitlement', () => {
@@ -94,34 +94,30 @@ describe('canAddDomain', () => {
   })
 })
 
-describe('shouldShowTempAiNotice', () => {
-  test('partner never sees temp model nag', () => {
-    expect(shouldShowTempAiNotice({
-      authenticated: true,
+describe('shouldShowHolocronPromotion', () => {
+  test('partner never sees the promotion', () => {
+    expect(shouldShowHolocronPromotion({
       hasActiveSubscription: false,
       orgPlan: 'partner',
     })).toBe(false)
   })
 
-  test('subscribed never sees nag', () => {
-    expect(shouldShowTempAiNotice({
-      authenticated: true,
+  test('subscribed projects never see the promotion', () => {
+    expect(shouldShowHolocronPromotion({
       hasActiveSubscription: true,
     })).toBe(false)
   })
 
-  test('unauthenticated sees nag', () => {
-    expect(shouldShowTempAiNotice({
-      authenticated: false,
+  test('unauthenticated sites show the promotion', () => {
+    expect(shouldShowHolocronPromotion({
       hasActiveSubscription: false,
     })).toBe(true)
   })
 
-  test('authenticated free without subscription does not see nag', () => {
-    expect(shouldShowTempAiNotice({
-      authenticated: true,
+  test('free projects show the promotion', () => {
+    expect(shouldShowHolocronPromotion({
       hasActiveSubscription: false,
       orgPlan: 'free',
-    })).toBe(false)
+    })).toBe(true)
   })
 })

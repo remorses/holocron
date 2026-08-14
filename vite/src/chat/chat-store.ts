@@ -32,10 +32,12 @@ export type ChatPart =
       title: string
       message: string
       command?: string
-      /** Visual weight only. `error` renders red, `info` (default) yellow. */
-      severity?: 'info' | 'error'
+      cta?: { label: string; href: string }
+      ownerNote?: { text: string; linkLabel: string; href: string }
+      /** Visual weight only. `promotion` uses the site's primary color. */
+      severity?: 'info' | 'error' | 'promotion'
       /** Repetition policy, independent of severity. `once` is for standing
-       *  advisories re-sent on every turn (the temporary-model nag) and is
+       *  content re-sent on every turn (such as the Holocron promotion) and is
        *  de-duplicated by code across the conversation. `always` (default)
        *  is for per-turn outcomes — rate limits, credit limits, errors —
        *  which must render every time or the turn looks like it hung. */

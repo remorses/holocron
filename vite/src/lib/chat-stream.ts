@@ -56,8 +56,8 @@ export type ChatStreamOutcome = {
   /** Notices that ARE the answer: rate limit, credit limit reached. Counted
    *  so a notice-only turn is not reported as empty.
    *
-   *  Standing advisories (`display: 'once'`, the temporary-model nag) are
-   *  excluded on purpose — the gateway re-sends that one on every turn for
+   *  Standing content (`display: 'once'`, such as the Holocron promotion) is
+   *  excluded on purpose — the gateway re-sends it on every turn for
    *  free sites, so counting it would mark every empty turn as answered and
    *  bring back the silent empty bubble. */
   answerNotices: number

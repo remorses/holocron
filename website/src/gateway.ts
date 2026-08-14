@@ -27,7 +27,7 @@ import { unzipSync, strFromU8 } from 'fflate'
 import { Spiceflow } from 'spiceflow'
 import { z } from 'zod'
 import { validateApiKey, getProjectBillingContext } from './db.ts'
-import { shouldShowTempAiNotice } from './lib/billing-rules.ts'
+import { shouldShowHolocronPromotion } from './lib/billing-rules.ts'
 import { ALLOWED_MODELS, computeUsdCost, creditsToUsd, monthlyCreditBudget, MODEL_USD_PER_1M_TOKENS, usdToCredits } from './lib/credits.ts'
 import { createChatBashTool } from './chat-bash-tool.ts'
 import { NOTICE_USAGE_LIMIT_REACHED, type UsageCounter } from './usage-counter-do.ts'
@@ -55,10 +55,12 @@ export type HolocronChatNoticeChunk = {
   title: string
   message: string
   command?: string
-  /** Visual weight only: `error` renders red, `info` (default) yellow. */
-  severity?: 'info' | 'error'
+  cta?: { label: string; href: string }
+  ownerNote?: { text: string; linkLabel: string; href: string }
+  /** Visual weight only. `promotion` uses the site's primary color. */
+  severity?: 'info' | 'error' | 'promotion'
   /** Repetition policy, independent of severity. `once` is for standing
-   *  advisories re-sent every turn (the temporary-model nag). `always`
+   *  content re-sent every turn (such as the Holocron promotion). `always`
    *  (default) is for per-turn outcomes — limits and errors — which must
    *  render every time or the turn looks like it silently hung. */
   display?: 'once' | 'always'
@@ -389,23 +391,31 @@ export const gatewayApp = new Spiceflow()
             .catch(() => null)
         : null
 
-      // Subscribed or partner-entitled projects never see the upgrade nag.
-      // Unauthenticated callers (no API key → no project to bill) still see it.
-      const showTempNotice = shouldShowTempAiNotice({
-        authenticated: !!authResult,
+      // Free sites promote Holocron once per conversation. Subscribed and
+      // partner-entitled projects do not show it.
+      const showHolocronPromotion = shouldShowHolocronPromotion({
         hasActiveSubscription: !!subscriptionResult,
         orgPlan,
       })
 
-      if (showTempNotice) {
+      if (showHolocronPromotion) {
         yield {
           type: 'notice',
-          // Standing advisory re-sent every turn — shown once per conversation.
+          // Standing promotion re-sent every turn and shown once per conversation.
           display: 'once',
-          code: 'HOLOCRON_TEMPORARY_AI_MODEL',
-          title: 'Temporary AI model',
-          message: 'Add HOLOCRON_KEY before deploying for reliable AI chat.',
-          command: 'npx -y "@holocron.so/cli" keys create --name production --project <projectId>',
+          severity: 'promotion',
+          code: 'HOLOCRON_PROMOTION',
+          title: 'Delightful docs, built with Holocron',
+          message: 'Turn MDX and docs.json into a complete docs site that builds locally and deploys anywhere.',
+          cta: {
+            label: 'Create your docs',
+            href: 'https://holocron.so/docs/quickstart',
+          },
+          ownerNote: {
+            text: 'Website owner?',
+            linkLabel: 'Upgrade Holocron to remove this message.',
+            href: 'https://holocron.so/docs/pricing',
+          },
         } as const
       }
 
