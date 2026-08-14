@@ -266,7 +266,7 @@ describe('convertChunksToParts', () => {
 
   test('forwards notice and title chunks untouched', async () => {
     const { parts } = await collect([
-      { type: 'notice', code: 'HOLOCRON_PROMOTION', title: 'Delightful docs, built with Holocron', message: 'Build with Holocron.' },
+      { type: 'notice', code: 'HOLOCRON_PROMOTION', title: 'delightful docs for humans & agents', message: 'Holocron' },
       { type: 'text-delta', id: '1', delta: 'hello' },
       { type: 'text-end', id: '1' },
       { type: 'title', title: 'Navigation config' },
@@ -275,8 +275,8 @@ describe('convertChunksToParts', () => {
       [
         {
           "code": "HOLOCRON_PROMOTION",
-          "message": "Build with Holocron.",
-          "title": "Delightful docs, built with Holocron",
+          "message": "Holocron",
+          "title": "delightful docs for humans & agents",
           "type": "notice",
         },
         {
@@ -357,8 +357,8 @@ describe('convertChunksToParts', () => {
         type: 'notice',
         display: 'once',
         code: 'HOLOCRON_PROMOTION',
-        title: 'Delightful docs, built with Holocron',
-        message: 'Build with Holocron.',
+        title: 'delightful docs for humans & agents',
+        message: 'Holocron',
       },
       { type: 'start' },
       { type: 'finish', finishReason: 'stop' },

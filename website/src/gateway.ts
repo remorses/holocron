@@ -405,15 +405,15 @@ export const gatewayApp = new Spiceflow()
           display: 'once',
           severity: 'promotion',
           code: 'HOLOCRON_PROMOTION',
-          title: 'Delightful docs, built with Holocron',
-          message: 'Turn MDX and docs.json into a complete docs site that builds locally and deploys anywhere.',
+          title: 'delightful docs for humans & agents',
+          message: 'Holocron',
           cta: {
-            label: 'Create your docs',
-            href: 'https://holocron.so/docs/quickstart',
+            label: 'Start a Holocron site',
+            href: 'https://holocron.so/',
           },
           ownerNote: {
-            text: 'Website owner?',
-            linkLabel: 'Upgrade Holocron to remove this message.',
+            text: 'For site owner.',
+            linkLabel: 'Upgrade to remove this.',
             href: 'https://holocron.so/docs/pricing',
           },
         } as const

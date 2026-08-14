@@ -23,10 +23,12 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { cn } from '../lib/css-vars.ts'
 import type { ChatMessage, ChatPart } from './chat-store.ts'
 import { respondToApproval } from './chat-store.ts'
-import { ArrowRightIcon, CopyIcon, CheckIcon, RefreshIcon, SparkleIcon } from './chat-icons.tsx'
+import { ArrowRightIcon, CopyIcon, CheckIcon, RefreshIcon } from './chat-icons.tsx'
 import { NavTooltip } from './chat-input.tsx'
 import { ShowMore } from './show-more.tsx'
 import { Link } from '../components/link.tsx'
+import { getGeneratedLogoUrl } from '../lib/generated-logo.tsx'
+import { withBasePath } from '../lib/holocron-url.ts'
 
 // ── User message ─────────────────────────────────────────────────────
 
@@ -69,34 +71,19 @@ export function ChatMessages({
   // every time, otherwise that turn looks like it silently hung.
   const seenNoticeCodes = new Set<string>()
   return (
-    <div className='text-[14px]' style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div className='flex flex-col gap-4 text-[14px]'>
       {messages.map((message, i) => {
         return (
           <div key={i} data-message-id={`msg-${i}`} style={message.role === 'user' ? { scrollMarginTop: '8px' } : undefined}>
             {message.role === 'user'
               ? <ChatUserMessage text={message.parts.filter((part) => part.type === 'text').map((part) => part.text).join('\n')} />
               : (
-                  <div
-                    className='flex flex-col gap-4'
-                  >
-                    {message.parts.map((part, partIndex) => {
-                      if (part.type === 'notice' && part.display === 'once') {
-                        if (seenNoticeCodes.has(part.code)) return null
-                        seenNoticeCodes.add(part.code)
-                      }
-                      return <ChatPartRenderer key={partIndex} part={part} allParts={message.parts} />
-                    })}
-                    {/* Footer: copy + regenerate. Hidden only on the
-                        currently-streaming assistant message (last in the
-                        array while isGenerating). Previous completed
-                        assistants always keep their footer visible. */}
-                    {!(isGenerating && i === messages.length - 1) && (
-                      <ChatAssistantFooter
-                        parts={message.parts}
-                        onRegenerate={onRegenerate ? () => onRegenerate(i) : undefined}
-                      />
-                    )}
-                  </div>
+                  <AssistantMessage
+                    parts={message.parts}
+                    isStreaming={!!(isGenerating && i === messages.length - 1)}
+                    onRegenerate={onRegenerate ? () => onRegenerate(i) : undefined}
+                    seenNoticeCodes={seenNoticeCodes}
+                  />
                 )}
           </div>
         )
@@ -156,6 +143,53 @@ function ChatAssistantFooter({
       )}
     </div>
   )
+}
+
+function AssistantMessage({
+  parts,
+  isStreaming,
+  onRegenerate,
+  seenNoticeCodes,
+}: {
+  parts: ChatPart[]
+  isStreaming: boolean
+  onRegenerate?: () => void
+  seenNoticeCodes: Set<string>
+}) {
+  const { content, promotions } = splitAssistantParts(parts, seenNoticeCodes)
+  return (
+    <div className='flex flex-col gap-4'>
+      {promotions.map(({ part, index }) => (
+        <ChatPromotion key={index} part={part} />
+      ))}
+      {content.map(({ part, index }) => (
+        <ChatPartRenderer key={index} part={part} allParts={parts} />
+      ))}
+      {!isStreaming && content.length > 0 && (
+        <ChatAssistantFooter parts={parts} onRegenerate={onRegenerate} />
+      )}
+    </div>
+  )
+}
+
+function splitAssistantParts(
+  parts: ChatPart[],
+  seenNoticeCodes: Set<string>,
+): {
+  content: { part: ChatPart; index: number }[]
+  promotions: { part: Extract<ChatPart, { type: 'notice' }>; index: number }[]
+} {
+  const content: { part: ChatPart; index: number }[] = []
+  const promotions: { part: Extract<ChatPart, { type: 'notice' }>; index: number }[] = []
+  for (const [index, part] of parts.entries()) {
+    if (part.type === 'notice' && part.display === 'once') {
+      if (seenNoticeCodes.has(part.code)) continue
+      seenNoticeCodes.add(part.code)
+    }
+    if (part.type === 'notice' && part.severity === 'promotion') promotions.push({ part, index })
+    else content.push({ part, index })
+  }
+  return { content, promotions }
 }
 
 function ChatPartRenderer({
@@ -243,29 +277,90 @@ function ToolApprovalRequest({
   )
 }
 
+function HolocronWordmark() {
+  const src = withBasePath(getGeneratedLogoUrl('holocron'))
+  return (
+    <span className='inline-flex items-center'>
+      <img
+        src={src}
+        alt='Holocron'
+        className='h-[18px] w-auto shrink-0 dark:hidden'
+        style={{ mixBlendMode: 'multiply' }}
+      />
+      <img
+        src={src}
+        alt='Holocron'
+        className='hidden h-[18px] w-auto shrink-0 dark:block'
+        style={{ mixBlendMode: 'screen', filter: 'invert(1)' }}
+      />
+    </span>
+  )
+}
+
+function ChatPromotion({
+  part,
+}: {
+  part: Extract<ChatPart, { type: 'notice' }>
+}) {
+  return (
+    <div
+      data-notice-code={part.code}
+      data-notice-severity='promotion'
+      className='no-bleed flex flex-col gap-3 rounded-lg border border-primary/15 bg-primary/5 px-3.5 py-3 text-foreground'
+    >
+      <div className='flex min-w-0 flex-col gap-2'>
+        <HolocronWordmark />
+        <div className='min-w-0 text-[13px] font-medium leading-snug text-pretty'>
+          {part.title}
+        </div>
+      </div>
+      <div className='flex min-w-0 flex-col gap-2.5'>
+        {part.cta && (
+          <Link
+            href={part.cta.href}
+            target='_blank'
+            rel='noopener noreferrer'
+            className='inline-flex w-fit items-center gap-1 text-xs font-medium text-primary no-underline hover:underline'
+          >
+            {part.cta.label}
+            <ArrowRightIcon />
+          </Link>
+        )}
+
+        {part.ownerNote && (
+          <div className='border-t border-primary/10 pt-2 text-[11px] leading-snug text-muted-foreground'>
+            <span>{part.ownerNote.text} </span>
+            <Link
+              href={part.ownerNote.href}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='underline decoration-foreground/20 underline-offset-2 transition-colors duration-150 ease-out hover:text-foreground'
+            >
+              {part.ownerNote.linkLabel}
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function ChatNotice({ part }: { part: Extract<ChatPart, { type: 'notice' }> }) {
   const isError = part.severity === 'error'
-  const isPromotion = part.severity === 'promotion'
   return (
     <div
       data-notice-code={part.code}
       data-notice-severity={part.severity ?? 'info'}
       className={cn(
         'no-bleed flex items-start gap-2.5 rounded-lg p-2 text-foreground',
-        isError && 'bg-[color-mix(in_srgb,var(--background)_92%,var(--red))]',
-        !isError && !isPromotion && 'bg-[color-mix(in_srgb,var(--background)_93%,var(--yellow))]',
-        isPromotion && 'border border-primary/15 bg-primary/5',
+        isError
+          ? 'bg-[color-mix(in_srgb,var(--background)_92%,var(--red))]'
+          : 'bg-[color-mix(in_srgb,var(--background)_93%,var(--yellow))]',
       )}
     >
-      {isPromotion ? (
-        <span aria-hidden='true' className='mt-0.5 shrink-0 text-primary'>
-          <SparkleIcon size={16} />
-        </span>
-      ) : (
-        <svg viewBox='0 0 16 16' width='16' height='16' fill='currentColor' aria-hidden='true' className={cn('mt-0.5 size-4 shrink-0', isError ? 'text-red' : 'text-yellow')}>
-          <path d='M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575L6.457 1.047ZM8 5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 0 1.5 0v-2.5A.75.75 0 0 0 8 5Zm1 7a1 1 0 1 0-2 0 1 1 0 0 0 2 0Z' />
-        </svg>
-      )}
+      <svg viewBox='0 0 16 16' width='16' height='16' fill='currentColor' aria-hidden='true' className={cn('mt-0.5 size-4 shrink-0', isError ? 'text-red' : 'text-yellow')}>
+        <path d='M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575L6.457 1.047ZM8 5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 0 1.5 0v-2.5A.75.75 0 0 0 8 5Zm1 7a1 1 0 1 0-2 0 1 1 0 0 0 2 0Z' />
+      </svg>
       <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
         <div className='flex flex-col gap-0.5'>
           <div className='text-xs font-semibold text-foreground'>
@@ -276,26 +371,10 @@ function ChatNotice({ part }: { part: Extract<ChatPart, { type: 'notice' }> }) {
           </div>
         </div>
 
-        {part.cta && (
-          <Link href={part.cta.href} target='_blank' rel='noopener noreferrer' className='inline-flex w-fit items-center gap-1 text-xs font-medium text-primary hover:underline'>
-            {part.cta.label}
-            <ArrowRightIcon />
-          </Link>
-        )}
-
         {part.command && (
           <code className='code-font-size block whitespace-pre-wrap rounded-md bg-foreground/6 px-2 py-1.5 font-mono text-foreground'>
             {part.command}
           </code>
-        )}
-
-        {part.ownerNote && (
-          <div className='flex flex-wrap gap-x-1 border-t border-border/70 pt-1.5 text-[10px] leading-[1.4] text-muted-foreground'>
-            <span>{part.ownerNote.text}</span>
-            <Link href={part.ownerNote.href} target='_blank' rel='noopener noreferrer' className='underline decoration-foreground/25 underline-offset-2 hover:text-foreground'>
-              {part.ownerNote.linkLabel}
-            </Link>
-          </div>
         )}
       </div>
     </div>

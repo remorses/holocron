@@ -99,7 +99,7 @@ export function SidebarAssistant() {
             <span className='shrink-0'>
               <MessageCircleIcon />
             </span>
-            Open existing chat
+            <span className='underline underline-offset-2'>Open existing chat</span>
           </button>
         ) : (
           <>

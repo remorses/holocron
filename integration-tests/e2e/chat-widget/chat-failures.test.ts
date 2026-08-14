@@ -65,17 +65,23 @@ test("an empty turn still reports itself when the upgrade advisory is present", 
   const assistant = await askScripted(page, "promotionThenEmpty");
   const promotion = assistant.locator("[data-notice-code='HOLOCRON_PROMOTION']");
   await expect(promotion).toBeVisible({ timeout: 30000 });
-  await expect(promotion).toContainText("Delightful docs, built with Holocron");
-  await expect(promotion.getByRole("link", { name: "Create your docs" })).toHaveAttribute(
+  await expect(promotion).toContainText("delightful docs");
+  await expect(promotion).toContainText("for humans & agents");
+  await expect(promotion.getByRole("link", { name: "Start a Holocron site" })).toHaveAttribute(
     "href",
-    "https://holocron.so/docs/quickstart",
+    "https://holocron.so/",
   );
-  await expect(promotion.getByText("Website owner?", { exact: true })).toBeVisible();
-  await expect(promotion.getByRole("link", { name: "Upgrade Holocron to remove this message." })).toHaveAttribute(
+  await expect(promotion.getByText("For site owner.", { exact: true })).toBeVisible();
+  await expect(promotion.getByRole("link", { name: "Upgrade to remove this." })).toHaveAttribute(
     "href",
     "https://holocron.so/docs/pricing",
   );
   await expect(assistant.locator("[data-notice-severity='error']")).toBeVisible();
+  const promoBox = await promotion.boundingBox();
+  const userBox = await page.locator("[data-message-id='msg-0']").boundingBox();
+  const errorBox = await assistant.locator("[data-notice-severity='error']").boundingBox();
+  expect(promoBox?.y).toBeGreaterThan(userBox?.y ?? 0);
+  expect(promoBox?.y).toBeLessThan(errorBox?.y ?? Number.POSITIVE_INFINITY);
 });
 
 test("the standing upgrade advisory does not hide the error that follows it", async ({ page }) => {
