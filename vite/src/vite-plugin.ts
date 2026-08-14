@@ -67,6 +67,14 @@ export type HolocronPluginOptions = {
    * Set to false to let Rolldown use its default splitting strategy.
    */
   codeSplitting?: boolean
+  /**
+   * Extra directories/files (relative to vite root, or absolute) appended as
+   * Tailwind `@source` directives next to the pagesDir source. Use this when
+   * MDX content is generated OUTSIDE the project at deploy time (e.g. Notaku
+   * swaps holocron-data.js per tenant): point at the code that emits the
+   * classNames so those utilities are compiled into the shell CSS.
+   */
+  tailwindSources?: string[]
 }
 
 const VIRTUAL_CONFIG = 'virtual:holocron-config'
@@ -649,16 +657,39 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
     load(id) {
       if (id.replace(/[?#].*$/, '') === HOLOCRON_GLOBALS_CSS_PATH) {
-        const pagesSourcePath = toCssSourcePath(path.dirname(HOLOCRON_GLOBALS_CSS_PATH), pagesDir)
+        const globalsDir = path.dirname(HOLOCRON_GLOBALS_CSS_PATH)
+        const pagesSourcePath = toCssSourcePath(globalsDir, pagesDir)
         const configSourcePath = configFilePath
-          ? toCssSourcePath(path.dirname(HOLOCRON_GLOBALS_CSS_PATH), configFilePath)
+          ? toCssSourcePath(globalsDir, configFilePath)
           : undefined
+        // Extra @source dirs for classes emitted outside the project
+        // (e.g. Notaku's notion-mdx converters generate MDX with Tailwind
+        // classNames that only exists in the DB at deploy time).
+        const extraSourceLines = (options.tailwindSources ?? []).map((src) => {
+          const abs = path.isAbsolute(src) ? src : path.resolve(root, src)
+          // Globs are passed through to Tailwind; only validate the static
+          // directory prefix (everything before the first glob character).
+          const hasGlob = /[*?{[]/.test(abs)
+          const staticPrefix = abs.split(/[*?{[]/)[0] ?? abs
+          const checkPath = !hasGlob
+            ? abs
+            : staticPrefix.endsWith(path.sep)
+              ? staticPrefix
+              : path.dirname(staticPrefix)
+          if (!fs.existsSync(checkPath)) {
+            throw new Error(
+              `[holocron] tailwindSources path not found: ${abs} (checked ${checkPath})`,
+            )
+          }
+          return `@source ${JSON.stringify(toCssSourcePath(globalsDir, abs))};`
+        })
         return [
           fs.readFileSync(HOLOCRON_GLOBALS_CSS_PATH, 'utf-8'),
           '',
           '/* Scan the user docs tree too, including custom `pagesDir` locations. */',
           `@source ${JSON.stringify(pagesSourcePath)};`,
           configSourcePath && `@source not ${JSON.stringify(configSourcePath)};`,
+          ...extraSourceLines,
         ].join('\n')
       }
 

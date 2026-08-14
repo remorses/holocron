@@ -1,0 +1,56 @@
+/* Notion color variables used by notaku's notion-mdx converters.
+   The generated MDX uses `text-(--notion-{color})` and `bg-(--notion-{color}-bg)`
+   utilities (safelisted in notaku notion-mdx/src/notion-color-classes.ts and
+   compiled via the tailwindSources option in vite.config.ts).
+
+   Palette ported from notaku notion-renderer/styles/styles.css so v2 sites
+   render Notion text/background colors the same as v1 SSR sites. Holocron
+   dark mode also uses a `.dark` class (see @custom-variant in globals.css). */
+
+:root {
+    --notion-red: #dc2626; /* red-600 */
+    --notion-pink: #db2777; /* pink-600 */
+    --notion-blue: #0284c7; /* sky-600 */
+    --notion-purple: #7c3aed; /* violet-600 */
+    --notion-teal: #059669; /* emerald-600 */
+    --notion-yellow: #d97706; /* amber-600 */
+    --notion-orange: #ea580c; /* orange-600 */
+    --notion-brown: #b45309; /* amber-700 */
+    --notion-gray: #6b7280; /* gray-500 */
+    --notion-green: #059669; /* emerald-600 */
+
+    --notion-gray-bg: rgba(243, 244, 246, 0.9); /* gray-100/90 */
+    --notion-red-bg: rgba(254, 226, 226, 0.8); /* red-100/80 */
+    --notion-pink-bg: rgba(252, 231, 243, 0.8); /* pink-100/80 */
+    --notion-blue-bg: rgba(219, 234, 254, 0.8); /* blue-100/80 */
+    --notion-purple-bg: rgba(237, 233, 254, 0.8); /* violet-100/80 */
+    --notion-teal-bg: rgba(209, 250, 229, 0.8); /* emerald-100/80 */
+    --notion-yellow-bg: rgba(254, 243, 199, 0.8); /* amber-100/80 */
+    --notion-orange-bg: rgba(255, 237, 213, 0.8); /* orange-100/80 */
+    --notion-brown-bg: rgba(254, 243, 199, 0.8); /* amber-100/80 */
+    --notion-green-bg: rgba(209, 250, 229, 0.8); /* emerald-100/80 */
+}
+
+.dark {
+    --notion-red: rgb(255, 115, 105);
+    --notion-pink: rgb(226, 85, 161);
+    --notion-blue: rgb(82, 156, 202);
+    --notion-purple: rgb(154, 109, 215);
+    --notion-teal: rgb(77, 171, 154);
+    --notion-yellow: rgb(255, 220, 73);
+    --notion-orange: rgb(255, 163, 68);
+    --notion-brown: rgb(147, 114, 100);
+    --notion-gray: rgba(151, 154, 155, 0.95);
+    /* v1 does not override --notion-green in dark mode; keep parity */
+
+    --notion-red-bg: rgba(89, 65, 65, 0.6);
+    --notion-pink-bg: rgba(83, 59, 76, 0.6);
+    --notion-blue-bg: rgba(54, 73, 84, 0.6);
+    --notion-purple-bg: rgba(68, 63, 87, 0.6);
+    --notion-teal-bg: rgba(53, 76, 75, 0.6);
+    --notion-yellow-bg: rgba(89, 86, 59, 0.6);
+    --notion-orange-bg: rgba(89, 74, 58, 0.6);
+    --notion-brown-bg: rgba(67, 64, 64, 0.6);
+    --notion-gray-bg: rgba(31, 41, 55, 0.6); /* gray-800/60 */
+    --notion-green-bg: rgba(53, 76, 75, 0.6);
+}
