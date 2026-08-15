@@ -53,6 +53,8 @@ export interface HolocronCSSProperties extends CSSProperties {
   '--grid-line-style'?: string
   /** `grid-row: <start> / span <N>` for a shared `<Aside full>` cell. */
   '--shared-row'?: string
+  /** Sticky Ask AI + page-nav height. Later asides add this to `top`. */
+  '--full-aside-height'?: string
 
   /* ---------------------------------------------------------------- *
    * Typography — font size overrides from `fonts` config.            *

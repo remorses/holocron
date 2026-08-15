@@ -2,12 +2,32 @@ import { describe, expect, test } from 'vitest'
 
 import type { Root } from 'mdast'
 import { mdxParse } from 'safe-mdx/parse'
-import { buildSections } from './mdx-sections.ts'
+import remarkFrontmatter from 'remark-frontmatter'
+import remarkGfm from 'remark-gfm'
+import remarkMdx from 'remark-mdx'
+import { remark } from 'remark'
+import {
+  buildSections,
+  rowCoveredByOverlappingShared,
+  sharedAsideOverlapsPerSection,
+} from './mdx-sections.ts'
+import { remarkInlineImports, type InlineImportEntry } from './remark-inline-imports.ts'
 import { formatSectionsToMdx } from './test-mdx-util.ts'
 
 function parseAndBuild(mdx: string) {
   const root: Root = mdxParse(mdx)
   return buildSections(root)
+}
+
+function parseInlineAndBuild(pageMdx: string, imports: Map<string, InlineImportEntry>) {
+  const processor = remark()
+    .use(remarkMdx)
+    .use(remarkFrontmatter, ['yaml'])
+    .use(remarkGfm)
+    .use(remarkInlineImports, { resolvedImports: imports })
+  const parsed = processor.parse(pageMdx)
+  const transformed = processor.runSync(parsed) as Root
+  return buildSections(transformed)
 }
 
 describe('buildSections', () => {
@@ -32,7 +52,7 @@ Body
 
       Body
 
-      [ASIDE]
+      [SHARED ASIDE]
       <Aside full>
         <HolocronAIAssistantWidget />
 
@@ -64,7 +84,7 @@ Body
 
       Body
 
-      [ASIDE]
+      [SHARED ASIDE]
       <Aside full>
         <HolocronAIAssistantWidget />
 
@@ -96,7 +116,7 @@ Body
 
       Body
 
-      [ASIDE]
+      [SHARED ASIDE]
       <Aside full>
         <HolocronAIAssistantWidget />
 
@@ -126,7 +146,7 @@ Body
 
       Body
 
-      [ASIDE]
+      [SHARED ASIDE]
       <Aside full>
         <HolocronAIAssistantWidget />
 
@@ -135,7 +155,7 @@ Body
     `)
   })
 
-  test('injects HolocronAIAssistantWidget into existing Aside in the first section', () => {
+  test('injects HolocronAIAssistantWidget as Aside full next to a first-section Aside', () => {
     const mdx = `Intro
 
 <Aside>
@@ -154,19 +174,23 @@ Body
 
       [ASIDE]
       <Aside>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-
         My aside
       </Aside>
 
       --- SECTION 1 ---
+      asideRowSpan: 2
 
       [CONTENT]
       ## Section
 
-      Body"
+      Body
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>"
     `)
   })
 
@@ -214,7 +238,7 @@ Part 3 content
 
       Part 2 content
 
-      [ASIDE]
+      [SHARED ASIDE]
       <Aside full>
         <HolocronAIAssistantWidget />
 
@@ -231,7 +255,7 @@ Part 3 content
 
       Part 3 content
 
-      [ASIDE]
+      [SHARED ASIDE]
       <Aside full>
         Second full aside.
       </Aside>"
@@ -265,14 +289,11 @@ Response body
 
       [ASIDE]
       <Aside>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-
         Intro aside
       </Aside>
 
       --- SECTION 1 ---
+      asideRowSpan: 2
 
       [CONTENT]
       ## API Section
@@ -286,6 +307,13 @@ Response body
 
       <Aside>
         Response body
+      </Aside>
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
       </Aside>"
     `)
   })
@@ -325,10 +353,6 @@ Response body
 
       [ASIDE]
       <Aside>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-
         Intro aside
       </Aside>
 
@@ -347,8 +371,12 @@ Response body
 
       Body B
 
-      [ASIDE]
+      [SHARED ASIDE]
       <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+
         Shared aside
       </Aside>
 
@@ -412,10 +440,6 @@ Billing runs on Stripe.
 
       [ASIDE]
       <Aside>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-
         <Info>
           Subscriptions are per site.
         </Info>
@@ -448,6 +472,7 @@ Billing runs on Stripe.
       </Aside>
 
       --- SECTION 4 ---
+      asideRowSpan: 5
 
       [CONTENT]
       ## Subscribe
@@ -459,13 +484,20 @@ Billing runs on Stripe.
         <Note>
           Billing runs on Stripe.
         </Note>
+      </Aside>
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
       </Aside>"
     `)
   })
 
-  test('heading-first page with NO intro aside absorbs per-section asides into full aside', () => {
-    // The synthetic AI aside is always <Aside full>, so per-section asides
-    // within the range are absorbed into the shared aside.
+  test('heading-first page with NO intro aside keeps per-section asides in their own sections', () => {
+    // First section has no authored aside, later sections do. The AI widget
+    // is still <Aside full> (page-span) but must not collect those later asides.
     const mdx = `# Pricing
 
 Holocron is free to start.
@@ -517,6 +549,13 @@ Billing runs on Stripe.
 
       Plans table.
 
+      [ASIDE]
+      <Aside>
+        <Info>
+          Subscriptions are per site.
+        </Info>
+      </Aside>
+
       --- SECTION 2 ---
 
       [CONTENT]
@@ -529,6 +568,13 @@ Billing runs on Stripe.
 
       Every branch gets a preview URL.
 
+      [ASIDE]
+      <Aside>
+        <Tip>
+          Preview deployments are automatic.
+        </Tip>
+      </Aside>
+
       --- SECTION 4 ---
       asideRowSpan: 5
 
@@ -538,36 +584,24 @@ Billing runs on Stripe.
       Manage billing from the dashboard.
 
       [ASIDE]
-      <Aside full>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>
-
-      <Aside>
-        <Info>
-          Subscriptions are per site.
-        </Info>
-      </Aside>
-
-      <Aside>
-        <Tip>
-          Preview deployments are automatic.
-        </Tip>
-      </Aside>
-
       <Aside>
         <Note>
           Billing runs on Stripe.
         </Note>
+      </Aside>
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
       </Aside>"
     `)
   })
 
-  test('heading-only first section uses full aside spanning all sections', () => {
-    // When h1 is immediately followed by h2 (no body between them), the
-    // synthetic AI aside is <Aside full> spanning the whole page.
-    // Per-section asides are absorbed into the shared aside.
+  test('heading-only first section keeps later asides with their own sections', () => {
+    // h1 then h2 with no body between them. Later asides must stay put;
+    // the AI widget is <Aside full> across the page and does not collect them.
     const mdx = `# Quickstart
 
 ## Install
@@ -608,6 +642,13 @@ Generate instructions.
 
       Auth instructions.
 
+      [ASIDE]
+      <Aside>
+        <Info>
+          Run \`egaki login --show\` to see providers.
+        </Info>
+      </Aside>
+
       --- SECTION 3 ---
       asideRowSpan: 4
 
@@ -616,17 +657,11 @@ Generate instructions.
 
       Generate instructions.
 
-      [ASIDE]
+      [SHARED ASIDE]
       <Aside full>
         <HolocronAIAssistantWidget />
 
         <HolocronPageNavRow />
-      </Aside>
-
-      <Aside>
-        <Info>
-          Run \`egaki login --show\` to see providers.
-        </Info>
       </Aside>"
     `)
   })
@@ -666,7 +701,7 @@ Generate instructions.
 
       Generate instructions.
 
-      [ASIDE]
+      [SHARED ASIDE]
       <Aside full>
         <HolocronAIAssistantWidget />
 
@@ -715,7 +750,209 @@ Reproduce from error logs locally.
 
       Reproduce from error logs locally.
 
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>"
+    `)
+  })
+
+  test('intro with no first-section aside keeps later asides next to their headings', () => {
+    // Traforo homepage shape: intro paragraphs, then ## sections each with
+    // their own <Aside>. Ask AI is <Aside full> for the whole page; later
+    // asides stay on their own section rows instead of merging into it.
+    const mdx = `HTTP tunnel via Cloudflare Durable Objects.
+
+## Usage
+
+Expose a local server.
+
+<Aside>
+<Tip>
+When you pass a command after \`--\`, traforo auto-detects the port.
+</Tip>
+</Aside>
+
+## Auto Port Detection
+
+Detects the local port from process output.
+
+<Aside>
+<Note>
+If you also pass \`-p\`, traforo uses that explicit port.
+</Note>
+</Aside>
+
+## Edge Caching
+
+Responses can be cached at the Cloudflare edge.
+
+<Aside>
+<Info>
+The \`X-Traforo-Cache\` response header shows HIT, MISS, or BYPASS.
+</Info>
+</Aside>
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      HTTP tunnel via Cloudflare Durable Objects.
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## Usage
+
+      Expose a local server.
+
       [ASIDE]
+      <Aside>
+        <Tip>
+          When you pass a command after \`--\`, traforo auto-detects the port.
+        </Tip>
+      </Aside>
+
+      --- SECTION 2 ---
+
+      [CONTENT]
+      ## Auto Port Detection
+
+      Detects the local port from process output.
+
+      [ASIDE]
+      <Aside>
+        <Note>
+          If you also pass \`-p\`, traforo uses that explicit port.
+        </Note>
+      </Aside>
+
+      --- SECTION 3 ---
+      asideRowSpan: 4
+
+      [CONTENT]
+      ## Edge Caching
+
+      Responses can be cached at the Cloudflare edge.
+
+      [ASIDE]
+      <Aside>
+        <Info>
+          The \`X-Traforo-Cache\` response header shows HIT, MISS, or BYPASS.
+        </Info>
+      </Aside>
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>"
+    `)
+  })
+
+  test('asides inside an imported markdown file stay with their own sections', () => {
+    // index.mdx that only renders <Readme />. After inlining, headings from
+    // the imported file must still own the asides that sit under them.
+    const imports = new Map<string, InlineImportEntry>([
+      ['../../README.md', {
+        content: `HTTP tunnel via Cloudflare Durable Objects.
+
+## Usage
+
+Expose a local server.
+
+<Aside>
+<Tip>
+When you pass a command after \`--\`, traforo auto-detects the port.
+</Tip>
+</Aside>
+
+## Auto Port Detection
+
+Detects the local port from process output.
+
+<Aside>
+<Note>
+If you also pass \`-p\`, traforo uses that explicit port.
+</Note>
+</Aside>
+
+## Edge Caching
+
+Responses can be cached at the Cloudflare edge.
+
+<Aside>
+<Info>
+The \`X-Traforo-Cache\` response header shows HIT, MISS, or BYPASS.
+</Info>
+</Aside>
+`,
+        absPath: '/project/README.md',
+        relativeDir: '../../',
+      }],
+    ])
+
+    const pageMdx = `---
+title: Traforo
+---
+
+import Readme from '../../README.md'
+
+<Readme />
+`
+    expect(formatSectionsToMdx(parseInlineAndBuild(pageMdx, imports))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      HTTP tunnel via Cloudflare Durable Objects.
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## Usage
+
+      Expose a local server.
+
+      [ASIDE]
+      <Aside>
+        <Tip>
+          When you pass a command after \`--\`, traforo auto-detects the port.
+        </Tip>
+      </Aside>
+
+      --- SECTION 2 ---
+
+      [CONTENT]
+      ## Auto Port Detection
+
+      Detects the local port from process output.
+
+      [ASIDE]
+      <Aside>
+        <Note>
+          If you also pass \`-p\`, traforo uses that explicit port.
+        </Note>
+      </Aside>
+
+      --- SECTION 3 ---
+      asideRowSpan: 4
+
+      [CONTENT]
+      ## Edge Caching
+
+      Responses can be cached at the Cloudflare edge.
+
+      [ASIDE]
+      <Aside>
+        <Info>
+          The \`X-Traforo-Cache\` response header shows HIT, MISS, or BYPASS.
+        </Info>
+      </Aside>
+
+      [SHARED ASIDE]
       <Aside full>
         <HolocronAIAssistantWidget />
 
@@ -735,19 +972,63 @@ Content
 `
     expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
       "--- SECTION 0 ---
-      asideRowSpan: 1
+      fullWidth: true
+
+      [CONTENT]
+      This should be full width.
+
+      --- SECTION 1 ---
+      asideRowSpan: 2
 
       [CONTENT]
       ## Following Section
 
       Content
 
-      [ASIDE]
+      [SHARED ASIDE]
       <Aside full>
         <HolocronAIAssistantWidget />
 
         <HolocronPageNavRow />
       </Aside>"
     `)
+  })
+
+  test('full-span AI and per-section asides overlap in the same sidebar column', () => {
+    const mdx = `Intro
+
+## Usage
+
+Body
+
+<Aside>
+<Tip>
+Tip
+</Tip>
+</Aside>
+`
+    const sections = parseAndBuild(mdx)
+    const layers = sections.map((section) => ({
+      hasPerSectionAside: section.asideNodes.length > 0,
+      hasSharedAside: (section.sharedAsideNodes?.length ?? 0) > 0,
+      asideRowSpan: section.asideRowSpan,
+    }))
+    expect(layers).toMatchInlineSnapshot(`
+      [
+        {
+          "asideRowSpan": undefined,
+          "hasPerSectionAside": false,
+          "hasSharedAside": false,
+        },
+        {
+          "asideRowSpan": 2,
+          "hasPerSectionAside": true,
+          "hasSharedAside": true,
+        },
+      ]
+    `)
+    expect(sharedAsideOverlapsPerSection(layers, 1)).toBe(true)
+    expect(rowCoveredByOverlappingShared(layers, 1)).toBe(true)
+    expect(rowCoveredByOverlappingShared(layers, 2)).toBe(true)
   })
 })

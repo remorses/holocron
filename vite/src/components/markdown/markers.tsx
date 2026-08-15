@@ -13,11 +13,10 @@ import React from 'react'
  *  The component itself is a pass-through.
  *
  *  Use `<Aside full>` to make the aside span every heading-introduced
- *  sub-section after it (until the next `<Aside>` of any kind, or end of
- *  page). Splits happen at every heading level (#, ##, ###, ...) so the
- *  sub-sections still get `--section-gap` between them; the aside sits in
- *  a grid cell with `grid-row: start / span N` so `position: sticky` keeps
- *  it pinned alongside the full range. */
+ *  sub-section after it (until the next `<Aside full>`, or end of page)
+ *  and collect later asides in that range. The synthetic Ask AI aside is
+ *  also `<Aside full>` but does not collect: later asides stay on their
+ *  own section rows. */
 export function Aside({ children, full }: { children: React.ReactNode; full?: boolean }) {
   void full // marker prop — used at parse time, not at render time
   return <>{children}</>

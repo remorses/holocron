@@ -397,7 +397,10 @@ function renderMdxPage({
   // Compute required right-sidebar width from aside contents. When an
   // Aside holds components like RequestExample / ResponseExample it needs
   // more horizontal room than the 210px default.
-  const allAsideNodes = mdastSections.flatMap((s) => s.asideNodes)
+  const allAsideNodes = mdastSections.flatMap((s) => [
+    ...s.asideNodes,
+    ...(s.sharedAsideNodes ?? []),
+  ])
   const sidebarWidth = computeSidebarWidthFromAsideNodes(allAsideNodes, visit)
 
   const sections: EditorialSection[] = mdastSections.map((section, i) => {
@@ -409,9 +412,17 @@ function renderMdxPage({
     const asideNodes = importNodes.length > 0 && section.asideNodes.length > 0
       ? [...importNodes, ...section.asideNodes]
       : section.asideNodes
+    const sharedAsideNodes = section.sharedAsideNodes ?? []
+    const sharedAsideSource = importNodes.length > 0 && sharedAsideNodes.length > 0
+      ? [...importNodes, ...sharedAsideNodes]
+      : sharedAsideNodes
     const aside =
       asideNodes.length > 0 ? (
         <RenderNodes markdown={pageMdx} nodes={asideNodes} modules={modules} baseUrl={mdxBaseUrl} source={mdxSourcePath} />
+      ) : undefined
+    const sharedAside =
+      sharedAsideSource.length > 0 ? (
+        <RenderNodes markdown={pageMdx} nodes={sharedAsideSource} modules={modules} baseUrl={mdxBaseUrl} source={mdxSourcePath} />
       ) : undefined
     const renderedContent = <RenderNodes markdown={pageMdx} nodes={contentNodes} modules={modules} baseUrl={mdxBaseUrl} source={mdxSourcePath} />
     // Prepend a rendered H1 from frontmatter title when the MDX doesn't
@@ -427,6 +438,7 @@ function renderMdxPage({
     return {
       content,
       aside,
+      sharedAside,
       fullWidth: section.fullWidth,
       asideRowSpan: section.asideRowSpan,
     }

@@ -39,6 +39,7 @@ import {
 import type { HolocronCSSProperties } from '../../lib/css-vars.ts'
 import {
   rowCoveredByOverlappingShared,
+  rowStartsOverlappingShared,
   sharedAsideOverlapsPerSection,
   sharedAsideRange,
 } from '../../lib/mdx-sections.ts'
@@ -78,8 +79,8 @@ export type EditorialSection = {
   asideRowSpan?: number
 }
 
-/** Writes `--page-aside-height` on the content grid so per-section asides
- *  can offset their sticky `top` below a page-level Ask AI cell. */
+/** Writes `--full-aside-height` on the content grid so later asides sit
+ *  below the Ask AI cell. `:root` already has a guessed default. */
 function SharedAsideCell({
   className,
   style,
@@ -98,14 +99,14 @@ function SharedAsideCell({
     const parent = el?.parentElement
     if (!el || !parent) return
     const apply = () => {
-      parent.style.setProperty('--page-aside-height', `${el.offsetHeight}px`)
+      parent.style.setProperty('--full-aside-height', `${el.offsetHeight}px`)
     }
     apply()
     const observer = new ResizeObserver(apply)
     observer.observe(el)
     return () => {
       observer.disconnect()
-      parent.style.removeProperty('--page-aside-height')
+      parent.style.removeProperty('--full-aside-height')
     }
   }, [measure])
   return <div ref={measure ? ref : undefined} className={className} style={style}>{children}</div>
@@ -466,12 +467,13 @@ export function EditorialPage({
                 const hasPerSectionAside = Boolean(section.aside)
                 const hasSharedAside = Boolean(section.sharedAside)
                 const coveredByPageAside = rowCoveredByOverlappingShared(asideLayers, row)
+                const startsPageAside = rowStartsOverlappingShared(asideLayers, row)
                 const measureSharedAside = sharedAsideOverlapsPerSection(asideLayers, i)
                 const stickyBase = hasTabBar
                   ? 'var(--sticky-top)'
                   : 'calc(var(--header-row-height) + var(--layout-gap))'
                 const perSectionTop = coveredByPageAside
-                  ? `calc(${stickyBase} + var(--page-aside-height, 0px))`
+                  ? `calc(${stickyBase} + var(--full-aside-height))`
                   : stickyBase
                 const asideClass =
                   'slot-aside flex flex-col text-(length:--type-small-size) leading-[1.5]'
@@ -483,18 +485,15 @@ export function EditorialPage({
                     {/* Inner per-section wrapper: subgrid, content + per-section aside */}
                     <div
                       className='flex flex-col gap-y-(--prose-gap) lg:grid lg:grid-cols-subgrid lg:col-[1/-1]'
-                      style={{
-                        gridRow: row,
-                        ...(coveredByPageAside && i === 0 ? { minHeight: 'var(--page-aside-height)' } : {}),
-                      }}
+                      style={{ gridRow: row }}
                     >
                       <div className='slot-main flex flex-col gap-(--prose-gap) lg:col-[1] lg:overflow-visible text-(length:--type-body-size)'>
                         {section.content}
                       </div>
                       {hasPerSectionAside && (
                         <div className={`${asideClass} lg:col-[2]`}>
-                          {coveredByPageAside && i === 0 && (
-                            <div className='hidden lg:block shrink-0' style={{ height: 'var(--page-aside-height)' }} />
+                          {startsPageAside && (
+                            <div className='hidden lg:block shrink-0' style={{ height: 'var(--full-aside-height)' }} />
                           )}
                           <div
                             className='flex flex-col gap-3 lg:sticky lg:self-start'
@@ -511,7 +510,7 @@ export function EditorialPage({
                         stacks at end of range without forcing an implicit 2nd
                         column in grid-cols-1. Can coexist with a per-section
                         aside in the same column; sticky top of those asides
-                        is offset by --page-aside-height. */}
+                        is offset by --full-aside-height. */}
                     {hasSharedAside && (
                       <SharedAsideCell
                         measure={measureSharedAside}

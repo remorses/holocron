@@ -19,7 +19,10 @@ function computeFromMdx(mdx: string): number {
   if (result instanceof Error) throw result
   const { mdast } = result
   const sections = buildSections(mdast)
-  const asideNodes = sections.flatMap((s) => s.asideNodes)
+  const asideNodes = sections.flatMap((s) => [
+    ...s.asideNodes,
+    ...(s.sharedAsideNodes ?? []),
+  ])
   return computeSidebarWidthFromAsideNodes(asideNodes, visit)
 }
 

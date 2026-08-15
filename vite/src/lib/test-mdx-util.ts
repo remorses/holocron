@@ -39,6 +39,18 @@ export function formatSectionsToMdx(sections: MdastSection[]): string {
         ],
       })
     }
+
+    if (s.sharedAsideNodes && s.sharedAsideNodes.length > 0) {
+      out += `\n[SHARED ASIDE]\n`
+      const sharedRoot: Root = { type: 'root', children: s.sharedAsideNodes }
+      out += toMarkdown(sharedRoot, {
+        extensions: [
+          gfmToMarkdown(),
+          mdxToMarkdown(),
+          frontmatterToMarkdown(['yaml']),
+        ],
+      })
+    }
   }
   return out.trim()
 }

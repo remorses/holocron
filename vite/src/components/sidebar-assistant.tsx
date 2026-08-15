@@ -192,7 +192,7 @@ export function PageNavRow() {
         type='button'
         onClick={handleCopyMd}
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent cursor-pointer',
+          'inline-flex items-center gap-1.5 rounded-md -ml-2 px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground hover:bg-accent cursor-pointer',
           isLoading && 'opacity-50 animate-pulse',
         )}
         title='Copy page as Markdown'
