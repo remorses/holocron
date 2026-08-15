@@ -34,6 +34,10 @@ export async function getMdxSource(slug) {
 export async function getPageIconRefs() {
   return []
 }
+
+export function getIconAtlas() {
+  return { icons: {} }
+}
 `;
 
 const configVirtualModule = ts`

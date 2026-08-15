@@ -58,18 +58,45 @@ export type CustomTabProvider = {
 
 const DEFAULT_TTL_MS = 60 * 60 * 1000 // 1 hour
 
+function pageMetaFromFrontmatter(fm: Record<string, unknown>): RuntimePageMeta | undefined {
+  const title = typeof fm.title === 'string' ? fm.title : undefined
+  const icon = typeof fm.icon === 'string' && fm.icon !== '' ? fm.icon : undefined
+  const iconColor = typeof fm.iconColor === 'string' && fm.iconColor !== '' ? fm.iconColor : undefined
+  if (!title && !icon && !iconColor) return undefined
+  return {
+    ...(title && { title }),
+    ...(icon && { icon }),
+    ...(iconColor && { iconColor }),
+  }
+}
+
+function pageMetaFromMdxContent(mdxContent: Record<string, string>): Record<string, RuntimePageMeta> {
+  const pageMeta: Record<string, RuntimePageMeta> = {}
+  for (const [slug, mdx] of Object.entries(mdxContent)) {
+    const meta = pageMetaFromFrontmatter(parseFrontmatterObject(mdx))
+    if (meta) pageMeta[slug] = meta
+  }
+  return pageMeta
+}
+
 /** Cache key for a runtime provider's full result. */
 function cacheKey(providerName: string, tabName: string): string {
   return `runtime-provider:${providerName}:${tabName}`
+}
+
+/** Sidebar fields extracted from runtime MDX frontmatter. */
+export type RuntimePageMeta = {
+  title?: string
+  icon?: string
+  iconColor?: string
 }
 
 /** Cached result shape stored in RuntimeCache. */
 type CachedResult = {
   groups: ConfigNavGroup[]
   mdxContent: Record<string, string>
-  /** Extracted frontmatter titles keyed by slug. Used by the sidebar
-   *  enrichment so runtime pages show real titles, not slug-derived ones. */
-  pageTitles: Record<string, string>
+  /** Frontmatter used by the sidebar so runtime pages show real titles and icons. */
+  pageMeta: Record<string, RuntimePageMeta>
 }
 
 /**
@@ -92,7 +119,12 @@ export async function resolveRuntimeResult(
 ): Promise<CachedResult> {
   const key = cacheKey(provider.name, tabInfo.tab)
   const cached = await cache.get<CachedResult>(key)
-  if (cached) return cached
+  if (cached) {
+    return {
+      ...cached,
+      pageMeta: cached.pageMeta ?? pageMetaFromMdxContent(cached.mdxContent ?? {}),
+    }
+  }
 
   // Coalesce concurrent cache misses: reuse the in-flight promise
   const existing = inflight.get(key)
@@ -102,18 +134,10 @@ export async function resolveRuntimeResult(
   const promise = (async (): Promise<CachedResult> => {
     try {
       const result = await provider.generate({ tab: { tab: tabInfo.tab, base: tabInfo.base } as ConfigNavTab })
-      // Extract titles from MDX frontmatter so sidebar shows real titles
-      const pageTitles: Record<string, string> = {}
-      for (const [slug, mdx] of Object.entries(result.mdxContent)) {
-        const fm = parseFrontmatterObject(mdx)
-        if (typeof fm.title === 'string') {
-          pageTitles[slug] = fm.title
-        }
-      }
       const toCache: CachedResult = {
         groups: result.groups,
         mdxContent: result.mdxContent,
-        pageTitles,
+        pageMeta: pageMetaFromMdxContent(result.mdxContent),
       }
       await cache.set(key, toCache, ttl)
       cacheVersion++
@@ -124,7 +148,7 @@ export async function resolveRuntimeResult(
           `Runtime provider "${provider.name}" failed for tab "${tabInfo.tab}": ${err instanceof Error ? err.message : String(err)}`,
         ),
       )
-      return { groups: [], mdxContent: {}, pageTitles: {} }
+      return { groups: [], mdxContent: {}, pageMeta: {} }
     }
   })()
 
@@ -160,8 +184,8 @@ export async function resolveRuntimeContent(
 
 export type MergedRuntimeNavigation = {
   tabs: ConfigNavTab[]
-  /** Frontmatter titles from all runtime providers, keyed by slug. */
-  pageTitles: Record<string, string>
+  /** Frontmatter from all runtime providers, keyed by slug. */
+  pageMeta: Record<string, RuntimePageMeta>
 }
 
 /** Memoized merge result. Reused when no provider has regenerated since
@@ -179,7 +203,7 @@ export async function mergeRuntimeNavigation(
   runtimeTabs: Map<string, CustomTabProvider>,
   cache: RuntimeCache,
 ): Promise<MergedRuntimeNavigation> {
-  if (runtimeTabs.size === 0) return { tabs: baseTabs, pageTitles: {} }
+  if (runtimeTabs.size === 0) return { tabs: baseTabs, pageMeta: {} }
 
   // Fast path: if no provider regenerated since last merge, reuse result.
   if (lastMerge && lastMerge.version === cacheVersion) {
@@ -191,7 +215,7 @@ export async function mergeRuntimeNavigation(
     return { ...tab }
   })
 
-  const allTitles: Record<string, string> = {}
+  const allMeta: Record<string, RuntimePageMeta> = {}
 
   await Promise.all(
     merged.map(async (tab, idx) => {
@@ -199,11 +223,11 @@ export async function mergeRuntimeNavigation(
       if (!provider) return
       const result = await resolveRuntimeResult(provider, { tab: tab.tab, base: tab.base }, cache)
       merged[idx] = { ...tab, groups: result.groups }
-      Object.assign(allTitles, result.pageTitles)
+      Object.assign(allMeta, result.pageMeta)
     }),
   )
 
-  const mergeResult: MergedRuntimeNavigation = { tabs: merged, pageTitles: allTitles }
+  const mergeResult: MergedRuntimeNavigation = { tabs: merged, pageMeta: allMeta }
   lastMerge = { version: cacheVersion, result: mergeResult }
   return mergeResult
 }

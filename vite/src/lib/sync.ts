@@ -6,11 +6,12 @@
  * request-time rendering is just parse + render with zero I/O.
  *
  * Build flow:
- * 1. Read dist/holocron-cache.json + dist/holocron-images.json (previous build)
+ * 1. Read dist/holocron-cache.json + dist/holocron-mdx.json + dist/holocron-images.json
  * 2. Walk config navigation tree
  * 3. For each page: check MDX git SHA → cache hit skips everything
  * 4. Cache miss: parse MDX, resolve images, process with sharp, rewrite content
- * 5. Write updated caches
+ * 5. Resolve used icon SVG bodies (Iconify only on cache miss)
+ * 6. Write updated caches
  */
 
 import fs from 'node:fs'
@@ -22,9 +23,20 @@ import { remarkInlineImports, buildSplicedNodes, type InlineImportEntry } from '
 import { visit } from 'unist-util-visit'
 import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
+import lucidePkg from '@iconify-json/lucide/package.json' with { type: 'json' }
+import faBrandsPkg from '@iconify-json/fa6-brands/package.json' with { type: 'json' }
+import faRegularPkg from '@iconify-json/fa6-regular/package.json' with { type: 'json' }
+import faSolidPkg from '@iconify-json/fa6-solid/package.json' with { type: 'json' }
+
+const ICON_PACKS_REVISION = [
+  lucidePkg.version,
+  faBrandsPkg.version,
+  faRegularPkg.version,
+  faSolidPkg.version,
+].join('+')
 import { buildEnrichedNavigation } from './enrich-navigation.ts'
 import { collectIconRefs, dedupeIconRefs, type IconRef } from './collect-icons.ts'
-import { resolveIconSvgs } from './resolve-icons.ts'
+import type { IconAtlas } from './resolve-icons.ts'
 import {
   type HolocronConfig,
   type ConfigNavTab,
@@ -120,6 +132,8 @@ export type SyncResult = {
   mdxContent: Record<string, string>
   /** Canonical icon refs used by each page body/frontmatter MDX. */
   pageIconRefs: Record<string, IconRef[]>
+  /** Resolved SVG bodies for the current site's used icon refs. */
+  icons: IconAtlas
   /** Resolved import entries per page slug. Each entry has a `moduleKey`
    *  (matching safe-mdx's glob key format, e.g. './snippets/greeting.tsx')
    *  and an `absPath` (absolute filesystem path for the import() call).
@@ -648,12 +662,25 @@ export async function syncNavigation({
     projectRoot,
   })
 
-  // 4f. Validate icon refs — resolve all collected icons and count failures.
+  // 4f. Resolve used icon SVG bodies. Reuse holocron-mdx.json hits so a
+  // warm dist/ does not parse the Iconify packs again.
   const allMdxIconRefs = Object.values(pageIconRefs).flat()
   const allIconRefs = dedupeIconRefs([
     ...collectIconRefs({ config, navigation, mdxIconRefs: allMdxIconRefs }),
   ])
-  const iconResolveResult = resolveIconSvgs(allIconRefs)
+  const iconResolveResult = await resolveCachedIconAtlas({
+    refs: allIconRefs,
+    cachedIcons: oldMdxCache.icons,
+    cachedUnresolved: oldMdxCache.unresolvedIconRefs,
+  })
+  const mergedIcons: IconAtlas = {
+    icons: { ...oldMdxCache.icons.icons, ...iconResolveResult.atlas.icons },
+  }
+  const unresolvedIconRefs = mergeUnresolvedIconRefs({
+    previous: oldMdxCache.unresolvedIconRefs,
+    currentUnresolved: iconResolveResult.unresolvedRefs,
+    nowResolved: Object.keys(iconResolveResult.atlas.icons),
+  })
 
   // 5. Write caches.
   writeCache(cachePath, navigation)
@@ -663,6 +690,8 @@ export async function syncNavigation({
     pageImportSources,
     pageInternalLinks,
     pageAssetRefs,
+    icons: mergedIcons,
+    unresolvedIconRefs,
   })
   saveImageCache({ distDir, cache: imageCache })
 
@@ -690,10 +719,10 @@ export async function syncNavigation({
       `Check that image, video, and audio file paths are correct.`,
     ))
   }
-  if (iconResolveResult.unresolvedCount > 0) {
+  if (iconResolveResult.unresolvedRefs.length > 0) {
     logger.warn('')
     logger.warn(formatHolocronWarning(
-      `found ${colors.yellow(String(iconResolveResult.unresolvedCount))} unresolved icon${iconResolveResult.unresolvedCount === 1 ? '' : 's'}: ${iconResolveResult.unresolvedRefs.map((r) => colors.cyan(r)).join(', ')}. ` +
+      `found ${colors.yellow(String(iconResolveResult.unresolvedRefs.length))} unresolved icon${iconResolveResult.unresolvedRefs.length === 1 ? '' : 's'}: ${iconResolveResult.unresolvedRefs.map((r) => colors.cyan(r)).join(', ')}. ` +
       `Check icon names in docs.json and page frontmatter.`,
     ))
   }
@@ -707,13 +736,14 @@ export async function syncNavigation({
 
   return {
     navigation, switchers, mdxContent, mdxParseErrors, pageIconRefs, pageImports,
+    icons: iconResolveResult.atlas,
     importedImageDepPaths: [...allImportedImageDepPaths], providerWatchPaths,
     runtimeTabNames, parsedCount, cachedCount,
     mdxContentErrorCount: mdxContentErrors.size,
     brokenLinkCount: brokenLinkStats.brokenLinkCount,
     brokenRedirectCount: brokenLinkStats.brokenRedirectCount,
     brokenAssetCount: brokenAssetStats.brokenAssetCount,
-    brokenIconCount: iconResolveResult.unresolvedCount,
+    brokenIconCount: iconResolveResult.unresolvedRefs.length,
   }
 }
 
@@ -970,6 +1000,30 @@ export async function processDeferredProviders({
       if (!existing.has(p)) syncResult.importedImageDepPaths.push(p)
     }
   }
+
+  const mdxCachePath = path.join(distDir, MDX_CACHE_FILENAME)
+  const diskCache = readMdxCache(mdxCachePath)
+  const allMdxIconRefs = Object.values(syncResult.pageIconRefs).flat()
+  const allIconRefs = dedupeIconRefs([
+    ...collectIconRefs({ config: clonedConfig, navigation, mdxIconRefs: allMdxIconRefs }),
+  ])
+  const iconResolveResult = await resolveCachedIconAtlas({
+    refs: allIconRefs,
+    cachedIcons: { icons: { ...diskCache.icons.icons, ...syncResult.icons.icons } },
+    cachedUnresolved: diskCache.unresolvedIconRefs,
+  })
+  syncResult.icons = iconResolveResult.atlas
+  syncResult.brokenIconCount = iconResolveResult.unresolvedRefs.length
+  writeMdxCache(mdxCachePath, {
+    ...diskCache,
+    pageIconRefs: { ...diskCache.pageIconRefs, ...syncResult.pageIconRefs },
+    icons: { icons: { ...diskCache.icons.icons, ...iconResolveResult.atlas.icons } },
+    unresolvedIconRefs: mergeUnresolvedIconRefs({
+      previous: diskCache.unresolvedIconRefs,
+      currentUnresolved: iconResolveResult.unresolvedRefs,
+      nowResolved: Object.keys(iconResolveResult.atlas.icons),
+    }),
+  })
   saveImageCache({ distDir, cache: imageCache })
 
   return { watchPaths: providerWatchPaths }
@@ -1694,6 +1748,13 @@ type MdxCacheEnvelope = {
   /** Local asset refs per page for broken-asset validation. Cached so we can
    *  validate asset paths on cache hits without re-parsing MDX. */
   pageAssetRefs: Record<string, AssetRef[]>
+  /** Resolved SVG bodies for icon refs this site has used. */
+  icons: IconAtlas
+  /** Icon refs that failed to resolve. Skipped on later syncs so we do not
+   *  reload Iconify just to warn again. */
+  unresolvedIconRefs: string[]
+  /** Installed @iconify-json package versions. Drop icon bodies when this changes. */
+  iconPacksRevision: string
 }
 
 function readCache(cachePath: string): Navigation | null {
@@ -1714,6 +1775,63 @@ function readCache(cachePath: string): Navigation | null {
   }
 }
 
+/** Reuse cached SVG bodies. Load Iconify only for refs that are still missing. */
+async function resolveCachedIconAtlas({
+  refs,
+  cachedIcons,
+  cachedUnresolved,
+}: {
+  refs: IconRef[]
+  cachedIcons: IconAtlas
+  cachedUnresolved: string[]
+}): Promise<{ atlas: IconAtlas; unresolvedRefs: string[] }> {
+  const atlas: IconAtlas = { icons: {} }
+  const unresolvedRefs: string[] = []
+  const missing: IconRef[] = []
+  const knownUnresolved = new Set(cachedUnresolved)
+
+  for (const ref of refs) {
+    const hit = cachedIcons.icons[ref]
+    if (hit) {
+      atlas.icons[ref] = hit
+      continue
+    }
+    if (knownUnresolved.has(ref)) {
+      unresolvedRefs.push(ref)
+      continue
+    }
+    missing.push(ref)
+  }
+
+  if (missing.length === 0) {
+    return { atlas, unresolvedRefs }
+  }
+
+  const { resolveIconSvgs } = await import('./resolve-icons.ts')
+  const fresh = resolveIconSvgs(missing)
+  Object.assign(atlas.icons, fresh.atlas.icons)
+  unresolvedRefs.push(...fresh.unresolvedRefs)
+  return { atlas, unresolvedRefs }
+}
+
+function mergeUnresolvedIconRefs({
+  previous,
+  currentUnresolved,
+  nowResolved,
+}: {
+  previous: string[]
+  currentUnresolved: string[]
+  nowResolved: string[]
+}): string[] {
+  const resolved = new Set(nowResolved)
+  const next = new Set<string>()
+  for (const ref of previous) {
+    if (!resolved.has(ref)) next.add(ref)
+  }
+  for (const ref of currentUnresolved) next.add(ref)
+  return [...next]
+}
+
 function writeCache(cachePath: string, nav: Navigation): void {
   const dir = path.dirname(cachePath)
   fs.mkdirSync(dir, { recursive: true })
@@ -1727,21 +1845,36 @@ type MdxCacheData = {
   pageImportSources: Record<string, string[]>
   pageInternalLinks: Record<string, InternalLink[]>
   pageAssetRefs: Record<string, AssetRef[]>
+  icons: IconAtlas
+  unresolvedIconRefs: string[]
 }
 
+const EMPTY_ICON_ATLAS: IconAtlas = { icons: {} }
+
 function readMdxCache(cachePath: string): MdxCacheData {
-  const empty: MdxCacheData = { content: {}, pageIconRefs: {}, pageImportSources: {}, pageInternalLinks: {}, pageAssetRefs: {} }
+  const empty: MdxCacheData = {
+    content: {},
+    pageIconRefs: {},
+    pageImportSources: {},
+    pageInternalLinks: {},
+    pageAssetRefs: {},
+    icons: EMPTY_ICON_ATLAS,
+    unresolvedIconRefs: [],
+  }
   if (!fs.existsSync(cachePath)) return empty
   try {
     const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
     if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
       const envelope = raw as MdxCacheEnvelope
+      const iconCacheValid = envelope.iconPacksRevision === ICON_PACKS_REVISION
       return {
         content: envelope.content,
         pageIconRefs: envelope.pageIconRefs ?? {},
         pageImportSources: envelope.pageImportSources ?? {},
         pageInternalLinks: envelope.pageInternalLinks ?? {},
         pageAssetRefs: envelope.pageAssetRefs ?? {},
+        icons: iconCacheValid ? envelope.icons ?? EMPTY_ICON_ATLAS : EMPTY_ICON_ATLAS,
+        unresolvedIconRefs: iconCacheValid ? envelope.unresolvedIconRefs ?? [] : [],
       }
     }
     return empty
@@ -1763,6 +1896,9 @@ function writeMdxCache(
     pageImportSources: data.pageImportSources,
     pageInternalLinks: data.pageInternalLinks,
     pageAssetRefs: data.pageAssetRefs,
+    icons: data.icons,
+    unresolvedIconRefs: data.unresolvedIconRefs,
+    iconPacksRevision: ICON_PACKS_REVISION,
   }
   fs.writeFileSync(cachePath, JSON.stringify(envelope))
 }

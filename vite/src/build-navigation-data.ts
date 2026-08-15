@@ -130,13 +130,14 @@ export async function generateHolocronData({
     return `  ${JSON.stringify(slug)}: () => import(${JSON.stringify(`./${filename}`)}).then((m) => m.default)`
   })
 
-  // Collect all icon refs
   const allMdxIconRefs = Object.values(pageIconRefs).flat()
-  const _iconRefs = collectIconRefs({
+  const iconRefs = collectIconRefs({
     config,
     navigation: navData.navigation,
     mdxIconRefs: allMdxIconRefs,
   })
+  const { resolveIconSvgs } = await import('./lib/resolve-icons.ts')
+  const iconAtlas = resolveIconSvgs(iconRefs).atlas
 
   // Assemble holocron-data.js source
   const dataChunkSource = [
@@ -164,7 +165,9 @@ export async function generateHolocronData({
     `  var load = loaders[slug];`,
     `  return load ? await load() : undefined;`,
     `}`,
-    `export function getPageIconRefs(slug) { return pageIconRefs[slug] || []; }`,
+     `export function getPageIconRefs(slug) { return pageIconRefs[slug] || []; }`,
+    `var iconAtlas = ${JSON.stringify(iconAtlas)};`,
+    `export function getIconAtlas() { return iconAtlas; }`,
     ``,
     `// virtual:holocron-modules`,
     `var modules = {};`,

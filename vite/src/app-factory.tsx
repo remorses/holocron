@@ -76,10 +76,12 @@ import {
 } from './site-data.ts'
 import type { HolocronConfig, ConfigNavTab, ConfigNavGroup } from './config.ts'
 import { collectIconRefs, dedupeIconRefs, type IconRef } from './lib/collect-icons.ts'
+import type { IconAtlas } from './lib/resolve-icons.ts'
 import { resolveConfigOverride, shouldShowConfigPanel } from './lib/config-override.ts'
 import { normalize as normalizeConfig } from './lib/normalize-config.ts'
 import {
   type CustomTabProvider,
+  type RuntimePageMeta,
   resolveRuntimeContent,
   mergeRuntimeNavigation,
 } from './lib/runtime-provider.ts'
@@ -203,6 +205,8 @@ type HolocronProviders = {
   getMdxSlugs(): Promise<string[]>
   getMdxSource(slug: string): Promise<string | undefined>
   getPageIconRefs(slug: string): Promise<IconRef[]>
+  /** Used-icon SVG atlas from sync. Sliced per request for the current page. */
+  getIconAtlas(): IconAtlas | Promise<IconAtlas>
   /** Lazy glob of importable files (snippets, components, colocated pages).
    *  Used by resolveModules() to resolve MDX import statements at render time. */
   getModules?(): Record<string, () => Promise<Record<string, any>>>
@@ -215,6 +219,15 @@ type HolocronProviders = {
 }
 
 /* ── Shared helpers ──────────────────────────────────────────────────── */
+
+function sliceIconAtlas(atlas: IconAtlas, refs: IconRef[]): IconAtlas {
+  const icons: IconAtlas['icons'] = {}
+  for (const ref of refs) {
+    const entry = atlas.icons[ref]
+    if (entry) icons[ref] = entry
+  }
+  return { icons }
+}
 
 function withBaseRoute(base: string, route: string): string {
   const normalizedBase = base === '/' ? '' : `/${base.replace(/^\/+|\/+$/g, '')}`
@@ -861,19 +874,19 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     origin: string,
   ): Promise<HolocronSiteData> {
     const pageIconRefs = slug ? await providers.getPageIconRefs(slug) : []
-    const { resolveIconSvgs } = await import('./lib/resolve-icons.ts')
+    const iconAtlas = await providers.getIconAtlas()
 
     // Merge runtime provider navigation into the site data so the sidebar
     // shows runtime pages (e.g. Outrank blog articles). On cache hit this
     // is just a Map lookup + shallow array clone.
     let effectiveSite = site
     if (runtimeTabs.size > 0) {
-      const { tabs: mergedConfigTabs, pageTitles } = await mergeRuntimeNavigation(
+      const { tabs: mergedConfigTabs, pageMeta } = await mergeRuntimeNavigation(
         effectiveConfig.navigation.tabs,
         runtimeTabs,
         runtimeCache,
       )
-      const mergedNavTabs = enrichRuntimeTabs(site.navigation, mergedConfigTabs, pageTitles)
+      const mergedNavTabs = enrichRuntimeTabs(site.navigation, mergedConfigTabs, pageMeta)
       effectiveSite = {
         ...site,
         config: { ...effectiveConfig, navigation: { ...effectiveConfig.navigation, tabs: mergedConfigTabs } },
@@ -883,7 +896,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
     return {
       ...buildVisibleSiteData({ ...effectiveSite, config: effectiveConfig }),
-      icons: resolveIconSvgs(dedupeIconRefs([...sharedIconRefs, ...pageIconRefs])).atlas,
+      icons: sliceIconAtlas(iconAtlas, dedupeIconRefs([...sharedIconRefs, ...pageIconRefs])),
       origin,
     }
   }
@@ -894,31 +907,39 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   function enrichRuntimeTabs(
     baseNav: Navigation,
     mergedConfigTabs: ConfigNavTab[],
-    pageTitles: Record<string, string>,
+    pageMeta: Record<string, RuntimePageMeta>,
   ): Navigation {
     return baseNav.map((navTab, i) => {
       const configTab = mergedConfigTabs[i]
       if (!configTab || !runtimeTabs.has(configTab.tab)) return navTab
-      const groups = configTab.groups.map((g) => enrichRuntimeGroup(g, pageTitles))
+      const groups = configTab.groups.map((g) => enrichRuntimeGroup(g, pageMeta))
       return { ...navTab, groups }
     })
   }
 
-  function enrichRuntimeGroup(g: ConfigNavGroup, pageTitles: Record<string, string>): NavGroup {
+  function enrichRuntimeGroup(
+    g: ConfigNavGroup,
+    pageMeta: Record<string, RuntimePageMeta>,
+  ): NavGroup {
     return {
       group: g.group,
       pages: g.pages.map((entry): NavPage | NavGroup => {
         if (typeof entry === 'string') {
+          const meta = pageMeta[entry]
           return {
             slug: entry,
             href: slugToHref(entry),
-            title: pageTitles[entry] ?? titleFromSlug(entry),
+            title: meta?.title ?? titleFromSlug(entry),
             gitSha: '',
             headings: [],
-            frontmatter: {},
+            ...(meta?.icon && { icon: meta.icon }),
+            frontmatter: {
+              ...(meta?.icon && { icon: meta.icon }),
+              ...(meta?.iconColor && { iconColor: meta.iconColor }),
+            },
           }
         }
-        return enrichRuntimeGroup(entry, pageTitles)
+        return enrichRuntimeGroup(entry, pageMeta)
       }),
     }
   }

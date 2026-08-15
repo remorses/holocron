@@ -31,4 +31,20 @@ describe('generateHolocronData', () => {
             })
         expect(loaderLine).toMatchInlineSnapshot(`"  "pages-with-weird-chars/page-with-quotes-\\"-what-a-good-'-library-slugify-no": () => import("./holocron-page-pages-with-weird-chars--page-with-quotes-\\"-what-a-good-'-library-slugify-no-af4cd76a.js").then((m) => m.default)"`)
     })
+
+    test('emits getIconAtlas with resolved SVG bodies', async () => {
+        const config = normalize({
+            name: 'Docs',
+            icons: { library: 'lucide' },
+            navigation: { pages: ['index'] },
+        })
+        const result = await generateHolocronData({
+            config,
+            slugs: ['index'],
+            getMdxSource: async () => '---\ntitle: Home\nicon: rocket\n---\n\n# Home\n',
+        })
+
+        expect(result.dataChunkSource).toContain('export function getIconAtlas()')
+        expect(result.dataChunkSource).toContain('lucide:rocket')
+    })
 })

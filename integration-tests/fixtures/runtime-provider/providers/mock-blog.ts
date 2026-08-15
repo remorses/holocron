@@ -10,11 +10,19 @@ import type { CustomTabProvider } from '@holocron.so/vite'
 
 let generateCallCount = 0
 
-const articles = [
+const articles: Array<{
+  slug: string
+  title: string
+  description: string
+  body: string
+  tag: string
+  icon?: string
+}> = [
   {
     slug: 'hello-world',
     title: 'Hello World',
     description: 'First blog post',
+    icon: 'https://cdn.example.com/rocket.svg',
     body: 'This is the **first** blog post from the runtime provider.',
     tag: 'Getting Started',
   },
@@ -52,6 +60,7 @@ const provider: CustomTabProvider = {
         '---',
         `title: "${article.title}"`,
         `description: "${article.description}"`,
+        ...(article.icon ? [`icon: "${article.icon}"`] : []),
         '---',
         '',
         `# ${article.title}`,

@@ -650,6 +650,18 @@ icon: rocket
 <Card icon="user" iconType="regular" />
 `, 'fontawesome').iconRefs).toEqual(['fontawesome:brands:discord', 'fontawesome:regular:user'])
   })
+
+  test('keeps a frontmatter URL icon on the page and does not collect a library ref', () => {
+    const result = processMdx(`---
+title: Page
+icon: https://cdn.example.com/rocket.svg
+---
+
+Hello.
+`, 'lucide')
+    expect(result.icon).toBe('https://cdn.example.com/rocket.svg')
+    expect(result.iconRefs).toEqual([])
+  })
 })
 
 describe('internal link collection', () => {

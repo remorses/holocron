@@ -15,6 +15,15 @@ test.describe("runtime provider", () => {
     ).toBeVisible();
   });
 
+  test("runtime page frontmatter URL icon renders in the sidebar", async ({
+    request,
+  }) => {
+    const res = await request.get("/blog/hello-world");
+    expect(res.ok()).toBe(true);
+    const html = await res.text();
+    expect(html).toContain('src="https://cdn.example.com/rocket.svg"');
+  });
+
   test("second runtime blog page renders", async ({ page }) => {
     await page.goto("/blog/second-post", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: "Second Post" })).toBeVisible();

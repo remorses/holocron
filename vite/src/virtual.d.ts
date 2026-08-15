@@ -18,11 +18,13 @@ declare module 'virtual:holocron-navigation' {
 
 declare module 'virtual:holocron-mdx' {
   import type { IconRef } from './lib/collect-icons.ts'
+  import type { IconAtlas } from './lib/resolve-icons.ts'
   /** Pre-processed MDX content exposed through async getters so custom
    *  virtual-module implementations can load content at request time. */
   export function getMdxSlugs(): Promise<string[]>
   export function getMdxSource(slug: string): Promise<string | undefined>
   export function getPageIconRefs(slug: string): Promise<IconRef[]>
+  export function getIconAtlas(): IconAtlas
 }
 
 declare module 'virtual:holocron-mdx-page/*' {

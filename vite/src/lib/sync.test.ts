@@ -1687,6 +1687,167 @@ icon: rocket
     })
 
     expect(result.pageIconRefs.page).toEqual(['lucide:rocket', 'lucide:github'])
+    expect(result.icons.icons['lucide:rocket']).toBeDefined()
+    expect(result.icons.icons['lucide:github']).toBeDefined()
+  })
+
+  test('writes resolved icon bodies into holocron-mdx.json', async () => {
+    const project = tracked(createProject(
+      {
+        icons: { library: 'lucide' },
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Page
+icon: rocket
+---
+
+Hello.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const mdxCache = JSON.parse(fs.readFileSync(path.join(project.distDir, 'holocron-mdx.json'), 'utf-8'))
+    expect(mdxCache.icons.icons['lucide:rocket'].body).toContain('<')
+    expect(mdxCache.unresolvedIconRefs).toEqual([])
+  })
+
+  test('reuses cached icon bodies on the next sync without overwriting them', async () => {
+    const project = tracked(createProject(
+      {
+        icons: { library: 'lucide' },
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Page
+icon: rocket
+---
+
+Hello.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const cachePath = path.join(project.distDir, 'holocron-mdx.json')
+    const cached = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
+    cached.icons.icons['lucide:rocket'].body = 'CACHED_ROCKET_BODY'
+    fs.writeFileSync(cachePath, JSON.stringify(cached))
+
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(result.icons.icons['lucide:rocket']!.body).toBe('CACHED_ROCKET_BODY')
+  })
+
+  test('merges a newly referenced icon into the cached atlas', async () => {
+    const project = tracked(createProject(
+      {
+        icons: { library: 'lucide' },
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Page
+icon: rocket
+---
+
+Hello.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    fs.writeFileSync(path.join(project.pagesDir, 'page.mdx'), `---
+title: Page
+icon: rocket
+---
+
+<Card icon="github" />
+`)
+
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(result.icons.icons['lucide:rocket']).toBeDefined()
+    expect(result.icons.icons['lucide:github']).toBeDefined()
+  })
+
+  test('re-resolves icons when the icon pack revision changes', async () => {
+    const project = tracked(createProject(
+      {
+        icons: { library: 'lucide' },
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Page
+icon: rocket
+---
+
+Hello.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const cachePath = path.join(project.distDir, 'holocron-mdx.json')
+    const cached = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
+    cached.icons.icons['lucide:rocket'].body = 'STALE_ROCKET_BODY'
+    cached.iconPacksRevision = 'stale-revision'
+    fs.writeFileSync(cachePath, JSON.stringify(cached))
+
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(result.icons.icons['lucide:rocket']!.body).not.toBe('STALE_ROCKET_BODY')
+    expect(result.icons.icons['lucide:rocket']!.body).toContain('<')
   })
 
   test('preserves page icon refs when image rewriting mutates the mdast', async () => {

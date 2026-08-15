@@ -773,6 +773,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         return [
           `const slugs = ${JSON.stringify(slugs)}`,
           `const pageIconRefs = ${JSON.stringify(syncResult.pageIconRefs)}`,
+          `const iconAtlas = ${JSON.stringify(syncResult.icons)}`,
           `const loaders = { ${loaderEntries.join(', ')} }`,
           `export function getMdxSlugs() { return slugs }`,
           `export async function getMdxSource(slug) {`,
@@ -780,6 +781,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           `  return load ? await load() : undefined`,
           `}`,
           `export function getPageIconRefs(slug) { return pageIconRefs[slug] ?? [] }`,
+          `export function getIconAtlas() { return iconAtlas }`,
         ].join('\n')
       }
       if (id.startsWith(RESOLVED_MDX_PAGE_PREFIX)) {

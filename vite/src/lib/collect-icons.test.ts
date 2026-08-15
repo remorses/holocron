@@ -20,6 +20,12 @@ describe('stringIconToRefs', () => {
     expect(stringIconToRefs('lucide:rocket', { defaultLibrary: 'fontawesome' })).toEqual(['lucide:rocket'])
     expect(stringIconToRefs('fontawesome:brands:discord', { defaultLibrary: 'lucide' })).toEqual(['fontawesome:brands:discord'])
   })
+
+  test('skips URL and root-absolute path icons', () => {
+    expect(stringIconToRefs('https://cdn.example.com/rocket.svg', { defaultLibrary: 'lucide' })).toEqual([])
+    expect(stringIconToRefs('http://cdn.example.com/rocket.svg', { defaultLibrary: 'lucide' })).toEqual([])
+    expect(stringIconToRefs('/icons/rocket.svg', { defaultLibrary: 'fontawesome' })).toEqual([])
+  })
 })
 
 describe('iconToRefs', () => {

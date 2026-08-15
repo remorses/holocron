@@ -1,6 +1,9 @@
 /**
  * Server-side SVG resolver for canonical icon refs like `lucide:rocket` and
  * `fontawesome:brands:discord`.
+ *
+ * Plugin / generateHolocronData only. Do not import this from RSC code —
+ * the Iconify packs are ~2 MB and would land in the worker bundle.
  */
 
 import { icons as lucideIcons } from '@iconify-json/lucide'
