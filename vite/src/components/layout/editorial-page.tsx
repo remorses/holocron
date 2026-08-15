@@ -9,7 +9,7 @@
 
 
 
-import React, { Fragment } from 'react'
+import React, { Fragment, useLayoutEffect, useRef } from 'react'
 import { Link } from '../link.tsx'
 import { useHolocronData } from '../../router.ts'
 import {
@@ -37,6 +37,11 @@ import {
   buildGridTokenStyle,
 } from '../../lib/sidebar-widths.ts'
 import type { HolocronCSSProperties } from '../../lib/css-vars.ts'
+import {
+  rowCoveredByOverlappingShared,
+  sharedAsideOverlapsPerSection,
+  sharedAsideRange,
+} from '../../lib/mdx-sections.ts'
 import type { PageMode } from '../../lib/page-frontmatter.ts'
 import { GridLinesFrame, TabBarDots, NavbarLines, AboveBottomDots } from './grid-lines.tsx'
 
@@ -58,15 +63,52 @@ function resolveEditorialPageMode(mode: PageMode | undefined): EditorialPageMode
 
 export type EditorialSection = {
   content: React.ReactNode
+  /** Per-section aside. Sticky only within this section's row. */
   aside?: React.ReactNode
+  /** Full-span aside (AI widget or authored `<Aside full>`). Rendered as
+   *  its own grid cell so it can coexist with `aside` on the same section. */
+  sharedAside?: React.ReactNode
   fullWidth?: boolean
-  /** How many grid rows this section's aside spans on desktop.
-   *  1 (default) for per-section asides. For a shared `<Aside full>`, the
-   *  aside is attached to the LAST sub-section of its range and the renderer
-   *  computes `grid-row: (thisRow - span + 1) / span ${span}` so the aside
+  /** How many grid rows this section's shared aside spans on desktop.
+   *  For a shared `<Aside full>`, the aside is attached to the LAST
+   *  sub-section of its range and the renderer computes
+   *  `grid-row: (thisRow - span + 1) / span ${span}` so the aside
    *  cell covers every sub-section row. Inside that tall cell,
    *  `position: sticky` keeps the aside pinned alongside all those rows. */
   asideRowSpan?: number
+}
+
+/** Writes `--page-aside-height` on the content grid so per-section asides
+ *  can offset their sticky `top` below a page-level Ask AI cell. */
+function SharedAsideCell({
+  className,
+  style,
+  measure,
+  children,
+}: {
+  className: string
+  style: HolocronCSSProperties
+  measure: boolean
+  children: React.ReactNode
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    if (!measure) return
+    const el = ref.current
+    const parent = el?.parentElement
+    if (!el || !parent) return
+    const apply = () => {
+      parent.style.setProperty('--page-aside-height', `${el.offsetHeight}px`)
+    }
+    apply()
+    const observer = new ResizeObserver(apply)
+    observer.observe(el)
+    return () => {
+      observer.disconnect()
+      parent.style.removeProperty('--page-aside-height')
+    }
+  }, [measure])
+  return <div ref={measure ? ref : undefined} className={className} style={style}>{children}</div>
 }
 
 function ContentFooter() {
@@ -147,6 +189,11 @@ export function EditorialPage({
   const pageMode = resolveEditorialPageMode(mode)
   const isCustomMode = pageMode === 'custom'
   const showLeftNav = pageMode === 'default'
+  const asideLayers = (sections ?? []).map((section) => ({
+    hasPerSectionAside: Boolean(section.aside),
+    hasSharedAside: Boolean(section.sharedAside),
+    asideRowSpan: section.asideRowSpan,
+  }))
   // In center mode the content + right rail occupy the page width without the
   // left navigation column, so cap the grid width to drop that column's width.
   const centerMaxWidthClass = 'lg:max-w-[calc(var(--grid-max-width)_-_var(--grid-nav-width)_-_var(--grid-gap))]'
@@ -415,14 +462,19 @@ export function EditorialPage({
                     </div>
                   )
                 }
-                const span = section.asideRowSpan ?? 1
-                const isShared = span > 1
-                const sharedAsideStartRow = row - span + 1
-                const hasPerSectionAside = Boolean(section.aside) && !isShared
-                const hasSharedAside = Boolean(section.aside) && isShared
-                
+                const { start: sharedAsideStartRow, span } = sharedAsideRange(section.asideRowSpan, i)
+                const hasPerSectionAside = Boolean(section.aside)
+                const hasSharedAside = Boolean(section.sharedAside)
+                const coveredByPageAside = rowCoveredByOverlappingShared(asideLayers, row)
+                const measureSharedAside = sharedAsideOverlapsPerSection(asideLayers, i)
+                const stickyBase = hasTabBar
+                  ? 'var(--sticky-top)'
+                  : 'calc(var(--header-row-height) + var(--layout-gap))'
+                const perSectionTop = coveredByPageAside
+                  ? `calc(${stickyBase} + var(--page-aside-height, 0px))`
+                  : stickyBase
                 const asideClass =
-                  'slot-aside flex flex-col gap-3 text-(length:--type-small-size) leading-[1.5]'
+                  'slot-aside flex flex-col text-(length:--type-small-size) leading-[1.5]'
                 const sharedAsideStyle: HolocronCSSProperties = {
                   '--shared-row': `${sharedAsideStartRow} / span ${span}`,
                 }
@@ -431,18 +483,25 @@ export function EditorialPage({
                     {/* Inner per-section wrapper: subgrid, content + per-section aside */}
                     <div
                       className='flex flex-col gap-y-(--prose-gap) lg:grid lg:grid-cols-subgrid lg:col-[1/-1]'
-                      style={{ gridRow: row }}
+                      style={{
+                        gridRow: row,
+                        ...(coveredByPageAside && i === 0 ? { minHeight: 'var(--page-aside-height)' } : {}),
+                      }}
                     >
                       <div className='slot-main flex flex-col gap-(--prose-gap) lg:col-[1] lg:overflow-visible text-(length:--type-body-size)'>
                         {section.content}
                       </div>
-                      {/* Aside column: per-section aside */}
                       {hasPerSectionAside && (
-                        <div
-                            className={`slot-aside flex flex-col gap-3 text-(length:--type-small-size) leading-[1.5] lg:col-[2] lg:sticky lg:self-start`}
-                            style={{ top: hasTabBar ? 'var(--sticky-top)' : 'calc(var(--header-row-height) + var(--layout-gap))' }}
-                        >
-                          {section.aside}
+                        <div className={`${asideClass} lg:col-[2]`}>
+                          {coveredByPageAside && i === 0 && (
+                            <div className='hidden lg:block shrink-0' style={{ height: 'var(--page-aside-height)' }} />
+                          )}
+                          <div
+                            className='flex flex-col gap-3 lg:sticky lg:self-start'
+                            style={{ top: perSectionTop }}
+                          >
+                            {section.aside}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -450,18 +509,21 @@ export function EditorialPage({
                         Desktop: explicit col 2 + row-span (via CSS var read at lg).
                         Mobile: grid-row stays `auto` → auto-placed by DOM order,
                         stacks at end of range without forcing an implicit 2nd
-                        column in grid-cols-1. */}
+                        column in grid-cols-1. Can coexist with a per-section
+                        aside in the same column; sticky top of those asides
+                        is offset by --page-aside-height. */}
                     {hasSharedAside && (
-                      <div
-                        className={`${asideClass} lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:self-start lg:overflow-y-auto`}
+                      <SharedAsideCell
+                        measure={measureSharedAside}
+                        className={`${asideClass} gap-3 lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:self-start lg:overflow-y-auto scrollbar-none`}
                         style={{
                           ...sharedAsideStyle,
-                          top: hasTabBar ? 'var(--sticky-top)' : 'calc(var(--header-row-height) + var(--layout-gap))',
+                          top: stickyBase,
                           maxHeight: hasTabBar ? 'calc(100vh - var(--sticky-top))' : 'calc(100vh - var(--header-row-height) - var(--layout-gap))',
                         }}
                       >
-                        {section.aside}
-                      </div>
+                        {section.sharedAside}
+                      </SharedAsideCell>
                     )}
                   </Fragment>
                 )

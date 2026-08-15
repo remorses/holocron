@@ -163,7 +163,7 @@ export function TableOfContentsPanel({
                 data-active={isActive}
                 onClick={(e) => notifyHeadingClick(e)}
                 className={cn(
-                  'py-1 leading-snug transition-colors no-underline',
+                  'py-1 leading-snug transition-colors no-underline block truncate',
                   'hover:text-foreground',
                 )}
                 style={{

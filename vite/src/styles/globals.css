@@ -397,7 +397,11 @@
      inside. It still follows --sidebar-link-radius, so a focused row reads as
      the same rounded pill as a hovered one. */
   .slot-sidebar-nav :focus-visible {
-    outline-offset: -2px;
+    outline: none;
+    background: var(--sidebar-hover-background);
+  }
+  .slot-sidebar-nav :focus:not(:focus-visible) {
+    outline: none;
   }
 
   /* Search input border + focus ring */
