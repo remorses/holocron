@@ -207,16 +207,27 @@ const extraGrammars: Syntax[] = [
   cshtml,
 ]
 
-for (const grammar of extraGrammars) {
-  refractor.register(grammar)
+const extraGrammarsRegistered = Symbol.for('@holocron.so/vite/refractor-extra-grammars-v1')
+
+/** Refractor's registry is process-global. RSC remount re-runs this module. */
+export function registerExtraGrammars() {
+  if (!Reflect.get(refractor.languages, extraGrammarsRegistered)) {
+    for (const grammar of extraGrammars) {
+      const name = grammar.displayName
+      if (name && refractor.registered(name)) continue
+      refractor.register(grammar)
+    }
+    Reflect.set(refractor.languages, extraGrammarsRegistered, true)
+  }
+  refractor.alias({ json: 'jsonc', markdown: 'mdx' })
+  refractor.languages.diagram = {
+    'box-drawing': /[┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷]+/,
+    'line-char': /[-_|<>]+/,
+    label: /[^\s┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷\-_|<>]+/,
+  }
 }
 
-refractor.alias({ json: 'jsonc', markdown: 'mdx' })
-refractor.languages.diagram = {
-  'box-drawing': /[┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷]+/,
-  'line-char': /[-_|<>]+/,
-  label: /[^\s┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷\-_|<>]+/,
-}
+registerExtraGrammars()
 
 /** Highlight code on the server. Unknown langs return undefined. */
 export function highlightCode(code: string, lang?: string): string | undefined {

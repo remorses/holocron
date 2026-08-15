@@ -52,7 +52,7 @@ const fixturePorts = await Promise.all(
 // Fixtures whose test files mutate shared state (config, MDX pages) on disk
 // must avoid in-project parallelism so multiple mutating files don't race on
 // the same Vite server. Read-only fixtures can still run fully parallel.
-const SERIAL_FIXTURES = new Set(["basic-hmr", "realworld-polar", "versions"]);
+const SERIAL_FIXTURES = new Set(["basic-hmr", "mcp", "openapi", "realworld-polar", "versions"]);
 
 const projects = fixturePorts.map(({ fixture, port }) => ({
   name: fixture.name,

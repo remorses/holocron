@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { CodeBlock } from '../components/markdown/code-block.tsx'
-import { highlightCode, HighlightedCodeBlock } from './highlight-code.tsx'
+import { highlightCode, HighlightedCodeBlock, registerExtraGrammars } from './highlight-code.tsx'
 
 const FORMER_PRISM_LANGS = [
   'markup', 'css', 'clike', 'regex', 'javascript', 'c', 'markup-templating',
@@ -74,6 +74,11 @@ describe('highlightCode', () => {
     }))
     expect(rendered).toContain('token keyword')
     expect(rendered).toContain('token string')
+  })
+
+  test('grammar registration is safe to re-run on RSC remount', () => {
+    expect(() => registerExtraGrammars()).not.toThrow()
+    expect(highlightCode('const greeting = "Hello"', 'javascript')).toContain('token')
   })
 
   test('does not full-bleed code blocks without line numbers', () => {

@@ -6,6 +6,8 @@
  * parameter rendering, and code examples.
  */
 
+import fs from 'node:fs'
+import path from 'node:path'
 import { test, expect } from '../helpers/test.ts'
 
 test.describe('docs + API tabs coexist', () => {
@@ -323,5 +325,57 @@ test.describe('OpenAPI "..." rest expansion', () => {
       const res = await request.get(`/${slug}`)
       expect(res.ok()).toBe(true)
     }
+  })
+})
+
+const fixtureRoot = path.resolve(import.meta.dirname, '../../fixtures/openapi')
+const specPath = path.join(fixtureRoot, 'api.yaml')
+
+test.describe.serial('OpenAPI spec HMR @dev', () => {
+  let originalSpec: string
+
+  test.beforeEach(() => {
+    originalSpec = fs.readFileSync(specPath, 'utf-8')
+  })
+
+  test.afterEach(() => {
+    fs.writeFileSync(specPath, originalSpec)
+  })
+
+  test('adding an endpoint to the spec creates a new routable page', async ({
+    request,
+  }) => {
+    const before = await request.get('/api/get-ping')
+    expect(before.ok()).toBe(false)
+
+    const newEndpoint = `
+  /ping:
+    get:
+      summary: Ping
+      description: Simple ping endpoint for HMR testing.
+      tags:
+        - default
+      security: []
+      responses:
+        "200":
+          description: Pong
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: pong`
+    fs.writeFileSync(specPath, `${originalSpec}\n${newEndpoint}\n`)
+
+    await expect
+      .poll(async () => (await request.get('/api/get-ping')).ok(), { timeout: 20_000 })
+      .toBe(true)
+
+    const html = await (await request.get('/api/get-ping')).text()
+    expect(html).toContain('Ping')
+    expect(html).toContain('/ping')
   })
 })
