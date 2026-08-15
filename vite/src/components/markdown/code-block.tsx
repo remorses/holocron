@@ -1,16 +1,12 @@
 'use client'
 
 /**
- * CodeBlock with Prism syntax highlighting and line numbers.
- *
- * Prism is lazy-loaded via dynamic import() so the ~891KB bundle doesn't
- * block initial page render. First paint shows unhighlighted code (same as
- * SSR output), then highlighting appears once Prism finishes loading.
- * The module is cached after first load so subsequent code blocks highlight
- * instantly.
+ * CodeBlock chrome: line numbers, copy button, optional precomputed highlight.
+ * Fenced MDX blocks pass `highlightedHtml` from the server so first paint and
+ * client navigation both show tokens. No client highlighter.
  */
 
-import React, { useMemo, useState, useCallback, useEffect } from 'react'
+import React, { useMemo, useState, useCallback } from 'react'
 import { bleedClass, hasLeftBleed, type BleedMode } from '../../lib/code-meta.ts'
 
 function CopyIcon() {
@@ -59,6 +55,7 @@ export function CodeBlock({
   title,
   highlight,
   wrap = false,
+  highlightedHtml,
 }: {
   children: string
   lang?: string
@@ -78,6 +75,8 @@ export function CodeBlock({
   highlight?: string
   /** Soft-wrap long lines instead of horizontal scrolling (Mintlify `wrap` flag). */
   wrap?: boolean
+  /** Server-highlighted HTML. Omit to render `children` as plain text. */
+  highlightedHtml?: string
 }) {
   const lineHeight = lineHeightProp ?? (lang === 'diagram' ? '1.3' : '1.6')
   // Wrapped code has no stable line grid: one logical line can span several
@@ -102,21 +101,6 @@ export function CodeBlock({
     () => highlight ? parseHighlightLines(highlight, lines.length) : undefined,
     [highlight, lines.length],
   )
-
-  // Prism is lazy-loaded so the ~891KB bundle doesn't block first paint.
-  // SSR returns null (unhighlighted), client loads Prism then re-renders.
-  const [highlightedHtml, setHighlightedHtml] = useState<string | undefined>(undefined)
-  useEffect(() => {
-    let cancelled = false
-    void import('#prism').then(({ Prism }) => {
-      if (cancelled) return
-      const prismLang = lang === 'mdx' ? 'markdown' : lang
-      const grammar = prismLang ? Prism.languages[prismLang] : undefined
-      if (!grammar) return
-      setHighlightedHtml(Prism.highlight(children, grammar, prismLang))
-    })
-    return () => { cancelled = true }
-  }, [children, lang])
 
   const bleedClassName = bleedClass(bleed)
   const leftBleed = hasLeftBleed(bleed)

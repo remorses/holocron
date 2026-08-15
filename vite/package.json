@@ -43,12 +43,6 @@
       "types": "./dist/mdx-exports.d.ts",
       "default": "./dist/mdx-exports.js"
     },
-    "./prism": {
-      "types": "./dist/prism.d.ts",
-      "ssr": "./dist/prism-noop.js",
-      "browser": "./dist/prism.js",
-      "default": "./dist/prism.js"
-    },
     "./chat": {
       "types": "./dist/chat/index.d.ts",
       "default": "./dist/chat/index.js"
@@ -62,12 +56,6 @@
       "ssr": "./dist/lib/empty-mermaid.js",
       "browser": "./dist/lib/mermaid-browser.js",
       "default": "./dist/lib/mermaid-browser.js"
-    },
-    "#prism": {
-      "types": "./dist/prism.d.ts",
-      "ssr": "./dist/prism-noop.js",
-      "browser": "./dist/prism.js",
-      "default": "./dist/prism.js"
     }
   },
   "files": [
@@ -78,9 +66,8 @@
   ],
   "scripts": {
     "generate-schema": "tsx scripts/generate-schema.ts",
-    "bundle-prism": "tsx scripts/bundle-prism.ts",
     "bundle-chat-css": "tsx scripts/bundle-chat-css.ts",
-    "build": "pnpm generate-schema && pnpm bundle-prism && pnpm bundle-chat-css && tsc && chmod +x dist/bin.js",
+    "build": "pnpm generate-schema && pnpm bundle-chat-css && tsc && chmod +x dist/bin.js",
     "typecheck": "tsc",
     "test": "vitest --run",
     "prepublishOnly": "rm -rf dist *.tsbuildinfo && pnpm build"
@@ -107,6 +94,7 @@
     "dedent": "^1.7.2",
     "fflate": "^0.8.2",
     "github-slugger": "^2.0.0",
+    "hast-util-to-html": "^9.0.5",
     "mdast-heading-id": "^2.0.0",
     "mdast-util-frontmatter": "^2.0.1",
     "mdast-util-gfm": "^3.1.0",
@@ -116,15 +104,15 @@
     "micromark-heading-id": "^2.0.0",
     "motion": "^12.42.2",
     "openapi-types": "^12.1.3",
-    "prismjs": "^1.30.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-medium-image-zoom": "^5.4.3",
+    "refractor": "^5.0.0",
     "remark": "^15.0.1",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
     "remark-mdx": "^3.1.1",
-    "safe-mdx": "^1.11.5",
+    "safe-mdx": "^1.13.0",
     "spiceflow": "1.26.0-rsc.18",
     "string-dedent": "^3.0.2",
     "tailwind-merge": "^3.5.0",
@@ -141,7 +129,6 @@
     "@tailwindcss/cli": "^4.3.0",
     "@types/mdast": "^4.0.4",
     "@types/node": "^25.9.2",
-    "@types/prismjs": "^1.26.6",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "postcss": "^8.5.16",

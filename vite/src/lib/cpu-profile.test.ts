@@ -65,6 +65,7 @@ function isRelevantLocation(location: string): boolean {
     location.startsWith('nm/unified') ||
     location.startsWith('nm/remark-parse') ||
     location.startsWith('nm/prismjs') ||
+    location.startsWith('nm/refractor') ||
     location.startsWith('nm/safe-mdx') ||
     location.startsWith('nm/zwitch')
   )

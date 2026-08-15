@@ -1166,8 +1166,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
   // Keep `@holocron.so/vite/*` inside the RSC/SSR transform pipeline so
   // `@vitejs/plugin-rsc` emits stable `client-package-proxy/...` imports.
-  // Prism grammars are pre-bundled into src/generated/prism-bundle.js so
-  // they don't trigger per-grammar optimize-deps discovery.
   const holocronRscPackagePlugin: Plugin = {
     name: 'holocron:rsc-package-source',
     configEnvironment(name, config) {
@@ -1207,7 +1205,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             '@holocron.so/vite > @orama/orama',
             '@holocron.so/vite > spiceflow > @vitejs/plugin-rsc/vendor/react-server-dom/client.browser',
             '@holocron.so/vite > cookie',
-            // prismjs is pre-bundled into src/generated/prism-bundle.js, no optimize entry needed
             '@holocron.so/vite > mermaid',
             '@holocron.so/vite > clsx',
             '@holocron.so/vite > react-medium-image-zoom',

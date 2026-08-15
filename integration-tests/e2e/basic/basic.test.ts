@@ -61,6 +61,18 @@ test.describe("HTML comments", () => {
   });
 });
 
+test.describe("syntax highlight", () => {
+  test("getting-started HTML includes server-highlighted tokens", async ({ request }) => {
+    const response = await request.get("/getting-started", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    expect(response.status()).toBe(200);
+    const html = await response.text();
+    expect(html).toContain("token keyword");
+    expect(html).toContain("language-ts");
+  });
+});
+
 test.describe("index path redirects", () => {
   test("GET /index redirects to /", async ({ request }) => {
     const response = await request.get("/index", { maxRedirects: 0 });
@@ -195,6 +207,7 @@ test.describe("navigation", () => {
 
     await expect(page).toHaveURL(/\/getting-started$/);
     await expect(page.getByRole("heading", { name: "Installation" })).toBeVisible();
+    await expect(page.locator("code.language-ts .token.keyword").first()).toBeVisible();
   });
 
   test("sidebar contains links to all pages", async ({ request }) => {

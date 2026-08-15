@@ -16,7 +16,6 @@ import {
   P,
   A,
   Code,
-  CodeBlock,
   Heading,
   SectionHeading,
   Table,
@@ -85,6 +84,7 @@ import { extractText } from './toc-tree.ts'
 import { logMdxError } from './logger.ts'
 import { parseCodeMeta, metaBool, type BleedMode } from './code-meta.ts'
 import type { SafeMdxComponentName } from './mdx-component-names.ts'
+import { HighlightedCodeBlock } from './highlight-code.tsx'
 
 import { SidebarAssistant, PageNavRow } from '../components/sidebar-assistant.tsx'
 import { OpenAPIEndpoint } from './openapi/render-openapi.tsx'
@@ -372,9 +372,9 @@ function renderCodeBlock(
         : (metaBool(rawBleed) ?? defaultBleed)
   const highlight = wrap ? undefined : meta.attributes.highlight
   return (
-    <CodeBlock lang={lang} lineHeight={isDiagram ? '1.4' : '1.6'} showLineNumbers={showLineNumbers} bleed={bleed} title={meta.title} highlight={highlight} wrap={wrap}>
+    <HighlightedCodeBlock lang={lang} lineHeight={isDiagram ? '1.4' : '1.6'} showLineNumbers={showLineNumbers} bleed={bleed} title={meta.title} highlight={highlight} wrap={wrap}>
       {node.value}
-    </CodeBlock>
+    </HighlightedCodeBlock>
   )
 }
 

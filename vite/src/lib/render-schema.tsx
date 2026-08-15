@@ -13,7 +13,7 @@ import { Expandable } from '../components/markdown/expandable.tsx'
 import { NavBadge } from '../components/layout/nav-badge.tsx'
 import { P, A, Code } from '../components/markdown/typography.tsx'
 import { List, OL, Li, Blockquote } from '../components/markdown/layout.tsx'
-import { CodeBlock } from '../components/markdown/code-block.tsx'
+import { HighlightedCodeBlock } from './highlight-code.tsx'
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
@@ -65,7 +65,9 @@ function renderDescNode(
   transform: (n: unknown) => React.ReactNode,
 ): React.ReactNode | undefined {
   if (node.type === 'code') {
-    return <CodeBlock lang={node.lang ?? 'text'} bleed='none' showLineNumbers={false}>{node.value ?? ''}</CodeBlock>
+    const lang = node.lang ?? 'text'
+    const value = node.value ?? ''
+    return <HighlightedCodeBlock lang={lang} bleed='none' showLineNumbers={false}>{value}</HighlightedCodeBlock>
   }
   if (node.type === 'heading') {
     const level = Math.min(Math.max(node.depth ?? 2, 2), 4)
