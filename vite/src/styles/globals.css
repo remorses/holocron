@@ -639,6 +639,7 @@
     --nav-mask-min-alpha: 0.12;
     --nav-mask-top: 0px;
     --nav-mask-bottom: 0px;
+    scroll-padding-block: var(--nav-mask-size);
     -webkit-mask-image: linear-gradient(
         to bottom,
         rgba(0, 0, 0, var(--nav-mask-min-alpha)) 0,
@@ -657,6 +658,10 @@
         rgba(0, 0, 0, 0.55) calc(100% - var(--nav-mask-bottom) * 0.5),
         rgba(0, 0, 0, var(--nav-mask-min-alpha)) 100%
     );
+}
+
+.slot-sidebar-nav [aria-current="page"] {
+    scroll-initial-target: nearest;
 }
 
 @supports (animation-timeline: scroll()) {

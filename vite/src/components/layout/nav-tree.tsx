@@ -67,6 +67,16 @@ function useSidebarTreeContext(): SidebarTreeContextValue {
   return value
 }
 
+/** Module-level so the Link ref identity is stable. Inline arrows would
+ *  re-attach every render and re-scroll the nav. `nearest` is a no-op when
+ *  the row is already inside the scrollport. Skip hidden mobile nav. */
+function revealActiveNavItem(el: HTMLAnchorElement | null) {
+  if (!el) return
+  const nav = el.closest('.slot-sidebar-nav')
+  if (!(nav instanceof HTMLElement) || nav.clientHeight === 0) return
+  el.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+}
+
 export function SidebarTreeProvider({
   value,
   children,
@@ -316,8 +326,9 @@ function NavPageLink({
   return (
     <div className='flex flex-col'>
       <Link
-        ref={isHighlighted ? highlightedRef : undefined}
+        ref={isHighlighted ? highlightedRef : isActive ? revealActiveNavItem : undefined}
         href={page.href}
+        aria-current={isActive ? 'page' : undefined}
         className={`group flex items-center gap-1.5 no-underline ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)]' : ''}`}
         style={{
           ...rowSpacing(depth > 0 ? `${depth} * var(--sidebar-indent)` : undefined),

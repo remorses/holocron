@@ -341,6 +341,17 @@ test.describe("group.expanded default state", () => {
     const html = await response.text();
     expect(ariaExpandedOf(html, "Collapsed Nested")).toBe("false");
   });
+
+  test("visiting a page inside a collapsed group opens that group in SSR HTML", async ({
+    request,
+  }) => {
+    const response = await request.get("/new", {
+      headers: { "sec-fetch-dest": "document" },
+    });
+    const html = await response.text();
+    expect(ariaExpandedOf(html, "Collapsed Nested")).toBe("true");
+    expect(html).toMatch(/<a[^>]*aria-current="page"[^>]*href="\/new"/);
+  });
 });
 
 test.describe("client navigation sidebar state", () => {
