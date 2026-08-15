@@ -160,7 +160,13 @@
      corners sliced flat at the clip edge. Every clipping ancestor of a row
      (the scroll `<nav>`, `ExpandableContainer`) reserves exactly this amount
      so a row can sit flush with the clip edge and still render whole. */
-  --sidebar-row-padding-x: 6px;
+  --sidebar-row-padding-x: 8px;
+  /* Vertical padding inside every sidebar row. Unlike the x padding this is
+     not cancelled: it is the pill's breathing room above and below the label. */
+  --sidebar-row-padding-y: 4px;
+  /* Space between sidebar rows. Lower this if you raise row padding, so the
+     text-to-text rhythm stays tight. */
+  --sidebar-row-gap: 4px;
   /* One nesting step in the sidebar tree. Defaults to the width of a row's
      leading slot (12px icon/chevron + 6px gap) so a nested group's label
      lands exactly where its children's icons start — the file-tree look,

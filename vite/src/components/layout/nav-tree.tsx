@@ -50,6 +50,7 @@ function rowSpacing(indent?: string): React.CSSProperties {
       ? `calc(var(--sidebar-row-padding-x) + ${indent})`
       : 'var(--sidebar-row-padding-x)',
     paddingInlineEnd: 'var(--sidebar-row-padding-x)',
+    paddingBlock: 'var(--sidebar-row-padding-y)',
     marginInline: 'calc(-1 * var(--sidebar-row-padding-x))',
     borderRadius: 'var(--sidebar-link-radius)',
   }
@@ -190,7 +191,7 @@ function TocInline({
   if (allVisibleHeadings.length === 0) return null
 
   return (
-    <div className='relative mt-1.5 pl-0.5 pb-2'>
+    <div className='relative mt-0.5 pl-0.5 pb-2'>
       {/* Guide line */}
       <div
         aria-hidden
@@ -244,6 +245,7 @@ function TocInline({
                   tabIndex={isDimmed ? -1 : 0}
                   style={{
                     ...rowSpacing(),
+                    paddingBlock: 0,
                     color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
                     fontWeight: 400,
                     background: isHighlighted ? 'var(--accent)' : isActive ? 'var(--sidebar-active-background)' : undefined,
@@ -430,7 +432,7 @@ export function NavGroupNode({
   // Top-level groups (depth 0) render as a flat section label — always expanded.
   if (depth === 0) {
     return (
-      <div className='flex flex-col gap-2.5'>
+      <div className='flex flex-col' style={{ gap: 'var(--sidebar-row-gap)' }}>
         {groupLabel && (
           <div
             className='cursor-default mb-0.5 flex items-center gap-1.5'
@@ -481,9 +483,9 @@ export function NavGroupNode({
         {group.group}
       </button>
       <ExpandableContainer open={isExpanded} animate={animate}>
-        {/* `pt-2.5` matches the `gap-2.5` rhythm between sibling rows so the
-            first child sits exactly one row-gap under its group label. */}
-        <div className='flex flex-col gap-2.5 pt-2.5'>
+        {/* `paddingTop` matches the row-gap rhythm so the first child sits
+            exactly one row-gap under its group label. */}
+        <div className='flex flex-col' style={{ gap: 'var(--sidebar-row-gap)', paddingTop: 'var(--sidebar-row-gap)' }}>
           {renderChildren(false)}
         </div>
       </ExpandableContainer>

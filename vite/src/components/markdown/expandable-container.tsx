@@ -85,8 +85,8 @@ export function ExpandableContainer({ open, children, animate }: { open: boolean
       <div style={{
         overflow: 'hidden',
         minHeight: 0,
-        paddingInline: 'var(--sidebar-row-padding-x, 6px)',
-        marginInline: 'calc(-1 * var(--sidebar-row-padding-x, 6px))',
+        paddingInline: 'var(--sidebar-row-padding-x, 8px)',
+        marginInline: 'calc(-1 * var(--sidebar-row-padding-x, 8px))',
       }}>{children}</div>
     </div>
   )

@@ -341,7 +341,7 @@ export function SideNav() {
  *  small rounded square, matching Mintlify's sidebar anchor placement. */
 function SidebarAnchors({ anchors }: { anchors: SidebarAnchor[] }) {
   return (
-    <div className='flex flex-col gap-2.5 mt-2 mb-0.5'>
+    <div className='flex flex-col mt-2 mb-0.5' style={{ gap: 'var(--sidebar-row-gap)' }}>
       {anchors.map((anchor) => {
         const isExternal = anchor.href.startsWith('http')
         return (

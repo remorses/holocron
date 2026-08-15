@@ -92,7 +92,7 @@ The left sidebar (`SideNav` / `nav-tree.tsx`) must never overflow horizontally. 
 
 ### Nested group rows are page rows
 
-A collapsible nested group (`NavGroupNode` at `depth > 0`) must render with the **same type and rhythm as a page link**: inherited font-size, `font-medium`, `gap-1.5` leading slot, and the standard `gap-2.5` row spacing (including `pt-2.5` on its children container). The chevron occupies the same 12px slot a page icon would, so group labels land in the same column as sibling page labels. Never give a nested group its own `font-size` — `--type-nav-group-size` is only for the uppercase top-level section label.
+A collapsible nested group (`NavGroupNode` at `depth > 0`) must render with the **same type and rhythm as a page link**: inherited font-size, `font-medium`, `gap-1.5` leading slot, and the standard `--sidebar-row-gap` row spacing (including matching `pt` on its children container). The chevron occupies the same 12px slot a page icon would, so group labels land in the same column as sibling page labels. Never give a nested group its own `font-size` — `--type-nav-group-size` is only for the uppercase top-level section label.
 
 `--sidebar-indent` defaults to `18px` because that is the leading slot width (12px icon/chevron + 6px gap). One nesting step therefore aligns a group's children under the group's own label, giving a file-tree look that works with or without page icons. Changing the slot width means changing this token too. The `fixtures/deep-nesting/` fixture exercises both cases: the Documentation tab has an icon on every page, the No Icons tab has none.
 
