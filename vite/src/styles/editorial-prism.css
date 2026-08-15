@@ -35,30 +35,76 @@ pre[class*='language-'] {
 .token.keyword,
 .token.module,
 .token.imports,
-.token.control-flow {
+.token.control-flow,
+.token.instruction,
+.token.directive,
+.token.important,
+.token.selector,
+.token.rule,
+.token.pseudo-class,
+.token.class,
+.token.delimiter,
+.token.decorator,
+.token.annotation,
+.token.this,
+.token.title {
   color: #d1242f;
 }
 
 /* Strings and template literals */
 .token.string,
 .token.template-string,
-.token.attr-value {
+.token.attr-value,
+.token.interpolation,
+.token.string-interpolation,
+.token.value,
+.token.single-quoted-string,
+.token.double-quoted-string,
+.token.scalar,
+.token.url,
+.token.header-value,
+.token.char {
   color: #0550ae;
 }
 
 /* Function names */
 .token.function,
-.token.class-name {
+.token.class-name,
+.token.method,
+.token.maybe-class-name,
+.token.function-variable,
+.token.function-definition,
+.token.class-name-definition,
+.token.known-class-name,
+.token.generic-function,
+.token.generic,
+.token.return-type,
+.token.class-name-fully-qualified {
   color: #7c3aed;
 }
 
-/* Object properties, parameters, variables in destructuring */
+/* Object properties, parameters, YAML/TOML keys, CSS @rules */
 .token.property,
-.token.parameter {
+.token.parameter,
+.token.key,
+.token.atrule,
+.token.property-access,
+.token.literal-property,
+.token.variable,
+.token.environment,
+.token.section,
+.token.section-name,
+.token.table,
+.token.assign-left,
+.token.string-property,
+.token.argument-name,
+.token.header,
+.token.header-name {
   color: #b45309;
 }
 
 /* HTML/JSX tag names */
+.token.tag,
 .token.tag .token.tag {
   color: #16a34a;
 }
@@ -75,12 +121,18 @@ pre[class*='language-'] {
 }
 
 /* Numbers */
-.token.number {
+.token.number,
+.token.hexcode,
+.token.color,
+.token.unit {
   color: #2563eb;
 }
 
 /* Operators: =, ===, =>, +, - */
-.token.operator {
+.token.operator,
+.token.arrow,
+.token.attr-equals,
+.token.entity {
   color: #d1242f;
 }
 
@@ -92,7 +144,11 @@ pre[class*='language-'] {
 /* Booleans, null, undefined */
 .token.boolean,
 .token.constant,
-.token.builtin {
+.token.builtin,
+.token.null,
+.token.console,
+.token.dom,
+.token.symbol {
   color: #2563eb;
 }
 
@@ -100,7 +156,8 @@ pre[class*='language-'] {
 .token.comment,
 .token.prolog,
 .token.doctype,
-.token.cdata {
+.token.cdata,
+.token.doc-comment {
   color: #6b7280;
   font-style: italic;
 }
@@ -121,8 +178,31 @@ pre[class*='language-'] {
 }
 
 /* Regex */
-.token.regex {
+.token.regex,
+.token.escape {
   color: #0550ae;
+}
+
+/* Diff */
+.token.inserted {
+  color: #16a34a;
+}
+
+.token.deleted {
+  color: #d1242f;
+}
+
+/* Official Prism standard tokens: weight/style, not color */
+.token.bold {
+  font-weight: 700;
+}
+
+.token.italic {
+  font-style: italic;
+}
+
+.token.namespace {
+  opacity: 0.7;
 }
 
 /* Shell/bash specific */
@@ -192,7 +272,19 @@ pre[class*='language-'] {
 .token.keyword,
 .token.module,
 .token.imports,
-.token.control-flow {
+.token.control-flow,
+.token.instruction,
+.token.directive,
+.token.important,
+.token.selector,
+.token.rule,
+.token.pseudo-class,
+.token.class,
+.token.delimiter,
+.token.decorator,
+.token.annotation,
+.token.this,
+.token.title {
   @variant dark {
     color: var(--prism-keyword);
   }
@@ -200,26 +292,60 @@ pre[class*='language-'] {
 
 .token.string,
 .token.template-string,
-.token.attr-value {
+.token.attr-value,
+.token.interpolation,
+.token.string-interpolation,
+.token.value,
+.token.single-quoted-string,
+.token.double-quoted-string,
+.token.scalar,
+.token.url,
+.token.header-value,
+.token.char {
   @variant dark {
     color: var(--prism-string);
   }
 }
 
 .token.function,
-.token.class-name {
+.token.class-name,
+.token.method,
+.token.maybe-class-name,
+.token.function-variable,
+.token.function-definition,
+.token.class-name-definition,
+.token.known-class-name,
+.token.generic-function,
+.token.generic,
+.token.return-type,
+.token.class-name-fully-qualified {
   @variant dark {
     color: var(--prism-function);
   }
 }
 
 .token.property,
-.token.parameter {
+.token.parameter,
+.token.key,
+.token.atrule,
+.token.property-access,
+.token.literal-property,
+.token.variable,
+.token.environment,
+.token.section,
+.token.section-name,
+.token.table,
+.token.assign-left,
+.token.string-property,
+.token.argument-name,
+.token.header,
+.token.header-name {
   @variant dark {
     color: var(--prism-property);
   }
 }
 
+.token.tag,
 .token.tag .token.tag {
   @variant dark {
     color: var(--prism-tag);
@@ -239,13 +365,19 @@ pre[class*='language-'] {
   }
 }
 
-.token.number {
+.token.number,
+.token.hexcode,
+.token.color,
+.token.unit {
   @variant dark {
     color: var(--prism-number);
   }
 }
 
-.token.operator {
+.token.operator,
+.token.arrow,
+.token.attr-equals,
+.token.entity {
   @variant dark {
     color: var(--prism-operator);
   }
@@ -259,7 +391,11 @@ pre[class*='language-'] {
 
 .token.boolean,
 .token.constant,
-.token.builtin {
+.token.builtin,
+.token.null,
+.token.console,
+.token.dom,
+.token.symbol {
   @variant dark {
     color: var(--prism-builtin);
   }
@@ -268,7 +404,8 @@ pre[class*='language-'] {
 .token.comment,
 .token.prolog,
 .token.doctype,
-.token.cdata {
+.token.cdata,
+.token.doc-comment {
   @variant dark {
     color: var(--prism-comment);
     font-style: italic;
@@ -293,9 +430,22 @@ pre[class*='language-'] {
   }
 }
 
-.token.regex {
+.token.regex,
+.token.escape {
   @variant dark {
     color: var(--prism-regex);
+  }
+}
+
+.token.inserted {
+  @variant dark {
+    color: var(--prism-tag);
+  }
+}
+
+.token.deleted {
+  @variant dark {
+    color: var(--prism-keyword);
   }
 }
 

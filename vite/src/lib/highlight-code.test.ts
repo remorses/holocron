@@ -45,6 +45,11 @@ describe('highlightCode', () => {
     expect(highlightCode('x')).toBeUndefined()
   })
 
+  test('yaml keys use key atrule token classes', () => {
+    const html = highlightCode('name: Deploy\n', 'yaml')
+    expect(html).toContain('token key atrule')
+  })
+
   test('highlights typescript with token classes', () => {
     const html = highlightCode('const greeting = "Hello"', 'typescript')
     expect(html).toContain('token keyword')
