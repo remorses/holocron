@@ -127,7 +127,7 @@ export async function generateHolocronData({
   const sortedSlugs = [...slugs].sort()
   const loaderEntries = sortedSlugs.map((slug) => {
     const filename = pageChunkFilename(slug)
-    return `  ${JSON.stringify(slug)}: () => import("./${filename}").then((m) => m.default)`
+    return `  ${JSON.stringify(slug)}: () => import(${JSON.stringify(`./${filename}`)}).then((m) => m.default)`
   })
 
   // Collect all icon refs
