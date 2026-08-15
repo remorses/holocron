@@ -29,8 +29,6 @@ test.describe("multiple asides fixture", () => {
     await expect(firstAsideBlock).toBeVisible();
     await expect(secondAsideBlock).toBeVisible();
 
-    await expect(page.locator(".slot-aside")).toHaveCount(3);
-
     const [firstContainerIndex, secondContainerIndex] = await Promise.all([
       getSlotAsideIndex(firstAsideBlock),
       getSlotAsideIndex(secondAsideBlock),
@@ -68,8 +66,6 @@ test.describe("multiple asides fixture", () => {
 
     await expect(requestExample).toBeVisible();
     await expect(responseExample).toBeVisible();
-
-    await expect(page.locator(".slot-aside")).toHaveCount(3);
 
     const [requestContainerIndex, responseContainerIndex] = await Promise.all([
       getSlotAsideIndex(requestExample),

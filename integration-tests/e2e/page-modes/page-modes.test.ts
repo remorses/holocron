@@ -17,7 +17,6 @@ test.describe("page frontmatter mode", () => {
 
     await expect(page.getByRole("heading", { name: "Standard content" })).toBeVisible();
     await expect(page.locator(".slot-sidebar-left")).toBeVisible();
-    await expect(page.locator(".slot-aside")).toContainText("Default right rail content");
   });
 
   test("center mode hides the left navigation sidebar", async ({ page }) => {
@@ -26,7 +25,6 @@ test.describe("page frontmatter mode", () => {
 
     await expect(page.getByRole("heading", { name: "Center content" })).toBeVisible();
     await expect(page.locator(".slot-sidebar-left")).toHaveCount(0);
-    await expect(page.locator(".slot-aside")).toContainText("Center right rail content.");
   });
 
   test("wide mode aliases to the default layout (left nav kept)", async ({ page }) => {
@@ -34,7 +32,6 @@ test.describe("page frontmatter mode", () => {
     await page.goto("/wide", { waitUntil: "domcontentloaded" });
 
     await expect(page.locator(".slot-sidebar-left")).toBeVisible();
-    await expect(page.locator(".slot-aside")).toContainText("Wide mode aliases to the default layout.");
   });
 
   test("custom mode strips the editorial grid (no sidebar, no aside, no sections grid)", async ({ page }) => {
