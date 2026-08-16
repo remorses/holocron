@@ -2,222 +2,188 @@
  * Server-only syntax highlighting via refractor (Prism grammars, hast output).
  * Do not import from client components or the highlighter lands in the browser.
  *
- * Uses `refractor` (36 common langs) plus the extra grammars Holocron used to
- * ship in the Prism bundle. Avoid `refractor/all` — that is ~297 langs and
- * adds ~900 KiB to the RSC worker.
+ * Uses `refractor/core` plus langs that show up in real product docs.
+ * Do not import `refractor` (36 langs) or `refractor/all` (~297 langs).
+ * Unknown langs render as plain text.
  */
 
 import type { ComponentProps } from 'react'
 import type { Syntax } from 'refractor/core'
-import { refractor } from 'refractor'
+import { refractor } from 'refractor/core'
 import { toHtml } from 'hast-util-to-html'
 import { CodeBlock } from '../components/markdown/code-block.tsx'
 
 import apacheconf from 'refractor/apacheconf'
-import applescript from 'refractor/applescript'
-import armasm from 'refractor/armasm'
-import awk from 'refractor/awk'
+import bash from 'refractor/bash'
 import batch from 'refractor/batch'
 import bicep from 'refractor/bicep'
-import bnf from 'refractor/bnf'
+import c from 'refractor/c'
+import clike from 'refractor/clike'
 import cmake from 'refractor/cmake'
-import clojure from 'refractor/clojure'
-import coffeescript from 'refractor/coffeescript'
+import cpp from 'refractor/cpp'
+import csharp from 'refractor/csharp'
 import cshtml from 'refractor/cshtml'
+import css from 'refractor/css'
 import cssExtras from 'refractor/css-extras'
 import csv from 'refractor/csv'
 import dart from 'refractor/dart'
+import diff from 'refractor/diff'
 import django from 'refractor/django'
 import docker from 'refractor/docker'
-import dot from 'refractor/dot'
-import ebnf from 'refractor/ebnf'
 import editorconfig from 'refractor/editorconfig'
-import ejs from 'refractor/ejs'
 import elixir from 'refractor/elixir'
-import elm from 'refractor/elm'
-import erb from 'refractor/erb'
-import erlang from 'refractor/erlang'
-import fsharp from 'refractor/fsharp'
 import gdscript from 'refractor/gdscript'
 import git from 'refractor/git'
 import glsl from 'refractor/glsl'
+import go from 'refractor/go'
 import gradle from 'refractor/gradle'
 import graphql from 'refractor/graphql'
 import groovy from 'refractor/groovy'
-import haml from 'refractor/haml'
 import handlebars from 'refractor/handlebars'
-import haskell from 'refractor/haskell'
 import hcl from 'refractor/hcl'
 import http from 'refractor/http'
 import ignore from 'refractor/ignore'
-import javadoc from 'refractor/javadoc'
-import javadoclike from 'refractor/javadoclike'
+import ini from 'refractor/ini'
+import java from 'refractor/java'
+import javascript from 'refractor/javascript'
 import jq from 'refractor/jq'
 import jsExtras from 'refractor/js-extras'
 import jsTemplates from 'refractor/js-templates'
 import jsdoc from 'refractor/jsdoc'
+import json from 'refractor/json'
 import json5 from 'refractor/json5'
-import jsonp from 'refractor/jsonp'
 import jsx from 'refractor/jsx'
-import julia from 'refractor/julia'
+import kotlin from 'refractor/kotlin'
 import latex from 'refractor/latex'
+import less from 'refractor/less'
 import liquid from 'refractor/liquid'
-import lisp from 'refractor/lisp'
-import llvm from 'refractor/llvm'
 import log from 'refractor/log'
-import matlab from 'refractor/matlab'
+import lua from 'refractor/lua'
+import makefile from 'refractor/makefile'
+import markdown from 'refractor/markdown'
+import markup from 'refractor/markup'
+import markupTemplating from 'refractor/markup-templating'
 import mermaid from 'refractor/mermaid'
-import nasm from 'refractor/nasm'
 import nginx from 'refractor/nginx'
-import nim from 'refractor/nim'
 import nix from 'refractor/nix'
-import ocaml from 'refractor/ocaml'
-import odin from 'refractor/odin'
-import pascal from 'refractor/pascal'
+import objectivec from 'refractor/objectivec'
+import php from 'refractor/php'
 import plantUml from 'refractor/plant-uml'
 import powershell from 'refractor/powershell'
-import prolog from 'refractor/prolog'
-import promql from 'refractor/promql'
 import properties from 'refractor/properties'
 import protobuf from 'refractor/protobuf'
-import pug from 'refractor/pug'
-import puppet from 'refractor/puppet'
-import purescript from 'refractor/purescript'
-import racket from 'refractor/racket'
-import reason from 'refractor/reason'
-import rego from 'refractor/rego'
-import rescript from 'refractor/rescript'
-import rest from 'refractor/rest'
+import python from 'refractor/python'
+import r from 'refractor/r'
+import regex from 'refractor/regex'
+import ruby from 'refractor/ruby'
+import rust from 'refractor/rust'
+import sass from 'refractor/sass'
 import scala from 'refractor/scala'
-import scheme from 'refractor/scheme'
+import scss from 'refractor/scss'
 import shellSession from 'refractor/shell-session'
 import solidity from 'refractor/solidity'
-import stylus from 'refractor/stylus'
+import sql from 'refractor/sql'
+import swift from 'refractor/swift'
 import systemd from 'refractor/systemd'
-import tcl from 'refractor/tcl'
-import textile from 'refractor/textile'
 import toml from 'refractor/toml'
 import tsx from 'refractor/tsx'
-import twig from 'refractor/twig'
-import uri from 'refractor/uri'
-import v from 'refractor/v'
-import verilog from 'refractor/verilog'
-import vhdl from 'refractor/vhdl'
-import vim from 'refractor/vim'
+import typescript from 'refractor/typescript'
 import wasm from 'refractor/wasm'
-import wgsl from 'refractor/wgsl'
-import wren from 'refractor/wren'
+import yaml from 'refractor/yaml'
 import zig from 'refractor/zig'
 
-const extraGrammars: Syntax[] = [
-  uri,
+const docsGrammars: Syntax[] = [
+  markup,
+  clike,
+  regex,
+  css,
   cssExtras,
+  javascript,
   jsExtras,
   jsTemplates,
-  javadoclike,
-  scheme,
-  haskell,
-  apacheconf,
-  applescript,
-  armasm,
-  awk,
-  batch,
-  bicep,
-  bnf,
-  cmake,
-  clojure,
-  coffeescript,
-  csv,
-  dart,
-  django,
-  docker,
-  dot,
-  ebnf,
-  editorconfig,
-  ejs,
-  elixir,
-  elm,
-  erb,
-  erlang,
-  fsharp,
-  gdscript,
-  git,
-  glsl,
-  gradle,
-  graphql,
-  groovy,
-  haml,
-  handlebars,
-  hcl,
-  http,
-  ignore,
-  javadoc,
-  jq,
   jsdoc,
+  markupTemplating,
+  c,
+  cpp,
+  csharp,
+  objectivec,
+  json,
   json5,
-  jsonp,
-  jsx,
-  julia,
-  latex,
-  liquid,
-  lisp,
-  llvm,
-  log,
-  matlab,
-  mermaid,
-  nasm,
-  nginx,
-  nim,
-  nix,
-  ocaml,
-  odin,
-  pascal,
-  plantUml,
-  powershell,
-  prolog,
-  promql,
-  properties,
-  protobuf,
-  pug,
-  puppet,
-  purescript,
-  racket,
-  reason,
-  rego,
-  rescript,
-  rest,
-  scala,
+  markdown,
+  yaml,
+  bash,
   shellSession,
-  solidity,
-  stylus,
-  systemd,
-  tcl,
-  textile,
+  python,
+  go,
+  rust,
+  java,
+  sql,
+  diff,
   toml,
+  ini,
+  ruby,
+  kotlin,
+  swift,
+  php,
+  typescript,
+  jsx,
   tsx,
-  twig,
-  v,
-  verilog,
-  vhdl,
-  vim,
-  wasm,
-  wgsl,
-  wren,
+  docker,
+  graphql,
+  hcl,
+  nginx,
+  http,
+  powershell,
+  scss,
+  sass,
+  less,
+  lua,
+  makefile,
+  dart,
+  solidity,
   zig,
+  wasm,
+  nix,
+  bicep,
+  protobuf,
+  git,
+  editorconfig,
+  ignore,
+  properties,
+  mermaid,
+  plantUml,
+  log,
+  csv,
+  jq,
+  elixir,
+  scala,
+  r,
+  batch,
+  cmake,
+  apacheconf,
+  gradle,
+  groovy,
+  glsl,
+  latex,
+  handlebars,
+  liquid,
+  django,
+  gdscript,
   cshtml,
+  systemd,
 ]
 
-const extraGrammarsRegistered = Symbol.for('@holocron.so/vite/refractor-extra-grammars-v1')
+const grammarsRegistered = Symbol.for('@holocron.so/vite/refractor-docs-grammars-v2')
 
 /** Refractor's registry is process-global. RSC remount re-runs this module. */
 export function registerExtraGrammars() {
-  if (!Reflect.get(refractor.languages, extraGrammarsRegistered)) {
-    for (const grammar of extraGrammars) {
+  if (!Reflect.get(refractor.languages, grammarsRegistered)) {
+    for (const grammar of docsGrammars) {
       const name = grammar.displayName
       if (name && refractor.registered(name)) continue
       refractor.register(grammar)
     }
-    Reflect.set(refractor.languages, extraGrammarsRegistered, true)
+    Reflect.set(refractor.languages, grammarsRegistered, true)
   }
   refractor.alias({ json: 'jsonc', markdown: 'mdx' })
   refractor.languages.diagram = {

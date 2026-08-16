@@ -8,30 +8,32 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { CodeBlock } from '../components/markdown/code-block.tsx'
 import { highlightCode, HighlightedCodeBlock, registerExtraGrammars } from './highlight-code.tsx'
 
-const FORMER_PRISM_LANGS = [
-  'markup', 'css', 'clike', 'regex', 'javascript', 'c', 'markup-templating',
-  'less', 'scss', 'sass', 'textile', 'json', 'markdown', 'ruby', 'csharp',
-  'dart', 'go', 'kotlin', 'reason', 'solidity', 'v', 'protobuf', 'gradle',
-  'groovy', 'fsharp', 'haskell', 'basic', 'bash', 'yaml', 'sql', 'python',
-  'lua', 'scheme', 'uri', 'stylus', 'perl', 'r', 'julia', 'matlab',
-  'clojure', 'elm', 'ocaml', 'lisp', 'prolog', 'hcl', 'bicep', 'nix',
-  'diff', 'git', 'toml', 'ini', 'properties', 'editorconfig', 'ignore',
-  'makefile', 'log', 'csv', 'promql', 'jq', 'rego', 'rust', 'zig', 'odin',
-  'nim', 'wasm', 'wgsl', 'llvm', 'armasm', 'nasm', 'mermaid', 'dot',
-  'latex', 'rest', 'bnf', 'ebnf', 'puppet', 'awk', 'tcl', 'vim',
-  'gdscript', 'wren', 'verilog', 'vhdl', 'pascal', 'applescript', 'swift',
-  'powershell', 'batch', 'nginx', 'apacheconf', 'systemd', 'cmake',
-  'erlang', 'rescript', 'cpp', 'objectivec', 'glsl', 'java', 'typescript',
-  'coffeescript', 'json5', 'jsonp', 'http', 'shell-session', 'haml',
-  'handlebars', 'ejs', 'django', 'twig', 'liquid', 'php', 'erb', 'pug',
-  'cshtml', 'elixir', 'racket', 'purescript', 'vbnet', 'docker', 'graphql',
-  'scala', 'jsx', 'tsx', 'jsdoc', 'javadoc', 'plant-uml',
+const DOCS_LANGS = [
+  'markup', 'html', 'css', 'scss', 'sass', 'less', 'clike', 'javascript',
+  'js', 'c', 'cpp', 'csharp', 'json', 'json5', 'jsonc', 'markdown', 'md',
+  'ruby', 'go', 'kotlin', 'bash', 'sh', 'shell-session', 'yaml', 'yml',
+  'sql', 'python', 'py', 'diff', 'toml', 'ini', 'rust', 'java',
+  'typescript', 'ts', 'php', 'docker', 'dockerfile', 'graphql', 'jsx',
+  'tsx', 'hcl', 'nginx', 'http', 'powershell', 'swift', 'lua', 'makefile',
+  'dart', 'solidity', 'zig', 'wasm', 'nix', 'bicep', 'protobuf', 'git',
+  'editorconfig', 'ignore', 'properties', 'mermaid', 'plant-uml', 'log',
+  'csv', 'jq', 'elixir', 'scala', 'objectivec', 'r', 'batch', 'cmake',
+  'apacheconf', 'gradle', 'groovy', 'glsl', 'latex', 'handlebars',
+  'liquid', 'django', 'jsdoc', 'gdscript', 'cshtml', 'systemd',
 ]
 
+const DROPPED_LANGS = ['vim', 'textile', 'pug', 'lisp', 'arduino', 'wren', 'prolog']
+
 describe('highlightCode', () => {
-  test('every former Prism lang is registered', () => {
-    const missing = FORMER_PRISM_LANGS.filter((id) => highlightCode('x', id) === undefined)
+  test('registers the docs language keep list', () => {
+    const missing = DOCS_LANGS.filter((id) => highlightCode('x', id) === undefined)
     expect(missing).toEqual([])
+  })
+
+  test('does not register long-tail langs like vim', () => {
+    for (const id of DROPPED_LANGS) {
+      expect(highlightCode('x', id)).toBeUndefined()
+    }
   })
 
   test('aliases mdx and jsonc', () => {
