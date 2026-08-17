@@ -197,6 +197,30 @@ describe('createOgImageResponse', () => {
     expect(ogPng.length).toBeGreaterThan(0)
   })
 
+  test('renders Diagrams card with icon inset from the title em box', { timeout: 30000 }, async () => {
+    const ico = fs.readFileSync(path.join(import.meta.dirname, '../../website/public/favicon.ico'))
+    const pngBytes = extractPngFromIco(ico.buffer.slice(ico.byteOffset, ico.byteOffset + ico.byteLength))
+    expect(pngBytes).toBeDefined()
+    const iconDataUrl = `data:image/png;base64,${Buffer.from(pngBytes!).toString('base64')}`
+
+    const response = createOgImageResponse({
+      title: 'Diagrams',
+      description: 'Unicode box-drawing diagrams and the alignment fixer CLI.',
+      siteName: 'Holocron',
+      pageLabel: 'holocron.so/docs/create/diagrams',
+      iconUrl: iconDataUrl,
+      backgroundUrl: localBgUrl,
+    })
+
+    await response.ready
+    const png = Buffer.from(await response.arrayBuffer())
+    const snapshotDir = path.join(import.meta.dirname, '__snapshots__')
+    fs.mkdirSync(snapshotDir, { recursive: true })
+    fs.writeFileSync(path.join(snapshotDir, 'og-image-diagrams.png'), png)
+    expect(Array.from(png.subarray(0, 4))).toEqual([137, 80, 78, 71])
+    expect(png.length).toBeGreaterThan(0)
+  })
+
   test('each title gets a deterministic background from the pool', { timeout: 60000 }, async () => {
     const snapshotDir = path.join(import.meta.dirname, '__snapshots__')
     fs.mkdirSync(snapshotDir, { recursive: true })

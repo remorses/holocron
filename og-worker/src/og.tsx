@@ -24,6 +24,12 @@ function getExcerpt(text: string | null | undefined, maxLength: number = 140): s
   return text.length > maxLength ? `${text.slice(0, maxLength).trimEnd()}...` : text
 }
 
+const TITLE_FONT_SIZE = 76
+const TITLE_LINE_HEIGHT = 1
+const ICON_SIZE = 64
+// Geist glyphs sit below the em-box top. Offset the icon by that same inset.
+const ICON_MARGIN_TOP = Math.round(TITLE_FONT_SIZE * TITLE_LINE_HEIGHT * 0.18)
+
 function OgIcon({ iconUrl, size }: { iconUrl?: string; size: number }) {
   if (!iconUrl) return null
 
@@ -37,6 +43,7 @@ function OgIcon({ iconUrl, size }: { iconUrl?: string; size: number }) {
         flexShrink: 0,
         borderRadius: Math.round(size * 0.16),
         objectFit: 'cover',
+        marginTop: ICON_MARGIN_TOP,
       }}
     />
   )
@@ -114,11 +121,11 @@ function OgTemplate({ iconUrl, title, description, siteName, pageLabel, backgrou
               gap: 24,
             }}
           >
-            <OgIcon iconUrl={iconUrl} size={64} />
+            <OgIcon iconUrl={iconUrl} size={ICON_SIZE} />
             <div
               style={{
-                fontSize: 76,
-                lineHeight: 1,
+                fontSize: TITLE_FONT_SIZE,
+                lineHeight: TITLE_LINE_HEIGHT,
                 fontWeight: 700,
                 letterSpacing: '-0.02em',
                 wordBreak: 'break-word',
