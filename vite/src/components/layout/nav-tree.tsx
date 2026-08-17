@@ -69,13 +69,21 @@ function useSidebarTreeContext(): SidebarTreeContextValue {
 }
 
 /** Module-level so the Link ref identity is stable. Inline arrows would
- *  re-attach every render and re-scroll the nav. `nearest` is a no-op when
- *  the row is already inside the scrollport. Skip hidden mobile nav. */
+ *  re-attach every render and re-scroll the nav. Skip hidden mobile nav.
+ *  Wait a frame so the nav has its real height; then skip if the row is
+ *  already fully visible. `nearest` plus scroll-padding still nudges a
+ *  visible first row and ruins the default top-aligned view. */
 function revealActiveNavItem(el: HTMLAnchorElement | null) {
   if (!el) return
-  const nav = el.closest('.slot-sidebar-nav')
-  if (!(nav instanceof HTMLElement) || nav.clientHeight === 0) return
-  el.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  requestAnimationFrame(() => {
+    if (!el.isConnected) return
+    const nav = el.closest('.slot-sidebar-nav')
+    if (!(nav instanceof HTMLElement) || nav.clientHeight === 0) return
+    const elRect = el.getBoundingClientRect()
+    const navRect = nav.getBoundingClientRect()
+    if (elRect.top >= navRect.top && elRect.bottom <= navRect.bottom) return
+    el.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  })
 }
 
 export function SidebarTreeProvider({

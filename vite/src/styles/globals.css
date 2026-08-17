@@ -668,10 +668,6 @@
     );
 }
 
-.slot-sidebar-nav [aria-current="page"] {
-    scroll-initial-target: nearest;
-}
-
 @supports (animation-timeline: scroll()) {
     @property --nav-mask-top {
         syntax: '<length>';

@@ -51,6 +51,49 @@ test.describe("deep nested sidebar", () => {
     expect(ariaExpandedOf(html, "Even Deeper")).toBe("false");
   });
 
+  test("does not scroll the sidebar when the first page is already in view", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 500 });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const nav = page.getByRole("navigation", { name: "Navigation" });
+    await expect(nav).toBeVisible({ timeout: 10000 });
+    await expect.poll(() => {
+      return nav.evaluate((node) => {
+        return Object.keys(node).some((key) => key.startsWith("__reactFiber"));
+      });
+    }).toBe(true);
+
+    await expectActiveLinkInNavViewport(page, /^Welcome$/);
+    await expect.poll(() => nav.evaluate((el) => el.scrollTop)).toBe(0);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  });
+
+  test("client navigation to a visible nearby page does not scroll the sidebar", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1600, height: 500 });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const nav = page.getByRole("navigation", { name: "Navigation" });
+    await expect(nav).toBeVisible({ timeout: 10000 });
+    await expect.poll(() => {
+      return nav.evaluate((node) => {
+        return Object.keys(node).some((key) => key.startsWith("__reactFiber"));
+      });
+    }).toBe(true);
+    await expect.poll(() => nav.evaluate((el) => el.scrollTop)).toBe(0);
+
+    await nav.evaluate((navEl) => {
+      const link = navEl.querySelector<HTMLAnchorElement>('a[href="/getting-started"]');
+      link?.click();
+    });
+    await expect(page).toHaveURL(/\/getting-started$/);
+    await expectActiveLinkInNavViewport(page, /^Getting Started$/);
+    await expect.poll(() => nav.evaluate((el) => el.scrollTop)).toBe(0);
+  });
+
   test("loads a deep page with the active sidebar row in view", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 500 });
     await page.goto("/advanced/internals/deep/deeper/level-5", {
