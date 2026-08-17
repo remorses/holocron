@@ -1796,7 +1796,7 @@ Root cause: SSR optimizer discovered `motion/react` mid-request on first render 
 
 ## Sidebar must not scroll an already-visible first row (2026)
 
-`scroll-initial-target: nearest` on `[aria-current=page]` fires during first layout, before the nav has its final height, and leaves a ~35px leftover scroll on the first page. `scrollIntoView({ block: nearest })` plus `scroll-padding-block` also nudges a visible top row. Do not use `scroll-initial-target`. After layout, skip the scroll when getBoundingClientRect shows the row fully inside the nav.
+`scroll-initial-target: nearest` on `[aria-current=page]` runs during first layout, before the flex nav has its final height. The browser thinks the first row does not fit, scrolls it to the top, and that leftover ~35px stays after layout. Do not use `scroll-initial-target`. JS must wait one frame, then `scrollIntoView({ block: nearest })` is a real no-op for a visible row.
 
 ## AI chat: lost answers came from buffered text + swallowed error chunks (2026)
 
