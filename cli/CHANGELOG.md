@@ -1,3 +1,7 @@
+## 0.21.1
+
+1. **Update the bundled Spiceflow RSC runtime** to `1.26.0-rsc.18`, including the latest Vite RSC plugin fixes.
+
 ## 0.21.0
 
 1. **`holocron diagrams fix` now formats GFM tables in place**, not just box-drawing diagrams:

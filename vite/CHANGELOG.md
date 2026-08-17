@@ -1,5 +1,107 @@
 # @holocron.so/vite
 
+## 0.30.0
+
+1. **Highlight fenced code on the server** — token colors are in the first HTML response and stay after in-site navigation. MDX fences no longer wait on a client `useEffect` + Prism load.
+
+   The highlighter loads a docs-focused refractor set, not all 297 Prism grammars. That keeps the RSC worker much smaller. Common product-docs languages still highlight: `ts`, `js`, `python`, `go`, `rust`, `bash`, `json`, `yaml`, `php`, `docker`, `scss`, `dart`, `elixir`, `scala`, `lua`, `nix`, `solidity`, `mermaid`, and the rest of the keep list.
+
+   These languages now render as **plain text**:
+
+   - editors and templates: `vim`, `textile`, `pug`, `haml`, `stylus`, `twig`, `ejs`, `erb`, `rest`
+   - functional and academic: `lisp`, `scheme`, `racket`, `haskell`, `ocaml`, `elm`, `purescript`, `reason`, `prolog`, `clojure`, `julia`, `matlab`
+   - systems and hardware: `llvm`, `nasm`, `armasm`, `wgsl`, `verilog`, `vhdl`, `wren`, `nim`, `odin`, `v`, `pascal`
+   - other long-tail: `applescript`, `arduino`, `awk`, `basic`, `bnf`, `coffeescript`, `dot`, `ebnf`, `erlang`, `fsharp`, `javadoc`, `jsonp`, `perl`, `promql`, `puppet`, `rego`, `rescript`, `tcl`, `uri`, `vbnet`
+
+   Unknown languages already rendered as plain text. That behavior is unchanged.
+
+   The code theme now covers every official Prism standard token (https://prismjs.com/tokens) plus the language-specific aliases used in Holocron docs. YAML keys, Dockerfile instructions, CSS selectors, bash variables, JS property access, and diff insert/delete no longer inherit the default text color.
+
+   The `@holocron.so/vite/prism` export is removed.
+
+2. **New `tailwindSources` plugin option** — extra directories, files, or globs appended as Tailwind `@source` directives next to the pagesDir source. Use this when MDX content is generated outside the project at deploy time (e.g. multi-tenant shells that swap `holocron-data.js` per site), pointing at the code that emits the classNames so those utilities are compiled into the shell CSS.
+
+   ```ts
+   holocron({
+       pagesDir: './src',
+       tailwindSources: ['../converters/src/**/*.ts'],
+   })
+   ```
+
+   Paths resolve relative to the vite root. The static prefix of each path is validated at build time so a wrong path fails loudly instead of silently missing classes.
+
+3. **Allow a URL or root-absolute path in page frontmatter `icon`** — runtime provider pages can now set `icon: https://cdn.example.com/rocket.svg` (or `/icons/rocket.svg`) and the sidebar renders it as an image. Library names, prefixed names, and emoji still work. This lets request-time pages show icons without adding them to the build-time icon atlas.
+
+   ```mdx
+   ---
+   title: Hello World
+   icon: https://cdn.example.com/rocket.svg
+   ---
+   ```
+
+4. **Normalize nested sidebar folders so they match page rows** — collapsible nested groups used to render at `--type-nav-group-size` (12px) with a tighter gap under the label, which made folders read as a smaller, separate tier from the pages around them. A nested group row is now visually a page row: same inherited font size, same medium weight, same `gap-1.5` leading slot (the chevron sits where a page's icon sits), and the same vertical rhythm between every row.
+
+   `--sidebar-indent` now defaults to `18px` instead of `12px` so one nesting step equals the width of that leading slot. Nested pages line up exactly under their group's label while the chevron stays in the gutter, giving the sidebar a proper file-tree alignment with or without page icons. Override the token to get a tighter tree.
+
+   Sidebar row highlights are no longer clipped. Hover, active and focus states used to be painted *outside* the row with a `box-shadow` spread, but the sidebar `<nav>` is `overflow-y-auto`, which per spec also clips horizontally, so the left rounded corners were sliced flat against the clip edge. Rows now carry real horizontal padding (`--sidebar-row-padding-x`, cancelled by an equal negative margin so the text column is unchanged) and the highlight is the row's own background, which can never be clipped. The browser focus ring is pulled inside with a negative `outline-offset` for the same reason.
+
+   `--sidebar-link-radius` now defaults to `6px` instead of `0px`, so hover and active states read as a rounded pill. Set it back to `0px` for square rows.
+
+5. **Give sidebar nav rows more padding inside the hover and active pill** — the highlight used to hug the label with no vertical padding and only `6px` on the sides. Rows now use `--sidebar-row-padding-y` (`4px`) and a slightly wider `--sidebar-row-padding-x` (`8px`). `--sidebar-row-gap` drops from `10px` to `4px` so the space between items stays about the same.
+
+   Override the tokens if you want a tighter or roomier tree:
+
+   ```css
+   :root {
+     --sidebar-row-padding-x: 8px;
+     --sidebar-row-padding-y: 4px;
+     --sidebar-row-gap: 4px;
+   }
+   ```
+
+6. **Scroll the left sidebar to the current page on load and on client navigation** — deep links into a long nav used to leave the tree at the top, so the active row sat off-screen. The current page now gets `aria-current="page"`. Chrome and Edge use `scroll-initial-target` for the first paint. Other browsers and client-side navigations call `scrollIntoView({ block: 'nearest' })` from a stable ref. Ancestor groups of the current page still open so the row exists in the layout before that scroll runs.
+
+7. **Replace the temporary AI model warning on free sites with a Holocron promotion** — the callout shows the Holocron wordmark, the product headline, a link to holocron.so, and a note for site owners that a Pro subscription removes it.
+
+8. **Keep the sidebar AI textarea as a normal input when a past chat exists** — the heading switches to **Open existing chat** with a message-circle icon; focusing the textarea no longer opens the drawer.
+
+9. **Keep used icon SVGs in the build cache** instead of shipping every Lucide and Font Awesome glyph in the worker.
+
+   The request loader used to import the full Iconify packs (~2 MB of SVG JSON) so it could look up `lucide:rocket` and similar names. The worker now reads a small atlas of the icons the site actually uses, stored in `dist/holocron-mdx.json` next to the other sync caches. Later builds and dev reloads reuse those bodies and only load Iconify when a new icon name appears.
+
+   Icons in the navbar, sidebar, and MDX still render the same way. No `docs.json` change is required.
+
+10. **Fix AI chat answers that never arrived** — assistant text is buffered and rendered as one markdown block, so a stream that ended without a `text-end` chunk (provider hiccup, dropped connection) silently discarded the whole answer and left an empty bubble. The buffer is now always flushed when the stream ends.
+
+    Also fixed in the same path:
+
+    - Provider failures are shown instead of swallowed. The AI SDK reports them as `error` chunks rather than throwing, and those chunks were ignored.
+    - Error notices are no longer hidden behind the "Temporary AI model" advisory, which used to suppress every later notice in the conversation. Notices now carry a `display` policy: standing advisories show once, per-turn outcomes (rate limits, credit limits, errors) show every time.
+    - Reasoning output is kept and rendered as a collapsed "thinking" preview, so a turn whose answer lands in reasoning is still visible.
+    - Scratchpad tags some models emit (`<think>`, `<thinking>`, …) are rendered as nothing instead of taking the surrounding answer down with them.
+    - A turn that produces nothing renderable now says so instead of showing an empty message, and exhausting the client-tool round limit reports a clear error instead of stopping without an answer.
+    - Every chat turn logs a one-line outcome (`[holocron:chat] turn …`) with text size, tool calls and timings, so lost answers are visible in worker logs.
+
+11. **Fix dev HMR for new OpenAPI and MCP pages** — editing a spec or MCP definition now creates the new page without a dev-server restart. Refractor grammar registration is idempotent, so the RSC remount after a provider sync no longer crashes the module runner.
+
+12. **Avoid repeating the site name in SEO titles** when a page title already starts with it. For example, a page titled `Holocron - Quickstart` now stays unchanged instead of becoming `Holocron - Quickstart — Holocron`.
+
+13. **Escape slugs in `generateHolocronData` `import()` paths** with `JSON.stringify`.
+
+    A page slug that contains `"` used to emit invalid JS in `holocron-data.js`:
+
+    ```js
+    import("./holocron-page-quotes-"-broken.js")
+    ```
+
+    The object key was already stringified. The import specifier is now too, so quotes, backticks, and newlines in slugs no longer crash the worker.
+
+    ```js
+    import("./holocron-page-quotes-\"-broken.js")
+    ```
+
+14. **Update the bundled Spiceflow RSC runtime** to `1.26.0-rsc.18`, including the latest Vite RSC plugin fixes.
+
 ## 0.29.0
 
 1. **Render OpenAPI `x-codeSamples` as Request example tabs** — SDK snippets from Stainless, Speakeasy, hey-api, or hand-written samples now show up next to the generated cURL block on endpoint pages.
