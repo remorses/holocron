@@ -18,6 +18,14 @@ describe('resolveIconSvgs', () => {
     expect(result.unresolvedRefs).toEqual([])
   })
 
+  test('lucide strokes stay at 2.5 so 12px sidebar icons do not blob', () => {
+    const result = resolveIconSvgs(['lucide:zap', 'lucide:file-json'])
+    expect(result.atlas.icons['lucide:zap']?.body).toContain('stroke-width="2.5"')
+    expect(result.atlas.icons['lucide:zap']?.body).not.toContain('stroke-width="2"')
+    expect(result.atlas.icons['lucide:zap']?.body).not.toContain('stroke-width="3"')
+    expect(result.atlas.icons['lucide:file-json']?.body).toContain('stroke-width="2.5"')
+  })
+
   test('reports unresolved icon refs', () => {
     const result = resolveIconSvgs([
       'lucide:github',
