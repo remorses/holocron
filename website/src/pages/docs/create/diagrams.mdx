@@ -11,7 +11,7 @@ Holocron renders fenced code blocks with the `diagram` language hint using speci
 ````mdx
 ```diagram
 ┌───────────────┐          ┌───────────────┐
-│   Browser     │────────► │   Server      │
+│   Browser     │────────> │   Server      │
 └───────────────┘          └───────────────┘
 ```
 ````
@@ -20,12 +20,12 @@ Holocron renders fenced code blocks with the `diagram` language hint using speci
 
 Use Unicode box-drawing characters instead of ASCII `|`, `-`, `+`. They fill the entire terminal cell and render with no visual gaps.
 
-| ASCII | Unicode | Name |
-|-------|---------|------|
-| `\|`  | `│`     | Vertical line |
+| ASCII | Unicode | Name            |
+| ----- | ------- | --------------- |
+| `\|`  | `│`     | Vertical line   |
 | `--`  | `──`    | Horizontal line |
-| `+`   | `┌┐└┘`  | Corners |
-| `+`   | `├┤┬┴┼` | Junctions |
+| `+`   | `┌┐└┘`  | Corners         |
+| `+`   | `├┤┬┴┼` | Junctions       |
 
 All four styles are supported: **light** (`┌─┐│`), **heavy** (`┏━┓┃`), **double** (`╔═╗║`), and **rounded** (`╭─╮╰─╯`).
 
@@ -33,7 +33,7 @@ All four styles are supported: **light** (`┌─┐│`), **heavy** (`┏━┓
 
 - Diagrams should cover the **full width of the content column**, roughly **94 characters**.
 - Never exceed 94 characters per line.
-- Use **directional arrows** (`►`, `◄`, `▼`, `▲`, `▶`, `◀`) on all connections. Never use plain lines without arrowheads.
+- Use **directional arrows** (`>`, `<`, `v`, `^`, `>`, `<`) on all connections. Never use plain lines without arrowheads.
 - Mix plain text labels with boxes. Not everything needs to be inside a box.
 
 ## Fixing alignment with the CLI

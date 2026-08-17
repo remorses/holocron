@@ -51,14 +51,14 @@ Tabs also support `hidden: true`:
 
 Hidden tabs behave differently from hidden pages:
 
-| Behavior | Hidden page (`frontmatter`) | Hidden tab |
-|---|---|---|
-| Visible in sidebar | No | No |
-| Visible in tab bar | N/A | No |
-| Accessible by URL | Yes | Yes |
-| In sitemap.xml | **No** | **Yes** |
-| In llms.txt | **No** | **Yes** |
-| `robots: noindex` | **Yes** | **No** |
+| Behavior           | Hidden page (`frontmatter`) | Hidden tab |
+| ------------------ | --------------------------- | ---------- |
+| Visible in sidebar | No                          | No         |
+| Visible in tab bar | N/A                         | No         |
+| Accessible by URL  | Yes                         | Yes        |
+| In sitemap.xml     | **No**                      | **Yes**    |
+| In llms.txt        | **No**                      | **Yes**    |
+| `robots: noindex`  | **Yes**                     | **No**     |
 
 Hidden **pages** are excluded from search engine indexing. Hidden **tabs** keep all their pages fully indexed; only the UI navigation is removed. This makes hidden tabs the right choice when you want content discoverable by search engines but not shown in the site navigation.
 

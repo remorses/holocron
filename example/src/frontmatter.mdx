@@ -60,13 +60,13 @@ deprecated: true
 
 **`mode`** controls the page layout. It is Mintlify-compatible and accepts `default`, `wide`, `center`, `custom`, or `frame`. Holocron keeps the layout system small and collapses these five values into two layouts.
 
-| `mode` | Left navigation sidebar | Aliases to |
-|---|---|---|
-| `default` | shown | — |
-| `wide` | shown | `default` |
-| `frame` | shown | `default` |
-| `center` | **hidden** | — |
-| `custom` | **hidden** | `center` |
+| `mode`    | Left navigation sidebar | Aliases to |
+| --------- | ----------------------- | ---------- |
+| `default` | shown                   | —          |
+| `wide`    | shown                   | `default`  |
+| `frame`   | shown                   | `default`  |
+| `center`  | **hidden**              | —          |
+| `custom`  | **hidden**              | `center`   |
 
 The `center` layout hides the left navigation sidebar and centers the content within the page width. Use it for landing pages, changelogs, or any page where you want the focus on the content instead of the navigation chrome.
 
@@ -118,15 +118,15 @@ keywords: ["setup", "config", "options"]
 
 Override the default OpenGraph tags for social sharing previews. These are rendered as `<meta property="og:...">` tags in the page `<head>`.
 
-| Field | Description |
-|---|---|
-| `og:title` | Social share title. Defaults to `{title} — {siteName}`. |
-| `og:description` | Social share description. Defaults to page `description`. |
-| `og:image` | Social share image URL. Defaults to auto-generated OG image. |
-| `og:url` | Canonical URL for the page. |
-| `og:type` | OpenGraph type, e.g. `article`. |
-| `og:image:width` | Image width in pixels (string or number). |
-| `og:image:height` | Image height in pixels (string or number). |
+| Field             | Description                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| `og:title`        | Social share title. Defaults to `{title} — {siteName}`.      |
+| `og:description`  | Social share description. Defaults to page `description`.    |
+| `og:image`        | Social share image URL. Defaults to auto-generated OG image. |
+| `og:url`          | Canonical URL for the page.                                  |
+| `og:type`         | OpenGraph type, e.g. `article`.                              |
+| `og:image:width`  | Image width in pixels (string or number).                    |
+| `og:image:height` | Image height in pixels (string or number).                   |
 
 ```yaml
 ---
@@ -143,15 +143,15 @@ title: API Overview
 
 Override the default Twitter Card tags. These are rendered as `<meta name="twitter:...">` tags.
 
-| Field | Description |
-|---|---|
-| `twitter:title` | Twitter card title. Defaults to `og:title`. |
-| `twitter:description` | Twitter card description. Defaults to `og:description`. |
-| `twitter:image` | Twitter card image. Defaults to `og:image`. |
-| `twitter:card` | Card type: `summary` or `summary_large_image` (default). |
-| `twitter:site` | Twitter handle for the site, e.g. `@mycompany`. |
-| `twitter:image:width` | Image width in pixels (string or number). |
-| `twitter:image:height` | Image height in pixels (string or number). |
+| Field                  | Description                                              |
+| ---------------------- | -------------------------------------------------------- |
+| `twitter:title`        | Twitter card title. Defaults to `og:title`.              |
+| `twitter:description`  | Twitter card description. Defaults to `og:description`.  |
+| `twitter:image`        | Twitter card image. Defaults to `og:image`.              |
+| `twitter:card`         | Card type: `summary` or `summary_large_image` (default). |
+| `twitter:site`         | Twitter handle for the site, e.g. `@mycompany`.          |
+| `twitter:image:width`  | Image width in pixels (string or number).                |
+| `twitter:image:height` | Image height in pixels (string or number).               |
 
 ```yaml
 ---

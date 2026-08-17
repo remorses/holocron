@@ -344,13 +344,13 @@ const browserTools = pageTools([
 
 This generates five tools:
 
-| Tool | Description |
-|------|-------------|
-| `browser_navigate` | Navigate to a declared page path |
-| `browser_type` | Type text into an input or textarea |
-| `browser_select` | Select a value in a dropdown |
+| Tool                | Description                                                               |
+| ------------------- | ------------------------------------------------------------------------- |
+| `browser_navigate`  | Navigate to a declared page path                                          |
+| `browser_type`      | Type text into an input or textarea                                       |
+| `browser_select`    | Select a value in a dropdown                                              |
 | `browser_highlight` | Show a persistent spotlight overlay on an element with a description card |
-| `browser_read_page` | List all interactive elements on the current page |
+| `browser_read_page` | List all interactive elements on the current page                         |
 
 The AI uses `browser_highlight` to point users at elements instead of clicking them directly. This keeps the user in control. For example, if a user asks "change my email", the AI types the new value with `browser_type`, then highlights the Save button with a message like "Click here to save".
 

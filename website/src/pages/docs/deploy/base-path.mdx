@@ -52,11 +52,11 @@ After deploying, configure your framework or web server to forward requests unde
 
 ```
 ┌──────────────────────┐       ┌──────────────────────────────────────────────┐
-│  yoursite.com        │       │  holocron.so hosting                        │
+│  yoursite.com        │       │  holocron.so hosting                         │
 │                      │       │                                              │
 │  /           → home  │       │                                              │
 │  /pricing    → page  │       │                                              │
-│  /docs/*     → proxy ├──────►│  docs-base-my-docs-remorses-site.holocron.so │
+│  /docs/*     → proxy ├──────>│          docs-base-my-docs-remorses-site.holocron.so│
 │                      │       │  serves /docs/* routes                       │
 └──────────────────────┘       └──────────────────────────────────────────────┘
 ```

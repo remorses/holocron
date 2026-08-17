@@ -85,15 +85,15 @@ deep under `pagesDir`, or vice versa.
    it in navigation.
 
 ```diagram
-   README.md   [pricing](./docs/pricing.md)   ◄── correct relative path to a real file
+   README.md   [pricing](./docs/pricing.md)   <── correct relative path to a real file
         │
-        ├───────────────────────► GitHub opens ./docs/pricing.md
+        ├───────────────────────> GitHub opens ./docs/pricing.md
         │
-        ▼  imported into the index page
-   Holocron recomputes the path ──► strips .md ──► lands on the page rendering pricing
+        v  imported into the index page
+   Holocron recomputes the path ──> strips .md ──> lands on the page rendering pricing
         │
-        ▼
-   /docs/pricing   ◄── resolves as long as a page renders that file and it is in docs.json
+        v
+   /docs/pricing   <── resolves as long as a page renders that file and it is in docs.json
 ```
 
 ## How it works

@@ -57,13 +57,13 @@ Self-hosted fonts skip Google Fonts entirely. No third-party requests are made.
 
 ## Font fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `family` | string | Font family name. Google Fonts names load automatically |
-| `weight` | number | Font weight (e.g. 400, 700) |
-| `source` | string | URL or local path to a font file |
-| `format` | `"woff"` \| `"woff2"` | Font file format. Required when using a local `source` |
-| `heading` | object | Override font for headings only |
-| `body` | object | Override font for body text only |
+| Field     | Type                  | Description                                             |
+| --------- | --------------------- | ------------------------------------------------------- |
+| `family`  | string                | Font family name. Google Fonts names load automatically |
+| `weight`  | number                | Font weight (e.g. 400, 700)                             |
+| `source`  | string                | URL or local path to a font file                        |
+| `format`  | `"woff"` \| `"woff2"` | Font file format. Required when using a local `source`  |
+| `heading` | object                | Override font for headings only                         |
+| `body`    | object                | Override font for body text only                        |
 
 The `heading` and `body` fields accept the same properties: `family`, `weight`, `source`, and `format`.

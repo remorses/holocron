@@ -66,9 +66,9 @@ The `environment` block makes the deployed URL clickable as a **deployment statu
 
 The deploy command automatically sets two GitHub Actions step outputs:
 
-| Output | Description |
-|---|---|
-| `holocron_url` | The live URL of the deployment |
+| Output                   | Description                     |
+| ------------------------ | ------------------------------- |
+| `holocron_url`           | The live URL of the deployment  |
 | `holocron_deployment_id` | The deployment ID for API calls |
 
 Use them in downstream steps, for example to post a comment with the deployment link:
@@ -146,11 +146,11 @@ In GitHub Actions, store the key as a [repository secret](https://docs.github.co
 npx -y "@holocron.so/cli" deploy [options]
 ```
 
-| Option | Description |
-|---|---|
-| `--branch <name>` | Override the branch name for deployment metadata |
-| `--project <id>` | Project ID (only needed with session auth, not with `HOLOCRON_KEY`) |
-| `--skip-build` | Skip the `vite build` step and upload the existing `dist/` |
+| Option            | Description                                                         |
+| ----------------- | ------------------------------------------------------------------- |
+| `--branch <name>` | Override the branch name for deployment metadata                    |
+| `--project <id>`  | Project ID (only needed with session auth, not with `HOLOCRON_KEY`) |
+| `--skip-build`    | Skip the `vite build` step and upload the existing `dist/`          |
 
 ## Self-hosting
 
@@ -226,6 +226,6 @@ npx wrangler deploy
 
 ### Environment variables
 
-| Variable | Default | Description |
-|---|---|---|
-| `PORT` | 3000 | Server listen port (Node.js only) |
+| Variable | Default | Description                       |
+| -------- | ------- | --------------------------------- |
+| `PORT`   | 3000    | Server listen port (Node.js only) |

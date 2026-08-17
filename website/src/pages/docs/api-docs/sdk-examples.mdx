@@ -22,7 +22,7 @@ On each generated endpoint page, the right aside **Request example** panel lists
 ```diagram
   OpenAPI operation
         │
-        ▼
+        v
   ┌─────────────────────────────────────────┐
   │ Request example                         │
   │  cURL  │  TypeScript  │  Python  │  …   │
@@ -66,11 +66,11 @@ paths:
             acme users list --role editor
 ```
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| **`lang`** | yes | Language id for highlighting (`TypeScript`, `python`, `bash`, …) |
-| **`source`** | yes | Inline snippet body (string). Use a string, not a `$ref`; external refs are not resolved for samples. |
-| **`label`** | no | Tab title. Defaults to `lang`. |
+| Field        | Required | Description                                                                                           |
+| ------------ | -------- | ----------------------------------------------------------------------------------------------------- |
+| **`lang`**   | yes      | Language id for highlighting (`TypeScript`, `python`, `bash`, …)                                      |
+| **`source`** | yes      | Inline snippet body (string). Use a string, not a `$ref`; external refs are not resolved for samples. |
+| **`label`**  | no       | Tab title. Defaults to `lang`.                                                                        |
 
 Multiple samples can share a language with different labels (for example two TypeScript flows).
 
@@ -161,12 +161,12 @@ npm run openapi:sdk
 Regenerate the decorated file in CI whenever the base OpenAPI or SDK config changes, then build docs.
 
 ```diagram
-  openapi.yaml ──► openapi-ts (sdk.examples) ──► openapi.with-samples.json
+  openapi.yaml ──> openapi-ts (sdk.examples) ──> openapi.with-samples.json
                                                          │
-                                                         ▼
+                                                         v
                                               docs.json openapi field
                                                          │
-                                                         ▼
+                                                         v
                                               Request example tabs
 ```
 

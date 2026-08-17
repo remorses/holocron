@@ -8,11 +8,11 @@ icon: arrow-left-right
 
 Every page can set a **mode** in its frontmatter to control how much of the editorial layout is rendered.
 
-| Mode | Left sidebar | Right aside | Editorial grid | Use case |
-|------|-------------|-------------|----------------|----------|
-| `default` | Yes | Yes | Yes | Standard docs pages |
-| `center` | No | Yes | Yes (2-column) | Focused content without nav |
-| `custom` | No | No | No | Landing pages, custom layouts |
+| Mode      | Left sidebar | Right aside | Editorial grid | Use case                      |
+| --------- | ------------ | ----------- | -------------- | ----------------------------- |
+| `default` | Yes          | Yes         | Yes            | Standard docs pages           |
+| `center`  | No           | Yes         | Yes (2-column) | Focused content without nav   |
+| `custom`  | No           | No          | No             | Landing pages, custom layouts |
 
 `wide` and `frame` are accepted for Mintlify compatibility and alias to `default`.
 
@@ -103,12 +103,12 @@ Full-width (2600px max)
 
 Holocron's page grid is controlled by four CSS variables:
 
-| Variable | Default | Description |
-|---|---|---|
-| `--grid-max-width` | `1200px` | Overall page cap |
-| `--grid-nav-width` | `230px` | Left sidebar (table of contents) |
-| `--grid-sidebar-width` | `230px` | Right sidebar (aside content) |
-| `--grid-gap` | `60px` | Gap between columns |
+| Variable               | Default  | Description                      |
+| ---------------------- | -------- | -------------------------------- |
+| `--grid-max-width`     | `1200px` | Overall page cap                 |
+| `--grid-nav-width`     | `230px`  | Left sidebar (table of contents) |
+| `--grid-sidebar-width` | `230px`  | Right sidebar (aside content)    |
+| `--grid-gap`           | `60px`   | Gap between columns              |
 
 The **content column width** is derived automatically:
 

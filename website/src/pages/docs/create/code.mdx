@@ -219,17 +219,17 @@ MDX fences highlight on the server. Used on its own, `CodeBlock` shows the raw `
 
 The `bleed` prop controls how far the block extends past its content column. The component **defaults to no bleed**, so it stays fully inside its parent, which is what you want in a dashboard, modal, or card. Opt into bleed only when you render inside the docs prose column:
 
-| `bleed` value | Behavior |
-| ------------- | -------- |
-| `'both'` / `true` | extends into both left and right margins |
-| `'right'` | extends into the right margin only |
+| `bleed` value      | Behavior                                          |
+| ------------------ | ------------------------------------------------- |
+| `'both'` / `true`  | extends into both left and right margins          |
+| `'right'`          | extends into the right margin only                |
 | `'none'` / `false` | no bleed, stays fully inside its parent (default) |
 
-| Prop | Type | Description |
-| ---- | ---- | ----------- |
-| `children` | `string` | The raw code to render and copy. |
-| `lang` | `string` | Language id, defaults to `jsx`. |
-| `showLineNumbers` | `boolean` | Line numbers on the left, on by default. |
-| `title` | `string` | Filename or label shown above the block. |
-| `highlight` | `string` | Comma-separated lines/ranges to focus, e.g. `"1-3,7"`. |
-| `bleed` | `boolean` | Extend into the page margins, off by default. |
+| Prop              | Type      | Description                                            |
+| ----------------- | --------- | ------------------------------------------------------ |
+| `children`        | `string`  | The raw code to render and copy.                       |
+| `lang`            | `string`  | Language id, defaults to `jsx`.                        |
+| `showLineNumbers` | `boolean` | Line numbers on the left, on by default.               |
+| `title`           | `string`  | Filename or label shown above the block.               |
+| `highlight`       | `string`  | Comma-separated lines/ranges to focus, e.g. `"1-3,7"`. |
+| `bleed`           | `boolean` | Extend into the page margins, off by default.          |

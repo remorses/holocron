@@ -19,12 +19,12 @@ dist/rsc/assets/
 └── ...fonts, icons, runtime
 ```
 
-| Layer | Changes per tenant? | Naming | Size |
-|---|---|---|---|
-| `holocron-stable-{hash}.js` | No | Content-hashed | ~2-6 MB |
-| `holocron-data.js` | Yes | Deterministic, no hash | ~5-50 KB |
-| `holocron-page-{slug}-{hash}.js` | Yes | Deterministic per slug | ~1-10 KB each |
-| Client JS/CSS | No | Content-hashed | ~3-10 MB |
+| Layer                            | Changes per tenant? | Naming                 | Size           |
+| -------------------------------- | ------------------- | ---------------------- | -------------- |
+| `holocron-stable-{hash}.js`      | No                  | Content-hashed         | \~2-6 MB       |
+| `holocron-data.js`               | Yes                 | Deterministic, no hash | \~5-50 KB      |
+| `holocron-page-{slug}-{hash}.js` | Yes                 | Deterministic per slug | \~1-10 KB each |
+| Client JS/CSS                    | No                  | Content-hashed         | \~3-10 MB      |
 
 The **stable chunk** contains all React, spiceflow, MDX components (accordion, tabs, code blocks, OpenAPI renderer, etc.). Tree shaking does not remove unused components because the MDX component registry imports everything unconditionally; the bundler can't know which component names appear in MDX content.
 
@@ -34,20 +34,20 @@ The **stable chunk** contains all React, spiceflow, MDX components (accordion, t
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  1. Build once                                                          │
 │     npx vite build                                                      │
-│     ► produces dist/ with stable chunks + template data                 │
+│     > produces dist/ with stable chunks + template data                 │
 └────────────────────────────────────┬────────────────────────────────────┘
                                      │
          ┌───────────────────────────┼───────────────────────────┐
-         ▼                           ▼                           ▼
+         v                           v                           v
 ┌─────────────────┐     ┌─────────────────┐         ┌─────────────────┐
 │  Tenant A       │     │  Tenant B       │         │  Tenant C       │
 │                 │     │                 │         │                 │
 │  generateData() │     │  generateData() │         │  generateData() │
-│  ► data.js      │     │  ► data.js      │         │  ► data.js      │
-│  ► page chunks  │     │  ► page chunks  │         │  ► page chunks  │
+│  > data.js      │     │  > data.js      │         │  > data.js      │
+│  > page chunks  │     │  > page chunks  │         │  > page chunks  │
 └────────┬────────┘     └────────┬────────┘         └────────┬────────┘
          │                       │                           │
-         ▼                       ▼                           ▼
+         v                       v                           v
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  Deploy (content-addressable)                                           │
 │  Shared stable chunk uploaded once. Only data.js + pages per tenant.    │
@@ -289,35 +289,35 @@ No build-time search index generation is needed. The navigation data in `holocro
 
 ## Feature support
 
-| Feature | Multi-tenant support |
-|---|---|
-| MDX pages (all content) | Works |
-| Navigation (tabs, groups, nested) | Works |
-| Code blocks (Shiki highlighting) | Works (runtime) |
-| Mermaid diagrams | Works (client-side render) |
-| Math / KaTeX | Works (client-side render) |
-| Colors / theming | Works via `colors` config |
-| Custom fonts | Works via `fonts` config |
-| Custom CSS | Works via `customCss` config |
-| Icons (lucide, emoji, URL) | Works |
-| Redirects | Works |
-| Sidebar search | Works (Orama, client-side) |
-| AI chat widget | Works (built into shell) |
-| Anchors | Works |
-| OpenAPI tabs | Works via `generateOpenAPIPages` |
-| Custom MDX components | Not supported |
-| Changelog tabs | Not yet supported |
+| Feature                           | Multi-tenant support             |
+| --------------------------------- | -------------------------------- |
+| MDX pages (all content)           | Works                            |
+| Navigation (tabs, groups, nested) | Works                            |
+| Code blocks (Shiki highlighting)  | Works (runtime)                  |
+| Mermaid diagrams                  | Works (client-side render)       |
+| Math / KaTeX                      | Works (client-side render)       |
+| Colors / theming                  | Works via `colors` config        |
+| Custom fonts                      | Works via `fonts` config         |
+| Custom CSS                        | Works via `customCss` config     |
+| Icons (lucide, emoji, URL)        | Works                            |
+| Redirects                         | Works                            |
+| Sidebar search                    | Works (Orama, client-side)       |
+| AI chat widget                    | Works (built into shell)         |
+| Anchors                           | Works                            |
+| OpenAPI tabs                      | Works via `generateOpenAPIPages` |
+| Custom MDX components             | Not supported                    |
+| Changelog tabs                    | Not yet supported                |
 
 ## What each export does
 
-| Export | Purpose |
-|---|---|
-| `normalizeConfig(raw)` | Parse a raw docs.json object into a `HolocronConfig` |
-| `parseConfigSource(jsonString)` | Parse a JSON/JSONC string into a `HolocronConfig` |
-| `generateHolocronData(opts)` | Produce `holocron-data.js` + page chunk sources |
-| `generateOpenAPIPages(opts)` | Generate MDX pages + navigation from an OpenAPI spec |
-| `buildNavigationData(opts)` | Build the enriched navigation tree (used internally by `generateHolocronData`) |
-| `processMdx(content, library)` | Process a single MDX string into normalized content + metadata |
-| `collectIconRefs(opts)` | Collect all icon refs needed for the icon atlas |
+| Export                          | Purpose                                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| `normalizeConfig(raw)`          | Parse a raw docs.json object into a `HolocronConfig`                           |
+| `parseConfigSource(jsonString)` | Parse a JSON/JSONC string into a `HolocronConfig`                              |
+| `generateHolocronData(opts)`    | Produce `holocron-data.js` + page chunk sources                                |
+| `generateOpenAPIPages(opts)`    | Generate MDX pages + navigation from an OpenAPI spec                           |
+| `buildNavigationData(opts)`     | Build the enriched navigation tree (used internally by `generateHolocronData`) |
+| `processMdx(content, library)`  | Process a single MDX string into normalized content + metadata                 |
+| `collectIconRefs(opts)`         | Collect all icon refs needed for the icon atlas                                |
 
 All functions are importable from `@holocron.so/vite`.

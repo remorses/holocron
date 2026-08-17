@@ -146,11 +146,11 @@ if (event.type === 'benefit_grant.created') {
 
 These changes happen in **Phase 2** only:
 
-| What changed | Phase 1 | Phase 2 | Fix |
-|---|---|---|---|
-| `seat.customer_id` | Still the seat holder | The buyer | Use `seat.member` or `seat.email` |
-| `grant.customer_id` | Still the grant recipient | The buyer | Use `grant.member` |
-| Old seat-holder customer IDs | Still valid | `404` | Map to `member_id` via seat list |
+| What changed                 | Phase 1                   | Phase 2   | Fix                               |
+| ---------------------------- | ------------------------- | --------- | --------------------------------- |
+| `seat.customer_id`           | Still the seat holder     | The buyer | Use `seat.member` or `seat.email` |
+| `grant.customer_id`          | Still the grant recipient | The buyer | Use `grant.member`                |
+| Old seat-holder customer IDs | Still valid               | `404`     | Map to `member_id` via seat list  |
 
 ## How to update your code
 

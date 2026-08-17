@@ -13,7 +13,7 @@ When you add `holocron()` to your Vite config, the plugin automatically adds the
 ```diagram
 vite.config.ts
      │
-     ▼
+     v
 holocron() plugin
      │
      ├── spiceflow() vite plugin (auto-added)
@@ -78,7 +78,7 @@ export const app = new Spiceflow()
 ```
 
 ```diagram
-Request ──► your middleware ──► your routes ──► holocronApp
+Request ──> your middleware ──> your routes ──> holocronApp
                                                    │
                                            docs pages, search,
                                            sidebar, MDX rendering

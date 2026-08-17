@@ -12,12 +12,12 @@ Every page in a Holocron site is an **MDX file** (.mdx or .md). Pages are discov
 
 The slug of a page is its file path relative to the pages directory, without the extension:
 
-| File path | Slug |
-|-----------|------|
-| `index.mdx` | `index` |
+| File path             | Slug              |
+| --------------------- | ----------------- |
+| `index.mdx`           | `index`           |
 | `getting-started.mdx` | `getting-started` |
-| `guides/auth.mdx` | `guides/auth` |
-| `api/users.mdx` | `api/users` |
+| `guides/auth.mdx`     | `guides/auth`     |
+| `api/users.mdx`       | `api/users`       |
 
 Reference these slugs in your `docs.json` navigation:
 
@@ -50,30 +50,30 @@ tag: New
 
 ### Supported fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `title` | string | Page title, used in sidebar and `<title>` tag |
-| `description` | string | SEO description and subtitle |
-| `icon` | string | Icon name displayed in the sidebar |
-| `iconColor` | string | Color for the sidebar icon. Named colors (`green`, `blue`, `red`, `purple`, `orange`, `yellow`, `pink`) or any CSS color string |
-| `sidebarTitle` | string | Short label for the sidebar, letting `title` be longer for SEO |
-| `sidebarToc` | boolean | Show or hide the page's section headings under its sidebar entry. Defaults to shown, unless the page renders a [`TableOfContentsPanel`](/docs/components/table-of-contents) |
-| `tag` | string | Badge label next to the page title in sidebar |
-| `mode` | string | Page layout mode: `"default"`, `"center"`, or `"custom"`. See [Layout](/docs/customize/layout) |
-| `maxWidth` | number | Maximum content width in pixels. Useful with `mode: "custom"` |
-| `deprecated` | boolean | Marks the page as deprecated |
-| `api` | string | Mintlify API page label like `GET /users` |
-| `hidden` | boolean | Hides the page from navigation and adds `noindex` |
-| `noindex` | boolean | Keeps the page visible but adds robots `noindex` |
-| `cache-control` | string | Custom response cache header |
-| `keywords` | string[] | Additional keywords for search |
-| `robots` | string | Custom robots meta value |
-| `og:title` | string | Open Graph title override |
-| `og:description` | string | Open Graph description |
-| `og:image` | string | Open Graph image URL |
-| `twitter:title` | string | Twitter card title |
-| `twitter:description` | string | Twitter card description |
-| `twitter:image` | string | Twitter card image |
+| Field                 | Type      | Description                                                                                                                                                                 |
+| --------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`               | string    | Page title, used in sidebar and `<title>` tag                                                                                                                               |
+| `description`         | string    | SEO description and subtitle                                                                                                                                                |
+| `icon`                | string    | Icon name displayed in the sidebar                                                                                                                                          |
+| `iconColor`           | string    | Color for the sidebar icon. Named colors (`green`, `blue`, `red`, `purple`, `orange`, `yellow`, `pink`) or any CSS color string                                             |
+| `sidebarTitle`        | string    | Short label for the sidebar, letting `title` be longer for SEO                                                                                                              |
+| `sidebarToc`          | boolean   | Show or hide the page's section headings under its sidebar entry. Defaults to shown, unless the page renders a [`TableOfContentsPanel`](/docs/components/table-of-contents) |
+| `tag`                 | string    | Badge label next to the page title in sidebar                                                                                                                               |
+| `mode`                | string    | Page layout mode: `"default"`, `"center"`, or `"custom"`. See [Layout](/docs/customize/layout)                                                                              |
+| `maxWidth`            | number    | Maximum content width in pixels. Useful with `mode: "custom"`                                                                                                               |
+| `deprecated`          | boolean   | Marks the page as deprecated                                                                                                                                                |
+| `api`                 | string    | Mintlify API page label like `GET /users`                                                                                                                                   |
+| `hidden`              | boolean   | Hides the page from navigation and adds `noindex`                                                                                                                           |
+| `noindex`             | boolean   | Keeps the page visible but adds robots `noindex`                                                                                                                            |
+| `cache-control`       | string    | Custom response cache header                                                                                                                                                |
+| `keywords`            | string\[] | Additional keywords for search                                                                                                                                              |
+| `robots`              | string    | Custom robots meta value                                                                                                                                                    |
+| `og:title`            | string    | Open Graph title override                                                                                                                                                   |
+| `og:description`      | string    | Open Graph description                                                                                                                                                      |
+| `og:image`            | string    | Open Graph image URL                                                                                                                                                        |
+| `twitter:title`       | string    | Twitter card title                                                                                                                                                          |
+| `twitter:description` | string    | Twitter card description                                                                                                                                                    |
+| `twitter:image`       | string    | Twitter card image                                                                                                                                                          |
 
 ## Open Graph image
 

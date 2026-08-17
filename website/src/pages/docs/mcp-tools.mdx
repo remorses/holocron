@@ -168,13 +168,13 @@ Add `example` values to your `inputSchema` properties for the best documentation
 
 MCP tool annotations are behavioral hints rendered as colored badges with tooltips:
 
-| Badge | Annotation | Meaning |
-|-------|-----------|---------|
-| **read-only** | `readOnlyHint: true` | Tool does not modify its environment |
-| **idempotent** | `idempotentHint: true` | Repeated calls with same args have no additional effect |
-| **destructive** | `destructiveHint: true` | Tool may perform destructive updates |
-| **closed-world** | `openWorldHint: false` | Tool operates in a closed domain (e.g. memory), not open like web search |
-| **long-running** | `execution.taskSupport: "optional" \| "required"` | Tool supports long-running async tasks |
+| Badge            | Annotation                                        | Meaning                                                                  |
+| ---------------- | ------------------------------------------------- | ------------------------------------------------------------------------ |
+| **read-only**    | `readOnlyHint: true`                              | Tool does not modify its environment                                     |
+| **idempotent**   | `idempotentHint: true`                            | Repeated calls with same args have no additional effect                  |
+| **destructive**  | `destructiveHint: true`                           | Tool may perform destructive updates                                     |
+| **closed-world** | `openWorldHint: false`                            | Tool operates in a closed domain (e.g. memory), not open like web search |
+| **long-running** | `execution.taskSupport: "optional" \| "required"` | Tool supports long-running async tasks                                   |
 
 Hover over any badge to see its description.
 

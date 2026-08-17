@@ -212,15 +212,15 @@ const session = await polar.customerSessions.create({
 
 ## Webhook events
 
-| Event | When | Key fields |
-|---|---|---|
-| `order.paid` | Customer completes purchase | `customer_id`, `product` |
-| `subscription.updated` | Seat count changes | `customer_id`, `seats` |
+| Event                    | When                           | Key fields                             |
+| ------------------------ | ------------------------------ | -------------------------------------- |
+| `order.paid`             | Customer completes purchase    | `customer_id`, `product`               |
+| `subscription.updated`   | Seat count changes             | `customer_id`, `seats`                 |
 | `customer_seat.assigned` | Seat assigned, invitation sent | `member`, `email`, `status: "pending"` |
-| `customer_seat.claimed` | Member claims their seat | `member`, `status: "claimed"` |
-| `benefit_grant.created` | Benefit granted to member | `member`, `customer_id` (buyer) |
-| `customer_seat.revoked` | Seat revoked | `member`, `status: "revoked"` |
-| `benefit_grant.revoked` | Benefit removed from member | `member`, `customer_id` (buyer) |
+| `customer_seat.claimed`  | Member claims their seat       | `member`, `status: "claimed"`          |
+| `benefit_grant.created`  | Benefit granted to member      | `member`, `customer_id` (buyer)        |
+| `customer_seat.revoked`  | Seat revoked                   | `member`, `status: "revoked"`          |
+| `benefit_grant.revoked`  | Benefit removed from member    | `member`, `customer_id` (buyer)        |
 
 <Info>
 On subscription cancellation, each seat is revoked individually. A subscription with 5 seats and 3 benefits produces 1 + 5 + 15 = 21 webhook events. Make sure your handlers are idempotent.
@@ -234,19 +234,19 @@ On subscription cancellation, each seat is revoked individually. A subscription 
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---|---|
-| Cannot reduce seats | Revoke assigned seats first. You can't go below the combined pending + claimed count. |
-| Claim link expired | Tokens expire after 24 hours. Resend via the portal or API: `polar.customerSeats.resend({ seat_id })` |
+| Problem             | Solution                                                                                              |
+| ------------------- | ----------------------------------------------------------------------------------------------------- |
+| Cannot reduce seats | Revoke assigned seats first. You can't go below the combined pending + claimed count.                 |
+| Claim link expired  | Tokens expire after 24 hours. Resend via the portal or API: `polar.customerSeats.resend({ seat_id })` |
 
 ## Subscriptions vs one-time purchases
 
-| | Subscriptions | One-Time Purchases |
-|---|---|---|
-| **Payment** | Recurring (monthly/yearly) | Single payment |
-| **Seat duration** | While subscribed | Perpetual |
-| **Adding seats** | Modify subscription | Purchase new order |
-| **Benefits** | While subscription active | Forever after claim |
+|                   | Subscriptions              | One-Time Purchases  |
+| ----------------- | -------------------------- | ------------------- |
+| **Payment**       | Recurring (monthly/yearly) | Single payment      |
+| **Seat duration** | While subscribed           | Perpetual           |
+| **Adding seats**  | Modify subscription        | Purchase new order  |
+| **Benefits**      | While subscription active  | Forever after claim |
 
 ## Limitations
 

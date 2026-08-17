@@ -10,12 +10,12 @@ Holocron implements the **agent-skills 0.2.0 discovery spec** (RFC 8615 extensio
 
 ## Discovery endpoints
 
-| Endpoint | Format |
-|----------|--------|
-| `/.well-known/agent-skills/index.json` | v0.2.0 JSON index |
+| Endpoint                                    | Format              |
+| ------------------------------------------- | ------------------- |
+| `/.well-known/agent-skills/index.json`      | v0.2.0 JSON index   |
 | `/.well-known/agent-skills/<name>/SKILL.md` | Skill markdown file |
-| `/.well-known/skills/index.json` | Legacy JSON index |
-| `/.well-known/skills/<name>/SKILL.md` | Legacy skill file |
+| `/.well-known/skills/index.json`            | Legacy JSON index   |
+| `/.well-known/skills/<name>/SKILL.md`       | Legacy skill file   |
 
 The `<name>` is derived from your site's `name` field in `docs.json` (lowercased, kebab-cased).
 

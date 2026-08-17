@@ -10,9 +10,9 @@ Every docs page in Holocron is also available as agent-readable Markdown by appe
 
 ## How it works
 
-| URL | Returns |
-|-----|---------|
-| `/quickstart` | HTML page |
+| URL              | Returns                            |
+| ---------------- | ---------------------------------- |
+| `/quickstart`    | HTML page                          |
 | `/quickstart.md` | Transformed MDX source as Markdown |
 
 This makes your docs machine-readable out of the box. AI agents, documentation scrapers, and CLI tools can fetch page source without parsing HTML. Holocron strips human-only `<Visibility>` blocks and prepends an agent directive to the response.
