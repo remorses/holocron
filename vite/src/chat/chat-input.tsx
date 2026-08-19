@@ -99,7 +99,7 @@ export function ChatInput({
           <button
             type='button'
             onClick={handleButtonClick}
-            className='flex items-center justify-center size-7 rounded-full transition-colors bg-foreground/[0.06] text-muted-foreground/50 hover:bg-foreground/[0.12]'
+            className='flex items-center justify-center size-7 rounded-full transition-colors bg-muted text-muted-foreground'
             aria-label='Stop generating'
           >
             <StopSquareIcon />
@@ -112,7 +112,7 @@ export function ChatInput({
             className={`flex items-center justify-center size-7 rounded-full transition-colors ${
               value.trim()
                 ? 'bg-primary text-primary-foreground'
-                : 'bg-foreground/[0.06] text-muted-foreground/50'
+                : 'bg-muted text-muted-foreground'
             }`}
             aria-label='Send message'
           >

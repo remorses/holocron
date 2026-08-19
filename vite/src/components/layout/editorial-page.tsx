@@ -510,11 +510,14 @@ export function EditorialPage({
                         stacks at end of range without forcing an implicit 2nd
                         column in grid-cols-1. Can coexist with a per-section
                         aside in the same column; sticky top of those asides
-                        is offset by --full-aside-height. */}
+                        is offset by --full-aside-height.
+                        Opaque bg + z-10 so later asides cannot show through
+                        the sticky Ask AI cell (`self-start` keeps the bg
+                        content-sized, not stretched across the row span). */}
                     {hasSharedAside && (
                       <SharedAsideCell
                         measure={measureSharedAside}
-                        className={`${asideClass} gap-3 lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:self-start lg:overflow-y-auto scrollbar-none`}
+                        className={`${asideClass} gap-3 bg-background z-10 lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:self-start lg:overflow-y-auto scrollbar-none`}
                         style={{
                           ...sharedAsideStyle,
                           top: stickyBase,
