@@ -12,18 +12,7 @@
  * which also covers `.holocron-chat.dark`).
  */
 
-/* ── Fin-style pill trigger (standalone widget mode) ─────────────────
- * Measured on fin.ai: collapsed 300×48px pill, expands on focus
- * with a width transition; surface has blur(10px) + layered shadow.
- * Bottom-center on mobile, bottom-right on desktop.
- *
- * --pill-width: collapsed width (default 300px). Override via ChatWidget
- *   style prop to make the pill narrower or wider.
- * --pill-expand: extra width added on focus (default 100px). The expanded
- *   width is pill-width + pill-expand, keeping expansion relative. */
-/* No CSS transform here — Motion layout morph uses transform, and a static
- * translateX(-50%) would fight the projection. Center on mobile with inset +
- * margin auto instead. */
+/* Pill trigger. No CSS transform — that fights Motion projection. */
 .holocron-chat-pill {
   position: fixed;
   bottom: 24px;
@@ -32,7 +21,27 @@
   z-index: 199;
   width: min(var(--pill-width, 300px), calc(100vw - 32px));
   margin-inline: auto;
+  border-radius: 24px;
+  overflow: hidden;
+  background: var(--background);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  /* Soft lift: hairline edge + tight contact + wide ambient (low alpha) */
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.05),
+    0 1px 2px rgb(0 0 0 / 0.04),
+    0 4px 12px rgb(0 0 0 / 0.06),
+    0 12px 28px rgb(0 0 0 / 0.05);
   transition: width 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+:host(.dark) .holocron-chat-pill,
+:where(.dark) .holocron-chat-pill {
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.07),
+    0 1px 2px rgb(0 0 0 / 0.2),
+    0 6px 16px rgb(0 0 0 / 0.22),
+    0 16px 36px rgb(0 0 0 / 0.18);
 }
 
 .holocron-chat-pill[data-expanded] {
@@ -47,30 +56,10 @@
   }
 }
 
-.holocron-chat-pill-surface {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  /* Soft lift: hairline edge + tight contact + wide ambient (low alpha) */
-  box-shadow:
-    0 0 0 1px rgb(0 0 0 / 0.05),
-    0 1px 2px rgb(0 0 0 / 0.04),
-    0 4px 12px rgb(0 0 0 / 0.06),
-    0 12px 28px rgb(0 0 0 / 0.05);
-}
-
-:host(.dark) .holocron-chat-pill-surface,
-:where(.dark) .holocron-chat-pill-surface {
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.07),
-    0 1px 2px rgb(0 0 0 / 0.2),
-    0 6px 16px rgb(0 0 0 / 0.22),
-    0 16px 36px rgb(0 0 0 / 0.18);
-}
-
-/* Drawer shell elevation — soft, not a black blob */
+/* Hairline via box-shadow; a real border smears during the morph. */
 .holocron-chat-drawer-panel {
   box-shadow:
-    0 0 0 1px rgb(0 0 0 / 0.05),
+    0 0 0 1px var(--border),
     0 2px 8px rgb(0 0 0 / 0.04),
     0 12px 32px rgb(0 0 0 / 0.08),
     0 24px 48px rgb(0 0 0 / 0.04);
@@ -79,7 +68,7 @@
 :host(.dark) .holocron-chat-drawer-panel,
 :where(.dark) .holocron-chat-drawer-panel {
   box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.06),
+    0 0 0 1px var(--border),
     0 2px 8px rgb(0 0 0 / 0.25),
     0 16px 40px rgb(0 0 0 / 0.3),
     0 32px 64px rgb(0 0 0 / 0.2);

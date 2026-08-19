@@ -5,7 +5,14 @@ import { createPortal } from 'react-dom'
 import { motion, useReducedMotion } from 'motion/react'
 import { Link } from './link.tsx'
 import { useSyncExternalStore } from 'react'
-import { chatStore, CHAT_LAYOUT_ID, CHAT_LAYOUT_TRANSITION, type ChatState } from '../chat/chat-store.ts'
+import {
+  chatStore,
+  chatShellLayoutId,
+  CHAT_LAYOUT_COLLAPSE,
+  CHAT_CONTENT_ENTER,
+  CHAT_CONTENT_EXIT,
+  type ChatState,
+} from '../chat/chat-store.ts'
 
 function useChatStore<T>(selector: (s: ChatState) => T): T {
   return useSyncExternalStore(chatStore.subscribe, () => selector(chatStore.getState()), () => selector(chatStore.getState()))
@@ -55,7 +62,7 @@ export function SidebarAssistant() {
   )
   const reduceMotion = useReducedMotion()
 
-  const {site } = useHolocronData()
+  const { site, currentPageHref } = useHolocronData()
   const sidebarRef = useRef<HTMLDivElement>(null)
   const handleChange = (value: string) => {
     setInputValue(value)
@@ -73,54 +80,66 @@ export function SidebarAssistant() {
     void ensureSessionRestored()
   }
 
-  // Stays mounted while the drawer is open so the drawer's exit clone can
-  // morph back into these bounds on close, and the aside layout stays stable.
-  // visibility:hidden while open keeps it measurable for Motion but removes
-  // it from the a11y tree and tab order — drawerState flips to 'closed'
-  // before the exit morph starts, so it is visible again during the morph.
+  // Stay mounted + inert while open. Opaque mix, not bg-accent (accent is rgba).
   const isDrawerOpen = drawerState === 'open'
   return (
     <motion.div
       ref={sidebarRef}
-      className='hidden lg:block w-full rounded-2xl bg-accent px-0.5 pt-px pb-0.5'
-      layoutId={CHAT_LAYOUT_ID}
-      layoutDependency={drawerState}
-      transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
-
-      style={{ borderRadius: 16, visibility: isDrawerOpen ? 'hidden' : 'visible' }}
+      className='hidden lg:block w-full overflow-hidden rounded-2xl'
+      data-chat-shell='sidebar'
+      layoutId={chatShellLayoutId(currentPageHref || '/')}
+      transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_COLLAPSE }}
+      inert={isDrawerOpen}
+      style={{
+        borderRadius: 16,
+        backgroundColor: 'color-mix(in srgb, var(--foreground) 8%, var(--background))',
+      }}
     >
-      <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
-        {hasExistingChat ? (
-          <button
-            type='button'
-            onClick={openExistingChat}
-            className='flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer'
-          >
-            <span className='shrink-0'>
-              <MessageCircleIcon />
-            </span>
-            <span className='underline underline-offset-2'>Open existing chat</span>
-          </button>
-        ) : (
-          <>
-            <span className='text-muted-foreground shrink-0'>
-              <InfoCircleIcon />
-            </span>
-            <span className='text-[11px] font-medium text-muted-foreground'>
-              Ask AI about this page
-            </span>
-          </>
-        )}
-      </div>
-      <ChatInput
-        value={inputValue}
-        onChange={handleChange}
-        onSubmit={handleSubmit}
-        placeholder={`what is ${site.config?.name || 'this page'}?`}
-        // Concentric radius: outer frame is 16px with a 2px gap → 14px keeps
-        // the accent ring visually uniform around the corners.
-        className='rounded-[14px]'
-      />
+      <motion.div
+        layout
+        animate={{ opacity: isDrawerOpen ? 0 : 1 }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : isDrawerOpen
+              ? CHAT_CONTENT_EXIT
+              : CHAT_CONTENT_ENTER
+        }
+        className='px-0.5 pt-px pb-0.5'
+      >
+        <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
+          {hasExistingChat ? (
+            <button
+              type='button'
+              onClick={openExistingChat}
+              className='flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground cursor-pointer'
+            >
+              <span className='shrink-0'>
+                <MessageCircleIcon />
+              </span>
+              <span className='underline underline-offset-2'>Open existing chat</span>
+            </button>
+          ) : (
+            <>
+              <span className='text-muted-foreground shrink-0'>
+                <InfoCircleIcon />
+              </span>
+              <span className='text-[11px] font-medium text-muted-foreground'>
+                Ask AI about this page
+              </span>
+            </>
+          )}
+        </div>
+        <ChatInput
+          value={inputValue}
+          onChange={handleChange}
+          onSubmit={handleSubmit}
+          placeholder={`what is ${site.config?.name || 'this page'}?`}
+          // Concentric radius: outer frame is 16px with a 2px gap → 14px keeps
+          // the accent ring visually uniform around the corners.
+          className='rounded-[14px]'
+        />
+      </motion.div>
     </motion.div>
   )
 }

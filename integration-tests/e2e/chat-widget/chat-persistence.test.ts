@@ -141,8 +141,8 @@ test("submit after reload includes the restored history in the request", async (
     { timeout: 30000 },
   );
 
-  // The drawer is open — use the visible drawer textarea.
-  const drawerInput = page.locator("textarea:visible");
+  // Sidebar textarea stays visible (inert) while the drawer is open.
+  const drawerInput = page.locator(".holocron-chat-input-frame textarea");
   await drawerInput.fill("and who maintains it?");
   await drawerInput.press("Enter");
 

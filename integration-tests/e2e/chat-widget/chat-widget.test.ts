@@ -11,9 +11,33 @@
  * textarea stays a normal input.
  */
 
-import { test, expect } from "../helpers/test.ts";
+import { test, expect, type Page } from "../helpers/test.ts";
 import fs from "node:fs";
 import path from "node:path";
+
+async function sampleTransforms(
+  page: Page,
+  selector: string,
+  action: () => Promise<void>,
+): Promise<string[]> {
+  await page.evaluate((sel) => {
+    const samples: string[] = [];
+    (window as unknown as { __tfSamples: string[]; __tfPoll: ReturnType<typeof setInterval> }).__tfSamples = samples;
+    (window as unknown as { __tfPoll: ReturnType<typeof setInterval> }).__tfPoll = setInterval(() => {
+      const el = document.querySelector(sel);
+      if (el) samples.push(getComputedStyle(el).transform);
+    }, 16);
+  }, selector);
+  await action();
+  await page.evaluate(
+    () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
+  );
+  return page.evaluate(() => {
+    const w = window as unknown as { __tfSamples: string[]; __tfPoll: ReturnType<typeof setInterval> };
+    clearInterval(w.__tfPoll);
+    return w.__tfSamples;
+  });
+}
 
 const cacheDir = path.join(
   import.meta.dirname,
@@ -93,6 +117,32 @@ test("typing in sidebar input and pressing Enter opens the chat drawer", async (
   // The drawer should open — it has a "New chat" button with aria-label
   const newChatButton = page.locator("button[aria-label='New chat']");
   await expect(newChatButton).toBeVisible({ timeout: 10000 });
+});
+
+test("chat shell morphs on open and stays still on client navigation", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  await expect(page.getByText("Ask AI about this page")).toBeVisible({ timeout: 10000 });
+
+  const openSamples = await sampleTransforms(page, "[data-chat-shell='drawer']", async () => {
+    const chatInput = page.locator("textarea").first();
+    await chatInput.fill("hello");
+    await chatInput.press("Enter");
+    await expect(page.locator("button[aria-label='New chat']")).toBeVisible({ timeout: 10000 });
+  });
+  expect(openSamples.some((t) => t.startsWith("matrix"))).toBe(true);
+
+  await page.locator("button[aria-label='Close']").click();
+  await expect(page.locator("button[aria-label='New chat']")).not.toBeVisible({ timeout: 5000 });
+
+  const navSamples = await sampleTransforms(page, "[data-chat-shell='sidebar']", async () => {
+    await page.locator('.slot-sidebar-left a[href="/getting-started"]').click();
+    await expect(page).toHaveURL(/getting-started/, { timeout: 5000 });
+    await expect(page.locator("[data-chat-shell='sidebar']")).toBeVisible({ timeout: 10000 });
+  });
+  expect(navSamples.length).toBeGreaterThan(0);
+  expect(navSamples.every((t) => t === "none")).toBe(true);
 });
 
 test("existing chat keeps the textarea normal and opens from the heading", async ({ page }) => {

@@ -17,7 +17,13 @@
 import React, { useEffect, useRef, useCallback, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { chatStore, CHAT_LAYOUT_ID, CHAT_LAYOUT_TRANSITION } from './chat-store.ts'
+import {
+  chatStore,
+  chatShellLayoutId,
+  CHAT_LAYOUT_TRANSITION,
+  CHAT_CONTENT_ENTER,
+  CHAT_CONTENT_EXIT,
+} from './chat-store.ts'
 
 function useChatStore<T>(selector: (s: import('./chat-store.ts').ChatState) => T): T {
   return useSyncExternalStore(chatStore.subscribe, () => selector(chatStore.getState()), () => selector(chatStore.getState()))
@@ -44,6 +50,8 @@ function getPortalTarget(): HTMLElement | null {
   return chatWidgetStore.getState().portalTarget || document.body
 }
 
+const getChatPageKey = () => chatWidgetStore.getState().currentSlug || '/'
+
 export function ChatDrawer() {
   const isMounted = useSyncExternalStore(emptySubscribe, getTrue, getFalse)
   if (!isMounted) return null
@@ -58,6 +66,8 @@ function ChatDrawerInner() {
   const draftText = useChatStore((s) => s.draftText)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const drawerPanelRef = useRef<HTMLDivElement>(null)
+  const pageKey = useSyncExternalStore(chatWidgetStore.subscribe, getChatPageKey, getChatPageKey)
+  const layoutKeyRef = useRef(pageKey)
   const reduceMotion = useReducedMotion()
 
   /** Scroll the last user message to the top of the scroll area so the
@@ -214,6 +224,7 @@ function ChatDrawerInner() {
   }, [drawerState])
 
   const isOpen = drawerState === 'open'
+  if (isOpen) layoutKeyRef.current = pageKey
 
   // Portal target from widget store (reactive), fallback to document.body
   const portalTarget = useSyncExternalStore(chatWidgetStore.subscribe, getPortalTarget, getNull)
@@ -240,18 +251,15 @@ function ChatDrawerInner() {
         />
       )}
 
-      {/* Drawer panel — Motion layoutId morphs sidebar widget / pill into this
-       * panel. AnimatePresence keeps the panel in the DOM while it exits so
-       * closing morphs it back into the pill/sidebar bounds (with crossfade)
-       * instead of vanishing instantly (motion.dev shared layout pattern). */}
+      {/* AnimatePresence keeps the panel mounted so close can morph back. */}
       <AnimatePresence>
       {isOpen && (
       <motion.div
         key='holocron-chat-drawer-panel'
         ref={drawerPanelRef}
         className='holocron-chat-drawer-panel'
-        layoutId={CHAT_LAYOUT_ID}
-        layoutDependency={drawerState}
+        data-chat-shell='drawer'
+        layoutId={chatShellLayoutId(layoutKeyRef.current)}
         initial={false}
         transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
 
@@ -264,10 +272,25 @@ function ChatDrawerInner() {
           pointerEvents: 'auto',
           background: 'var(--background)',
           borderRadius: 24,
-          border: '1px solid var(--border)',
+          overflow: 'hidden',
+        }}
+      >
+      {/* `layout` counter-scales so text stays at final size while the shell grows. */}
+      <motion.div
+        layout
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : { opacity: isOpen ? CHAT_CONTENT_ENTER : CHAT_CONTENT_EXIT }
+        }
+        style={{
+          position: 'absolute',
+          inset: 0,
           display: 'flex',
           flexDirection: 'column',
-          overflow: 'hidden',
         }}
       >
         {/* Top bar */}
@@ -391,6 +414,7 @@ function ChatDrawerInner() {
           </div>
         </div>
       </motion.div>
+      </motion.div>
       )}
       </AnimatePresence>
     </div>,
@@ -455,13 +479,17 @@ function WelcomeMessage({
     onSubmit(text)
   }
 
-  const enter = (delay: number) =>
+  const enter = (step: number) =>
     reduceMotion
       ? {}
       : {
           initial: { opacity: 0, y: 10, filter: 'blur(2px)' },
           animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
-          transition: { duration: 0.4, delay, ease: [0.22, 0.61, 0.36, 1] as const },
+          transition: {
+            duration: 0.26,
+            delay: 0.14 + step * 0.05,
+            ease: [0.22, 0.61, 0.36, 1] as const,
+          },
         }
 
   return (
@@ -496,7 +524,7 @@ function WelcomeMessage({
       </motion.div>
 
       <motion.div
-        {...enter(0.05)}
+        {...enter(1)}
         style={{
           fontSize: '17px',
           fontWeight: 600,
@@ -509,7 +537,7 @@ function WelcomeMessage({
       </motion.div>
 
       <motion.div
-        {...enter(0.1)}
+        {...enter(2)}
         style={{
           fontSize: '13px',
           color: 'var(--muted-foreground)',
@@ -522,7 +550,7 @@ function WelcomeMessage({
       </motion.div>
 
       <motion.div
-        {...enter(0.16)}
+        {...enter(3)}
         style={{
           display: 'flex',
           flexDirection: 'column',

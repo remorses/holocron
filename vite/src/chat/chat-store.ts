@@ -122,16 +122,35 @@ export function respondToApproval(toolCallId: string, approved: boolean): void {
   resolve?.(approved)
 }
 
-/**
- * Shared Motion layoutId for the pill/sidebar trigger ↔ drawer morph.
- * Works inside shadow DOM (unlike CSS view-transition-name).
- */
+/** Shared layoutId prefix. Key per page via chatShellLayoutId so client nav cannot pair two widgets. */
 export const CHAT_LAYOUT_ID = 'holocron-chat-container'
 
-/** Default spring used for the chat shell morph. */
+export function chatShellLayoutId(pageKey: string): string {
+  return `${CHAT_LAYOUT_ID}:${pageKey || '/'}`
+}
+
+/** Drawer open spring. */
 export const CHAT_LAYOUT_TRANSITION = {
   type: 'spring' as const,
-  stiffness: 420,
-  damping: 36,
-  mass: 0.8,
+  duration: 0.44,
+  bounce: 0,
+}
+
+/** Drawer close spring. */
+export const CHAT_LAYOUT_COLLAPSE = {
+  type: 'spring' as const,
+  duration: 0.34,
+  bounce: 0,
+}
+
+/** Content fade-in after the shell is roughly panel-sized. */
+export const CHAT_CONTENT_ENTER = {
+  duration: 0.2,
+  delay: 0.12,
+  ease: [0.23, 1, 0.32, 1] as const,
+}
+
+export const CHAT_CONTENT_EXIT = {
+  duration: 0.1,
+  ease: [0.4, 0, 1, 1] as const,
 }

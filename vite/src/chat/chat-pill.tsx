@@ -1,30 +1,30 @@
 'use client'
 
 /**
- * ChatPill — fin.ai-style textarea pill, the default trigger for the
- * standalone ChatWidget (widget mode only; docs mode keeps SidebarAssistant).
- *
- * Morphs into ChatDrawer via Motion layoutId. Stays mounted while the drawer
- * is open — Motion promotes the drawer to lead and crossfades this shell,
- * then morphs the drawer's exit clone back into it on close.
+ * ChatPill — widget-mode trigger. Outer shell owns layoutId; inner `layout` child counter-scales.
  */
 
 import React, { useCallback, useRef, useState, useSyncExternalStore } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import {
   chatStore,
-  CHAT_LAYOUT_ID,
-  CHAT_LAYOUT_TRANSITION,
+  chatShellLayoutId,
+  CHAT_LAYOUT_COLLAPSE,
+  CHAT_CONTENT_ENTER,
+  CHAT_CONTENT_EXIT,
 } from './chat-store.ts'
+import { chatWidgetStore } from './chat-widget-store.ts'
 import { ensureSessionRestored } from './chat-submit.ts'
 import { ArrowUpIcon } from './chat-icons.tsx'
 
 const getDrawerState = () => chatStore.getState().drawerState
+const getChatPageKey = () => chatWidgetStore.getState().currentSlug || '/'
 
 export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: string }) {
   const [inputValue, setInputValue] = useState('')
   const [focused, setFocused] = useState(false)
   const drawerState = useSyncExternalStore(chatStore.subscribe, getDrawerState, getDrawerState)
+  const pageKey = useSyncExternalStore(chatWidgetStore.subscribe, getChatPageKey, getChatPageKey)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const reduceMotion = useReducedMotion()
 
@@ -72,24 +72,30 @@ export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: st
   const expanded = focused || inputValue.length > 0
   const isDrawerOpen = drawerState === 'open'
 
-  // Stays mounted while the drawer is open so the drawer's exit clone can
-  // morph back into these bounds on close (motion.dev: "To animate an
-  // element back to its origin, use AnimatePresence to keep it in the DOM").
-  // visibility:hidden while open keeps it measurable for Motion but removes
-  // it from the a11y tree and tab order — drawerState flips to 'closed'
-  // before the exit morph starts, so it is visible again during the morph.
+  // Stay mounted + inert while open so close can morph back. visibility:hidden kills the crossfade.
   return (
     <motion.div
       ref={pillRef}
       className='holocron-chat-pill'
+      data-chat-shell='pill'
       data-expanded={expanded ? '' : undefined}
-      layoutId={CHAT_LAYOUT_ID}
-      layoutDependency={drawerState}
-      transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
-
-      style={{ borderRadius: 24, visibility: isDrawerOpen ? 'hidden' : 'visible' }}
+      layoutId={chatShellLayoutId(pageKey)}
+      transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_COLLAPSE }}
+      inert={isDrawerOpen}
+      style={{ borderRadius: 24 }}
     >
-      <div className='holocron-chat-pill-surface flex items-end gap-2 rounded-[24px] bg-background py-1.5 pr-1.5 pl-5'>
+      <motion.div
+        layout
+        animate={{ opacity: isDrawerOpen ? 0 : 1 }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : isDrawerOpen
+              ? CHAT_CONTENT_EXIT
+              : CHAT_CONTENT_ENTER
+        }
+        className='holocron-chat-pill-content flex items-end gap-2 py-1.5 pr-1.5 pl-5'
+      >
         <textarea
           ref={textareaRef}
           value={inputValue}
@@ -113,12 +119,12 @@ export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: st
           className={`flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors ${
             hasText
               ? 'bg-foreground text-background'
-              : 'bg-foreground/[0.06] text-muted-foreground/60'
+              : 'bg-muted text-muted-foreground'
           }`}
         >
           <ArrowUpIcon size={14} />
         </button>
-      </div>
+      </motion.div>
     </motion.div>
   )
 }
