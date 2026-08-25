@@ -5,6 +5,11 @@
  * Uses `refractor/core` plus langs that show up in real product docs.
  * Do not import `refractor` (36 langs) or `refractor/all` (~297 langs).
  * Unknown langs render as plain text.
+ *
+ * Grammars stay statically imported (wrangler evaluates `import()` at boot today)
+ * but `refractor.register` runs only when highlightCode needs that lang.
+ * TODO: switch each `refractor/<lang>` import to `import()` when Cloudflare
+ * Workers can leave those chunks unevaluated until first use.
  */
 
 import type { ComponentProps } from 'react'
@@ -173,19 +178,15 @@ const docsGrammars: Syntax[] = [
   systemd,
 ]
 
-const grammarsRegistered = Symbol.for('@holocron.so/vite/refractor-docs-grammars-v2')
+const grammarById = new Map<string, Syntax>()
+for (const grammar of docsGrammars) {
+  grammarById.set(grammar.displayName, grammar)
+  for (const alias of grammar.aliases ?? []) grammarById.set(alias, grammar)
+}
+grammarById.set('jsonc', json)
 
-/** Refractor's registry is process-global. RSC remount re-runs this module. */
-export function registerExtraGrammars() {
-  if (!Reflect.get(refractor.languages, grammarsRegistered)) {
-    for (const grammar of docsGrammars) {
-      const name = grammar.displayName
-      if (name && refractor.registered(name)) continue
-      refractor.register(grammar)
-    }
-    Reflect.set(refractor.languages, grammarsRegistered, true)
-  }
-  refractor.alias({ json: 'jsonc', markdown: 'mdx' })
+function installDiagramGrammar() {
+  if (refractor.registered('diagram')) return
   refractor.languages.diagram = {
     'box-drawing': /[┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷]+/,
     'line-char': /[-_|<>]+/,
@@ -193,12 +194,110 @@ export function registerExtraGrammars() {
   }
 }
 
-registerExtraGrammars()
+// Prism markdown has YAML frontmatter, but only if yaml is registered first
+// (`inside: Prism.languages.yaml` is captured at register time). There is no
+// official Prism MDX grammar; the TextMate one is wooorm/markdown-tm-language.
+function wireYamlFrontmatter(grammar) {
+  const matter = grammar?.['front-matter-block']?.inside?.['front-matter']
+  if (matter) matter.inside = refractor.languages.yaml
+}
+
+function ensureMarkdownWithFrontmatter() {
+  if (!refractor.registered('yaml')) refractor.register(yaml)
+  if (!refractor.registered('markdown')) refractor.register(markdown)
+  wireYamlFrontmatter(refractor.languages.markdown)
+}
+
+function walkMarkdownCodeFences(tokens) {
+  if (!tokens || typeof tokens === 'string' || !Array.isArray(tokens)) return
+  for (const token of tokens) {
+    if (!token || typeof token === 'string') continue
+    if (token.type !== 'code') {
+      walkMarkdownCodeFences(token.content)
+      continue
+    }
+    const codeLang = token.content?.[1]
+    const codeBlock = token.content?.[3]
+    if (
+      !codeLang ||
+      !codeBlock ||
+      codeLang.type !== 'code-language' ||
+      codeBlock.type !== 'code-block' ||
+      typeof codeLang.content !== 'string'
+    ) continue
+    let lang = codeLang.content.replace(/\b#/g, 'sharp').replace(/\b\+\+/g, 'pp')
+    lang = (/[a-z][\w-]*/i.exec(lang) || [''])[0].toLowerCase()
+    if (!lang) continue
+    ensureLang(lang)
+    const alias = 'language-' + lang
+    if (!codeBlock.alias) codeBlock.alias = [alias]
+    else if (typeof codeBlock.alias === 'string') {
+      codeBlock.alias = codeBlock.alias === alias ? [alias] : [codeBlock.alias, alias]
+    } else if (!codeBlock.alias.includes(alias)) {
+      codeBlock.alias.push(alias)
+    }
+  }
+}
+
+function installMdxCodeFenceHook() {
+  const prism: any = refractor
+  if (prism._holocronMdxHook) return
+  prism._holocronMdxHook = true
+  prism.hooks.add('after-tokenize', (env) => {
+    if (env.language !== 'mdx') return
+    walkMarkdownCodeFences(env.tokens)
+  })
+}
+
+function installMdxGrammar() {
+  ensureMarkdownWithFrontmatter()
+  if (!refractor.registered('jsx')) refractor.register(jsx)
+  const prism: any = refractor
+  if (prism.languages.mdx && prism.languages.mdx !== prism.languages.markdown) {
+    installMdxCodeFenceHook()
+    return
+  }
+  const mdx = prism.languages.extend('markdown', {})
+  mdx.tag = prism.languages.jsx.tag
+  wireYamlFrontmatter(mdx)
+  prism.languages.mdx = mdx
+  prism.languages.insertBefore('mdx', 'blockquote', {
+    'mdx-esm': {
+      pattern: /^(?:import|export)\b.+(?:\n[ \t].+)*$/m,
+      greedy: true,
+      alias: 'language-javascript',
+      inside: prism.languages.javascript,
+    },
+  })
+  installMdxCodeFenceHook()
+}
+
+/** Refractor's registry is process-global. RSC remount re-runs this module. */
+function ensureLang(id: string): boolean {
+  if (id === 'diagram') {
+    installDiagramGrammar()
+    return true
+  }
+  if (id === 'mdx') {
+    installMdxGrammar()
+    return Boolean(refractor.languages.mdx)
+  }
+  if (id === 'markdown' || id === 'md') {
+    ensureMarkdownWithFrontmatter()
+    return true
+  }
+  if (refractor.registered(id)) return true
+  const grammar = grammarById.get(id)
+  if (!grammar) return false
+  if (!refractor.registered(grammar.displayName)) refractor.register(grammar)
+  if (grammar.displayName === 'json') refractor.alias({ json: 'jsonc' })
+  return refractor.registered(id)
+}
 
 /** Highlight code on the server. Unknown langs return undefined. */
 export function highlightCode(code: string, lang?: string): string | undefined {
   const id = lang?.trim().toLowerCase()
-  if (!id || !refractor.registered(id)) return undefined
+  if (!id || !ensureLang(id)) return undefined
   return toHtml(refractor.highlight(code, id))
 }
 

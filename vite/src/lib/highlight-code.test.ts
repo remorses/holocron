@@ -1,16 +1,18 @@
 /**
  * Server highlight helper: token HTML, aliases, unknown langs, diagram grammar.
+ * Isolation tests must stay first. Refractor state is process-global.
  */
 
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { refractor } from 'refractor/core'
 import { CodeBlock } from '../components/markdown/code-block.tsx'
-import { highlightCode, HighlightedCodeBlock, registerExtraGrammars } from './highlight-code.tsx'
+import { highlightCode, HighlightedCodeBlock } from './highlight-code.tsx'
 
 const DOCS_LANGS = [
   'markup', 'html', 'css', 'scss', 'sass', 'less', 'clike', 'javascript',
-  'js', 'c', 'cpp', 'csharp', 'json', 'json5', 'jsonc', 'markdown', 'md',
+  'js', 'c', 'cpp', 'csharp', 'json', 'json5', 'jsonc',   'markdown', 'md', 'mdx',
   'ruby', 'go', 'kotlin', 'bash', 'sh', 'shell-session', 'yaml', 'yml',
   'sql', 'python', 'py', 'diff', 'toml', 'ini', 'rust', 'java',
   'typescript', 'ts', 'php', 'docker', 'dockerfile', 'graphql', 'jsx',
@@ -25,6 +27,38 @@ const DOCS_LANGS = [
 const DROPPED_LANGS = ['vim', 'textile', 'pug', 'lisp', 'arduino', 'wren', 'prolog']
 
 describe('highlightCode', () => {
+  test('import does not register grammars', () => {
+    expect(refractor.registered('java')).toBe(false)
+    expect(refractor.registered('nix')).toBe(false)
+    expect(refractor.registered('csharp')).toBe(false)
+  })
+
+  test('first highlight of ts and bash still works', () => {
+    const ts = highlightCode('const greeting = "Hello"', 'ts')
+    expect(ts).toContain('token keyword')
+    expect(ts).toContain('token string')
+    const bash = highlightCode('echo hi', 'bash')
+    expect(bash).toContain('token')
+  })
+
+  test('highlight of nix registers only that lang', () => {
+    expect(refractor.registered('java')).toBe(false)
+    expect(highlightCode('x', 'nix')).toBeDefined()
+    expect(refractor.registered('nix')).toBe(true)
+    expect(refractor.registered('java')).toBe(false)
+    expect(refractor.registered('csharp')).toBe(false)
+  })
+
+  test('calling highlight twice does not double-register', () => {
+    const spy = vi.spyOn(refractor, 'register')
+    highlightCode('fmt.Println(1)', 'go')
+    const calls = spy.mock.calls.length
+    expect(calls).toBeGreaterThan(0)
+    highlightCode('fmt.Println(2)', 'go')
+    expect(spy.mock.calls.length).toBe(calls)
+    spy.mockRestore()
+  })
+
   test('registers the docs language keep list', () => {
     const missing = DOCS_LANGS.filter((id) => highlightCode('x', id) === undefined)
     expect(missing).toEqual([])
@@ -36,8 +70,7 @@ describe('highlightCode', () => {
     }
   })
 
-  test('aliases mdx and jsonc', () => {
-    expect(highlightCode('x', 'mdx')).toBeDefined()
+  test('aliases jsonc', () => {
     expect(highlightCode('{ "a": 1 }', 'jsonc')).toContain('token')
   })
 
@@ -58,9 +91,51 @@ describe('highlightCode', () => {
     expect(html).toContain('token string')
   })
 
-  test('highlights fenced code inside mdx snippets', () => {
-    const html = highlightCode('const greeting = "Hello"', 'mdx')
-    expect(html).toBeDefined()
+  test('highlights yaml frontmatter in markdown', () => {
+    const html = highlightCode('---\ntitle: Hello\n---\n\n# Hi\n', 'markdown')
+    expect(html).toContain('front-matter-block')
+    expect(html).toContain('token key atrule')
+    expect(html).toContain('title')
+  })
+
+  test('highlights yaml frontmatter in md', () => {
+    const html = highlightCode('---\ntitle: Hello\n---\n\n# Hi\n', 'md')
+    expect(html).toContain('token key atrule')
+  })
+
+  test('highlights yaml frontmatter in mdx', () => {
+    const html = highlightCode('---\ntitle: Hello\n---\n\n# Hi\n', 'mdx')
+    expect(html).toContain('front-matter-block')
+    expect(html).toContain('token key atrule')
+    expect(html).toContain('title')
+  })
+
+  test('highlights jsx component tags in mdx', () => {
+    const html = highlightCode('<Note>\nHello\n</Note>\n', 'mdx')
+    expect(html).toContain('token tag')
+    expect(html).toContain('token class-name')
+  })
+
+  test('highlights jsx attributes and import in mdx', () => {
+    const html = highlightCode(
+      "import Foo from './foo'\n\n<Step title=\"First\">\nDo this.\n</Step>\n",
+      'mdx',
+    )
+    expect(html).toContain('token keyword')
+    expect(html).toContain('token attr-name')
+    expect(html).toContain('token attr-value')
+  })
+
+  test('highlights jsx expression attributes in mdx', () => {
+    const html = highlightCode('<Card href={url} />\n', 'mdx')
+    expect(html).toContain('token tag')
+    expect(html).toContain('token script')
+  })
+
+  test('highlights nested fenced code inside mdx snippets', () => {
+    const html = highlightCode('```ts\nconst greeting = "Hello"\n```\n', 'mdx')
+    expect(html).toContain('token keyword')
+    expect(html).toContain('token string')
   })
 
   test('highlights diagram box drawing', () => {
@@ -79,7 +154,8 @@ describe('highlightCode', () => {
   })
 
   test('grammar registration is safe to re-run on RSC remount', () => {
-    expect(() => registerExtraGrammars()).not.toThrow()
+    expect(() => highlightCode('const greeting = "Hello"', 'javascript')).not.toThrow()
+    expect(() => highlightCode('const greeting = "Hello"', 'javascript')).not.toThrow()
     expect(highlightCode('const greeting = "Hello"', 'javascript')).toContain('token')
   })
 
