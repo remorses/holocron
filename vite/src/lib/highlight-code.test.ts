@@ -33,6 +33,29 @@ describe('highlightCode', () => {
     expect(refractor.registered('csharp')).toBe(false)
   })
 
+  test('html keeps inline style and script grammars', () => {
+    const html = highlightCode('<style>.a{color:red}</style><script>var a=1</script>', 'html')
+    expect(html).toContain('token language-css')
+    expect(html).toContain('token language-javascript')
+  })
+
+  test('http bodies keep the content-type grammar', () => {
+    const html = highlightCode('HTTP/1.1 200 OK\nContent-Type: application/json\n\n{ "id": 1 }\n', 'http')
+    expect(html).toContain('token application-json')
+    expect(html).toContain('token property')
+  })
+
+  test('css extras tokens survive', () => {
+    const html = highlightCode(':root { --brand: #ff0000; margin: 10px }', 'css')
+    expect(html).toContain('token variable')
+    expect(html).toContain('token hexcode')
+    expect(html).toContain('token unit')
+  })
+
+  test('js extras tokens survive on typescript', () => {
+    expect(highlightCode('const x = Math.PI', 'ts')).toContain('token known-class-name')
+  })
+
   test('first highlight of ts and bash still works', () => {
     const ts = highlightCode('const greeting = "Hello"', 'ts')
     expect(ts).toContain('token keyword')

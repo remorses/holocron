@@ -8,6 +8,8 @@
  *
  * Grammars stay statically imported (wrangler evaluates `import()` at boot today)
  * but `refractor.register` runs only when highlightCode needs that lang.
+ * First highlight installs a small core set in Prism order (markup, css+extras,
+ * javascript+extras, json) so html/http/ts keep embedded and extras tokens.
  * TODO: switch each `refractor/<lang>` import to `import()` when Cloudflare
  * Workers can leave those chunks unevaluated until first use.
  */
@@ -178,12 +180,39 @@ const docsGrammars: Syntax[] = [
   systemd,
 ]
 
+const MODIFIER_GRAMMARS = new Set([
+  'css-extras',
+  'js-extras',
+  'js-templates',
+  'markup-templating',
+])
+
+const CORE_GRAMMARS: Syntax[] = [
+  markup,
+  css,
+  cssExtras,
+  javascript,
+  jsExtras,
+  jsTemplates,
+  json,
+]
+
+const coreRegistered = Symbol.for('@holocron.so/vite/refractor-core-grammars-v1')
+
 const grammarById = new Map<string, Syntax>()
 for (const grammar of docsGrammars) {
+  if (MODIFIER_GRAMMARS.has(grammar.displayName)) continue
   grammarById.set(grammar.displayName, grammar)
   for (const alias of grammar.aliases ?? []) grammarById.set(alias, grammar)
 }
 grammarById.set('jsonc', json)
+
+function ensureCore() {
+  if (Reflect.get(refractor.languages, coreRegistered)) return
+  for (const grammar of CORE_GRAMMARS) refractor.register(grammar)
+  refractor.alias({ json: 'jsonc' })
+  Reflect.set(refractor.languages, coreRegistered, true)
+}
 
 function installDiagramGrammar() {
   if (refractor.registered('diagram')) return
@@ -279,18 +308,21 @@ function ensureLang(id: string): boolean {
     return true
   }
   if (id === 'mdx') {
+    ensureCore()
     installMdxGrammar()
     return Boolean(refractor.languages.mdx)
   }
   if (id === 'markdown' || id === 'md') {
+    ensureCore()
     ensureMarkdownWithFrontmatter()
     return true
   }
-  if (refractor.registered(id)) return true
   const grammar = grammarById.get(id)
+  if (!grammar && !refractor.registered(id)) return false
+  ensureCore()
+  if (refractor.registered(id)) return true
   if (!grammar) return false
   if (!refractor.registered(grammar.displayName)) refractor.register(grammar)
-  if (grammar.displayName === 'json') refractor.alias({ json: 'jsonc' })
   return refractor.registered(id)
 }
 
