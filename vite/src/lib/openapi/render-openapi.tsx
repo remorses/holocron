@@ -170,8 +170,8 @@ export function OpenAPIEndpoint(props: OpenAPIEndpointProps) {
   return (
     <div className='flex flex-col gap-(--prose-gap) text-sm'>
       <div className='flex flex-col gap-2'>
-        <div className='flex items-center gap-3'>
-          <code className='code-font-size text-muted-foreground font-mono'>{props.path}</code>
+        <div className='flex min-w-0 items-center gap-3'>
+          <code className='code-font-size text-muted-foreground font-mono min-w-0 truncate' title={props.path}>{props.path}</code>
           <MethodBadge method={props.method} />
           {props.deprecated && <NavBadge label='deprecated' color='orange' />}
         </div>
