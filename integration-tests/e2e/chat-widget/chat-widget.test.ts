@@ -117,6 +117,7 @@ test("typing in sidebar input and pressing Enter opens the chat drawer", async (
   // The drawer should open — it has a "New chat" button with aria-label
   const newChatButton = page.locator("button[aria-label='New chat']");
   await expect(newChatButton).toBeVisible({ timeout: 10000 });
+  await expect(page.locator(".holocron-chat-input-frame textarea")).toHaveValue("");
 });
 
 test("chat shell morphs on open and stays still on client navigation", async ({ page }) => {

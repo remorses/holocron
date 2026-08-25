@@ -64,6 +64,7 @@ function ChatDrawerInner() {
   const messages = useChatStore((s) => s.messages)
   const errorMessage = useChatStore((s) => s.errorMessage)
   const draftText = useChatStore((s) => s.draftText)
+  const pendingSubmit = useChatStore((s) => s.pendingSubmit)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const drawerPanelRef = useRef<HTMLDivElement>(null)
   const pageKey = useSyncExternalStore(chatWidgetStore.subscribe, getChatPageKey, getChatPageKey)
@@ -399,7 +400,7 @@ function ChatDrawerInner() {
             }}
           >
             <ChatInput
-              value={draftText}
+              value={pendingSubmit ? '' : draftText}
               onChange={(v) => chatStore.setState({ draftText: v })}
               onSubmit={handleSubmit}
               onStop={handleStop}

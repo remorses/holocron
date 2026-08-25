@@ -488,6 +488,8 @@ export async function submitChat(
   if (!submitText) return
   if (chatStore.getState().isGenerating) return
 
+  chatStore.setState({ draftText: '', pendingSubmit: false })
+
    const { chatApiUrl, currentSlug, tools: storeBrowserTools, context } = chatWidgetStore.getState()
    if (!chatApiUrl) {
      console.error('chatWidgetStore.chatApiUrl is not set')
@@ -506,8 +508,6 @@ export async function submitChat(
    chatStore.setState((s) => ({
      isGenerating: true,
      messages: [...s.messages, nextUserMessage],
-     draftText: '',
-     pendingSubmit: false,
      errorMessage: null,
      abortController: controller,
    }))

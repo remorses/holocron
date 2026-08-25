@@ -72,6 +72,7 @@ export function SidebarAssistant() {
   const handleSubmit = () => {
     const text = inputValue.trim()
     if (!text) return
+    setInputValue('')
     chatStore.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' })
   }
 
