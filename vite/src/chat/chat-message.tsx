@@ -27,8 +27,6 @@ import { ArrowRightIcon, CopyIcon, CheckIcon, RefreshIcon } from './chat-icons.t
 import { NavTooltip } from './chat-input.tsx'
 import { ShowMore } from './show-more.tsx'
 import { Link } from '../components/link.tsx'
-import { getGeneratedLogoUrl } from '../lib/generated-logo.tsx'
-import { withBasePath } from '../lib/holocron-url.ts'
 
 // ── User message ─────────────────────────────────────────────────────
 
@@ -278,7 +276,8 @@ function ToolApprovalRequest({
 }
 
 function HolocronWordmark() {
-  const src = withBasePath(getGeneratedLogoUrl('holocron'))
+  // Absolute URL: local /holocron-api/ai-logo proxy 404s in embeds and mocks.
+  const src = 'https://holocron.so/api/ai-logo/holocron.jpeg'
   return (
     <span className='inline-flex items-center'>
       <img
@@ -306,9 +305,9 @@ function ChatPromotion({
     <div
       data-notice-code={part.code}
       data-notice-severity='promotion'
-      className='no-bleed flex flex-col gap-3 rounded-lg border border-primary/15 bg-primary/5 px-3.5 py-3 text-foreground'
+      className='no-bleed flex flex-col gap-3 rounded-lg bg-primary/5 px-3.5 py-3 text-foreground'
     >
-      <div className='flex min-w-0 flex-col gap-2'>
+      <div className='flex min-w-0 flex-col gap-4'>
         <HolocronWordmark />
         <div className='min-w-0 text-[13px] font-medium leading-snug text-pretty'>
           {part.title}
