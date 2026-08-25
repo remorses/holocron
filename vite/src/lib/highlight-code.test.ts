@@ -149,6 +149,25 @@ describe('highlightCode', () => {
     expect(html).toContain('token attr-value')
   })
 
+  test('highlights multiline mdx import through the from line', () => {
+    const html = highlightCode("import {\n  Foo,\n} from './foo'\n", 'mdx')
+    expect(html).toContain('token keyword')
+    expect(html).toContain('token string')
+    expect(html).not.toMatch(/<\/span>\s*\} from/)
+  })
+
+  test('highlights import type and side-effect import in mdx', () => {
+    const html = highlightCode("import type { Foo } from './foo'\nimport './bar'\n", 'mdx')
+    expect(html).toContain('token keyword')
+    expect(html).toContain('token string')
+  })
+
+  test('does not eat indented markdown after a blank line after import', () => {
+    const html = highlightCode("import Foo from './foo'\n\n  indented\n", 'mdx')
+    expect(html).toContain('token keyword')
+    expect(html).toMatch(/<\/span>\n\n  indented/)
+  })
+
   test('highlights jsx expression attributes in mdx', () => {
     const html = highlightCode('<Card href={url} />\n', 'mdx')
     expect(html).toContain('token tag')

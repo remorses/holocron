@@ -292,7 +292,8 @@ function installMdxGrammar() {
   prism.languages.mdx = mdx
   prism.languages.insertBefore('mdx', 'blockquote', {
     'mdx-esm': {
-      pattern: /^(?:import|export)\b.+(?:\n[ \t].+)*$/m,
+      // Until the next blank line. MDX requires a blank line before markdown.
+      pattern: /^(?:import|export)\b[^\r\n]*(?:(?:\r\n?|\n)(?![ \t]*$)[^\r\n]*)*/m,
       greedy: true,
       alias: 'language-javascript',
       inside: prism.languages.javascript,
