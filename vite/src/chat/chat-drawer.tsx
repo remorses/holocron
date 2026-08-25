@@ -22,7 +22,7 @@ import {
   chatShellLayoutId,
   CHAT_LAYOUT_TRANSITION,
   CHAT_CONTENT_ENTER,
-  CHAT_CONTENT_EXIT,
+  CHAT_DRAWER_CONTENT_EXIT,
 } from './chat-store.ts'
 
 function useChatStore<T>(selector: (s: import('./chat-store.ts').ChatState) => T): T {
@@ -285,7 +285,7 @@ function ChatDrawerInner() {
         transition={
           reduceMotion
             ? { duration: 0 }
-            : { opacity: isOpen ? CHAT_CONTENT_ENTER : CHAT_CONTENT_EXIT }
+            : { opacity: isOpen ? CHAT_CONTENT_ENTER : CHAT_DRAWER_CONTENT_EXIT }
         }
         style={{
           position: 'absolute',
@@ -487,8 +487,8 @@ function WelcomeMessage({
           initial: { opacity: 0, y: 10, filter: 'blur(2px)' },
           animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
           transition: {
-            duration: 0.26,
-            delay: 0.14 + step * 0.05,
+            duration: 0.18,
+            delay: 0.08 + step * 0.04,
             ease: [0.22, 0.61, 0.36, 1] as const,
           },
         }

@@ -93,7 +93,7 @@ export function SidebarAssistant() {
       inert={isDrawerOpen}
       style={{
         borderRadius: 16,
-        backgroundColor: 'color-mix(in srgb, var(--foreground) 8%, var(--background))',
+        backgroundColor: 'var(--background)',
       }}
     >
       <motion.div
@@ -107,6 +107,9 @@ export function SidebarAssistant() {
               : CHAT_CONTENT_ENTER
         }
         className='px-0.5 pt-px pb-0.5'
+        style={{
+          backgroundColor: 'color-mix(in srgb, var(--foreground) 8%, var(--background))',
+        }}
       >
         <div className='flex items-center gap-1.5 px-2.5 py-1.5'>
           {hasExistingChat ? (

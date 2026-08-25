@@ -132,25 +132,32 @@ export function chatShellLayoutId(pageKey: string): string {
 /** Drawer open spring. */
 export const CHAT_LAYOUT_TRANSITION = {
   type: 'spring' as const,
-  duration: 0.44,
+  duration: 0.28,
   bounce: 0,
 }
 
 /** Drawer close spring. */
 export const CHAT_LAYOUT_COLLAPSE = {
   type: 'spring' as const,
-  duration: 0.34,
+  duration: 0.22,
   bounce: 0,
 }
 
 /** Content fade-in after the shell is roughly panel-sized. */
 export const CHAT_CONTENT_ENTER = {
-  duration: 0.2,
-  delay: 0.12,
+  duration: 0.14,
+  delay: 0.06,
   ease: [0.23, 1, 0.32, 1] as const,
 }
 
 export const CHAT_CONTENT_EXIT = {
-  duration: 0.1,
+  duration: 0.08,
+  ease: [0.4, 0, 1, 1] as const,
+}
+
+/** Drawer messages stay visible until the shell is almost widget-sized. */
+export const CHAT_DRAWER_CONTENT_EXIT = {
+  duration: 0.08,
+  delay: 0.14,
   ease: [0.4, 0, 1, 1] as const,
 }
