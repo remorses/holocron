@@ -1,12 +1,14 @@
 /**
- * Server highlight helper: token HTML, aliases, unknown langs, diagram grammar.
+ * Server highlight helper: token HTML, aliases, unknown langs, custom grammars.
  * Isolation tests must stay first. Refractor state is process-global.
+ * Custom langs (mdx, md frontmatter, diagram, extras) use inline HTML snapshots.
  */
 
 import { describe, expect, test, vi } from 'vitest'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { refractor } from 'refractor/core'
+import dedent from 'string-dedent'
 import { CodeBlock } from '../components/markdown/code-block.tsx'
 import { highlightCode, HighlightedCodeBlock } from './highlight-code.tsx'
 
@@ -208,5 +210,358 @@ describe('highlightCode', () => {
       children: 'A --> B',
     }))
     expect(rendered).not.toContain('class="m-0 py-2 bleed"')
+  })
+
+  test('mdx frontmatter colors yaml keys including $schema', () => {
+    expect(highlightCode(dedent`
+      ---
+      $schema: https://holocron.so/frontmatter.json
+      title: Authentication
+      description: How to set up auth.
+      icon: lucide:lock
+      ---
+    `, 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token front-matter-block"><span class="token punctuation">---</span>
+      <span class="token front-matter yaml language-yaml"><span class="token key atrule">$schema</span><span class="token punctuation">:</span> https<span class="token punctuation">:</span>//holocron.so/frontmatter.json
+      <span class="token key atrule">title</span><span class="token punctuation">:</span> Authentication
+      <span class="token key atrule">description</span><span class="token punctuation">:</span> How to set up auth.
+      <span class="token key atrule">icon</span><span class="token punctuation">:</span> lucide<span class="token punctuation">:</span>lock</span>
+      <span class="token punctuation">---</span></span>"
+    `)
+  })
+
+  test('mdx frontmatter then heading and body', () => {
+    expect(highlightCode(dedent`
+      ---
+      title: Hello
+      ---
+
+      # Hi
+
+      Body text.
+    `, 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token front-matter-block"><span class="token punctuation">---</span>
+      <span class="token front-matter yaml language-yaml"><span class="token key atrule">title</span><span class="token punctuation">:</span> Hello</span>
+      <span class="token punctuation">---</span></span>
+
+      <span class="token title important"><span class="token punctuation">#</span> Hi</span>
+
+      Body text."
+    `)
+  })
+
+  test('md alias frontmatter uses the same yaml tokens', () => {
+    expect(highlightCode(dedent`
+      ---
+      title: Hello
+      ---
+
+      # Hi
+    `, 'md')).toMatchInlineSnapshot(`
+      "<span class="token front-matter-block"><span class="token punctuation">---</span>
+      <span class="token front-matter yaml language-yaml"><span class="token key atrule">title</span><span class="token punctuation">:</span> Hello</span>
+      <span class="token punctuation">---</span></span>
+
+      <span class="token title important"><span class="token punctuation">#</span> Hi</span>"
+    `)
+  })
+
+  test('markdown nested ts fence inner-highlights', () => {
+    expect(highlightCode(dedent`
+      \`\`\`ts
+      const greeting = "Hello"
+      \`\`\`
+    `, 'markdown')).toMatchInlineSnapshot(`
+      "<span class="token code"><span class="token punctuation">\`\`\`</span><span class="token code-language">ts</span>
+      <span class="token code-block language-ts"><span class="token keyword">const</span> greeting <span class="token operator">=</span> <span class="token string">"Hello"</span></span>
+      <span class="token punctuation">\`\`\`</span></span>"
+    `)
+  })
+
+  test('mdx Note component uses jsx class-name tokens', () => {
+    expect(highlightCode(dedent`
+      <Note>
+      This is a note.
+      </Note>
+    `, 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;</span><span class="token class-name">Note</span></span><span class="token punctuation">></span></span>
+      This is a note.
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;/</span><span class="token class-name">Note</span></span><span class="token punctuation">></span></span>"
+    `)
+  })
+
+  test('mdx nested Step attributes', () => {
+    expect(highlightCode(dedent`
+      <Steps>
+        <Step title="First step">
+          Do this first.
+        </Step>
+      </Steps>
+    `, 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;</span><span class="token class-name">Steps</span></span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;</span><span class="token class-name">Step</span></span> <span class="token attr-name">title</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>First step<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+          Do this first.
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;/</span><span class="token class-name">Step</span></span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;/</span><span class="token class-name">Steps</span></span><span class="token punctuation">></span></span>"
+    `)
+  })
+
+  test('mdx self-closing component', () => {
+    expect(highlightCode('<Icon name="star" />\n', 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;</span><span class="token class-name">Icon</span></span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>star<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+      "
+    `)
+  })
+
+  test('mdx className attribute', () => {
+    expect(highlightCode("<MyBanner className='text-xl'>Short text</MyBanner>\n", 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;</span><span class="token class-name">MyBanner</span></span> <span class="token attr-name">className</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">'</span>text-xl<span class="token punctuation">'</span></span><span class="token punctuation">></span></span>Short text<span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;/</span><span class="token class-name">MyBanner</span></span><span class="token punctuation">></span></span>
+      "
+    `)
+  })
+
+  test('mdx jsx expression attributes', () => {
+    expect(highlightCode('<Card href={url} icon={Star} />\n', 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;</span><span class="token class-name">Card</span></span> <span class="token attr-name">href</span><span class="token script language-javascript"><span class="token script-punctuation punctuation">=</span><span class="token punctuation">{</span>url<span class="token punctuation">}</span></span> <span class="token attr-name">icon</span><span class="token script language-javascript"><span class="token script-punctuation punctuation">=</span><span class="token punctuation">{</span><span class="token maybe-class-name">Star</span><span class="token punctuation">}</span></span> <span class="token punctuation">/></span></span>
+      "
+    `)
+  })
+
+  test('mdx multiline named import includes the from line', () => {
+    expect(highlightCode(dedent`
+      import {
+        Foo,
+        Bar,
+      } from './foo'
+    `, 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token mdx-esm language-javascript"><span class="token keyword module">import</span> <span class="token imports"><span class="token punctuation">{</span>
+        <span class="token maybe-class-name">Foo</span><span class="token punctuation">,</span>
+        <span class="token maybe-class-name">Bar</span><span class="token punctuation">,</span>
+      <span class="token punctuation">}</span></span> <span class="token keyword module">from</span> <span class="token string">'./foo'</span></span>"
+    `)
+  })
+
+  test('mdx export from', () => {
+    expect(highlightCode("export { Foo } from './foo'\n", 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token mdx-esm language-javascript"><span class="token keyword module">export</span> <span class="token exports"><span class="token punctuation">{</span> <span class="token maybe-class-name">Foo</span> <span class="token punctuation">}</span></span> <span class="token keyword module">from</span> <span class="token string">'./foo'</span></span>
+      "
+    `)
+  })
+
+  test('mdx multiline export from', () => {
+    expect(highlightCode(dedent`
+      export {
+        Foo,
+      } from './foo'
+    `, 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token mdx-esm language-javascript"><span class="token keyword module">export</span> <span class="token exports"><span class="token punctuation">{</span>
+        <span class="token maybe-class-name">Foo</span><span class="token punctuation">,</span>
+      <span class="token punctuation">}</span></span> <span class="token keyword module">from</span> <span class="token string">'./foo'</span></span>"
+    `)
+  })
+
+  test('mdx import type', () => {
+    expect(highlightCode("import type { Foo } from './foo'\n", 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token mdx-esm language-javascript"><span class="token keyword module">import</span> type <span class="token punctuation">{</span> <span class="token maybe-class-name">Foo</span> <span class="token punctuation">}</span> <span class="token keyword module">from</span> <span class="token string">'./foo'</span></span>
+      "
+    `)
+  })
+
+  test('mdx side-effect import', () => {
+    expect(highlightCode("import './bar'\n", 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token mdx-esm language-javascript"><span class="token keyword module">import</span> <span class="token string">'./bar'</span></span>
+      "
+    `)
+  })
+
+  test('mdx export default function', () => {
+    expect(highlightCode(dedent`
+      export default function Foo() {
+        return 1
+      }
+    `, 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token mdx-esm language-javascript"><span class="token keyword module">export</span> <span class="token keyword module">default</span> <span class="token keyword">function</span> <span class="token function"><span class="token maybe-class-name">Foo</span></span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword control-flow">return</span> <span class="token number">1</span>
+      <span class="token punctuation">}</span></span>"
+    `)
+  })
+
+  test('mdx nested ts fence inner-highlights', () => {
+    expect(highlightCode(dedent`
+      \`\`\`ts
+      const greeting = "Hello"
+      \`\`\`
+    `, 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token code"><span class="token punctuation">\`\`\`</span><span class="token code-language">ts</span>
+      <span class="token code-block language-ts"><span class="token keyword">const</span> greeting <span class="token operator">=</span> <span class="token string">"Hello"</span></span>
+      <span class="token punctuation">\`\`\`</span></span>"
+    `)
+  })
+
+  test('mdx nested json fence inner-highlights', () => {
+    expect(highlightCode(dedent`
+      \`\`\`json
+      { "a": 1 }
+      \`\`\`
+    `, 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token code"><span class="token punctuation">\`\`\`</span><span class="token code-language">json</span>
+      <span class="token code-block language-json"><span class="token punctuation">{</span> <span class="token property">"a"</span><span class="token operator">:</span> <span class="token number">1</span> <span class="token punctuation">}</span></span>
+      <span class="token punctuation">\`\`\`</span></span>"
+    `)
+  })
+
+  test('mdx nested yaml fence inner-highlights', () => {
+    expect(highlightCode(dedent`
+      \`\`\`yaml
+      name: Deploy
+      \`\`\`
+    `, 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token code"><span class="token punctuation">\`\`\`</span><span class="token code-language">yaml</span>
+      <span class="token code-block language-yaml"><span class="token key atrule">name</span><span class="token punctuation">:</span> Deploy</span>
+      <span class="token punctuation">\`\`\`</span></span>"
+    `)
+  })
+
+  test('mdx nested mermaid fence inner-highlights', () => {
+    expect(highlightCode(dedent`
+      \`\`\`mermaid
+      graph TD
+        A-->B
+      \`\`\`
+    `, 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token code"><span class="token punctuation">\`\`\`</span><span class="token code-language">mermaid</span>
+      <span class="token code-block language-mermaid"><span class="token keyword">graph</span> TD
+        A<span class="token arrow operator">--></span>B</span>
+      <span class="token punctuation">\`\`\`</span></span>"
+    `)
+  })
+
+  test('mdx frontmatter import heading and jsx together', () => {
+    expect(highlightCode(dedent`
+      ---
+      title: Auth
+      ---
+
+      import Foo from './foo'
+
+      # Auth
+
+      <Note>
+      Use a key.
+      </Note>
+    `, 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token front-matter-block"><span class="token punctuation">---</span>
+      <span class="token front-matter yaml language-yaml"><span class="token key atrule">title</span><span class="token punctuation">:</span> Auth</span>
+      <span class="token punctuation">---</span></span>
+
+      <span class="token mdx-esm language-javascript"><span class="token keyword module">import</span> <span class="token imports"><span class="token maybe-class-name">Foo</span></span> <span class="token keyword module">from</span> <span class="token string">'./foo'</span></span>
+
+      <span class="token title important"><span class="token punctuation">#</span> Auth</span>
+
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;</span><span class="token class-name">Note</span></span><span class="token punctuation">></span></span>
+      Use a key.
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;/</span><span class="token class-name">Note</span></span><span class="token punctuation">></span></span>"
+    `)
+  })
+
+  test('mdx mid-page hr is not frontmatter', () => {
+    expect(highlightCode(dedent`
+      # Title
+
+      ---
+
+      After the rule.
+    `, 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token title important"><span class="token punctuation">#</span> Title</span>
+
+      <span class="token hr punctuation">---</span>
+
+      After the rule."
+    `)
+  })
+
+  test('mdx list bold code and link', () => {
+    expect(highlightCode(dedent`
+      - **bold** and \`code\`
+      - [link](https://example.com)
+    `, 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token list punctuation">-</span> <span class="token bold"><span class="token punctuation">**</span><span class="token content">bold</span><span class="token punctuation">**</span></span> and <span class="token code-snippet code keyword">\`code\`</span>
+      <span class="token list punctuation">-</span> <span class="token url">[<span class="token content">link</span>](<span class="token url">https://example.com</span>)</span>"
+    `)
+  })
+
+  test('mdx blockquote', () => {
+    expect(highlightCode('> quoted text\n', 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token blockquote punctuation">></span> quoted text
+      "
+    `)
+  })
+
+  test('mdx crlf frontmatter', () => {
+    expect(highlightCode('---\r\ntitle: Hello\r\n---\r\n\r\n# Hi\r\n', 'mdx')).toMatchInlineSnapshot(`
+      "<span class="token front-matter-block"><span class="token punctuation">---</span>
+      <span class="token front-matter yaml language-yaml"><span class="token key atrule">title</span><span class="token punctuation">:</span> Hello</span>
+      <span class="token punctuation">---</span></span>
+
+      <span class="token title important"><span class="token punctuation">#</span> Hi</span>
+      "
+    `)
+  })
+
+  test('diagram box drawing and labels', () => {
+    expect(highlightCode('┌─A─┐\n│ B │\n└───┘', 'diagram')).toMatchInlineSnapshot(`
+      "<span class="token box-drawing">┌─</span><span class="token label">A</span><span class="token box-drawing">─┐</span>
+      <span class="token box-drawing">│</span> <span class="token label">B</span> <span class="token box-drawing">│</span>
+      <span class="token box-drawing">└───┘</span>"
+    `)
+  })
+
+  test('diagram arrows', () => {
+    expect(highlightCode('docs.json ───► Vite Plugin', 'diagram')).toMatchInlineSnapshot(`"<span class="token label">docs.json</span> <span class="token box-drawing">───</span><span class="token label">►</span> <span class="token label">Vite</span> <span class="token label">Plugin</span>"`)
+  })
+
+  test('diagram mixed boxes and arrows', () => {
+    expect(highlightCode(dedent`
+      ┌───────────────┐
+      docs.jsonc ───►│  Vite Plugin  │──────► Build
+                     └───────┬───────┘
+    `, 'diagram')).toMatchInlineSnapshot(`
+      "<span class="token box-drawing">┌───────────────┐</span>
+      <span class="token label">docs.jsonc</span> <span class="token box-drawing">───</span><span class="token label">►</span><span class="token box-drawing">│</span>  <span class="token label">Vite</span> <span class="token label">Plugin</span>  <span class="token box-drawing">│──────</span><span class="token label">►</span> <span class="token label">Build</span>
+                     <span class="token box-drawing">└───────┬───────┘</span>"
+    `)
+  })
+
+  test('diagram ascii arrows use line-char', () => {
+    expect(highlightCode('A --> B\nfoo | bar', 'diagram')).toMatchInlineSnapshot(`
+      "<span class="token label">A</span> <span class="token line-char">--></span> <span class="token label">B</span>
+      <span class="token label">foo</span> <span class="token line-char">|</span> <span class="token label">bar</span>"
+    `)
+  })
+
+  test('css extras variable hexcode unit', () => {
+    expect(highlightCode(':root { --brand: #ff0000; margin: 10px }', 'css')).toMatchInlineSnapshot(`"<span class="token selector"><span class="token pseudo-class">:root</span></span> <span class="token punctuation">{</span> <span class="token variable">--brand</span><span class="token punctuation">:</span> <span class="token hexcode color">#ff0000</span><span class="token punctuation">;</span> <span class="token property">margin</span><span class="token punctuation">:</span> <span class="token number">10</span><span class="token unit">px</span> <span class="token punctuation">}</span>"`)
+  })
+
+  test('js extras known-class-name on typescript', () => {
+    expect(highlightCode('const x = Math.PI', 'ts')).toMatchInlineSnapshot(`"<span class="token keyword">const</span> x <span class="token operator">=</span> <span class="token known-class-name class-name">Math</span><span class="token punctuation">.</span><span class="token constant">PI</span>"`)
+  })
+
+  test('js templates highlight nested html', () => {
+    expect(highlightCode('html`<div>${x}</div>`', 'js')).toMatchInlineSnapshot(`"html<span class="token template-string"><span class="token template-punctuation string">\`</span><span class="token html language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;</span>div</span><span class="token punctuation">></span></span><span class="token interpolation"><span class="token interpolation-punctuation punctuation">\${</span>x<span class="token interpolation-punctuation punctuation">}</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;/</span>div</span><span class="token punctuation">></span></span></span><span class="token template-punctuation string">\`</span></span>"`)
+  })
+
+  test('html inline style and script grammars', () => {
+    expect(highlightCode('<style>.a{color:red}</style><script>var a=1</script>', 'html')).toMatchInlineSnapshot(`"<span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;</span>style</span><span class="token punctuation">></span></span><span class="token style"><span class="token language-css"><span class="token selector"><span class="token class">.a</span></span><span class="token punctuation">{</span><span class="token property">color</span><span class="token punctuation">:</span><span class="token color">red</span><span class="token punctuation">}</span></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;/</span>style</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;</span>script</span><span class="token punctuation">></span></span><span class="token script"><span class="token language-javascript"><span class="token keyword">var</span> a<span class="token operator">=</span><span class="token number">1</span></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;/</span>script</span><span class="token punctuation">></span></span>"`)
+  })
+
+  test('http json body uses content-type grammar', () => {
+    expect(highlightCode('HTTP/1.1 200 OK\nContent-Type: application/json\n\n{ "id": 1 }\n', 'http')).toMatchInlineSnapshot(`
+      "<span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
+      <span class="token header"><span class="token header-name keyword">Content-Type</span><span class="token punctuation">:</span> <span class="token header-value">application/json</span></span>
+      <span class="token application-json">
+      <span class="token punctuation">{</span> <span class="token property">"id"</span><span class="token operator">:</span> <span class="token number">1</span> <span class="token punctuation">}</span>
+      </span>"
+    `)
   })
 })
