@@ -23,6 +23,7 @@ import { createSpiceflowFetch } from 'spiceflow/client'
 import { Head, ProgressBar } from 'spiceflow/react'
 import { MdastToJsx, type SafeMdxError } from 'safe-mdx'
 import { mdxParse, resolveModules, type EagerModules } from 'safe-mdx/parse'
+import { memoize, rememberCacheOrigin } from '#memoize'
 import { parse as parseCookies } from 'cookie'
 import type { Root } from 'mdast'
 import {
@@ -296,8 +297,8 @@ function renderMdxPage({
   modules?: EagerModules
   /** Pages directory prefix for resolving relative imports */
   pagesDirPrefix?: string
-  /** Pre-parsed mdast — avoids re-parsing when the caller already parsed it (e.g. for resolveModules) */
-  preParsedMdast?: Root
+  /** Pre-parsed mdast from parsePageMdx. Required so render never re-parses. */
+  preParsedMdast: Root
   /** Safe-mdx render errors collected during dev-only pre-validation. */
   devRenderErrors?: SafeMdxError[]
 }) {
@@ -316,7 +317,7 @@ function renderMdxPage({
   const pageTwitterTitle = pageSeoMeta['twitter:title'] ?? loaderData.headTitle
   const pageTwitterCard = pageSeoMeta['twitter:card'] ?? 'summary_large_image'
 
-  const mdast = preParsedMdast ?? mdxParse(pageMdx)
+  const mdast = preParsedMdast
 
   const pageMode = loaderData.currentPageFrontmatter?.mode
 
@@ -565,10 +566,16 @@ function renderMdxParseErrorPage({
   )
 }
 
-/** Runtime parse boundary for MDX loaded during dev/HMR. */
-function parsePageMdx(markdown: string, source: string): HolocronMdxParseError | Root {
+const parseMarkdownCached = memoize({
+  namespace: 'mdx-parse',
+  key: (markdown: string) => markdown,
+  fn: (markdown: string) => mdxParse(markdown),
+})
+
+/** Runtime parse boundary for MDX loaded during request render. */
+async function parsePageMdx(markdown: string, source: string): Promise<HolocronMdxParseError | Root> {
   try {
-    return mdxParse(markdown)
+    return await parseMarkdownCached(markdown)
   } catch (err) {
     const { line, column, reason } = extractParseErrorInfo(err)
     return new HolocronMdxParseError({ reason, line, column, source, mdxSource: markdown })
@@ -1171,7 +1178,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       // Only loads modules that the current page actually imports.
       // Parse the mdast once and share it with renderMdxPage to avoid a duplicate parse.
       const pageSource = slug === 'index' ? '/' : `/${slug}`
-      const preParsedMdast = parsePageMdx(pageMdx, pageSource)
+      const preParsedMdast = await parsePageMdx(pageMdx, pageSource)
       if (preParsedMdast instanceof Error) return renderMdxParseErrorPage({ slug, error: preParsedMdast, bannerJsx })
 
       const modules = lazyGlob && Object.keys(lazyGlob).length > 0
@@ -1207,6 +1214,10 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
   // `let app` because spiceflow's chain types don't survive the loop.
   let app: AnySpiceflow = new Spiceflow()
+
+  app = app.use(({ request }: { request: Request }) => {
+    rememberCacheOrigin(request.url)
+  })
 
   // Agent redirect: when Accept includes text/markdown, 302 to .md URL.
   // No UA sniffing — only fires when the client explicitly asks for markdown.
@@ -1938,9 +1949,8 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         pageLabel: `${url.host}${pageHref}`,
       })
 
-      // Parse MDX
       const pageSource = `/${strippedSlug}`
-      const preParsedMdast = parsePageMdx(pageMdx, pageSource)
+      const preParsedMdast = await parsePageMdx(pageMdx, pageSource)
       if (preParsedMdast instanceof Error) {
         return renderMdxParseErrorPage({ slug: strippedSlug, error: preParsedMdast, bannerJsx: null })
       }

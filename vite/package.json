@@ -56,6 +56,11 @@
       "ssr": "./dist/lib/empty-mermaid.js",
       "browser": "./dist/lib/mermaid-browser.js",
       "default": "./dist/lib/mermaid-browser.js"
+    },
+    "#memoize": {
+      "types": "./dist/lib/memoize-node.d.ts",
+      "workerd": "./dist/lib/memoize-workerd.js",
+      "default": "./dist/lib/memoize-workerd.js"
     }
   },
   "files": [
