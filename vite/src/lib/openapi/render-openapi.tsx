@@ -17,6 +17,7 @@ import {
   FieldList,
   Property,
   Section,
+  canExpandSchema,
   type SchemaInfo,
 } from '../render-schema.tsx'
 
@@ -93,10 +94,17 @@ function AuthSection({ security }: { security: SecurityInfo[] }) {
 
 function ParameterGroup({ title, params }: { title: string; params: ParameterInfo[] }) {
   if (params.length === 0) return null
+  const firstExpandable = params.findIndex((p) => canExpandSchema(p.schema ?? {}, 0))
   return (
     <Section title={title}>
-      {params.map((p) => (
-        <Property key={p.name} name={p.name} schema={{ ...(p.schema ?? {}), description: p.description ?? p.schema?.description }} required={p.required} />
+      {params.map((p, i) => (
+        <Property
+          key={p.name}
+          name={p.name}
+          schema={{ ...(p.schema ?? {}), description: p.description ?? p.schema?.description }}
+          required={p.required}
+          defaultOpen={i === firstExpandable}
+        />
       ))}
     </Section>
   )
@@ -117,17 +125,22 @@ function RequestBodySection({ body }: { body: NonNullable<OpenAPIEndpointProps['
   )
 }
 
+function responseHasBody(r: ResponseInfo) {
+  return !!(r.schema && (
+    (r.schema.properties && Object.keys(r.schema.properties).length > 0) ||
+    r.schema.type === 'array' || r.schema.type
+  ))
+}
+
 function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
   if (responses.length === 0) return null
+  const firstExpandable = responses.findIndex((r) => responseHasBody(r) || r.description)
   return (
     <div className='flex flex-col gap-4'>
       <div className='font-semibold text-foreground'>Response</div>
       <div className='flex flex-col gap-4'>
-        {responses.map((r) => {
-          const hasSchema = r.schema && (
-            (r.schema.properties && Object.keys(r.schema.properties).length > 0) ||
-            r.schema.type === 'array' || r.schema.type
-          )
+        {responses.map((r, i) => {
+          const hasSchema = responseHasBody(r)
           // OpenAPI "default" response with no schema/description is noise — skip it
           if (!hasSchema && !r.description) {
             if (r.status === 'default') return null
@@ -135,7 +148,7 @@ function ResponseSection({ responses }: { responses: ResponseInfo[] }) {
           }
           const statusLabel = r.status === 'default' ? 'Default' : r.status
           return (
-            <Expandable key={r.status} title={`${statusLabel}${r.description ? ` · ${r.description}` : ''}`} defaultOpen={r.status === '200'}>
+            <Expandable key={r.status} title={`${statusLabel}${r.description ? ` · ${r.description}` : ''}`} defaultOpen={i === firstExpandable}>
               {hasSchema && r.schema && <FieldList schema={r.schema} />}
               {!hasSchema && r.description && <Desc>{r.description}</Desc>}
             </Expandable>

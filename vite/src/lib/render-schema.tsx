@@ -123,15 +123,21 @@ export function collectTags(s: SchemaInfo): { k: string; v: string }[] {
 
 /* ── Property ─────────────────────────────────────────────────────────── */
 
-export function Property({ name, schema, required, depth = 0 }: {
+export function canExpandSchema(schema: SchemaInfo, depth: number): boolean {
+  const objNested = schema.type === 'object' && !!schema.properties && Object.keys(schema.properties).length > 0
+  const arrNested = schema.type === 'array' && schema.items?.type === 'object' && !!schema.items.properties
+  return (objNested || arrNested) && depth <= 3
+}
+
+export function Property({ name, schema, required, depth = 0, defaultOpen = false }: {
   name: string
   schema: SchemaInfo
   required?: boolean
   depth?: number
+  defaultOpen?: boolean
 }) {
-  const objNested = schema.type === 'object' && schema.properties && Object.keys(schema.properties).length > 0
-  const arrNested = schema.type === 'array' && schema.items?.type === 'object' && schema.items?.properties
-  const canExpand = (objNested || arrNested) && depth <= 3
+  const arrNested = schema.type === 'array' && schema.items?.type === 'object' && !!schema.items.properties
+  const canExpand = canExpandSchema(schema, depth)
   const childSchema = arrNested ? schema.items! : schema
   const tags = collectTags(schema)
 
@@ -155,7 +161,7 @@ export function Property({ name, schema, required, depth = 0 }: {
         </div>
       )}
       {canExpand && (
-        <Expandable title={`Show ${arrNested ? 'item ' : ''}properties`}>
+        <Expandable title={`Show ${arrNested ? 'item ' : ''}properties`} defaultOpen={defaultOpen}>
           <FieldList schema={childSchema} depth={depth + 1} />
         </Expandable>
       )}
@@ -167,16 +173,34 @@ export function Property({ name, schema, required, depth = 0 }: {
 
 export function FieldList({ schema, depth = 0 }: { schema: SchemaInfo; depth?: number }) {
   if (schema.properties && Object.keys(schema.properties).length > 0) {
+    const entries = Object.entries(schema.properties)
+    const firstExpandable = depth === 0
+      ? entries.findIndex(([, v]) => canExpandSchema(v, depth))
+      : -1
     return (
       <div className='flex flex-col'>
-        {Object.entries(schema.properties).map(([k, v]) => (
-          <Property key={k} name={k} schema={v} required={(schema.required ?? []).includes(k)} depth={depth} />
+        {entries.map(([k, v], i) => (
+          <Property
+            key={k}
+            name={k}
+            schema={v}
+            required={(schema.required ?? []).includes(k)}
+            depth={depth}
+            defaultOpen={i === firstExpandable}
+          />
         ))}
       </div>
     )
   }
   if (schema.type === 'array' && schema.items) {
-    return <Property name='items' schema={schema.items} depth={depth} />
+    return (
+      <Property
+        name='items'
+        schema={schema.items}
+        depth={depth}
+        defaultOpen={depth === 0 && canExpandSchema(schema.items, depth)}
+      />
+    )
   }
   if (schema.type) {
     return <div className='text-muted-foreground'>Type: <code className='font-mono code-font-size'>{typeString(schema)}</code></div>
