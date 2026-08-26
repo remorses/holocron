@@ -1777,12 +1777,12 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         yield* convertChunksToParts(uiStream, {
           priorMessages,
           onOutcome: (outcome) => {
-            // A turn is fine when the user got text, reasoning, a tool call,
-            // or a terminal notice. Intermediate client-tool turns carry no
-            // text, so keying the warning on text alone would cry wolf.
+            // A turn is fine when the user got text, a tool call, or a
+            // terminal notice. Reasoning is not shown, so it does not count.
+            // Intermediate client-tool turns carry no text, so keying the
+            // warning on text alone would cry wolf.
             const renderable =
               outcome.textParts > 0 ||
-              outcome.reasoningChars > 0 ||
               outcome.toolCalls > 0 ||
               outcome.answerNotices > 0
             const summary = [

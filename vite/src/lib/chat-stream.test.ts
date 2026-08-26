@@ -3,7 +3,7 @@
 // Every case here maps to a way the assistant answer used to disappear
 // silently: the buffered text was dropped when the provider closed the
 // stream without `text-end`, provider errors arrived as `error` chunks that
-// were ignored, and reasoning was thrown away.
+// were ignored.
 //
 // renderText is stubbed so snapshots show plain text instead of React trees.
 
@@ -139,8 +139,8 @@ describe('convertChunksToParts', () => {
     expect(outcome.textParts).toBe(0)
   })
 
-  test('keeps reasoning so a reasoning-only turn is still visible', async () => {
-    const { parts } = await collect([
+  test('hides reasoning so a reasoning-only turn is reported as no answer', async () => {
+    const { parts, outcome } = await collect([
       { type: 'reasoning-start', id: 'r1' },
       { type: 'reasoning-delta', id: 'r1', delta: 'The docs mention navigation.' },
       { type: 'reasoning-end', id: 'r1' },
@@ -148,11 +148,37 @@ describe('convertChunksToParts', () => {
     expect(parts).toMatchInlineSnapshot(`
       [
         {
-          "text": "The docs mention navigation.",
-          "type": "reasoning",
+          "code": "HOLOCRON_STREAM_ERROR",
+          "display": "always",
+          "message": "The AI model did not return a response. This usually means the provider is temporarily unavailable. Please try again.",
+          "severity": "error",
+          "title": "AI model unavailable",
+          "type": "notice",
         },
       ]
     `)
+    expect(outcome.reasoningChars).toBe(28)
+    expect(outcome.textParts).toBe(0)
+  })
+
+  test('keeps the answer and drops reasoning when both arrive', async () => {
+    const { parts, outcome } = await collect([
+      { type: 'reasoning-start', id: 'r1' },
+      { type: 'reasoning-delta', id: 'r1', delta: 'I should look at docs.json.' },
+      { type: 'reasoning-end', id: 'r1' },
+      { type: 'text-delta', id: '1', delta: 'Set `navigation.tabs`.' },
+      { type: 'text-end', id: '1' },
+    ])
+    expect(parts).toMatchInlineSnapshot(`
+      [
+        {
+          "text": "Set \`navigation.tabs\`.",
+          "type": "text",
+        },
+      ]
+    `)
+    expect(outcome.reasoningChars).toBe(27)
+    expect(outcome.textParts).toBe(1)
   })
 
   test('text that renders nothing is reported as no answer', async () => {
@@ -499,6 +525,28 @@ describe('modelMessagesToChatMessages', () => {
     const messages = modelMessagesToChatMessages([
       { role: 'user', content: 'hi' },
       { role: 'assistant', content: '<think>never produced an answer</think>' },
+    ])
+    expect(messages.at(-1)).toMatchInlineSnapshot(`
+      {
+        "parts": [
+          {
+            "code": "HOLOCRON_STREAM_ERROR",
+            "display": "always",
+            "message": "The AI model did not return a response. This usually means the provider is temporarily unavailable. Please try again.",
+            "severity": "error",
+            "title": "AI model unavailable",
+            "type": "notice",
+          },
+        ],
+        "role": "assistant",
+      }
+    `)
+  })
+
+  test('a stored reasoning-only turn becomes a notice, not a thinking preview', () => {
+    const messages = modelMessagesToChatMessages([
+      { role: 'user', content: 'hi' },
+      { role: 'assistant', content: [{ type: 'reasoning', text: 'I should look at docs.json.' }] },
     ])
     expect(messages.at(-1)).toMatchInlineSnapshot(`
       {

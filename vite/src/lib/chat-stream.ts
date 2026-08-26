@@ -19,9 +19,8 @@
  *    on provider failures: `toUIMessageStream()` converts them into
  *    `{ type: 'error', errorText }` chunks, so dropping unknown chunk types
  *    silently swallowed every provider failure.
- * 3. Reasoning deltas are kept. Reasoning models (deepseek) sometimes put the
- *    whole answer in reasoning; dropping those chunks rendered an empty
- *    assistant bubble.
+ * 3. Reasoning deltas are counted for logs only. The widget never shows
+ *    thinking; a reasoning-only turn is treated as no answer.
  * 4. Text that renders to nothing (the model wrapped its whole answer in a
  *    `<think>` tag, which chat-render.tsx maps to a null component) is
  *    reported as "no answer" rather than emitted as a blank part.
@@ -121,7 +120,6 @@ export async function* convertChunksToParts(
   const startedAt = Date.now()
 
   let textBuffer = ''
-  let reasoningBuffer = ''
   const toolNames = new Map<string, string>()
 
   const outcome: ChatStreamOutcome = {
@@ -138,14 +136,8 @@ export async function* convertChunksToParts(
     chunkTypes: {},
   }
 
-  /** Emit buffered reasoning (if any) followed by buffered text. */
+  /** Emit buffered text. Reasoning is never yielded. */
   function* flush(): Generator<ChatStreamPart> {
-    if (reasoningBuffer.trim()) {
-      outcome.reasoningChars += reasoningBuffer.length
-      yield { type: 'reasoning', text: reasoningBuffer.trim() }
-    }
-    reasoningBuffer = ''
-
     const text = textBuffer
     textBuffer = ''
     if (!text.trim()) return
@@ -188,12 +180,9 @@ export async function* convertChunksToParts(
           continue
 
         case 'reasoning-delta':
-          reasoningBuffer += chunk.delta ?? ''
+          outcome.reasoningChars += (chunk.delta ?? '').length
           continue
 
-        // Reasoning is flushed together with the text block it precedes, so
-        // reasoning-end alone does not emit — otherwise a model that
-        // interleaves reasoning and text would produce a part per token run.
         case 'reasoning-end':
           continue
 
@@ -277,7 +266,6 @@ export async function* convertChunksToParts(
     // Nothing renderable at all — surface it instead of an empty bubble.
     if (
       outcome.textParts === 0 &&
-      outcome.reasoningChars === 0 &&
       outcome.toolCalls === 0 &&
       outcome.answerNotices === 0 &&
       !outcome.errorText &&

@@ -209,10 +209,6 @@ function ChatPartRenderer({
     )
   }
 
-  if (part.type === 'reasoning') {
-    return <ReasoningPreview text={part.text} />
-  }
-
   if (part.type === 'tool-call') {
     return <ToolCallStarted part={part} allParts={allParts} />
   }
@@ -376,26 +372,6 @@ function ChatNotice({ part }: { part: Extract<ChatPart, { type: 'notice' }> }) {
           </code>
         )}
       </div>
-    </div>
-  )
-}
-
-// ── Reasoning (thinking) preview ─────────────────────────────────────
-
-/** Model reasoning, collapsed behind ShowMore. Rendered as plain text on
- *  purpose: reasoning is often half-formed markdown, and running it through
- *  the MDX renderer would drop unknown tags. */
-function ReasoningPreview({ text }: { text: string }) {
-  return (
-    <div data-reasoning=''>
-      <ShowMore>
-        <ToolPreviewContainer>
-          <div className='flex flex-row gap-2'>
-            <div className='shrink-0 text-muted-foreground'>✻</div>
-            <span className='whitespace-pre-wrap text-[12px] text-muted-foreground'>{text}</span>
-          </div>
-        </ToolPreviewContainer>
-      </ShowMore>
     </div>
   )
 }

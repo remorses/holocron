@@ -22,10 +22,6 @@ export type ChatModelMessage = Record<string, unknown>
  *  `text` field remains serializable and is sent back in future requests. */
 export type ChatPart =
   | { type: 'text'; text: string; jsx?: ReactNode }
-  /** Model reasoning (thinking) — rendered as a collapsed muted preview.
-   *  Kept as a part so a turn whose answer lands entirely in reasoning is
-   *  still visible instead of rendering an empty bubble. */
-  | { type: 'reasoning'; text: string }
   | {
       type: 'notice'
       code: string

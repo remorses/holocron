@@ -190,9 +190,10 @@ export function modelMessagesToChatMessages(modelMessages: unknown[]): ChatMessa
             const rendered = renderMarkdownTextPart(part.text)
             if (rendered) parts.push(rendered)
           }
-          // Keeps restored turns identical to live ones for reasoning models.
+          // Reasoning is never shown. Count it so a reasoning-only stored
+          // turn still gets the no-answer notice instead of disappearing.
           if (part.type === 'reasoning' && typeof part.text === 'string' && part.text.trim()) {
-            parts.push({ type: 'reasoning', text: part.text.trim() })
+            hadStoredText = true
           }
           if (part.type === 'tool-call' && typeof part.toolCallId === 'string') {
             const toolName = typeof part.toolName === 'string' ? part.toolName : 'tool'
