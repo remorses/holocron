@@ -58,7 +58,7 @@ export function NavBadge({
 
   return (
     <span
-      className={`inline-flex items-center rounded-full shrink-0 px-1.5 text-[10px] leading-[18px] font-semibold tracking-wide ${colorCls ?? variantCls}`}
+      className={`inline-flex items-center rounded-full shrink-0 px-[calc(6em/14)] text-[calc(10em/14)] leading-[1.8] font-semibold tracking-wide ${colorCls ?? variantCls}`}
       style={color ? { textTransform: 'uppercase', letterSpacing: '0.05em' } : undefined}
     >
       {label}

@@ -195,7 +195,7 @@ function TocInline({
   if (allVisibleHeadings.length === 0) return null
 
   return (
-    <div className='relative mt-0.5 pl-0.5 pb-2'>
+    <div className='relative mt-[calc(2em/14)] pl-[calc(2em/14)] pb-[calc(8em/14)]'>
       {/* Guide line */}
       <div
         aria-hidden
@@ -224,10 +224,10 @@ function TocInline({
       <div className='relative'>
         <ul
           ref={listRef}
-          className='relative list-none m-0 p-0 flex flex-col gap-1.5 pt-1.5 pl-3 leading-[1.33] box-content'
+          className='relative list-none m-0 p-0 flex flex-col gap-(--sidebar-leading-gap) pt-(--sidebar-leading-gap) pl-(--sidebar-icon-size) leading-[1.33] box-content'
           style={needsCollapse && !isExpanded ? {
-            maskImage: 'linear-gradient(to bottom, black calc(100% - 80px), rgba(0,0,0,0.35))',
-            WebkitMaskImage: 'linear-gradient(to bottom, black calc(100% - 80px), rgba(0,0,0,0.35))',
+            maskImage: 'linear-gradient(to bottom, black calc(100% - calc(80em / 14)), rgba(0,0,0,0.35))',
+            WebkitMaskImage: 'linear-gradient(to bottom, black calc(100% - calc(80em / 14)), rgba(0,0,0,0.35))',
           } : undefined}
         >
           {displayedHeadings.map((heading) => {
@@ -245,7 +245,7 @@ function TocInline({
                   data-active={isActive}
                   data-heading-id={heading.slug}
                   onClick={(e) => notifyHeadingClick(e)}
-                  className={`block leading-5 no-underline ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)]' : ''}`}
+                  className={`block leading-[1.43] no-underline ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)]' : ''}`}
                   tabIndex={isDimmed ? -1 : 0}
                   style={{
                     ...rowSpacing(),
@@ -270,10 +270,10 @@ function TocInline({
           className='border-none bg-transparent cursor-pointer text-left hover:[background:var(--sidebar-hover-background)]'
           style={{
             ...rowSpacing(),
-            paddingBlock: '2px',
-            marginInlineStart: 'calc(12px - var(--sidebar-row-padding-x))',
-            marginTop: '4px',
-            fontSize: 'var(--type-small-size, 13px)',
+            paddingBlock: 'calc(2em / 14)',
+            marginInlineStart: 'calc(var(--sidebar-icon-size) - var(--sidebar-row-padding-x))',
+            marginTop: 'var(--sidebar-row-gap)',
+            fontSize: 'calc(13em / 14)',
             fontWeight: 500,
             color: 'var(--muted-foreground)',
             fontFamily: 'var(--font-sans)',
@@ -335,7 +335,7 @@ function NavPageLink({
         ref={isHighlighted ? highlightedRef : isActive ? revealActiveNavItem : undefined}
         href={page.href}
         aria-current={isActive ? 'page' : undefined}
-        className={`group flex items-center gap-1.5 no-underline ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)]' : ''}`}
+        className={`group flex items-center gap-(--sidebar-leading-gap) no-underline ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)]' : ''}`}
         style={{
           ...rowSpacing(depth > 0 ? `${depth} * var(--sidebar-indent)` : undefined),
           opacity: isDimmed ? 0.45 : 1,
@@ -354,10 +354,10 @@ function NavPageLink({
                 !isActive && 'group-hover:[filter:saturate(1)]',
               )}
             >
-              <Icon icon={page.icon} size={12} color={iconColor} />
+              <Icon icon={page.icon} size='var(--sidebar-icon-size)' color={iconColor} />
             </span>
           ) : (
-            <Icon icon={page.icon} size={12} />
+            <Icon icon={page.icon} size='var(--sidebar-icon-size)' />
           )
         })()}
         <span className={cn('font-medium', hasBadge && 'truncate min-w-0')}>{frontmatter.sidebarTitle ?? page.title}</span>
@@ -439,7 +439,7 @@ export function NavGroupNode({
       <div className='flex flex-col' style={{ gap: 'var(--sidebar-row-gap)' }}>
         {groupLabel && (
           <div
-            className='cursor-default mb-0.5 flex items-center gap-1.5'
+            className='cursor-default mb-[calc(2em/14)] flex items-center gap-(--sidebar-leading-gap)'
             style={{
               marginTop: 'var(--sidebar-group-margin-top)',
               opacity: isDimmed ? 0.45 : 1,
@@ -464,18 +464,18 @@ export function NavGroupNode({
 
   // A nested group row is visually a page row whose leading icon slot holds the
   // chevron: same inherited font-size, same `font-medium` weight, same
-  // `gap-1.5` between slot and label, same indent math (a group at `depth`
-  // renders its own children pages at `depth`, so `depth - 1` puts the chevron
-  // exactly where a sibling page's icon sits). Never give this row its own
-  // font-size — that is what made nested folders read as a different, smaller
-  // tier than the pages around them.
+  // `--sidebar-leading-gap` between slot and label, same indent math (a group at
+  // `depth` renders its own children pages at `depth`, so `depth - 1` puts the
+  // chevron exactly where a sibling page's icon sits). Never give this row its
+  // own font-size — that is what made nested folders read as a different,
+  // smaller tier than the pages around them.
   return (
     <div className='flex flex-col'>
       <button
         type='button'
         onClick={() => onToggleGroup(groupKey)}
         aria-expanded={isExpanded}
-        className={`flex items-center gap-1.5 border-none bg-transparent cursor-pointer text-left font-medium ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)]' : ''}`}
+        className={`flex items-center gap-(--sidebar-leading-gap) border-none bg-transparent cursor-pointer text-left font-medium ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)]' : ''}`}
         style={{
           ...rowSpacing(depth > 1 ? `${depth - 1} * var(--sidebar-indent)` : undefined),
           opacity: isDimmed ? 0.45 : 1,

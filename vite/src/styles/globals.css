@@ -119,7 +119,7 @@
      px value so nested `font-size: var(--type-code-size)` on pre + code does
      not compound the way an `em` value would. */
   --type-code-size: calc(var(--type-body-size) * 0.933);
-  --type-nav-group-size: 12px;
+  --type-nav-group-size: calc(12em / 14);
 
   /* Code block frame — override these to wrap code blocks in a visible
      container (background, border, rounded corners). Defaults are invisible
@@ -145,9 +145,11 @@
   /* Table — override corner rounding for markdown tables. */
   --table-radius: 0px;
 
-  /* Sidebar nav — spacing and link styling */
-  --sidebar-group-margin-top: 12px;
-  --sidebar-link-radius: 6px;
+  /* Sidebar nav — spacing is em so it scales with --sidebar-font-size.
+     Each calc is the previous px amount over a 14px sidebar font. */
+  --sidebar-font-size: 14px;
+  --sidebar-group-margin-top: calc(12em / 14);
+  --sidebar-link-radius: calc(6em / 14);
   /* Horizontal padding inside every sidebar row (page link, group toggle, TOC
      heading) so the hover/active pill has breathing room around the text.
      Rows cancel it with an equal negative inline margin, so text alignment is
@@ -160,19 +162,18 @@
      corners sliced flat at the clip edge. Every clipping ancestor of a row
      (the scroll `<nav>`, `ExpandableContainer`) reserves exactly this amount
      so a row can sit flush with the clip edge and still render whole. */
-  --sidebar-row-padding-x: 8px;
+  --sidebar-row-padding-x: calc(8em / 14);
   /* Vertical padding inside every sidebar row. Unlike the x padding this is
      not cancelled: it is the pill's breathing room above and below the label. */
-  --sidebar-row-padding-y: 4px;
+  --sidebar-row-padding-y: calc(4em / 14);
   /* Space between sidebar rows. Lower this if you raise row padding, so the
      text-to-text rhythm stays tight. */
-  --sidebar-row-gap: 4px;
-  /* One nesting step in the sidebar tree. Defaults to the width of a row's
-     leading slot (12px icon/chevron + 6px gap) so a nested group's label
-     lands exactly where its children's icons start — the file-tree look,
-     where a folder's twisty sits in the gutter and its contents align under
-     the folder name. Lower it for a tighter tree. */
-  --sidebar-indent: 18px;
+  --sidebar-row-gap: calc(4em / 14);
+  --sidebar-icon-size: calc(12em / 14);
+  --sidebar-leading-gap: calc(6em / 14);
+  /* One nesting step = leading slot (icon + gap) so nested pages line up
+     under the group label. Changing icon size or leading gap updates indent. */
+  --sidebar-indent: calc(var(--sidebar-icon-size) + var(--sidebar-leading-gap));
   /* Background pill behind the deepest active sidebar item: the active TOC
      heading when the current page's TOC is expanded, otherwise the page link
      itself. Transparent by default (active state is color-only); override to
@@ -472,11 +473,15 @@
 
   .slot-sidebar-left {
     display: none;
+    --sidebar-font-size: 13px;
     @variant lg {
       display: block;
       grid-column: 1;
       /* grid-row is set dynamically via inline style so the sidebar spans
          exactly the number of content rows — no wasted implicit rows. */
+    }
+    @variant xl {
+      --sidebar-font-size: 14px;
     }
   }
 

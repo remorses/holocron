@@ -211,14 +211,14 @@ export function SideNav() {
   }, [activeId, effectiveCurrentPageHref, effectiveExpandedGroups, highlightedHref, searchState, sidebarAnimate, toggleGroup])
 
   return (
-    <aside className='flex flex-col max-w-(--grid-nav-width) min-h-0 text-sm'>
+    <aside className='flex flex-col max-w-(--grid-nav-width) min-h-0 text-(length:--sidebar-font-size)'>
       {/* Search input — leading magnifier icon + "/" hotkey kbd on the right.
           No horizontal padding: the input's border box then starts and ends
           exactly where the nav rows' hover pills do. */}
-      <div className='pb-3 flex items-center relative shrink-0'>
+      <div className='pb-(--sidebar-group-margin-top) flex items-center relative shrink-0'>
         <span
           aria-hidden='true'
-          className='absolute left-3.5 pointer-events-none inline-flex items-center justify-center'
+          className='absolute left-[1em] pointer-events-none inline-flex items-center justify-center'
           style={{ color: 'var(--muted-foreground)' }}
         >
           <SearchIcon />
@@ -232,7 +232,9 @@ export function SideNav() {
           placeholder={siteConfig.search.prompt || 'Search...'}
           className={`w-full outline-none box-border search-input${query ? ' search-input-active' : ''}`}
           style={{
-            padding: '4px 34px 4px 28px',
+            paddingBlock: 'var(--sidebar-row-padding-y)',
+            paddingInlineStart: '2em',
+            paddingInlineEnd: 'calc(34em / 14)',
             fontFamily: 'var(--font-sans)',
             fontWeight: 'var(--weight-prose)',
             color: 'var(--foreground)',
@@ -248,27 +250,27 @@ export function SideNav() {
               handleQueryChange('')
               searchInputRef.current?.focus()
             }}
-            className='absolute right-2.5 flex items-center justify-center size-5 rounded-sm cursor-pointer border-none bg-transparent transition-colors'
+            className='absolute right-[calc(10em/14)] flex items-center justify-center size-[calc(20em/14)] rounded-sm cursor-pointer border-none bg-transparent transition-colors'
             style={{ color: 'var(--muted-foreground)' }}
             aria-label='Clear search'
           >
-            <svg width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round'>
+            <svg width='12' height='12' viewBox='0 0 12 12' className='size-(--sidebar-icon-size)' fill='none' stroke='currentColor' strokeWidth='1.5' strokeLinecap='round'>
               <path d='M2 2l8 8M10 2l-8 8' />
             </svg>
           </button>
         ) : (
           <span
             aria-hidden='true'
-            className='absolute right-2.5 pointer-events-none flex items-center gap-1'
+            className='absolute right-[calc(10em/14)] pointer-events-none flex items-center gap-[calc(4em/14)]'
             style={{ color: 'var(--muted-foreground)' }}
           >
             <kbd
               style={{
                 fontFamily: 'var(--font-sans)',
-                fontSize: '12px',
+                fontSize: 'calc(12em / 14)',
                 fontWeight: 500,
-                lineHeight: '18px',
-                padding: '0 5px',
+                lineHeight: 1.5,
+                padding: '0 calc(5em / 14)',
                 border: '1px solid var(--text-tertiary)',
                 borderRadius: 'var(--radius-sm)',
               }}
@@ -282,13 +284,13 @@ export function SideNav() {
       {/* Rows cancel their own `--sidebar-row-padding-x` with a negative inline
           margin, so the nav reserves exactly that much padding: a row's hover
           pill then sits flush with this element's horizontal clip edge and
-          keeps all four rounded corners. `-mr-2` pulls the nav edge back out
-          (−8px) so the reserved scrollbar gutter sits outside the aside
-          instead of eating row width; padding stays symmetric so a pill ends
-          flush against that gutter. */}
+          keeps all four rounded corners. Negative `margin-inline-end` pulls
+           the nav edge back out so the reserved scrollbar gutter sits outside
+           the aside instead of eating row width; padding stays symmetric so a
+           pill ends flush against that gutter. */}
       <nav
         aria-label='Navigation'
-        className='slot-sidebar-nav overflow-y-auto scrollbar-stable min-h-0 -mr-2 pb-6 flex flex-col gap-2'
+        className='slot-sidebar-nav overflow-y-auto scrollbar-stable min-h-0 -mr-(--sidebar-row-padding-x) pb-[calc(24em/14)] flex flex-col gap-[calc(8em/14)]'
         style={{ paddingInline: 'var(--sidebar-row-padding-x)' }}
       >
         {/* Sidebar anchors — external links like GitHub, Discord, etc.
@@ -299,7 +301,7 @@ export function SideNav() {
         <SidebarTreeProvider value={sidebarTreeContext}>
           {noResults ? (
             <div
-              className='px-1 py-4 text-center'
+              className='px-[calc(4em/14)] py-[calc(16em/14)] text-center'
               style={{ color: 'var(--muted-foreground)' }}
             >
               No results for &ldquo;{query}&rdquo;
@@ -319,7 +321,7 @@ export function SideNav() {
           <button
             type='button'
             onClick={handleSearchWithAi}
-            className='group flex items-center gap-1.5 no-underline w-full text-left cursor-pointer border-none bg-transparent hover:[background:var(--sidebar-hover-background)]'
+            className='group flex items-center gap-(--sidebar-leading-gap) no-underline w-full text-left cursor-pointer border-none bg-transparent hover:[background:var(--sidebar-hover-background)]'
             style={{
               ...sidebarRowSpacing,
               font: 'inherit',
@@ -341,7 +343,7 @@ export function SideNav() {
  *  small rounded square, matching Mintlify's sidebar anchor placement. */
 function SidebarAnchors({ anchors }: { anchors: SidebarAnchor[] }) {
   return (
-    <div className='flex flex-col mt-2 mb-0.5' style={{ gap: 'var(--sidebar-row-gap)' }}>
+    <div className='flex flex-col mt-[calc(8em/14)] mb-[calc(2em/14)]' style={{ gap: 'var(--sidebar-row-gap)' }}>
       {anchors.map((anchor) => {
         const isExternal = anchor.href.startsWith('http')
         return (
@@ -349,7 +351,7 @@ function SidebarAnchors({ anchors }: { anchors: SidebarAnchor[] }) {
             key={anchor.href}
             href={anchor.href}
             {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-            className='no-underline flex items-center gap-1.5 hover:[background:var(--sidebar-hover-background)]'
+            className='no-underline flex items-center gap-(--sidebar-leading-gap) hover:[background:var(--sidebar-hover-background)]'
             style={{
               ...sidebarRowSpacing,
               color: 'var(--sidebar-foreground)',
@@ -357,7 +359,7 @@ function SidebarAnchors({ anchors }: { anchors: SidebarAnchor[] }) {
               transition: 'color 0.15s',
             }}
           >
-            <Icon icon={anchor.icon} size={12} color={resolveIconColor(anchor.iconColor)} />
+            <Icon icon={anchor.icon} size='var(--sidebar-icon-size)' color={resolveIconColor(anchor.iconColor)} />
             <span>{anchor.label}</span>
             {isExternal && <span className='ml-auto opacity-50'>↗</span>}
           </Link>

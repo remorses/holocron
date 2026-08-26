@@ -106,7 +106,7 @@ Common color tokens include:
 | `--type-heading-2-size` | `16px`  | H2 heading size      |
 | `--type-heading-3-size` | `16px`  | H3 heading size      |
 | `--type-small-size`     | `13px`  | Small text           |
-| `--type-nav-group-size` | `12px`  | Sidebar group labels |
+| `--type-nav-group-size` | `calc(12em / 14)` | Sidebar group labels. Scales with `--sidebar-font-size` |
 | `--weight-regular`      | `400`   | Normal text weight   |
 | `--weight-prose`        | `475`   | Body prose weight    |
 | `--weight-heading`      | `560`   | Heading weight       |
@@ -160,17 +160,20 @@ The copy button automatically aligns to the top-right of the padded frame.
 
 ### Sidebar navigation
 
-| Token                         | Default            | Purpose                                                                                                                                          |
-| ----------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `--sidebar-group-margin-top`  | `12px`             | Top margin above group labels                                                                                                                    |
-| `--sidebar-link-radius`       | `6px`              | Corner radius of the hover / active / focus pill behind a nav row                                                                                |
-| `--sidebar-row-padding-x`     | `8px`              | Horizontal padding inside a nav row, so its pill extends past the label. Rows cancel it with a negative margin, so the text column does not move |
-| `--sidebar-row-padding-y`     | `4px`              | Vertical padding inside a nav row. This is the pill's breathing room above and below the label                                                   |
-| `--sidebar-row-gap`           | `4px`              | Space between sidebar rows. Lower this if you raise row padding, so the text-to-text rhythm stays tight                                          |
-| `--sidebar-indent`            | `18px`             | Indentation per nesting level. Defaults to the width of a row's leading icon/chevron slot so nested pages align under their group label          |
-| `--sidebar-active-background` | `transparent`      | Background pill behind the deepest active item (TOC heading when expanded, else page link)                                                       |
-| `--sidebar-hover-background`  | `var(--accent)`    | Hover background on sidebar links, group toggles, and TOC headings                                                                               |
-| `--search-input-radius`       | `var(--radius-xl)` | Corner radius of the sidebar search input                                                                                                        |
+| Token                         | Default                                                    | Purpose                                                                                                                                          |
+| ----------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--sidebar-font-size`         | `14px` (`13px` below `xl` on the left sidebar)             | Base type size for the left nav. Spacing tokens use `em`, so they follow this size                                                               |
+| `--sidebar-group-margin-top`  | `calc(12em / 14)`                                          | Top margin above group labels                                                                                                                    |
+| `--sidebar-link-radius`       | `calc(6em / 14)`                                           | Corner radius of the hover / active / focus pill behind a nav row                                                                                |
+| `--sidebar-row-padding-x`     | `calc(8em / 14)`                                           | Horizontal padding inside a nav row, so its pill extends past the label. Rows cancel it with a negative margin, so the text column does not move |
+| `--sidebar-row-padding-y`     | `calc(4em / 14)`                                           | Vertical padding inside a nav row. This is the pill's breathing room above and below the label                                                   |
+| `--sidebar-row-gap`           | `calc(4em / 14)`                                           | Space between sidebar rows. Lower this if you raise row padding, so the text-to-text rhythm stays tight                                          |
+| `--sidebar-icon-size`         | `calc(12em / 14)`                                          | Width and height of page icons and nested-group chevrons                                                                                         |
+| `--sidebar-leading-gap`       | `calc(6em / 14)`                                           | Gap between the leading icon or chevron and the row label                                                                                        |
+| `--sidebar-indent`            | `calc(var(--sidebar-icon-size) + var(--sidebar-leading-gap))` | Indentation per nesting level. Equals the leading slot so nested pages align under their group label                                          |
+| `--sidebar-active-background` | `transparent`                                              | Background pill behind the deepest active item (TOC heading when expanded, else page link)                                                       |
+| `--sidebar-hover-background`  | `var(--accent)`                                            | Hover background on sidebar links, group toggles, and TOC headings                                                                               |
+| `--search-input-radius`       | `var(--radius-xl)`                                         | Corner radius of the sidebar search input                                                                                                        |
 
 ### Spacing
 

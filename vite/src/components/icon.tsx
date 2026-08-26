@@ -16,8 +16,8 @@ import { useHolocronDataSafe } from '../router.ts'
 
 export type IconProps = {
   icon: ConfigIcon | undefined
-  /** px — applied to width+height. Emoji spans use this as font-size. */
-  size?: number
+  /** CSS length. Numbers are px. Emoji spans use this as font-size. */
+  size?: number | string
   className?: string
   /** Font Awesome style override for string icons, matching Mintlify's `iconType` prop. */
   iconType?: string
@@ -25,23 +25,28 @@ export type IconProps = {
   color?: string
 }
 
+function cssSize(size: number | string): string {
+  return typeof size === 'number' ? `${size}px` : size
+}
+
 function renderLibraryIcon(
   iconAtlas: IconAtlas,
   key: string,
-  size: number,
+  size: number | string,
   className?: string,
   colorStyle?: React.CSSProperties,
 ): React.ReactElement | null {
   const entry = iconAtlas.icons[key]
   if (!entry) return null
+  const length = cssSize(size)
   return (
     <svg
       aria-hidden='true'
       viewBox={`0 0 ${entry.width} ${entry.height}`}
-      width={size}
-      height={size}
+      width={length}
+      height={length}
       className={className}
-      style={{ display: 'inline-block', flexShrink: 0, ...colorStyle }}
+      style={{ display: 'inline-block', flexShrink: 0, width: length, height: length, ...colorStyle }}
       dangerouslySetInnerHTML={{ __html: entry.body }}
     />
   )
@@ -85,7 +90,7 @@ export function Icon({ icon, size = 16, className, iconType, color }: IconProps)
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: `${size}px`,
+            fontSize: cssSize(size),
             lineHeight: 1,
             flexShrink: 0,
             ...colorStyle,
@@ -96,14 +101,15 @@ export function Icon({ icon, size = 16, className, iconType, color }: IconProps)
       )
     }
     if (isUrl(icon)) {
+      const length = cssSize(size)
       return (
         <img
           src={icon}
           alt=''
-          width={size}
-          height={size}
+          width={typeof size === 'number' ? size : undefined}
+          height={typeof size === 'number' ? size : undefined}
           className={className}
-          style={{ display: 'inline-block', flexShrink: 0 }}
+          style={{ display: 'inline-block', flexShrink: 0, width: length, height: length }}
         />
       )
     }
