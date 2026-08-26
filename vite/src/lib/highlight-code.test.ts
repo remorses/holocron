@@ -556,6 +556,18 @@ describe('highlightCode', () => {
     `)
   })
 
+  test('diagram caret plus and slash are line-char', () => {
+    const html = highlightCode('A --^ B\n+---+\n / \\\n', 'diagram')
+    expect(html).not.toMatch(/token label">\^/)
+    expect(html).not.toMatch(/token label">\+/)
+    expect(html).toMatchInlineSnapshot(`
+      "<span class="token label">A</span> <span class="token line-char">--^</span> <span class="token label">B</span>
+      <span class="token line-char">+---+</span>
+       <span class="token line-char">/</span> <span class="token line-char">\\</span>
+      "
+    `)
+  })
+
   test('css extras variable hexcode unit', () => {
     expect(highlightCode(':root { --brand: #ff0000; margin: 10px }', 'css')).toMatchInlineSnapshot(`"<span class="token selector"><span class="token pseudo-class">:root</span></span> <span class="token punctuation">{</span> <span class="token variable">--brand</span><span class="token punctuation">:</span> <span class="token hexcode color">#ff0000</span><span class="token punctuation">;</span> <span class="token property">margin</span><span class="token punctuation">:</span> <span class="token number">10</span><span class="token unit">px</span> <span class="token punctuation">}</span>"`)
   })

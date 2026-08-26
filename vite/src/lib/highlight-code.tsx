@@ -215,11 +215,10 @@ function ensureCore() {
 }
 
 function installDiagramGrammar() {
-  if (refractor.registered('diagram')) return
   refractor.languages.diagram = {
     'box-drawing': /[┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷]+/,
-    'line-char': /[-_|<>►◄▼▲→←↑↓]+/,
-    label: /[^\s┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷\-_|<>►◄▼▲→←↑↓]+/,
+    'line-char': /[-_|<>^►◄▼▲→←↑↓+/\\]+/,
+    label: /[^\s┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷\-_|<>^►◄▼▲→←↑↓+/\\]+/,
   }
 }
 
