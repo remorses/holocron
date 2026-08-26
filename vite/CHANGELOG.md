@@ -1,8 +1,12 @@
 # @holocron.so/vite
 
+## 0.31.1
+
+1. **Fix `--sidebar-font-size` override on `:root`** — the variable was declared directly on `.slot-sidebar-left`, which beat any `:root` override. It now lives only on `:root` (13px default, 14px at `xl`) so user CSS overrides propagate correctly.
+
 ## 0.31.0
 
-1. **Scale the sidebar with `--sidebar-font-size`** — sidebar type, icons, padding, and row spacing now use `em` relative to `--sidebar-font-size` (14px). Below the `xl` breakpoint the left sidebar shrinks to **13px** so the whole nav densifies together on smaller screens. The mobile drawer and large desktops stay at 14px.
+1. **Scale the sidebar with `--sidebar-font-size`** — sidebar type, icons, padding, and row spacing now use `em` relative to `--sidebar-font-size` (13px default, 14px at `xl`). Override on `:root` to change globally.
 
    Override it in your CSS to change the sidebar size at any breakpoint:
 
