@@ -84,6 +84,20 @@ describe('highlightCode', () => {
     spy.mockRestore()
   })
 
+  test('markdown nested zig fence inner-highlights before keep-list', () => {
+    expect(refractor.registered('zig')).toBe(false)
+    const html = highlightCode('```zig\nconst x = 1;\n```\n', 'markdown')
+    expect(html).toContain('token keyword')
+    expect(html).toContain('token number')
+    expect(html).not.toMatch(/language-zig">const x/)
+  })
+
+  test('mdx nested mermaid fence inner-highlights before keep-list', () => {
+    const html = highlightCode('```mermaid\ngraph TD\n  A-->B\n```\n', 'mdx')
+    expect(html).toContain('token keyword')
+    expect(html).toContain('token arrow')
+  })
+
   test('registers the docs language keep list', () => {
     const missing = DOCS_LANGS.filter((id) => highlightCode('x', id) === undefined)
     expect(missing).toEqual([])
@@ -517,7 +531,10 @@ describe('highlightCode', () => {
   })
 
   test('diagram arrows', () => {
-    expect(highlightCode('docs.json ───► Vite Plugin', 'diagram')).toMatchInlineSnapshot(`"<span class="token label">docs.json</span> <span class="token box-drawing">───</span><span class="token label">►</span> <span class="token label">Vite</span> <span class="token label">Plugin</span>"`)
+    const html = highlightCode('docs.json ───► Vite Plugin', 'diagram')
+    expect(html).toContain('token line-char')
+    expect(html).not.toMatch(/token label">►/)
+    expect(html).toMatchInlineSnapshot(`"<span class="token label">docs.json</span> <span class="token box-drawing">───</span><span class="token line-char">►</span> <span class="token label">Vite</span> <span class="token label">Plugin</span>"`)
   })
 
   test('diagram mixed boxes and arrows', () => {
@@ -527,7 +544,7 @@ describe('highlightCode', () => {
                      └───────┬───────┘
     `, 'diagram')).toMatchInlineSnapshot(`
       "<span class="token box-drawing">┌───────────────┐</span>
-      <span class="token label">docs.jsonc</span> <span class="token box-drawing">───</span><span class="token label">►</span><span class="token box-drawing">│</span>  <span class="token label">Vite</span> <span class="token label">Plugin</span>  <span class="token box-drawing">│──────</span><span class="token label">►</span> <span class="token label">Build</span>
+      <span class="token label">docs.jsonc</span> <span class="token box-drawing">───</span><span class="token line-char">►</span><span class="token box-drawing">│</span>  <span class="token label">Vite</span> <span class="token label">Plugin</span>  <span class="token box-drawing">│──────</span><span class="token line-char">►</span> <span class="token label">Build</span>
                      <span class="token box-drawing">└───────┬───────┘</span>"
     `)
   })

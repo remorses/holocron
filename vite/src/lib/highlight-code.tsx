@@ -218,8 +218,8 @@ function installDiagramGrammar() {
   if (refractor.registered('diagram')) return
   refractor.languages.diagram = {
     'box-drawing': /[┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷]+/,
-    'line-char': /[-_|<>]+/,
-    label: /[^\s┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷\-_|<>]+/,
+    'line-char': /[-_|<>►◄▼▲→←↑↓]+/,
+    label: /[^\s┌┐└┘├┤┬┴┼─│═║╔╗╚╝╠╣╦╩╬╭╮╯╰┊┈╌┄╶╴╵╷\-_|<>►◄▼▲→←↑↓]+/,
   }
 }
 
@@ -231,10 +231,23 @@ function wireYamlFrontmatter(grammar) {
   if (matter) matter.inside = refractor.languages.yaml
 }
 
+// First md/mdx fence registers every docs lang so nested ```ts blocks highlight.
+function registerDocsGrammars() {
+  const prism: any = refractor
+  if (prism._holocronDocsGrammars) return
+  prism._holocronDocsGrammars = true
+  for (const grammar of docsGrammars) {
+    if (MODIFIER_GRAMMARS.has(grammar.displayName)) continue
+    if (!refractor.registered(grammar.displayName)) refractor.register(grammar)
+  }
+}
+
 function ensureMarkdownWithFrontmatter() {
   if (!refractor.registered('yaml')) refractor.register(yaml)
   if (!refractor.registered('markdown')) refractor.register(markdown)
   wireYamlFrontmatter(refractor.languages.markdown)
+  registerDocsGrammars()
+  installNestedFenceHook()
 }
 
 function walkMarkdownCodeFences(tokens) {
@@ -268,13 +281,14 @@ function walkMarkdownCodeFences(tokens) {
   }
 }
 
-function installMdxCodeFenceHook() {
+function installNestedFenceHook() {
   const prism: any = refractor
-  if (prism._holocronMdxHook) return
-  prism._holocronMdxHook = true
+  prism._holocronWalkMarkdownCodeFences = walkMarkdownCodeFences
+  if (prism._holocronNestedFenceHook) return
+  prism._holocronNestedFenceHook = true
   prism.hooks.add('after-tokenize', (env) => {
-    if (env.language !== 'mdx') return
-    walkMarkdownCodeFences(env.tokens)
+    if (env.language !== 'mdx' && env.language !== 'markdown' && env.language !== 'md') return
+    prism._holocronWalkMarkdownCodeFences(env.tokens)
   })
 }
 
@@ -283,7 +297,7 @@ function installMdxGrammar() {
   if (!refractor.registered('jsx')) refractor.register(jsx)
   const prism: any = refractor
   if (prism.languages.mdx && prism.languages.mdx !== prism.languages.markdown) {
-    installMdxCodeFenceHook()
+    installNestedFenceHook()
     return
   }
   const mdx = prism.languages.extend('markdown', {})
@@ -299,7 +313,7 @@ function installMdxGrammar() {
       inside: prism.languages.javascript,
     },
   })
-  installMdxCodeFenceHook()
+  installNestedFenceHook()
 }
 
 /** Refractor's registry is process-global. RSC remount re-runs this module. */
