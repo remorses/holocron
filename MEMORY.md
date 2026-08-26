@@ -647,6 +647,9 @@ Structural fix (if needed later): move per-section asides out of the
 subgrid row flow and into `position: absolute` or a separate parallel
 flex column. Keep `<Aside full>` using the grid-row span approach.
 
+As of 2026-08-26, Ask AI intentionally uses a regular first-section Aside.
+Accept this row-height coupling rather than restoring a page-wide overlay.
+
 ## `.editorial-prose { margin: 0 }` SHADOWS Tailwind margin utilities (cascade trap)
 
 In `vite/src/styles/editorial.css` the `.editorial-prose` class sets `margin: 0`.

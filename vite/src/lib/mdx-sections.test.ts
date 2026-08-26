@@ -6,11 +6,7 @@ import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import remarkMdx from 'remark-mdx'
 import { remark } from 'remark'
-import {
-  buildSections,
-  rowCoveredByOverlappingShared,
-  sharedAsideOverlapsPerSection,
-} from './mdx-sections.ts'
+import { buildSections } from './mdx-sections.ts'
 import { remarkInlineImports, type InlineImportEntry } from './remark-inline-imports.ts'
 import { formatSectionsToMdx } from './test-mdx-util.ts'
 
@@ -44,20 +40,19 @@ Body
       [CONTENT]
       Intro
 
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
       --- SECTION 1 ---
-      asideRowSpan: 2
 
       [CONTENT]
       ## Section
 
-      Body
-
-      [SHARED ASIDE]
-      <Aside full>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>"
+      Body"
     `)
   })
 
@@ -74,22 +69,21 @@ Body
       [CONTENT]
       Intro
 
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
       --- SECTION 1 ---
-      asideRowSpan: 2
 
       [CONTENT]
       <Heading level="2">
         Section
       </Heading>
 
-      Body
-
-      [SHARED ASIDE]
-      <Aside full>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>"
+      Body"
     `)
   })
 
@@ -106,26 +100,25 @@ Body
       [CONTENT]
       Intro
 
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
       --- SECTION 1 ---
-      asideRowSpan: 2
 
       [CONTENT]
       <h2>
         Section
       </h2>
 
-      Body
-
-      [SHARED ASIDE]
-      <Aside full>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>"
+      Body"
     `)
   })
 
-  test('injects HolocronAIAssistantWidget as full Aside when no aside exists anywhere', () => {
+  test('injects HolocronAIAssistantWidget as a regular first-section Aside', () => {
     const mdx = `Intro
 
 ## Section
@@ -138,24 +131,23 @@ Body
       [CONTENT]
       Intro
 
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
       --- SECTION 1 ---
-      asideRowSpan: 2
 
       [CONTENT]
       ## Section
 
-      Body
-
-      [SHARED ASIDE]
-      <Aside full>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>"
+      Body"
     `)
   })
 
-  test('injects HolocronAIAssistantWidget as Aside full next to a first-section Aside', () => {
+  test('adds the AI widget beside an authored first-section Aside', () => {
     const mdx = `Intro
 
 <Aside>
@@ -174,23 +166,21 @@ Body
 
       [ASIDE]
       <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
+      <Aside>
         My aside
       </Aside>
 
       --- SECTION 1 ---
-      asideRowSpan: 2
 
       [CONTENT]
       ## Section
 
-      Body
-
-      [SHARED ASIDE]
-      <Aside full>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>"
+      Body"
     `)
   })
 
@@ -289,11 +279,16 @@ Response body
 
       [ASIDE]
       <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
+      <Aside>
         Intro aside
       </Aside>
 
       --- SECTION 1 ---
-      asideRowSpan: 2
 
       [CONTENT]
       ## API Section
@@ -307,13 +302,6 @@ Response body
 
       <Aside>
         Response body
-      </Aside>
-
-      [SHARED ASIDE]
-      <Aside full>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
       </Aside>"
     `)
   })
@@ -392,8 +380,7 @@ Response body
 
   test('page starting with a heading keeps per-section asides scoped (pricing page repro)', () => {
     // Heading-first page with an intro <Aside> + two per-section asides.
-    // Each aside must stay in its own section, not collapse into one shared
-    // <Aside full> pinned at the top.
+    // Each aside must stay in its own section, not collapse into one shared sidebar.
     const mdx = `# Pricing
 
 Holocron is free to start.
@@ -440,6 +427,12 @@ Billing runs on Stripe.
 
       [ASIDE]
       <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
+      <Aside>
         <Info>
           Subscriptions are per site.
         </Info>
@@ -472,7 +465,6 @@ Billing runs on Stripe.
       </Aside>
 
       --- SECTION 4 ---
-      asideRowSpan: 5
 
       [CONTENT]
       ## Subscribe
@@ -484,20 +476,13 @@ Billing runs on Stripe.
         <Note>
           Billing runs on Stripe.
         </Note>
-      </Aside>
-
-      [SHARED ASIDE]
-      <Aside full>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
       </Aside>"
     `)
   })
 
   test('heading-first page with NO intro aside keeps per-section asides in their own sections', () => {
     // First section has no authored aside, later sections do. The AI widget
-    // is still <Aside full> (page-span) but must not collect those later asides.
+    // is a regular first-section aside, so later asides stay on their own rows.
     const mdx = `# Pricing
 
 Holocron is free to start.
@@ -542,6 +527,13 @@ Billing runs on Stripe.
 
       Holocron is free to start.
 
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
       --- SECTION 1 ---
 
       [CONTENT]
@@ -576,7 +568,6 @@ Billing runs on Stripe.
       </Aside>
 
       --- SECTION 4 ---
-      asideRowSpan: 5
 
       [CONTENT]
       ## Subscribe
@@ -588,20 +579,13 @@ Billing runs on Stripe.
         <Note>
           Billing runs on Stripe.
         </Note>
-      </Aside>
-
-      [SHARED ASIDE]
-      <Aside full>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
       </Aside>"
     `)
   })
 
   test('heading-only first section keeps later asides with their own sections', () => {
-    // h1 then h2 with no body between them. Later asides must stay put;
-    // the AI widget is <Aside full> across the page and does not collect them.
+    // h1 then h2 with no body between them. The AI stays with h1, and later
+    // asides remain in the sections that contain them.
     const mdx = `# Quickstart
 
 ## Install
@@ -628,6 +612,13 @@ Generate instructions.
       [CONTENT]
       # Quickstart
 
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
       --- SECTION 1 ---
 
       [CONTENT]
@@ -650,26 +641,15 @@ Generate instructions.
       </Aside>
 
       --- SECTION 3 ---
-      asideRowSpan: 4
 
       [CONTENT]
       ## Generate
 
-      Generate instructions.
-
-      [SHARED ASIDE]
-      <Aside full>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>"
+      Generate instructions."
     `)
   })
 
-  test('heading-only first section with no asides anywhere spans all sections', () => {
-    // When no per-section asides exist, the AI widget is <Aside full>.
-    // The full-aside range now includes section 0 (heading-only), so the
-    // aside spans all sections. No "before" range is excluded.
+  test('heading-only first section keeps the AI widget in that section', () => {
     const mdx = `# Quickstart
 
 ## Install
@@ -686,6 +666,13 @@ Generate instructions.
       [CONTENT]
       # Quickstart
 
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
       --- SECTION 1 ---
 
       [CONTENT]
@@ -694,26 +681,18 @@ Generate instructions.
       Install instructions.
 
       --- SECTION 2 ---
-      asideRowSpan: 3
 
       [CONTENT]
       ## Generate
 
-      Generate instructions.
-
-      [SHARED ASIDE]
-      <Aside full>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>"
+      Generate instructions."
     `)
   })
 
-  test('intro content + sub-headings (no aside) — AI widget spans from row 1', () => {
+  test('intro content + sub-headings keeps the AI widget with the intro', () => {
     // Regression test: pages like debugging-workflows.mdx that have intro
     // content (blockquote + paragraph) followed by ### sub-headings but no
-    // authored <Aside>. The synthetic <Aside full> must span from section 0
+    // authored <Aside>. The regular synthetic aside must stay with the intro
     // so the AI widget starts at the top of the sidebar, not section 1.
     const mdx = `> Reproduce failures and fix broken automations.
 
@@ -735,6 +714,13 @@ Reproduce from error logs locally.
 
       There are two common debugging scenarios.
 
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
       --- SECTION 1 ---
 
       [CONTENT]
@@ -743,26 +729,18 @@ Reproduce from error logs locally.
       When a workflow fails remotely, connect directly.
 
       --- SECTION 2 ---
-      asideRowSpan: 3
 
       [CONTENT]
       ### Local debugging
 
-      Reproduce from error logs locally.
-
-      [SHARED ASIDE]
-      <Aside full>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>"
+      Reproduce from error logs locally."
     `)
   })
 
   test('intro with no first-section aside keeps later asides next to their headings', () => {
     // Traforo homepage shape: intro paragraphs, then ## sections each with
-    // their own <Aside>. Ask AI is <Aside full> for the whole page; later
-    // asides stay on their own section rows instead of merging into it.
+    // their own <Aside>. Ask AI stays with the intro; later asides stay on
+    // their own section rows instead of merging into it.
     const mdx = `HTTP tunnel via Cloudflare Durable Objects.
 
 ## Usage
@@ -801,6 +779,13 @@ The \`X-Traforo-Cache\` response header shows HIT, MISS, or BYPASS.
       [CONTENT]
       HTTP tunnel via Cloudflare Durable Objects.
 
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
       --- SECTION 1 ---
 
       [CONTENT]
@@ -830,7 +815,6 @@ The \`X-Traforo-Cache\` response header shows HIT, MISS, or BYPASS.
       </Aside>
 
       --- SECTION 3 ---
-      asideRowSpan: 4
 
       [CONTENT]
       ## Edge Caching
@@ -842,13 +826,6 @@ The \`X-Traforo-Cache\` response header shows HIT, MISS, or BYPASS.
         <Info>
           The \`X-Traforo-Cache\` response header shows HIT, MISS, or BYPASS.
         </Info>
-      </Aside>
-
-      [SHARED ASIDE]
-      <Aside full>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
       </Aside>"
     `)
   })
@@ -909,6 +886,13 @@ import Readme from '../../README.md'
       [CONTENT]
       HTTP tunnel via Cloudflare Durable Objects.
 
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
       --- SECTION 1 ---
 
       [CONTENT]
@@ -938,7 +922,6 @@ import Readme from '../../README.md'
       </Aside>
 
       --- SECTION 3 ---
-      asideRowSpan: 4
 
       [CONTENT]
       ## Edge Caching
@@ -950,13 +933,72 @@ import Readme from '../../README.md'
         <Info>
           The \`X-Traforo-Cache\` response header shows HIT, MISS, or BYPASS.
         </Info>
-      </Aside>
+      </Aside>"
+    `)
+  })
 
-      [SHARED ASIDE]
-      <Aside full>
+  test('a later authored full aside keeps its range separate from the AI aside', () => {
+    const mdx = `Intro
+
+## Part one
+
+Body one.
+
+<Aside full>
+<Note>
+Shared note.
+</Note>
+</Aside>
+
+## Part two
+
+Body two.
+
+<Aside>
+<Tip>
+Collected tip.
+</Tip>
+</Aside>
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      [ASIDE]
+      <Aside>
         <HolocronAIAssistantWidget />
 
         <HolocronPageNavRow />
+      </Aside>
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## Part one
+
+      Body one.
+
+      --- SECTION 2 ---
+      asideRowSpan: 1
+
+      [CONTENT]
+      ## Part two
+
+      Body two.
+
+      [SHARED ASIDE]
+      <Aside full>
+        <Note>
+          Shared note.
+        </Note>
+      </Aside>
+
+      <Aside>
+        <Tip>
+          Collected tip.
+        </Tip>
       </Aside>"
     `)
   })
@@ -972,29 +1014,30 @@ Content
 `
     expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
       "--- SECTION 0 ---
+
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
+      --- SECTION 1 ---
       fullWidth: true
 
       [CONTENT]
       This should be full width.
 
-      --- SECTION 1 ---
-      asideRowSpan: 2
+      --- SECTION 2 ---
 
       [CONTENT]
       ## Following Section
 
-      Content
-
-      [SHARED ASIDE]
-      <Aside full>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>"
+      Content"
     `)
   })
 
-  test('full-span AI and per-section asides overlap in the same sidebar column', () => {
+  test('AI widget behaves like a regular first-section aside', () => {
     const mdx = `Intro
 
 ## Usage
@@ -1008,27 +1051,32 @@ Tip
 </Aside>
 `
     const sections = parseAndBuild(mdx)
-    const layers = sections.map((section) => ({
-      hasPerSectionAside: section.asideNodes.length > 0,
-      hasSharedAside: (section.sharedAsideNodes?.length ?? 0) > 0,
-      asideRowSpan: section.asideRowSpan,
-    }))
-    expect(layers).toMatchInlineSnapshot(`
-      [
-        {
-          "asideRowSpan": undefined,
-          "hasPerSectionAside": false,
-          "hasSharedAside": false,
-        },
-        {
-          "asideRowSpan": 2,
-          "hasPerSectionAside": true,
-          "hasSharedAside": true,
-        },
-      ]
+    expect(formatSectionsToMdx(sections)).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      [ASIDE]
+      <Aside>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## Usage
+
+      Body
+
+      [ASIDE]
+      <Aside>
+        <Tip>
+          Tip
+        </Tip>
+      </Aside>"
     `)
-    expect(sharedAsideOverlapsPerSection(layers, 1)).toBe(true)
-    expect(rowCoveredByOverlappingShared(layers, 1)).toBe(true)
-    expect(rowCoveredByOverlappingShared(layers, 2)).toBe(true)
   })
 })

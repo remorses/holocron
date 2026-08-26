@@ -3,9 +3,8 @@
  * Splits at every heading and handles `<Aside full>` row spans.
  *
  * Authored `<Aside full>` collects later asides into one shared sidebar.
- * The synthetic AI/page-nav aside is also `<Aside full>` so it can stick
- * across the page, but it does not collect. Later section asides stay
- * on their own rows (`asideNodes`) next to their headings.
+ * The synthetic AI/page-nav aside is a regular first-section aside, so later
+ * section asides stay on their own rows (`asideNodes`) next to their headings.
  */
 
 import type { Root, RootContent } from 'mdast'
@@ -15,8 +14,8 @@ type FlowJsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
 export type MdastSection = {
   contentNodes: RootContent[]
   asideNodes: RootContent[]
-  /** Full-span aside for this range. Separate from `asideNodes` so a
-   *  page-level AI `<Aside full>` can coexist with per-section asides. */
+  /** Full-span aside for this range. Separate from `asideNodes` so authored
+   *  `<Aside full>` content can span multiple section rows. */
   sharedAsideNodes?: RootContent[]
   /** How many section rows this section's shared aside spans on desktop.
    *  1 (default) for per-section asides; N for a shared `<Aside full>`
@@ -150,27 +149,22 @@ export function buildSections(root: Root, { enableAssistant = true }: { enableAs
     }
   }
 
-  // Synthetic page chrome (Ask AI + page nav). Always `<Aside full>` so it
-  // can stick across the page. Do not prepend into a regular first aside:
-  // that aside must stay on its own section row. Only fold into an authored
-  // `<Aside full>` so `full` still means "collect this range".
-  //
-  // Identity of `syntheticAside` is how the collect loop knows not to
-  // swallow later per-section asides. Do not sniff children for this.
-  let syntheticAside: FlowJsxNode | null = null
+  // Ask AI + page nav behaves like a regular aside in the first section.
+  // An authored first-section `<Aside full>` still owns the full sidebar range,
+  // so prepend the page chrome there instead of adding a competing aside.
   if (firstFullAsideIdx !== -1) {
     const asideNode = children[firstFullAsideIdx]
     if (asideNode && isAsideNode(asideNode)) {
       asideNode.children.unshift(...injectedNodes)
     }
   } else {
-    syntheticAside = {
+    const syntheticAside: FlowJsxNode = {
       type: 'mdxJsxFlowElement',
       name: 'Aside',
-      attributes: [{ type: 'mdxJsxAttribute', name: 'full', value: null }],
+      attributes: [],
       children: [...injectedNodes],
     }
-    children.splice(0, 0, syntheticAside)
+    children.splice(scanStart, 0, syntheticAside)
   }
 
   // Find indices of all <Aside full> nodes
@@ -196,23 +190,16 @@ export function buildSections(root: Root, { enableAssistant = true }: { enableAs
     sections.push(...groupBySections(before))
   }
 
-  // Each full-aside range: split at headings. Authored `<Aside full>`
-  // collects every later Aside into one shared sidebar. The synthetic AI
-  // aside does not collect: later asides stay on their own section rows.
+  // Each authored full-aside range splits at headings and collects every
+  // later Aside into one shared sidebar.
   for (let r = 0; r < fullAsideIndices.length; r++) {
     const start = fullAsideIndices[r]!
     const end = fullAsideIndices[r + 1] ?? children.length
     const sharedAsideNode = children[start]!
-    const collectsLaterAsides = sharedAsideNode !== syntheticAside
     const rangeNodes = children.slice(start + 1, end)
-
-    const rangeForGrouping = collectsLaterAsides
-      ? rangeNodes.filter((n) => !isAsideNode(n) && !isFullWidthNode(n))
-      : rangeNodes
+    const rangeForGrouping = rangeNodes.filter((n) => !isAsideNode(n) && !isFullWidthNode(n))
     const subSections = groupBySections({ type: 'root', children: rangeForGrouping })
-    const sharedAsideNodes = collectsLaterAsides
-      ? [sharedAsideNode, ...rangeNodes.filter(isAsideNode)]
-      : [sharedAsideNode]
+    const sharedAsideNodes = [sharedAsideNode, ...rangeNodes.filter(isAsideNode)]
 
     if (subSections.length === 0) {
       sections.push({ contentNodes: [], asideNodes: [], sharedAsideNodes, asideRowSpan: 1 })
@@ -222,7 +209,6 @@ export function buildSections(root: Root, { enableAssistant = true }: { enableAs
     // Attach the shared aside to the LAST sub-section (for clean mobile stacking
     // at the end of its range). Desktop rendering uses asideRowSpan to compute
     // an explicit `grid-row: start / span N` that covers all sub-sections.
-    // Per-section asides already live on `asideNodes` from groupBySections.
     const lastSub = subSections[subSections.length - 1]!
     lastSub.sharedAsideNodes = sharedAsideNodes
     lastSub.asideRowSpan = subSections.length
@@ -246,42 +232,4 @@ export function sharedAsideRange(asideRowSpan: number | undefined, index: number
   const span = asideRowSpan ?? 1
   const end = index + 1
   return { start: end - span + 1, end, span }
-}
-
-export type AsideLayerSection = {
-  hasPerSectionAside: boolean
-  hasSharedAside: boolean
-  asideRowSpan?: number
-}
-
-/** True when this section's shared aside covers a row that also has a per-section aside. */
-export function sharedAsideOverlapsPerSection(
-  sections: AsideLayerSection[],
-  index: number,
-): boolean {
-  const section = sections[index]
-  if (!section?.hasSharedAside) return false
-  const { start, end } = sharedAsideRange(section.asideRowSpan, index)
-  return sections.some((other, j) => other.hasPerSectionAside && j + 1 >= start && j + 1 <= end)
-}
-
-export function rowCoveredByOverlappingShared(
-  sections: AsideLayerSection[],
-  row: number,
-): boolean {
-  return sections.some((section, i) => {
-    if (!sharedAsideOverlapsPerSection(sections, i)) return false
-    const { start, end } = sharedAsideRange(section.asideRowSpan, i)
-    return row >= start && row <= end
-  })
-}
-
-export function rowStartsOverlappingShared(
-  sections: AsideLayerSection[],
-  row: number,
-): boolean {
-  return sections.some((section, i) => {
-    if (!sharedAsideOverlapsPerSection(sections, i)) return false
-    return sharedAsideRange(section.asideRowSpan, i).start === row
-  })
 }

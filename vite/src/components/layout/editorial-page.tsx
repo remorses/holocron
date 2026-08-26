@@ -9,7 +9,7 @@
 
 
 
-import React, { Fragment, useLayoutEffect, useRef } from 'react'
+import React, { Fragment } from 'react'
 import { Link } from '../link.tsx'
 import { useHolocronData } from '../../router.ts'
 import {
@@ -37,18 +37,11 @@ import {
   buildGridTokenStyle,
 } from '../../lib/sidebar-widths.ts'
 import type { HolocronCSSProperties } from '../../lib/css-vars.ts'
-import {
-  rowCoveredByOverlappingShared,
-  rowStartsOverlappingShared,
-  sharedAsideOverlapsPerSection,
-  sharedAsideRange,
-} from '../../lib/mdx-sections.ts'
+import { sharedAsideRange } from '../../lib/mdx-sections.ts'
 import type { PageMode } from '../../lib/page-frontmatter.ts'
 import { GridLinesFrame, TabBarDots, NavbarLines, AboveBottomDots } from './grid-lines.tsx'
 
-type EditorialPageMode = 'default' | 'center' | 'custom'
-
-function resolveEditorialPageMode(mode: PageMode | undefined): EditorialPageMode {
+function resolveEditorialPageMode(mode: PageMode | undefined): 'default' | 'center' | 'custom' {
   // Three resolved modes:
   // - "default" (+ "wide", "frame"): full editorial layout with left nav,
   //   sections grid, right aside column.
@@ -66,8 +59,7 @@ export type EditorialSection = {
   content: React.ReactNode
   /** Per-section aside. Sticky only within this section's row. */
   aside?: React.ReactNode
-  /** Full-span aside (AI widget or authored `<Aside full>`). Rendered as
-   *  its own grid cell so it can coexist with `aside` on the same section. */
+  /** Authored full-span aside. Rendered as its own multi-row grid cell. */
   sharedAside?: React.ReactNode
   fullWidth?: boolean
   /** How many grid rows this section's shared aside spans on desktop.
@@ -77,39 +69,6 @@ export type EditorialSection = {
    *  cell covers every sub-section row. Inside that tall cell,
    *  `position: sticky` keeps the aside pinned alongside all those rows. */
   asideRowSpan?: number
-}
-
-/** Writes `--full-aside-height` on the content grid so later asides sit
- *  below the Ask AI cell. `:root` already has a guessed default. */
-function SharedAsideCell({
-  className,
-  style,
-  measure,
-  children,
-}: {
-  className: string
-  style: HolocronCSSProperties
-  measure: boolean
-  children: React.ReactNode
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  useLayoutEffect(() => {
-    if (!measure) return
-    const el = ref.current
-    const parent = el?.parentElement
-    if (!el || !parent) return
-    const apply = () => {
-      parent.style.setProperty('--full-aside-height', `${el.offsetHeight}px`)
-    }
-    apply()
-    const observer = new ResizeObserver(apply)
-    observer.observe(el)
-    return () => {
-      observer.disconnect()
-      parent.style.removeProperty('--full-aside-height')
-    }
-  }, [measure])
-  return <div ref={measure ? ref : undefined} className={className} style={style}>{children}</div>
 }
 
 function ContentFooter() {
@@ -190,11 +149,6 @@ export function EditorialPage({
   const pageMode = resolveEditorialPageMode(mode)
   const isCustomMode = pageMode === 'custom'
   const showLeftNav = pageMode === 'default'
-  const asideLayers = (sections ?? []).map((section) => ({
-    hasPerSectionAside: Boolean(section.aside),
-    hasSharedAside: Boolean(section.sharedAside),
-    asideRowSpan: section.asideRowSpan,
-  }))
   // In center mode the content + right rail occupy the page width without the
   // left navigation column, so cap the grid width to drop that column's width.
   const centerMaxWidthClass = 'lg:max-w-[calc(var(--grid-max-width)_-_var(--grid-nav-width)_-_var(--grid-gap))]'
@@ -466,15 +420,9 @@ export function EditorialPage({
                 const { start: sharedAsideStartRow, span } = sharedAsideRange(section.asideRowSpan, i)
                 const hasPerSectionAside = Boolean(section.aside)
                 const hasSharedAside = Boolean(section.sharedAside)
-                const coveredByPageAside = rowCoveredByOverlappingShared(asideLayers, row)
-                const startsPageAside = rowStartsOverlappingShared(asideLayers, row)
-                const measureSharedAside = sharedAsideOverlapsPerSection(asideLayers, i)
                 const stickyBase = hasTabBar
                   ? 'var(--sticky-top)'
                   : 'calc(var(--header-row-height) + var(--layout-gap))'
-                const perSectionTop = coveredByPageAside
-                  ? `calc(${stickyBase} + var(--full-aside-height))`
-                  : stickyBase
                 const asideClass =
                   'slot-aside flex flex-col text-(length:--type-small-size) leading-[1.5]'
                 const sharedAsideStyle: HolocronCSSProperties = {
@@ -492,32 +440,23 @@ export function EditorialPage({
                       </div>
                       {hasPerSectionAside && (
                         <div className={`${asideClass} lg:col-[2]`}>
-                          {startsPageAside && (
-                            <div className='hidden lg:block shrink-0' style={{ height: 'var(--full-aside-height)' }} />
-                          )}
                           <div
                             className='flex flex-col gap-3 lg:sticky lg:self-start'
-                            style={{ top: perSectionTop }}
+                            style={{ top: stickyBase }}
                           >
                             {section.aside}
                           </div>
                         </div>
                       )}
                     </div>
-                    {/* Shared aside: single element, direct content-grid child.
+                    {/* Authored full aside: single element, direct content-grid child.
                         Desktop: explicit col 2 + row-span (via CSS var read at lg).
                         Mobile: grid-row stays `auto` → auto-placed by DOM order,
                         stacks at end of range without forcing an implicit 2nd
-                        column in grid-cols-1. Can coexist with a per-section
-                        aside in the same column; sticky top of those asides
-                        is offset by --full-aside-height.
-                        Opaque bg + z-10 so later asides cannot show through
-                        the sticky Ask AI cell (`self-start` keeps the bg
-                        content-sized, not stretched across the row span). */}
+                        column in grid-cols-1. */}
                     {hasSharedAside && (
-                      <SharedAsideCell
-                        measure={measureSharedAside}
-                        className={`${asideClass} gap-3 bg-background z-10 lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:self-start lg:overflow-y-auto scrollbar-none`}
+                      <div
+                        className={`${asideClass} gap-3 lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:self-start lg:overflow-y-auto scrollbar-none`}
                         style={{
                           ...sharedAsideStyle,
                           top: stickyBase,
@@ -525,7 +464,7 @@ export function EditorialPage({
                         }}
                       >
                         {section.sharedAside}
-                      </SharedAsideCell>
+                      </div>
                     )}
                   </Fragment>
                 )
