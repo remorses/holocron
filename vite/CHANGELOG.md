@@ -1,5 +1,51 @@
 # @holocron.so/vite
 
+## 0.31.0
+
+1. **Scale the sidebar with `--sidebar-font-size`** — sidebar type, icons, padding, and row spacing now use `em` relative to `--sidebar-font-size` (14px). Below the `xl` breakpoint the left sidebar shrinks to **13px** so the whole nav densifies together on smaller screens. The mobile drawer and large desktops stay at 14px.
+
+   Override it in your CSS to change the sidebar size at any breakpoint:
+
+   ```css
+   :root {
+     --sidebar-font-size: 13px;
+   }
+   ```
+
+   New spacing variables that scale with the font size: `--sidebar-icon-size`, `--sidebar-leading-gap`. `--sidebar-indent` is now derived from these two automatically.
+
+2. **Highlight YAML frontmatter and JSX tags in MDX code fences** — ` ```mdx ` blocks now color frontmatter delimiters, YAML keys/values, JSX tags (including `{expr}` attributes), and ESM `import`/`export` statements. ` ```md ` and ` ```markdown ` fences also get frontmatter highlighting.
+
+3. **Highlight nested fences inside Markdown snippets** — a ` ```md ` block that contains ` ```ts ` (or another language) now colors the inner fence. The first Markdown or MDX snippet registers the docs language set so inner fences have a grammar ready.
+
+4. **Keep highlighting through multiline MDX imports** — the MDX fence grammar now treats an `import` as one block until the next blank line. `from './foo'`, `import type`, and side-effect imports stay colored.
+
+5. **Register Prism grammars on first highlight instead of at module load** — hosting a Holocron site inside a Cloudflare Worker no longer pays `refractor.register` for every language on isolate boot. Routes that never highlight code skip that cost entirely.
+
+6. **Keep HTML, HTTP, CSS, and JS highlight extras** — the first highlighted fence now installs a core set in Prism order (markup, CSS plus extras, JavaScript plus extras, JSON). Later fences register only the language they need. HTML `<style>`/`<script>`, HTTP JSON bodies, and CSS/JS extra tokens stay colored.
+
+7. **Cache the request-time MDX parse** — the same page source is not parsed again on every request. Repeat views reuse the parsed tree. Cloudflare Workers with a custom domain keep the tree in the Cache API across isolate restarts.
+
+8. **Fix the AI chat open/close animation** — the trigger now morphs into the drawer instead of popping, and the morph no longer fires on client-side page changes. Each page's Ask AI widget uses its own `layoutId`, so navigating to another page does not pair the old widget with the new one. Opening runs at 440ms, closing at 340ms. Content renders at final size during the whole transition instead of stretching with the shell.
+
+9. **Hide model thinking in the AI chat** — reasoning tokens are no longer shown as a collapsed preview; only the final answer is rendered.
+
+10. **Clear the chat input immediately after sending** — submitting from the sidebar Ask AI widget used to leave the same text in the drawer textarea until session restore finished. The input now empties right away.
+
+11. **Stop page content from showing through the sticky Ask AI widget** — the widget shell and send button now use opaque backgrounds instead of alpha tints.
+
+12. **Polish the free-chat Holocron promotion card** — the wordmark loads from holocron.so so it shows in the embedded widget and local mocks. More space under the logo, no card border.
+
+13. **Open the first OpenAPI response and nested properties by default** — endpoint pages with only a schema no longer show an empty closed panel.
+
+14. **Truncate long OpenAPI paths** — the HTTP method badge stays visible instead of overflowing the content column.
+
+15. **Color diagram arrowheads as connectors** — Unicode arrows (`►` `◄` `▼` `▲`) and ASCII connectors (`^` `+` `/` `\`) in ` ```diagram ` fences now use the same structural token as box-drawing characters and `-->` arrows.
+
+16. **Thin Lucide icon strokes from 3 to 2.5** — 12px sidebar and tab icons stay sharp instead of looking filled in.
+
+17. **Stop the left sidebar from scrolling when the active row is already in view** — the first page used to shift down a few pixels on load. The sidebar now leaves an already-visible row alone.
+
 ## 0.30.0
 
 1. **Highlight fenced code on the server** — token colors are in the first HTML response and stay after in-site navigation. MDX fences no longer wait on a client `useEffect` + Prism load.
