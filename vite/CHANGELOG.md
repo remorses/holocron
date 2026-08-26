@@ -2,13 +2,7 @@
 
 ## 0.31.1
 
-1. **Fix `--sidebar-font-size` override on `:root`** — the variable was declared directly on `.slot-sidebar-left`, which beat any `:root` override. It now lives only on `:root` (13px default, 14px at `xl`) so user CSS overrides propagate correctly.
-
-## 0.31.0
-
-1. **Scale the sidebar with `--sidebar-font-size`** — sidebar type, icons, padding, and row spacing now use `em` relative to `--sidebar-font-size` (13px default, 14px at `xl`). Override on `:root` to change globally.
-
-   Override it in your CSS to change the sidebar size at any breakpoint:
+1. **Scale the sidebar with `--sidebar-font-size`** — sidebar type, icons, padding, and row spacing now use `em` relative to `--sidebar-font-size` (13px default, 14px at `xl`). Override on `:root` to change globally. The sidebar no longer scrolls when the active row is already in view.
 
    ```css
    :root {
@@ -18,37 +12,17 @@
 
    New spacing variables that scale with the font size: `--sidebar-icon-size`, `--sidebar-leading-gap`. `--sidebar-indent` is now derived from these two automatically.
 
-2. **Highlight YAML frontmatter and JSX tags in MDX code fences** — ` ```mdx ` blocks now color frontmatter delimiters, YAML keys/values, JSX tags (including `{expr}` attributes), and ESM `import`/`export` statements. ` ```md ` and ` ```markdown ` fences also get frontmatter highlighting.
+2. **Improved code fence highlighting** — Prism grammars now register on first highlight instead of at module load, so Cloudflare Worker isolates skip that cost on routes that never highlight code. MDX fences color YAML frontmatter, JSX tags, and ESM `import`/`export`. Markdown fences highlight nested fences (e.g. ` ```ts ` inside ` ```md `). HTML `<style>`/`<script>`, HTTP JSON bodies, and CSS/JS extra tokens stay colored.
 
-3. **Highlight nested fences inside Markdown snippets** — a ` ```md ` block that contains ` ```ts ` (or another language) now colors the inner fence. The first Markdown or MDX snippet registers the docs language set so inner fences have a grammar ready.
+3. **Cache the request-time MDX parse** — repeat page views reuse the parsed tree. Cloudflare Workers with a custom domain keep the tree in the Cache API across isolate restarts.
 
-4. **Keep highlighting through multiline MDX imports** — the MDX fence grammar now treats an `import` as one block until the next blank line. `from './foo'`, `import type`, and side-effect imports stay colored.
+4. **AI chat polish** — the Ask AI widget morphs smoothly on open/close (440ms open, 340ms close). Reasoning tokens are hidden; only the final answer is rendered. The input clears immediately after sending. The widget uses opaque backgrounds so page content does not show through.
 
-5. **Register Prism grammars on first highlight instead of at module load** — hosting a Holocron site inside a Cloudflare Worker no longer pays `refractor.register` for every language on isolate boot. Routes that never highlight code skip that cost entirely.
+5. **OpenAPI endpoint pages** — the first response and nested properties open by default. Long endpoint paths are truncated so the HTTP method badge stays visible.
 
-6. **Keep HTML, HTTP, CSS, and JS highlight extras** — the first highlighted fence now installs a core set in Prism order (markup, CSS plus extras, JavaScript plus extras, JSON). Later fences register only the language they need. HTML `<style>`/`<script>`, HTTP JSON bodies, and CSS/JS extra tokens stay colored.
+6. **Color diagram connectors** — Unicode arrows (`►` `◄` `▼` `▲`) and ASCII connectors (`^` `+` `/` `\`) in ` ```diagram ` fences now use the structural connector color.
 
-7. **Cache the request-time MDX parse** — the same page source is not parsed again on every request. Repeat views reuse the parsed tree. Cloudflare Workers with a custom domain keep the tree in the Cache API across isolate restarts.
-
-8. **Fix the AI chat open/close animation** — the trigger now morphs into the drawer instead of popping, and the morph no longer fires on client-side page changes. Each page's Ask AI widget uses its own `layoutId`, so navigating to another page does not pair the old widget with the new one. Opening runs at 440ms, closing at 340ms. Content renders at final size during the whole transition instead of stretching with the shell.
-
-9. **Hide model thinking in the AI chat** — reasoning tokens are no longer shown as a collapsed preview; only the final answer is rendered.
-
-10. **Clear the chat input immediately after sending** — submitting from the sidebar Ask AI widget used to leave the same text in the drawer textarea until session restore finished. The input now empties right away.
-
-11. **Stop page content from showing through the sticky Ask AI widget** — the widget shell and send button now use opaque backgrounds instead of alpha tints.
-
-12. **Polish the free-chat Holocron promotion card** — the wordmark loads from holocron.so so it shows in the embedded widget and local mocks. More space under the logo, no card border.
-
-13. **Open the first OpenAPI response and nested properties by default** — endpoint pages with only a schema no longer show an empty closed panel.
-
-14. **Truncate long OpenAPI paths** — the HTTP method badge stays visible instead of overflowing the content column.
-
-15. **Color diagram arrowheads as connectors** — Unicode arrows (`►` `◄` `▼` `▲`) and ASCII connectors (`^` `+` `/` `\`) in ` ```diagram ` fences now use the same structural token as box-drawing characters and `-->` arrows.
-
-16. **Thin Lucide icon strokes from 3 to 2.5** — 12px sidebar and tab icons stay sharp instead of looking filled in.
-
-17. **Stop the left sidebar from scrolling when the active row is already in view** — the first page used to shift down a few pixels on load. The sidebar now leaves an already-visible row alone.
+7. **Thin Lucide icon strokes from 3 to 2.5** — 12px sidebar and tab icons stay sharp instead of looking filled in.
 
 ## 0.30.0
 
