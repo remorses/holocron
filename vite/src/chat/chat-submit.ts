@@ -23,7 +23,6 @@
  * session cookie exists, and also awaited by submitChat to prevent races.
  */
 
-import type { ToolModelMessage } from 'ai'
 import { decodeFederationPayload } from 'spiceflow/react'
 import { chatStore, respondToApproval } from './chat-store.ts'
 import type { ChatMessage, ChatModelMessage, ChatPart } from './chat-store.ts'
@@ -613,7 +612,7 @@ export async function submitChat(
       }
 
       // Build AI SDK v6 ToolModelMessage for the next turn.
-      const toolResultMessages: ToolModelMessage[] = toolResults.map((tr) => ({
+      const toolResultMessages: ChatModelMessage[] = toolResults.map((tr) => ({
         role: 'tool' as const,
         content: [{
           type: 'tool-result' as const,
