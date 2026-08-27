@@ -1,5 +1,39 @@
 # @holocron.so/vite
 
+## 0.32.0
+
+1. **Customize generated OpenAPI pages with `x-holocron`** — override page metadata, insert compatible Markdown and MDX content, or choose the endpoint URL directly on an OpenAPI operation:
+
+   ```yaml
+   paths:
+     /users:
+       post:
+         x-holocron:
+           metadata:
+             title: Create a new user
+             sidebarTitle: Create user
+             description: Add a user to the current organization.
+           content: |
+             <Badge color="blue">1 Credit</Badge>
+
+             <Note>
+             User email addresses must be unique.
+             </Note>
+           href: /api-reference/users/create
+   ```
+
+   `metadata` supports `title`, `sidebarTitle`, and `description`. `content` renders before the generated endpoint header, description, authorization, parameters, and request fields. `href` replaces the generated slug and bypasses the OpenAPI tab's `base` prefix. It must be a non-root, root-relative internal path without a query string, hash, backslash, double slash, or `.` / `..` segment.
+
+   The same page override subset works through Mintlify's `x-mint` extension. `x-holocron` wins field by field when both extensions define a value. Existing `x-mint` specifications can also place `title`, `sidebarTitle`, and `description` directly inside the extension; nested `metadata` values take priority.
+
+2. **Fix Ask AI and right-sidebar layout** — the page-level AI widget now behaves like a regular first-section aside. It scrolls and unsticks with that section, while later authored asides stay attached to their own headings. Explicit `<Aside full>` blocks keep their multi-section behavior, including when the first full aside owns the AI widget. Like any per-section aside, the widget can make a short first section taller.
+
+   Tall regular and full asides now scroll within the available viewport instead of clipping or shrinking their children. Ask AI also stays still during client navigation between layouts such as OpenAPI and changelog pages, while the intended open and close morph into the chat drawer remains enabled.
+
+3. **Style tables in generated OpenAPI and MCP descriptions** — GitHub Flavored Markdown tables now use the same editorial components as documentation pages and AI chat, including styled headers, row separators, cell padding, and horizontal scrolling on narrow screens.
+
+4. **Make code samples denser** — fenced code now renders at about 12px with the default 14px body size. Copyable API request and response panels also use 10px left padding, giving long examples more usable horizontal space while regular MDX tabs keep their existing padding.
+
 ## 0.31.1
 
 1. **Scale the sidebar with `--sidebar-font-size`** — sidebar type, icons, padding, and row spacing now use `em` relative to `--sidebar-font-size` (13px default, 14px at `xl`). Override on `:root` to change globally. The sidebar no longer scrolls when the active row is already in view.

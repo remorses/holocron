@@ -170,11 +170,11 @@ export function OpenAPIEndpoint(props: OpenAPIEndpointProps) {
 
   return (
     <div className='flex flex-col gap-(--prose-gap) text-sm'>
-      {props.children && (
+      {props.children ? (
         <div className='no-bleed flex flex-col gap-(--prose-gap)'>
           {props.children}
         </div>
-      )}
+      ) : null}
       <div className='flex flex-col gap-2'>
         <div className='flex min-w-0 items-center gap-3'>
           <code className='code-font-size text-muted-foreground font-mono min-w-0 truncate' title={props.path}>{props.path}</code>
