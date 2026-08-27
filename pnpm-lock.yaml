@@ -495,6 +495,9 @@ importers:
         specifier: ^5.0.12
         version: 5.0.12(@types/react@19.2.17)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))
     devDependencies:
+      '@ai-sdk/provider':
+        specifier: ^3.0.8
+        version: 3.0.8
       '@tailwindcss/cli':
         specifier: ^4.3.0
         version: 4.3.0
@@ -510,6 +513,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      ai:
+        specifier: ^6.0.149
+        version: 6.0.149(zod@4.4.3)
       postcss:
         specifier: ^8.5.16
         version: 8.5.16
