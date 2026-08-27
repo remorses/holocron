@@ -31,11 +31,22 @@ export type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'head' | 
 
 export const HTTP_METHODS: HttpMethod[] = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']
 
+export interface MintOperationMetadata {
+  title?: string
+  sidebarTitle?: string
+  description?: string
+  content?: string
+}
+
+type OperationObject = (OpenAPIV3.OperationObject | OpenAPIV3_1.OperationObject) & {
+  'x-mint'?: MintOperationMetadata
+}
+
 /** A single API operation extracted from the spec. */
 export interface ExtractedOperation {
   path: string
   method: HttpMethod
-  operation: OpenAPIV3.OperationObject | OpenAPIV3_1.OperationObject
+  operation: OperationObject
   /** Merged parameters from path item + operation level. */
   parameters: (OpenAPIV3.ParameterObject | OpenAPIV3_1.ParameterObject)[]
   /** Security requirements (operation-level or fallback to global). */
@@ -222,6 +233,8 @@ export function operationSlug(op: ExtractedOperation): string {
 
 /** Get a display title for an operation. */
 export function operationTitle(op: ExtractedOperation): string {
+  const mint = getMintOperationMetadata(op)
+  if (mint.title) return mint.title
   if (op.operation.summary) return op.operation.summary
   if (op.operation.operationId) {
     return op.operation.operationId
@@ -236,6 +249,9 @@ export function operationTitle(op: ExtractedOperation): string {
  *  The method is already shown as a colored badge in the sidebar, so it should
  *  not be repeated in the text label. */
 export function operationSidebarTitle(op: ExtractedOperation): string {
+  const mint = getMintOperationMetadata(op)
+  if (mint.sidebarTitle) return mint.sidebarTitle
+  if (mint.title) return mint.title
   if (op.operation.summary) return op.operation.summary
   if (op.operation.operationId) {
     return op.operation.operationId
@@ -244,6 +260,22 @@ export function operationSidebarTitle(op: ExtractedOperation): string {
       .replace(/\b\w/g, (c) => c.toUpperCase())
   }
   return op.path
+}
+
+/** Read Mintlify's operation-level page overrides. */
+export function getMintOperationMetadata(op: ExtractedOperation): MintOperationMetadata {
+  const value = op.operation['x-mint']
+  if (!value || typeof value !== 'object') return {}
+
+  const stringValue = (key: keyof MintOperationMetadata) =>
+    typeof value[key] === 'string' ? value[key] : undefined
+
+  return {
+    title: stringValue('title'),
+    sidebarTitle: stringValue('sidebarTitle'),
+    description: stringValue('description'),
+    content: stringValue('content'),
+  }
 }
 
 /** Pretty-print a tag name (converts kebab/snake to Title Case). */

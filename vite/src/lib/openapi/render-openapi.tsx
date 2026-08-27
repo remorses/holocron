@@ -51,6 +51,7 @@ export interface SecurityInfo {
 }
 
 export interface OpenAPIEndpointProps {
+  children?: React.ReactNode
   method: string
   path: string
   summary?: string
@@ -177,6 +178,7 @@ export function OpenAPIEndpoint(props: OpenAPIEndpointProps) {
         </div>
         {props.description && <Desc>{props.description}</Desc>}
       </div>
+      {props.children}
       <AuthSection security={props.security} />
       <ParameterGroup title='Query Parameters' params={query} />
       {props.requestBody && <RequestBodySection body={props.requestBody} />}

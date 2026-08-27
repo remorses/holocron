@@ -19,7 +19,7 @@
  */
 
 import type { ConfigNavGroup } from '../../config.ts'
-import type { DereferencedDocument, ExtractedOperation } from './process.ts'
+import type { DereferencedDocument, ExtractedOperation, MintOperationMetadata } from './process.ts'
 import { buildVirtualPageMdx } from '../virtual-page-mdx.ts'
 import { endpointKey } from './endpoint-ref.ts'
 import { codeSampleFenceBlocks, extractCodeSamples, fenceTitle } from './code-samples.ts'
@@ -48,7 +48,7 @@ export async function generateOpenAPIPages({
   spec,
   slugPrefix = 'api',
 }: GenerateOpenAPIPagesOptions): Promise<GenerateOpenAPIPagesResult> {
-  const { processOpenAPISpec, extractOperations, operationSlug, operationTitle, operationSidebarTitle, tagDisplayName } = await import('./process.ts')
+  const { processOpenAPISpec, extractOperations, operationSlug, operationTitle, operationSidebarTitle, tagDisplayName, getMintOperationMetadata } = await import('./process.ts')
   const { generateCurl } = await import('./curl-generator.ts')
 
   // processOpenAPISpec accepts string (path/URL) or object (parsed spec).
@@ -93,6 +93,7 @@ export async function generateOpenAPIPages({
       doc,
       title: operationTitle(op),
       sidebarTitle: operationSidebarTitle(op),
+      mint: getMintOperationMetadata(op),
       curl: generateCurl(op),
     })
     return slug
@@ -128,12 +129,14 @@ function buildEndpointMdx({
   doc,
   title,
   sidebarTitle,
+  mint,
   curl,
 }: {
   op: ExtractedOperation
   doc: DereferencedDocument
   title: string
   sidebarTitle: string
+  mint: MintOperationMetadata
   curl: string
 }): string {
   const params = op.parameters.map((p) => ({
@@ -186,7 +189,7 @@ function buildEndpointMdx({
     method: op.method,
     path: op.path,
     summary: op.operation.summary,
-    description: op.operation.description,
+    description: mint.description ?? op.operation.description,
     parameters: params,
     requestBody,
     responses,
@@ -227,13 +230,15 @@ function buildEndpointMdx({
     frontmatter: {
       title,
       ...(sidebarTitle !== title ? { sidebarTitle } : {}),
-      description: plainText(op.operation.description ?? op.operation.summary ?? '').slice(0, 200),
+      description: plainText(mint.description ?? op.operation.description ?? op.operation.summary ?? '').slice(0, 200),
       api: `${op.method.toUpperCase()} ${op.path}`,
       gridGap: 30,
       ...(op.operation.deprecated ? { deprecated: true } : {}),
     },
     aside,
-    body: `<OpenAPIEndpoint {...${propsJson}} />`,
+    body: mint.content?.trim()
+      ? `<OpenAPIEndpoint {...${propsJson}}>\n${mint.content.trim()}\n</OpenAPIEndpoint>`
+      : `<OpenAPIEndpoint {...${propsJson}} />`,
   })
 }
 

@@ -98,6 +98,55 @@ describe('openapi provider — selective mode', () => {
     `)
   })
 
+  test('uses x-mint page metadata and content', async () => {
+    const specPath = path.join(dir, 'mint.yaml')
+    fs.writeFileSync(specPath, `
+openapi: "3.1.0"
+info: { title: Test API, version: "1.0.0" }
+paths:
+  /users:
+    get:
+      summary: Raw summary
+      description: Long internal operation details.
+      x-mint:
+        title: Friendly endpoint
+        sidebarTitle: Users
+        description: Short page description.
+        content: '<Badge color="blue">1 Credit</Badge>'
+      responses:
+        "200": { description: ok }
+`)
+
+    const config = {
+      navigation: {
+        tabs: [{ tab: 'API', openapi: specPath, groups: [{ group: 'Users', pages: ['GET /users'] }] } as ConfigNavTab],
+      },
+    }
+    const mdxContent: Record<string, string> = {}
+    await processVirtualTabs({
+      config,
+      projectRoot: dir,
+      pagesDir: dir,
+      publicDir: path.join(dir, 'public'),
+      mdxContent,
+      providers: [openapiProvider],
+    })
+
+    const relevant = mdxContent['api/get-users']!
+      .split('\n')
+      .filter((line) => /^(title|sidebarTitle|description):|OpenAPIEndpoint|Badge/.test(line))
+      .join('\n')
+
+    expect(relevant).toMatchInlineSnapshot('\n' + `
+      "title: \"Friendly endpoint\"
+      sidebarTitle: \"Users\"
+      description: \"Short page description.\"
+      <OpenAPIEndpoint {...{\"method\":\"get\",\"path\":\"/users\",\"summary\":\"Raw summary\",\"description\":\"Short page description.\",\"parameters\":[],\"responses\":[{\"status\":\"200\",\"description\":\"ok\",\"examples\":[]}],\"security\":[],\"servers\":[]}}>
+      <Badge color=\"blue\">1 Credit</Badge>
+      </OpenAPIEndpoint>"
+    `)
+  })
+
   test('"..." expands to TOP-LEVEL groups, not nested sub-groups', async () => {
     const config = {
       navigation: {
