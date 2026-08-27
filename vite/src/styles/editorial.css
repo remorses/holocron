@@ -176,13 +176,12 @@
 }
 
 /* ========================================================================
-   Code card — RequestExample / ResponseExample code is denser: smaller
-   font, tighter letter-spacing. Line numbers are disabled via meta flags
-   in the OpenAPI provider (lines=false on code fences).
+   Code card — RequestExample / ResponseExample code is denser: tighter
+   letter-spacing. Font size comes from the global --type-code-size (~12px).
+   Line numbers are disabled via meta flags in the OpenAPI provider.
    ======================================================================== */
 
 .code-card-body figure {
-  --type-code-size: 12px;
   letter-spacing: -0.01em;
 }
 

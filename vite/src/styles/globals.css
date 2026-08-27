@@ -115,10 +115,11 @@
   --type-heading-2-size: 16px;
   --type-heading-3-size: 16px;
   --type-small-size: 13px;
-  /* Relative to body size (≈14px at 15px body). calc() keeps it a resolved
-     px value so nested `font-size: var(--type-code-size)` on pre + code does
-     not compound the way an `em` value would. */
-  --type-code-size: calc(var(--type-body-size) * 0.933);
+  /* Relative to body size. calc() keeps it a resolved px value so nested
+     `font-size: var(--type-code-size)` on pre + code does not compound the
+     way an `em` value would. 0.857 ≈ 12px at 14px body — optically smaller
+     than sans at the same nominal size, matching the aside/code-card density. */
+  --type-code-size: calc(var(--type-body-size) * 0.857);
   --type-nav-group-size: calc(12em / 14);
 
   /* Code block frame — override these to wrap code blocks in a visible

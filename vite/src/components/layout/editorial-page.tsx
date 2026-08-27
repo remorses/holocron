@@ -441,8 +441,11 @@ export function EditorialPage({
                       {hasPerSectionAside && (
                         <div className={`${asideClass} lg:col-[2]`}>
                           <div
-                            className='flex flex-col gap-3 lg:sticky lg:self-start'
-                            style={{ top: stickyBase }}
+                            className='flex flex-col gap-3 lg:sticky lg:self-start lg:overflow-y-auto scrollbar-none [&>*]:shrink-0'
+                            style={{
+                              top: stickyBase,
+                              maxHeight: hasTabBar ? 'calc(100vh - var(--sticky-top))' : 'calc(100vh - var(--header-row-height) - var(--layout-gap))',
+                            }}
                           >
                             {section.aside}
                           </div>
@@ -456,7 +459,7 @@ export function EditorialPage({
                         column in grid-cols-1. */}
                     {hasSharedAside && (
                       <div
-                        className={`${asideClass} gap-3 lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:self-start lg:overflow-y-auto scrollbar-none`}
+                        className={`${asideClass} gap-3 lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:self-start lg:overflow-y-auto scrollbar-none [&>*]:shrink-0`}
                         style={{
                           ...sharedAsideStyle,
                           top: stickyBase,
