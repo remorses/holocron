@@ -29,6 +29,13 @@ declare module '@holocron.so/vite/app' {
   export { app }
 }
 
+declare module '@holocron.so/vite/chat' {
+  const ChatWidget: any
+  const pageTools: any
+  type ChatToolDefinition = any
+  export { ChatWidget, pageTools, ChatToolDefinition }
+}
+
 declare module '@holocron.so/vite/src/schema.json' {
   const schema: any
   export default schema
