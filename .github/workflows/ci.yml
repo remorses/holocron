@@ -31,7 +31,7 @@ jobs:
       - name: Generate website icon schemas
         run: pnpm --filter website generate-icon-schemas
       - name: Build workspace
-        run: pnpm --filter @holocron.so/cli build && pnpm --filter @holocron.so/vite build && pnpm build
+        run: pnpm --filter @holocron.so/cli build && pnpm --filter @holocron.so/vite build && pnpm -r --filter '!notaku-shell' build
       - name: Run vite tests
         run: pnpm --filter @holocron.so/vite test
       - name: Run integration tests
