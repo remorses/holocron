@@ -15,15 +15,26 @@ import { test, expect, type Page } from "../helpers/test.ts";
 import fs from "node:fs";
 import path from "node:path";
 
-async function sampleTransforms(
-  page: Page,
-  selector: string,
-  action: () => Promise<void>,
-): Promise<string[]> {
+declare global {
+  interface Window {
+    __tfPoll: number;
+    __tfSamples: string[];
+  }
+}
+
+async function sampleTransforms({
+  page,
+  selector,
+  action,
+}: {
+  page: Page;
+  selector: string;
+  action: () => Promise<void>;
+}): Promise<string[]> {
   await page.evaluate((sel) => {
     const samples: string[] = [];
-    (window as unknown as { __tfSamples: string[]; __tfPoll: ReturnType<typeof setInterval> }).__tfSamples = samples;
-    (window as unknown as { __tfPoll: ReturnType<typeof setInterval> }).__tfPoll = setInterval(() => {
+    window.__tfSamples = samples;
+    window.__tfPoll = window.setInterval(() => {
       const el = document.querySelector(sel);
       if (el) samples.push(getComputedStyle(el).transform);
     }, 16);
@@ -33,9 +44,8 @@ async function sampleTransforms(
     () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
   );
   return page.evaluate(() => {
-    const w = window as unknown as { __tfSamples: string[]; __tfPoll: ReturnType<typeof setInterval> };
-    clearInterval(w.__tfPoll);
-    return w.__tfSamples;
+    window.clearInterval(window.__tfPoll);
+    return window.__tfSamples;
   });
 }
 
@@ -126,21 +136,29 @@ test("chat shell morphs on open and stays still on client navigation", async ({ 
   await page.waitForLoadState("networkidle");
   await expect(page.getByText("Ask AI about this page")).toBeVisible({ timeout: 10000 });
 
-  const openSamples = await sampleTransforms(page, "[data-chat-shell='drawer']", async () => {
-    const chatInput = page.locator("textarea").first();
-    await chatInput.fill("hello");
-    await chatInput.press("Enter");
-    await expect(page.locator("button[aria-label='New chat']")).toBeVisible({ timeout: 10000 });
+  const openSamples = await sampleTransforms({
+    page,
+    selector: "[data-chat-shell='drawer']",
+    action: async () => {
+      const chatInput = page.locator("textarea").first();
+      await chatInput.fill("hello");
+      await chatInput.press("Enter");
+      await expect(page.locator("button[aria-label='New chat']")).toBeVisible({ timeout: 10000 });
+    },
   });
   expect(openSamples.some((t) => t.startsWith("matrix"))).toBe(true);
 
   await page.locator("button[aria-label='Close']").click();
   await expect(page.locator("button[aria-label='New chat']")).not.toBeVisible({ timeout: 5000 });
 
-  const navSamples = await sampleTransforms(page, "[data-chat-shell='sidebar']", async () => {
-    await page.locator('.slot-sidebar-left a[href="/getting-started"]').click();
-    await expect(page).toHaveURL(/getting-started/, { timeout: 5000 });
-    await expect(page.locator("[data-chat-shell='sidebar']")).toBeVisible({ timeout: 10000 });
+  const navSamples = await sampleTransforms({
+    page,
+    selector: "[data-chat-shell='sidebar']",
+    action: async () => {
+      await page.locator('.slot-sidebar-left a[href="/getting-started"]').click();
+      await expect(page).toHaveURL(/getting-started/, { timeout: 5000 });
+      await expect(page.getByRole("heading", { name: "Getting Started", level: 1 })).toBeVisible({ timeout: 10000 });
+    },
   });
   expect(navSamples.length).toBeGreaterThan(0);
   expect(navSamples.every((t) => t === "none")).toBe(true);

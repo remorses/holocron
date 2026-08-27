@@ -81,10 +81,12 @@ export function SidebarAssistant() {
     void ensureSessionRestored()
   }
 
+  // Remount per page; changing layoutId alone still animates one Motion instance's new box.
   // Stay mounted + inert while open. Opaque mix, not bg-accent (accent is rgba).
   const isDrawerOpen = drawerState === 'open'
   return (
     <motion.div
+      key={currentPageHref || '/'}
       ref={sidebarRef}
       className='hidden lg:block w-full overflow-hidden rounded-2xl'
       data-chat-shell='sidebar'
