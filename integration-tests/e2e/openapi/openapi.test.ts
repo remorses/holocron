@@ -188,7 +188,7 @@ test.describe('OpenAPI tab', () => {
   })
 
   test('markdown in endpoint description renders as HTML, not raw text', async ({ page }) => {
-    // POST /orders has a Markdown description (heading, list, inline code, link).
+    // POST /orders has a Markdown description (heading, list, inline code, link, table).
     await page.goto('/api/post-orders')
     // The markdown link becomes a real, visible anchor element.
     const link = page.locator('a[href="https://example.com/orders"]', { hasText: 'orders guide' })
@@ -199,6 +199,10 @@ test.describe('OpenAPI tab', () => {
     await expect(page.getByRole('heading', { name: 'Pricing notes' })).toBeVisible()
     // Inline code `gift-wrap` renders inside a <code> element.
     await expect(page.locator('code', { hasText: 'gift-wrap' }).first()).toBeVisible()
+    // GFM tables use the same editorial table component as regular MDX pages.
+    const table = page.locator('[data-slot="table-container"]', { hasText: 'The order was created' })
+    await expect(table).toBeVisible()
+    await expect(table.locator('[data-slot="table"]')).toContainText('The order was invalid')
   })
 
   test('204 no-content response renders gracefully', async ({ request }) => {

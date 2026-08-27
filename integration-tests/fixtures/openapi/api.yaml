@@ -518,6 +518,11 @@ paths:
         - Use the `notes` field for `gift-wrap` instructions.
 
         See the [orders guide](https://example.com/orders) for the full flow.
+
+        | Status | Billed? | Meaning |
+        | --- | --- | --- |
+        | 200 | Yes | The order was created |
+        | 400 | No | The order was invalid |
       requestBody:
         required: true
         content:

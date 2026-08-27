@@ -6,14 +6,13 @@
  * consistent styling. Extracted here to avoid duplication.
  */
 
-import React from 'react'
-import { SafeMdxRenderer } from 'safe-mdx'
+import { Fragment, type ReactNode } from 'react'
+import { SafeMdxRenderer, type RenderNode } from 'safe-mdx'
 import { mdxParse } from 'safe-mdx/parse'
 import { Expandable } from '../components/markdown/expandable.tsx'
 import { NavBadge } from '../components/layout/nav-badge.tsx'
-import { P, A, Code } from '../components/markdown/typography.tsx'
-import { List, OL, Li, Blockquote } from '../components/markdown/layout.tsx'
 import { HighlightedCodeBlock } from './highlight-code.tsx'
+import { editorialMarkdownComponents } from './editorial-markdown-components.tsx'
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
@@ -46,34 +45,22 @@ export interface SchemaInfo {
 /**
  * Description fields in OpenAPI and MCP are Markdown by spec (headings,
  * lists, code, links, emphasis). Render them through safe-mdx with a
- * focused component map. The map is intentionally small — just prose
- * primitives, no nested MDX components.
+ * standard editorial Markdown map, without enabling nested MDX components.
  */
 const descComponents = {
-  p: P,
-  a: A,
-  code: Code,
-  ul: List,
-  ol: OL,
-  li: Li,
-  blockquote: Blockquote,
-  pre: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-} as Record<string, unknown>
+  ...editorialMarkdownComponents,
+  pre: ({ children }: { children: ReactNode }) => <>{children}</>,
+}
 
-function renderDescNode(
-  node: { type: string; lang?: string | null; value?: string; depth?: number },
-  transform: (n: unknown) => React.ReactNode,
-): React.ReactNode | undefined {
+const renderDescNode: RenderNode = (node, transform) => {
   if (node.type === 'code') {
     const lang = node.lang ?? 'text'
-    const value = node.value ?? ''
-    return <HighlightedCodeBlock lang={lang} bleed='none' showLineNumbers={false}>{value}</HighlightedCodeBlock>
+    return <HighlightedCodeBlock lang={lang} bleed='none' showLineNumbers={false}>{node.value}</HighlightedCodeBlock>
   }
   if (node.type === 'heading') {
     const level = Math.min(Math.max(node.depth ?? 2, 2), 4)
-    const Tag = `h${level}` as 'h2' | 'h3' | 'h4'
-    const children = (node as { children?: unknown[] }).children ?? []
-    return <Tag className='font-semibold text-foreground'>{children.map((c, i) => <React.Fragment key={i}>{transform(c)}</React.Fragment>)}</Tag>
+    const Tag = level === 2 ? 'h2' : level === 3 ? 'h3' : 'h4'
+    return <Tag className='font-semibold text-foreground'>{node.children.map((child, i) => <Fragment key={i}>{transform(child)}</Fragment>)}</Tag>
   }
   return undefined
 }
@@ -84,12 +71,12 @@ export function Desc({ children }: { children: string | undefined }) {
   const markdown = children.trim()
   if (!markdown) return null
   return (
-    <div className='flex flex-col gap-2 text-foreground'>
+    <div className='no-bleed flex flex-col gap-(--prose-gap) text-foreground'>
       <SafeMdxRenderer
         markdown={markdown}
         mdast={mdxParse(markdown)}
-        components={descComponents as never}
-        renderNode={renderDescNode as never}
+        components={descComponents}
+        renderNode={renderDescNode}
         onError={() => {}}
       />
     </div>

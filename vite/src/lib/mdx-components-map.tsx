@@ -3,7 +3,7 @@
  * Maps MDX element names and mdast nodes to editorial components.
  */
 
-import { Children, Fragment, isValidElement, type ReactNode } from 'react'
+import { Children, Fragment, type ElementType, type ReactNode } from 'react'
 import { SafeMdxRenderer } from 'safe-mdx'
 import type { PhrasingContent, Root, RootContent } from 'mdast'
 import type { MyRootContent } from 'safe-mdx'
@@ -13,25 +13,9 @@ import {
   FullWidth,
   Above,
   Hero,
-  P,
-  A,
-  Code,
   Heading,
   SectionHeading,
-  Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableCaption,
-  Image,
-  Blockquote,
   Bleed,
-  List,
-  OL,
-  Li,
   Callout,
   Note,
   Warning,
@@ -85,32 +69,14 @@ import { logMdxError } from './logger.ts'
 import { parseCodeMeta, metaBool, type BleedMode } from './code-meta.ts'
 import type { SafeMdxComponentName } from './mdx-component-names.ts'
 import { HighlightedCodeBlock } from './highlight-code.tsx'
+import {
+  EditorialImage,
+  editorialMarkdownComponents,
+} from './editorial-markdown-components.tsx'
 
 import { SidebarAssistant, PageNavRow } from '../components/sidebar-assistant.tsx'
 import { OpenAPIEndpoint } from './openapi/render-openapi.tsx'
 import { MCPTool, MCPResource } from './mcp/render-mcp.tsx'
-
-function ImageWithProps(props: {
-  src: string
-  alt: string
-  width?: string | number
-  height?: string | number
-  placeholder?: string
-  className?: string
-  loading?: 'lazy' | 'eager'
-}) {
-  return (
-    <Image
-      src={props.src}
-      alt={props.alt}
-      width={props.width}
-      height={props.height}
-      placeholder={props.placeholder}
-      className={props.className || ''}
-      loading={props.loading}
-    />
-  )
-}
 
 const Markdown = ({ children, inline = false }: { children: ReactNode, inline?: boolean }) => {
   const markdown = Children.toArray(children).join('')
@@ -151,54 +117,9 @@ function isPhrasingContent(node: MyRootContent): node is PhrasingContent {
     || node.type === 'text'
 }
 
-// Native JSX headings (<h1 className='...'>text</h1>) rendered through the
-// component map. When written multi-line in MDX, the parser wraps text in
-// paragraph nodes → P component → editorial-prose div. These overrides unwrap
-// P children so heading text renders inline without the prose wrapper.
-// Markdown # headings are intercepted by renderNode before reaching these.
-function createJsxHeading(Tag: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') {
-  return function JsxHeading({ children, ...props }: Record<string, any>) {
-    return <Tag {...props}>{unwrapPChildren(children)}</Tag>
-  }
-}
-
-/** Strip P (editorial-prose) wrappers from React children. When the MDX parser
- *  wraps text inside a flow element in a paragraph node, safe-mdx renders it
- *  as <P> → <div class="editorial-prose">. This extracts the inner content. */
-function unwrapPChildren(children: ReactNode): ReactNode {
-  return Children.map(children, (child) => {
-    if (isValidElement(child) && child.type === P) {
-      return (child.props as { children?: ReactNode }).children
-    }
-    return child
-  })
-}
-
 export const mdxComponents = {
-  p: P,
-  h1: createJsxHeading('h1'),
-  h2: createJsxHeading('h2'),
-  h3: createJsxHeading('h3'),
-  h4: createJsxHeading('h4'),
-  h5: createJsxHeading('h5'),
-  h6: createJsxHeading('h6'),
+  ...editorialMarkdownComponents,
   Heading,
-  a: A,
-  code: Code,
-  table: Table,
-  thead: TableHeader,
-  tbody: TableBody,
-  tfoot: TableFooter,
-  tr: TableRow,
-  th: TableHead,
-  td: TableCell,
-  caption: TableCaption,
-  blockquote: Blockquote,
-  ul: List,
-  ol: OL,
-  li: Li,
-  Image: ImageWithProps,
-  img: ImageWithProps,
   Bleed,
   Aside,
   FullWidth,
@@ -258,7 +179,7 @@ export const mdxComponents = {
   OpenAPIEndpoint,
   MCPTool,
   MCPResource,
-} satisfies Record<SafeMdxComponentName | `${string}.${string}`, unknown>
+} satisfies Record<SafeMdxComponentName | `${string}.${string}`, ElementType>
 
 
 export interface RenderNodeOptions {
@@ -297,7 +218,7 @@ export function renderNode(
 ): ReactNode | undefined {
   if (node.type === 'image') {
     const imgNode = node
-    return <ImageWithProps src={imgNode.url} alt={imgNode.alt || ''} />
+    return <EditorialImage src={imgNode.url} alt={imgNode.alt || ''} />
   }
   if (node.type === 'heading') {
     const heading = node
@@ -398,28 +319,6 @@ export function RenderNodes({ markdown, nodes, modules, baseUrl, source }: {
       components={mdxComponents}
       renderNode={renderNode}
       modules={modules}
-      baseUrl={baseUrl}
-      onError={(error) => logMdxError(error, source)}
-    />
-  )
-}
-
-/** Render MDX imported from another MDX file, e.g.
- *  `import Snippet from '/snippets/example.mdx'` followed by `<Snippet />`.
- *  Vite doesn't compile user MDX snippets as JSX, so the virtual modules map
- *  exposes raw markdown and this component renders it through the same safe-mdx
- *  component map used by pages. */
-function RenderImportedMdx({ markdown, baseUrl, source }: {
-  markdown: string
-  baseUrl?: string
-  source?: string
-}) {
-  return (
-    <SafeMdxRenderer
-      markdown={markdown}
-      mdast={mdxParse(markdown)}
-      components={mdxComponents}
-      renderNode={renderNode}
       baseUrl={baseUrl}
       onError={(error) => logMdxError(error, source)}
     />
