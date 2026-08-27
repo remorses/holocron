@@ -19,7 +19,7 @@
  */
 
 import type { ConfigNavGroup } from '../../config.ts'
-import type { DereferencedDocument, ExtractedOperation, MintOperationMetadata } from './process.ts'
+import type { DereferencedDocument, ExtractedOperation, OperationPageOverrides } from './process.ts'
 import { buildVirtualPageMdx } from '../virtual-page-mdx.ts'
 import { endpointKey } from './endpoint-ref.ts'
 import { codeSampleFenceBlocks, extractCodeSamples, fenceTitle } from './code-samples.ts'
@@ -48,7 +48,7 @@ export async function generateOpenAPIPages({
   spec,
   slugPrefix = 'api',
 }: GenerateOpenAPIPagesOptions): Promise<GenerateOpenAPIPagesResult> {
-  const { processOpenAPISpec, extractOperations, operationSlug, operationTitle, operationSidebarTitle, tagDisplayName, getMintOperationMetadata } = await import('./process.ts')
+  const { processOpenAPISpec, extractOperations, operationPageSlug, operationTitle, operationSidebarTitle, tagDisplayName, getOperationPageOverrides } = await import('./process.ts')
   const { generateCurl } = await import('./curl-generator.ts')
 
   // processOpenAPISpec accepts string (path/URL) or object (parsed spec).
@@ -76,7 +76,7 @@ export async function generateOpenAPIPages({
 
   const emitEndpoint = (item: OpWithDoc): string => {
     const { op, doc } = item
-    const slug = slugPrefix ? `${slugPrefix}/${operationSlug(op)}` : operationSlug(op)
+    const slug = operationPageSlug(op, slugPrefix)
     const existing = emitted.get(slug)
     if (existing) {
       if (existing === item) return slug
@@ -93,7 +93,7 @@ export async function generateOpenAPIPages({
       doc,
       title: operationTitle(op),
       sidebarTitle: operationSidebarTitle(op),
-      mint: getMintOperationMetadata(op),
+      overrides: getOperationPageOverrides(op),
       curl: generateCurl(op),
     })
     return slug
@@ -129,14 +129,14 @@ function buildEndpointMdx({
   doc,
   title,
   sidebarTitle,
-  mint,
+  overrides,
   curl,
 }: {
   op: ExtractedOperation
   doc: DereferencedDocument
   title: string
   sidebarTitle: string
-  mint: MintOperationMetadata
+  overrides: OperationPageOverrides
   curl: string
 }): string {
   const params = op.parameters.map((p) => ({
@@ -189,7 +189,7 @@ function buildEndpointMdx({
     method: op.method,
     path: op.path,
     summary: op.operation.summary,
-    description: mint.description ?? op.operation.description,
+    description: overrides.description ?? op.operation.description,
     parameters: params,
     requestBody,
     responses,
@@ -230,14 +230,14 @@ function buildEndpointMdx({
     frontmatter: {
       title,
       ...(sidebarTitle !== title ? { sidebarTitle } : {}),
-      description: plainText(mint.description ?? op.operation.description ?? op.operation.summary ?? '').slice(0, 200),
+      description: plainText(overrides.description ?? op.operation.description ?? op.operation.summary ?? '').slice(0, 200),
       api: `${op.method.toUpperCase()} ${op.path}`,
       gridGap: 30,
       ...(op.operation.deprecated ? { deprecated: true } : {}),
     },
     aside,
-    body: mint.content?.trim()
-      ? `<OpenAPIEndpoint {...${propsJson}}>\n${mint.content.trim()}\n</OpenAPIEndpoint>`
+    body: overrides.content?.trim()
+      ? `<OpenAPIEndpoint {...${propsJson}}>\n${overrides.content.trim()}\n</OpenAPIEndpoint>`
       : `<OpenAPIEndpoint {...${propsJson}} />`,
   })
 }

@@ -697,6 +697,19 @@ paths:
     get:
       summary: Health check
       description: Returns service health status. No authentication required.
+      x-mint:
+        metadata:
+          sidebarTitle: Health status
+          description: Check the Acme API service status.
+      x-holocron:
+        metadata:
+          title: Service health
+        content: |
+          <Badge color="green">No authentication</Badge>
+
+          <Note>
+          This endpoint does not consume credits.
+          </Note>
       security: []
       responses:
         "200":

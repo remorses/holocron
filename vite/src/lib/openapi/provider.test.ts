@@ -4,6 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { processVirtualTabs } from '../virtual-tab-provider.ts'
 import { openapiProvider } from './provider.ts'
+import { generateOpenAPIPages } from './generate.ts'
 import type { ConfigNavTab } from '../../config.ts'
 
 const SPEC = `
@@ -106,6 +107,7 @@ info: { title: Test API, version: "1.0.0" }
 paths:
   /users:
     get:
+      tags: [users]
       summary: Raw summary
       description: Long internal operation details.
       x-mint:
@@ -144,6 +146,171 @@ paths:
       <OpenAPIEndpoint {...{\"method\":\"get\",\"path\":\"/users\",\"summary\":\"Raw summary\",\"description\":\"Short page description.\",\"parameters\":[],\"responses\":[{\"status\":\"200\",\"description\":\"ok\",\"examples\":[]}],\"security\":[],\"servers\":[]}}>
       <Badge color=\"blue\">1 Credit</Badge>
       </OpenAPIEndpoint>"
+    `)
+  })
+
+  test('uses x-holocron overrides with x-mint field fallbacks', async () => {
+    const specPath = path.join(dir, 'holocron.yaml')
+    fs.writeFileSync(specPath, `
+openapi: "3.1.0"
+info: { title: Test API, version: "1.0.0" }
+paths:
+  /users:
+    get:
+      tags: [users]
+      summary: Raw summary
+      description: Raw operation description.
+      x-mint:
+        metadata:
+          title: Mint title
+          sidebarTitle: Mint users
+          description: Mint description.
+        content: '<Badge color="blue">Mint content</Badge>'
+        href: /mint/users
+      x-holocron:
+        title: Holocron title
+        sidebarTitle: 42
+        content: '<Badge color="green">Holocron content</Badge>'
+        href: /reference/users
+      responses:
+        "200": { description: ok }
+`)
+
+    const config = {
+      navigation: {
+        tabs: [{ tab: 'API', openapi: specPath, groups: [] } as ConfigNavTab],
+      },
+    }
+    const mdxContent: Record<string, string> = {}
+    await processVirtualTabs({
+      config,
+      projectRoot: dir,
+      pagesDir: dir,
+      publicDir: path.join(dir, 'public'),
+      mdxContent,
+      providers: [openapiProvider],
+    })
+    const standalone = await generateOpenAPIPages({ spec: fs.readFileSync(specPath, 'utf8') })
+
+    expect({
+      navigation: config.navigation.tabs[0]!.groups,
+      pages: mdxContent,
+    }).toEqual({
+      navigation: standalone.navigation,
+      pages: standalone.pages,
+    })
+
+    expect({
+      pages: Object.keys(mdxContent),
+      mdx: mdxContent['reference/users']
+        ?.split('\n')
+        .filter((line) => /^(title|sidebarTitle|description):|OpenAPIEndpoint|Badge/.test(line))
+        .join('\n'),
+    }).toMatchInlineSnapshot('\n' + `
+      {
+        "mdx": "title: \"Holocron title\"
+      sidebarTitle: \"Mint users\"
+      description: \"Mint description.\"
+      <OpenAPIEndpoint {...{\"method\":\"get\",\"path\":\"/users\",\"summary\":\"Raw summary\",\"description\":\"Mint description.\",\"parameters\":[],\"responses\":[{\"status\":\"200\",\"description\":\"ok\",\"examples\":[]}],\"security\":[],\"servers\":[]}}>
+      <Badge color=\"green\">Holocron content</Badge>
+      </OpenAPIEndpoint>",
+        "pages": [
+          "reference/users",
+        ],
+      }
+    `)
+  })
+
+  test('applies x-holocron overrides in the standalone generator', async () => {
+    const result = await generateOpenAPIPages({
+      spec: {
+        openapi: '3.1.0',
+        info: { title: 'Test API', version: '1.0.0' },
+        paths: {
+          '/users': {
+            get: {
+              summary: 'Raw summary',
+              'x-holocron': {
+                metadata: { title: 'Generated users', sidebarTitle: 'Users' },
+                content: '<Note>Generated content</Note>',
+                href: '/reference/generated-users',
+              },
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+        },
+      },
+    })
+
+    expect({
+      navigation: result.navigation,
+      pages: Object.keys(result.pages),
+      mdx: result.pages['reference/generated-users']
+        ?.split('\n')
+        .filter((line) => /^(title|sidebarTitle):|OpenAPIEndpoint|Note/.test(line))
+        .join('\n'),
+    }).toMatchInlineSnapshot('\n' + `
+      {
+        "mdx": "title: \"Generated users\"
+      sidebarTitle: \"Users\"
+      <OpenAPIEndpoint {...{\"method\":\"get\",\"path\":\"/users\",\"summary\":\"Raw summary\",\"parameters\":[],\"responses\":[{\"status\":\"200\",\"description\":\"ok\",\"examples\":[]}],\"security\":[],\"servers\":[]}}>
+      <Note>Generated content</Note>
+      </OpenAPIEndpoint>",
+        "navigation": [
+          {
+            "group": "Default",
+            "pages": [
+              "reference/generated-users",
+            ],
+          },
+        ],
+        "pages": [
+          "reference/generated-users",
+        ],
+      }
+    `)
+  })
+
+  test('rejects non-route extension href values', async () => {
+    await expect(generateOpenAPIPages({
+      spec: {
+        openapi: '3.1.0',
+        info: { title: 'Test API', version: '1.0.0' },
+        paths: {
+          '/users': {
+            get: {
+              'x-holocron': { href: 'https://example.com/users' },
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+        },
+      },
+    })).rejects.toThrowErrorMatchingInlineSnapshot(
+      `[Error: OpenAPI operation extension href must be a root-relative path without query or hash: https://example.com/users]`,
+    )
+  })
+
+  test('falls back to a valid x-mint href when x-holocron href is invalid', async () => {
+    const result = await generateOpenAPIPages({
+      spec: {
+        openapi: '3.1.0',
+        info: { title: 'Test API', version: '1.0.0' },
+        paths: {
+          '/users': {
+            get: {
+              'x-mint': { href: '/mint/users' },
+              'x-holocron': { href: 'https://example.com/users' },
+              responses: { 200: { description: 'ok' } },
+            },
+          },
+        },
+      },
+    })
+
+    expect(Object.keys(result.pages)).toMatchInlineSnapshot(`
+      [
+        "mint/users",
+      ]
     `)
   })
 

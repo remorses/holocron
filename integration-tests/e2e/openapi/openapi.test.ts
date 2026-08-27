@@ -117,9 +117,19 @@ test.describe('OpenAPI tab', () => {
     const res = await request.get('/api/get-health')
     expect(res.ok()).toBe(true)
     const html = await res.text()
-    expect(html).toContain('Health check')
+    expect(html).toContain('Service health')
     // Should NOT contain Authorization section
     expect(html).not.toContain('bearerAuth')
+  })
+
+  test('x-holocron renders page overrides with x-mint fallbacks', async ({ page }) => {
+    await page.goto('/api/get-health')
+    await expect(page).toHaveTitle(/Service health/)
+    await expect(page.getByText('Check the Acme API service status.')).toBeVisible()
+    await expect(page.getByText('No authentication')).toBeVisible()
+    await expect(page.getByText('This endpoint does not consume credits.')).toBeVisible()
+    const mainText = await page.locator('.slot-main').first().innerText()
+    expect(mainText.indexOf('No authentication')).toBeLessThan(mainText.indexOf('/health'))
   })
 
   test('endpoint with explicit example shows response example', async ({ request }) => {

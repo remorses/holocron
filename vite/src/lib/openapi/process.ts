@@ -31,15 +31,23 @@ export type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'head' | 
 
 export const HTTP_METHODS: HttpMethod[] = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']
 
-export interface MintOperationMetadata {
+export interface OperationPageOverrides {
   title?: string
   sidebarTitle?: string
   description?: string
   content?: string
+  href?: string
+}
+
+type OperationPageMetadata = Pick<OperationPageOverrides, 'title' | 'sidebarTitle' | 'description'>
+
+interface OperationPageExtension extends OperationPageOverrides {
+  metadata?: OperationPageMetadata
 }
 
 type OperationObject = (OpenAPIV3.OperationObject | OpenAPIV3_1.OperationObject) & {
-  'x-mint'?: MintOperationMetadata
+  'x-mint'?: OperationPageExtension
+  'x-holocron'?: OperationPageExtension
 }
 
 /** A single API operation extracted from the spec. */
@@ -233,8 +241,8 @@ export function operationSlug(op: ExtractedOperation): string {
 
 /** Get a display title for an operation. */
 export function operationTitle(op: ExtractedOperation): string {
-  const mint = getMintOperationMetadata(op)
-  if (mint.title) return mint.title
+  const overrides = getOperationPageOverrides(op)
+  if (overrides.title) return overrides.title
   if (op.operation.summary) return op.operation.summary
   if (op.operation.operationId) {
     return op.operation.operationId
@@ -249,9 +257,9 @@ export function operationTitle(op: ExtractedOperation): string {
  *  The method is already shown as a colored badge in the sidebar, so it should
  *  not be repeated in the text label. */
 export function operationSidebarTitle(op: ExtractedOperation): string {
-  const mint = getMintOperationMetadata(op)
-  if (mint.sidebarTitle) return mint.sidebarTitle
-  if (mint.title) return mint.title
+  const overrides = getOperationPageOverrides(op)
+  if (overrides.sidebarTitle) return overrides.sidebarTitle
+  if (overrides.title) return overrides.title
   if (op.operation.summary) return op.operation.summary
   if (op.operation.operationId) {
     return op.operation.operationId
@@ -262,20 +270,59 @@ export function operationSidebarTitle(op: ExtractedOperation): string {
   return op.path
 }
 
-/** Read Mintlify's operation-level page overrides. */
-export function getMintOperationMetadata(op: ExtractedOperation): MintOperationMetadata {
-  const value = op.operation['x-mint']
-  if (!value || typeof value !== 'object') return {}
+/** Read operation-level page overrides. `x-holocron` is canonical and
+ *  overrides Mintlify-compatible `x-mint` values field by field. */
+export function getOperationPageOverrides(op: ExtractedOperation): OperationPageOverrides {
+  const mint = parseOperationPageOverrides(op.operation['x-mint'])
+  const holocron = parseOperationPageOverrides(op.operation['x-holocron'])
+  const overrides = { ...mint, ...holocron }
+  const validHref = [holocron.href, mint.href].find((href) => href && isValidOperationHref(href))
+  const href = validHref ?? holocron.href ?? mint.href
+  if (href !== undefined) overrides.href = href
+  return overrides
+}
 
-  const stringValue = (key: keyof MintOperationMetadata) =>
-    typeof value[key] === 'string' ? value[key] : undefined
+function parseOperationPageOverrides(value: OperationPageExtension | undefined): OperationPageOverrides {
+  if (!isPlainObject(value)) return {}
+  const metadata = isPlainObject(value.metadata) ? value.metadata : {}
+  const overrides: OperationPageOverrides = {}
 
-  return {
-    title: stringValue('title'),
-    sidebarTitle: stringValue('sidebarTitle'),
-    description: stringValue('description'),
-    content: stringValue('content'),
+  for (const key of ['title', 'sidebarTitle', 'description'] as const) {
+    const direct = typeof value[key] === 'string' ? value[key] : undefined
+    const nested = typeof metadata[key] === 'string' ? metadata[key] : undefined
+    const resolved = nested ?? direct
+    if (resolved !== undefined) overrides[key] = resolved
   }
+
+  if (typeof value.content === 'string') overrides.content = value.content
+  if (typeof value.href === 'string') overrides.href = value.href
+  return overrides
+}
+
+/** Generate the page slug, honoring a custom extension href when present. */
+export function operationPageSlug(op: ExtractedOperation, slugPrefix: string): string {
+  const href = getOperationPageOverrides(op).href?.trim()
+  if (href) {
+    if (!isValidOperationHref(href)) {
+      throw new Error(`OpenAPI operation extension href must be a root-relative path without query or hash: ${href}`)
+    }
+    const slug = href.replace(/^\/+|\/+$/g, '')
+    if (!slug) throw new Error('OpenAPI operation extension href must not resolve to the site root')
+    return slug
+  }
+
+  const slug = operationSlug(op)
+  return slugPrefix ? `${slugPrefix}/${slug}` : slug
+}
+
+function isValidOperationHref(href: string): boolean {
+  const value = href.trim()
+  return value.startsWith('/') &&
+    !value.includes('?') &&
+    !value.includes('#') &&
+    !value.includes('\\') &&
+    !value.includes('//') &&
+    !value.split('/').some((segment) => segment === '.' || segment === '..')
 }
 
 /** Pretty-print a tag name (converts kebab/snake to Title Case). */

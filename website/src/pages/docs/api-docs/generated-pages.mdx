@@ -19,6 +19,20 @@ Each operation gets a slug derived from the method and path:
 
 The `base` prefix (default `"api"`) is prepended to all slugs.
 
+### Custom endpoint URLs
+
+Set **`x-holocron.href`** on an operation to replace its generated slug. The Mintlify-compatible `x-mint.href` alias works too.
+
+```yaml
+paths:
+  /users:
+    get:
+      x-holocron:
+        href: /api-reference/users/list
+```
+
+This endpoint renders at **`/api-reference/users/list`** instead of `/api/get-users`. Custom `href` values must be internal paths without a query string or hash.
+
 ## Grouping by tags
 
 Operations are grouped by their `tags` field in the spec. Each tag becomes a sidebar group:

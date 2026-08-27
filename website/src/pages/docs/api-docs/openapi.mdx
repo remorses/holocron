@@ -143,6 +143,58 @@ The tag groups are hoisted to the tab's top level so they render as separate sid
 
 The `"..."` entry only expands endpoints you did **not** already reference explicitly, so you can pin a few important endpoints up top and let the rest fall in afterward. Only one `"..."` is allowed per tab.
 
+## Customize generated pages
+
+Add **`x-holocron`** to an OpenAPI operation to override its generated page metadata, insert MDX content, or choose its URL.
+
+```yaml
+paths:
+  /users:
+    post:
+      summary: Create user
+      x-holocron:
+        metadata:
+          title: Create a new user
+          sidebarTitle: Create user
+          description: Add a user to the current organization.
+        content: |
+          <Badge color="blue">1 Credit</Badge>
+
+          <Note>
+          User email addresses must be unique.
+          </Note>
+        href: /api-reference/users/create
+```
+
+The **`metadata`** object supports `title`, `sidebarTitle`, and `description`. The `content` field accepts Markdown and Holocron MDX components. Holocron renders it before the generated endpoint header, description, authorization, parameters, and request fields.
+
+The optional **`href`** must be an internal path without a query string or hash. It replaces the normal method-and-path slug and does not use the tab's `base` prefix.
+
+<Aside>
+<Info>
+Use **`x-holocron`** for new specifications. It is the canonical extension and can gain Holocron-specific options in future releases.
+</Info>
+</Aside>
+
+### Mintlify compatibility
+
+Holocron treats **`x-mint` as a compatibility alias** for the same page overrides. Existing Mintlify specifications work without renaming the extension.
+
+```yaml
+paths:
+  /users:
+    post:
+      x-mint:
+        metadata:
+          title: Create a new user
+          sidebarTitle: Create user
+        content: '<Badge color="blue">1 Credit</Badge>'
+```
+
+Some existing specifications put `title`, `sidebarTitle`, and `description` **directly inside the extension**. Holocron supports this legacy shape too. When direct fields and `metadata` both define a value, `metadata` wins.
+
+If an operation defines **both extensions**, `x-holocron` wins field by field. Missing or invalid `x-holocron` fields fall back to valid `x-mint` values.
+
 ## Controlling which routes appear in the spec
 
 Holocron documents every operation in your OpenAPI spec. If your API has **internal routes** (admin endpoints, webhook receivers, internal service calls) that should not appear in the public docs, exclude them from the spec itself rather than trying to filter them in `docs.json`.

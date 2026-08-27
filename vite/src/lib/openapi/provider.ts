@@ -12,7 +12,7 @@ import path from 'node:path'
 import type { OpenAPIV3 } from 'openapi-types'
 import type { ConfigNavGroup, ConfigNavPageEntry } from '../../config.ts'
 import type { VirtualTabProvider, VirtualTabResult } from '../virtual-tab-provider.ts'
-import type { ExtractedOperation, DereferencedDocument, MintOperationMetadata } from './process.ts'
+import type { ExtractedOperation, DereferencedDocument, OperationPageOverrides } from './process.ts'
 import { buildVirtualPageMdx } from '../virtual-page-mdx.ts'
 import { parseEndpointRef, endpointKey } from './endpoint-ref.ts'
 import { codeSampleFenceBlocks, extractCodeSamples, fenceTitle } from './code-samples.ts'
@@ -74,12 +74,12 @@ export const openapiProvider: VirtualTabProvider = {
     // nothing to generate.
     if (allOps.length === 0) return { groups: tab.groups, mdxContent, watchPaths }
 
-    const { operationSlug, operationTitle, operationSidebarTitle, tagDisplayName, getMintOperationMetadata } = await import('./process.ts')
+    const { operationPageSlug, operationTitle, operationSidebarTitle, tagDisplayName, getOperationPageOverrides } = await import('./process.ts')
     const { generateCurl } = await import('./curl-generator.ts')
 
     /** Compute the virtual slug for an operation (shared by both modes). */
     const slugFor = (op: ExtractedOperation): string =>
-      slugPrefix ? `${slugPrefix}/${operationSlug(op)}` : operationSlug(op)
+      operationPageSlug(op, slugPrefix)
 
     // Track which operation owns each emitted slug, so referencing the SAME
     // endpoint twice dedups, but two DISTINCT operations colliding on one slug
@@ -109,7 +109,7 @@ export const openapiProvider: VirtualTabProvider = {
         doc,
         title: operationTitle(op),
         sidebarTitle: operationSidebarTitle(op),
-        mint: getMintOperationMetadata(op),
+        overrides: getOperationPageOverrides(op),
         curl: generateCurl(op),
       })
       return slug
@@ -285,14 +285,14 @@ function buildEndpointMdx({
   doc,
   title,
   sidebarTitle,
-  mint,
+  overrides,
   curl,
 }: {
   op: ExtractedOperation
   doc: DereferencedDocument
   title: string
   sidebarTitle: string
-  mint: MintOperationMetadata
+  overrides: OperationPageOverrides
   curl: string
 }): string {
   const params = op.parameters.map((p) => ({
@@ -353,7 +353,7 @@ function buildEndpointMdx({
     method: op.method,
     path: op.path,
     summary: op.operation.summary,
-    description: mint.description ?? op.operation.description,
+    description: overrides.description ?? op.operation.description,
     parameters: params,
     requestBody,
     responses,
@@ -404,14 +404,14 @@ function buildEndpointMdx({
       // Sidebar already shows a method badge, so strip the method from the label.
       ...(sidebarTitle !== title ? { sidebarTitle } : {}),
       // Flatten markdown to plain text for the page <meta> description.
-      description: plainText(mint.description ?? op.operation.description ?? op.operation.summary ?? '').slice(0, 200),
+      description: plainText(overrides.description ?? op.operation.description ?? op.operation.summary ?? '').slice(0, 200),
       api: `${op.method.toUpperCase()} ${op.path}`,
       gridGap: 30,
       ...(op.operation.deprecated ? { deprecated: true } : {}),
     },
     aside,
-    body: mint.content?.trim()
-      ? `<OpenAPIEndpoint {...${propsJson}}>\n${mint.content.trim()}\n</OpenAPIEndpoint>`
+    body: overrides.content?.trim()
+      ? `<OpenAPIEndpoint {...${propsJson}}>\n${overrides.content.trim()}\n</OpenAPIEndpoint>`
       : `<OpenAPIEndpoint {...${propsJson}} />`,
   })
 }
