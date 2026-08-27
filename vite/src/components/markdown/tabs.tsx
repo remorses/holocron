@@ -191,6 +191,7 @@ export function Tabs({
   const panelRef = useRef<HTMLDivElement>(null)
   const [copied, setCopied] = useState(false)
   const tabIds = tabs.map((tab, index) => tab.props.id ?? `${uniqueId}-tab-${index}`)
+  const isCodePanel = copyable
 
   const selectTab = (index: number) => {
     if (index === activeIndex) return
@@ -234,7 +235,7 @@ export function Tabs({
           />
         )}
         {title && (
-          <span className='relative z-10 shrink-0 self-center truncate pl-3 text-xs font-medium text-muted-foreground'>
+          <span className={cn('relative z-10 shrink-0 self-center truncate text-xs font-medium text-muted-foreground', isCodePanel ? 'pl-2.5' : 'pl-3')}>
             {title}
           </span>
         )}
@@ -311,7 +312,7 @@ export function Tabs({
         role='tabpanel'
         aria-labelledby={tabIds[activeIndex]}
         tabIndex={0}
-        className='no-bleed flex flex-col gap-(--prose-gap) rounded-xl bg-background p-4'
+        className={cn('no-bleed flex flex-col gap-(--prose-gap) rounded-xl bg-background p-4', isCodePanel && 'pl-2.5')}
       >
         {/* `<Tab>` children render their inner content; any other element
             (e.g. a `<CodeBlock>` passed directly by RequestExample) renders
