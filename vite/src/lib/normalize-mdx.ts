@@ -119,7 +119,7 @@ function trySync<T>(fn: () => T, mdxSource: string, source?: string): HolocronMd
   } catch (err) {
     if (err instanceof HolocronMdxParseError) return err
     const { line, column, reason } = extractParseErrorInfo(err)
-    return new HolocronMdxParseError({ reason, line, column, source, mdxSource })
+    return new HolocronMdxParseError({ reason, line, column, source, mdxSource, cause: err })
   }
 }
 

@@ -120,18 +120,19 @@ export function buildCodeFrame(source: string, line: number, column?: number): s
  * Properties are designed for both terminal output and dev error overlay rendering.
  */
 export class HolocronMdxParseError extends Error {
+  readonly code = 'HOLOCRON_MDX_PARSE_ERROR' as const
   /** 1-based line number in the MDX source */
-  line: number
+  readonly line: number
   /** 1-based column number in the MDX source */
-  column: number | undefined
+  readonly column: number | undefined
   /** The slug or file path of the MDX page */
-  source: string | undefined
+  readonly source: string | undefined
   /** The reason/description from the parser (without location prefix) */
-  reason: string
+  readonly reason: string
   /** Pre-formatted code frame for terminal output */
-  codeFrame: string
+  readonly codeFrame: string
   /** The raw MDX source (for dev error overlay rendering) */
-  mdxSource: string
+  readonly mdxSource: string
 
   constructor({
     reason,
@@ -139,12 +140,14 @@ export class HolocronMdxParseError extends Error {
     column,
     source,
     mdxSource,
+    cause,
   }: {
     reason: string
     line: number
     column?: number
     source?: string
     mdxSource: string
+    cause?: unknown
   }) {
     const locationStr = source
       ? `${source}:${line}${column ? ':' + column : ''}`
@@ -159,7 +162,7 @@ export class HolocronMdxParseError extends Error {
       codeFrame,
     ].join('\n')
 
-    super(fullMessage)
+    super(fullMessage, { cause })
     this.name = 'HolocronMdxParseError'
     this.reason = reason
     this.line = line
@@ -171,13 +174,29 @@ export class HolocronMdxParseError extends Error {
 
   toJSON() {
     return {
+      code: this.code,
+      name: this.name,
+      message: this.message,
       reason: this.reason,
       line: this.line,
       column: this.column,
       source: this.source,
+      codeFrame: this.codeFrame,
       mdxSource: this.mdxSource,
     }
   }
+}
+
+export function isHolocronMdxParseError(error: unknown): error is HolocronMdxParseError {
+  if (error instanceof HolocronMdxParseError) return true
+  if (error == null || typeof error !== 'object') return false
+  return (
+    Reflect.get(error, 'code') === 'HOLOCRON_MDX_PARSE_ERROR' &&
+    typeof Reflect.get(error, 'line') === 'number' &&
+    typeof Reflect.get(error, 'reason') === 'string' &&
+    typeof Reflect.get(error, 'codeFrame') === 'string' &&
+    typeof Reflect.get(error, 'mdxSource') === 'string'
+  )
 }
 
 /** Shape of remark's VFileMessage error (line/column/reason). */

@@ -53,8 +53,19 @@ export {
   collectAllPages,
   buildPageIndex,
 } from './navigation.ts'
-export { buildNavigationData, generateHolocronData } from './build-navigation-data.ts'
-export type { HolocronNavigationData, GenerateHolocronDataResult } from './build-navigation-data.ts'
+export {
+  buildNavigationData,
+  generateHolocronData,
+  HolocronMdxParseError,
+  HolocronDataGenerationError,
+  isHolocronMdxParseError,
+  isHolocronDataGenerationError,
+} from './build-navigation-data.ts'
+export type {
+  HolocronNavigationData,
+  GenerateHolocronDataResult,
+  HolocronPageMdxError,
+} from './build-navigation-data.ts'
 export { TableOfContentsPanel } from './components/toc-panel.tsx'
 
 /* ── Typed client router + loader data ───────────────────────────────── */

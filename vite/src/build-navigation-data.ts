@@ -11,11 +11,37 @@
 import { createHash } from 'node:crypto'
 import type { HolocronConfig } from './config.ts'
 import { slugToHref, type NavPage } from './navigation.ts'
-import { processMdx } from './lib/mdx-processor.ts'
+import { processMdx, type ProcessedMdx } from './lib/mdx-processor.ts'
 import { collectIconRefs } from './lib/collect-icons.ts'
 import { buildEnrichedNavigation, type EnrichedNavigationData } from './lib/enrich-navigation.ts'
+import {
+  HolocronMdxParseError,
+  isHolocronMdxParseError,
+} from './lib/logger.ts'
+
+export { HolocronMdxParseError, isHolocronMdxParseError }
 
 export type HolocronNavigationData = EnrichedNavigationData
+
+function navPageFromProcessed({
+  slug,
+  processed,
+}: {
+  slug: string
+  processed: ProcessedMdx
+}): NavPage {
+  return {
+    slug,
+    href: slugToHref(slug),
+    title: processed.title,
+    description: processed.description,
+    gitSha: '',
+    headings: processed.headings,
+    ...(processed.icon && { icon: processed.icon }),
+    frontmatter: processed.frontmatter,
+    ...(processed.hasTocPanel && { hasTocPanel: true as const }),
+  }
+}
 
 export async function buildNavigationData({
   config,
@@ -34,17 +60,7 @@ export async function buildNavigationData({
     // In the custom virtual modules path, parse errors are fatal — no
     // sync cache to store them in, so propagate as a thrown error.
     if (processed instanceof Error) throw processed
-    return {
-      slug,
-      href: slugToHref(slug),
-      title: processed.title,
-      description: processed.description,
-      gitSha: '',
-      headings: processed.headings,
-      ...(processed.icon && { icon: processed.icon }),
-      frontmatter: processed.frontmatter,
-      ...(processed.hasTocPanel && { hasTocPanel: true as const }),
-    }
+    return navPageFromProcessed({ slug, processed })
   }
   return await buildEnrichedNavigation({ config, enrichPage })
 }
@@ -61,6 +77,55 @@ export type GenerateHolocronDataResult = {
   dataChunkSource: string
   /** Per-page JS chunks. Key is the slug, value has filename + source. */
   pageChunks: Map<string, { filename: string; source: string }>
+}
+
+export type HolocronPageMdxError = {
+  slug: string
+  error: HolocronMdxParseError
+}
+
+export class HolocronDataGenerationError extends AggregateError {
+  readonly code = 'HOLOCRON_DATA_GENERATION_FAILED' as const
+  readonly pageErrors: readonly HolocronPageMdxError[]
+
+  constructor({ pageErrors }: { pageErrors: readonly HolocronPageMdxError[] }) {
+    super(
+      pageErrors.map(({ error }) => error),
+      `Failed to generate ${pageErrors.length} MDX ${pageErrors.length === 1 ? 'page' : 'pages'}`,
+    )
+    this.name = 'HolocronDataGenerationError'
+    this.pageErrors = [...pageErrors]
+  }
+
+  toJSON() {
+    return {
+      code: this.code,
+      name: this.name,
+      message: this.message,
+      pageErrors: this.pageErrors,
+    }
+  }
+}
+
+function isHolocronPageMdxError(value: unknown): value is HolocronPageMdxError {
+  if (value == null || typeof value !== 'object') return false
+  return (
+    typeof Reflect.get(value, 'slug') === 'string' &&
+    isHolocronMdxParseError(Reflect.get(value, 'error'))
+  )
+}
+
+export function isHolocronDataGenerationError(
+  error: unknown,
+): error is HolocronDataGenerationError {
+  if (error instanceof HolocronDataGenerationError) return true
+  if (error == null || typeof error !== 'object') return false
+  const pageErrors = Reflect.get(error, 'pageErrors')
+  return (
+    Reflect.get(error, 'code') === 'HOLOCRON_DATA_GENERATION_FAILED' &&
+    Array.isArray(pageErrors) &&
+    pageErrors.every(isHolocronPageMdxError)
+  )
 }
 
 /**
@@ -91,31 +156,45 @@ export async function generateHolocronData({
   base?: string
 }): Promise<GenerateHolocronDataResult> {
   // Process each page: normalize MDX and extract metadata
-  const processedPages = new Map<string, string>()
+  const processedPages = new Map<string, ProcessedMdx>()
+  const pageErrors: HolocronPageMdxError[] = []
   const pageIconRefs: Record<string, string[]> = {}
 
   for (const slug of slugs) {
     const raw = await getMdxSource(slug)
     const pageSource = slug === 'index' ? '/' : `/${slug}`
     const processed = processMdx(raw, config.icons.library, pageSource)
-    if (processed instanceof Error) throw processed
-    processedPages.set(slug, processed.normalizedContent)
+    if (processed instanceof Error) {
+      pageErrors.push({ slug, error: processed })
+      continue
+    }
+    processedPages.set(slug, processed)
     pageIconRefs[slug] = processed.iconRefs
   }
 
+  if (pageErrors.length > 0) {
+    throw new HolocronDataGenerationError({ pageErrors })
+  }
+
   // Build enriched navigation tree
-  const navData = await buildNavigationData({
+  const navData = await buildEnrichedNavigation({
     config,
-    getMdxSource: async (slug) => {
-      const content = await getMdxSource(slug)
-      return content
+    enrichPage: async (slug) => {
+      const processed = processedPages.get(slug)
+      if (!processed) {
+        throw new Error(`[holocron] custom navigation builder could not load MDX for page "${slug}"`)
+      }
+      return navPageFromProcessed({ slug, processed })
     },
   })
 
   // Build per-page chunks
   const pageChunks = new Map<string, { filename: string; source: string }>()
   for (const slug of slugs) {
-    const content = processedPages.get(slug)!
+    const content = processedPages.get(slug)?.normalizedContent
+    if (content === undefined) {
+      throw new Error(`[holocron] processed MDX missing for page "${slug}"`)
+    }
     const filename = pageChunkFilename(slug)
     pageChunks.set(slug, {
       filename,

@@ -43,6 +43,10 @@
       "types": "./dist/mdx-exports.d.ts",
       "default": "./dist/mdx-exports.js"
     },
+    "./data": {
+      "types": "./dist/build-navigation-data.d.ts",
+      "default": "./dist/build-navigation-data.js"
+    },
     "./chat": {
       "types": "./dist/chat/index.d.ts",
       "default": "./dist/chat/index.js"
