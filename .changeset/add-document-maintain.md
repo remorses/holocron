@@ -11,7 +11,7 @@ Pages can record the source files, folders, and URLs used to generate them:
 ```yaml
 ---
 prompt: |
-  Write the authentication guide from @../../../src/auth/.
+  Write the authentication guide from @/src/auth/.
   Explain sessions, API keys, and GitHub Actions OIDC.
 ---
 ```

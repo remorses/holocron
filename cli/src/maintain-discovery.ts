@@ -23,7 +23,7 @@ export type MaintainPage = {
   references: PromptReferences
 }
 
-const LOCAL_REFERENCE_RE = /@((?:\.\.?\/)[^\s<>"'`()\[\]{}]+)/g
+const LOCAL_REFERENCE_RE = /@((?:\.\.?\/|\/)[^\s<>"'`()\[\]{}]+)/g
 const URL_REFERENCE_RE = /https?:\/\/[^\s<>"'`]+/g
 const FRONTMATTER_RE = /^---\s*\n([\s\S]*?)\n---(?:\s*\n|$)/
 
@@ -90,7 +90,9 @@ export function extractPromptReferences({
 
   for (const match of prompt.matchAll(LOCAL_REFERENCE_RE)) {
     const raw = trimReference(match[1]!)
-    const lexicalPath = path.resolve(pageDirectory, raw)
+    const lexicalPath = raw.startsWith('/')
+      ? path.resolve(repoRoot, raw.replace(/^\/+/, ''))
+      : path.resolve(pageDirectory, raw)
     if (!isInside(repoRoot, lexicalPath)) throw new Error(`Prompt reference escapes the repository: ${raw}`)
     if (!fs.existsSync(lexicalPath)) {
       const repoPath = normalizeRepoPath(repoRoot, lexicalPath)

@@ -4,16 +4,16 @@ sidebarTitle: Overview
 description: Rerun versioned page generation prompts when source files change, or review every page with a scheduled maintenance prompt.
 icon: lucide:book-open-check
 prompt: |
-  Write the Maintain overview from @../../../../cli/src/maintain.ts,
-  @../../../../cli/src/maintain-discovery.ts, and
-  @../../../../website/src/maintain-api.ts. Follow the Holocron authoring rules
-  in @../../../../skills/holocron/SKILL.md.
+  Write the Maintain overview from @/cli/src/maintain.ts,
+  @/cli/src/maintain-discovery.ts, and
+  @/website/src/maintain-api.ts. Follow the Holocron authoring rules
+  in @/skills/holocron/SKILL.md.
 
   Explain that every page with prompt frontmatter is maintained from its path
   and URL references. Explain that the Holocron skill adds generation prompts
   to new MDX pages by default. Cover routine prompts, paid model access, local
   use, and the command flags. Include a complete MDX example. Use the shared
-  homepage hero from @../../components/hero-section.tsx with a Maintain heading.
+  homepage hero from @/website/src/components/hero-section.tsx with a Maintain heading.
 ---
 
 import { HeroSection } from '../../components/hero-section.tsx'
@@ -34,7 +34,7 @@ When a referenced source changes, Maintain gives the **current page, its generat
 
 ## Generate a maintainable page
 
-The page-level **`prompt`** is the original instruction used to generate the page. Use `@./path` or `@../path` for repository files and folders. Put remote source URLs directly in the prompt.
+The page-level **`prompt`** is the original instruction used to generate the page. Use **`@/path`** for files and folders from the **repository root**. Use `@./path` or `@../path` when the source sits next to the MDX page. Put remote source URLs directly in the prompt.
 
 ```mdx
 ---
@@ -42,8 +42,8 @@ title: Authenticate API requests
 sidebarTitle: Authentication
 description: Authenticate requests with sessions, API keys, and GitHub Actions OIDC.
 prompt: |
-  Write the authentication guide from @../../../src/auth/ and
-  @../../../src/middleware/session.ts.
+  Write the authentication guide from @/src/auth/ and
+  @/src/middleware/session.ts.
   Use https://github.com/example/project/releases for recent behavior changes.
   Explain sessions, API keys, and GitHub Actions OIDC authentication.
   Include a complete TypeScript example for every method.
@@ -54,7 +54,17 @@ prompt: |
 Use a session or API key to authenticate API requests.
 ```
 
-Paths resolve **relative to the MDX page**. A file reference selects the page when that file changes. A folder reference selects it when any tracked file inside the folder changes. GitHub release events and explicit routine runs can select matching URL references.
+```diagram
+  repository root
+       │
+       ├── src/auth/                         ◄── @/src/auth/
+       ├── src/middleware/session.ts         ◄── @/src/middleware/session.ts
+       └── website/src/pages/docs/auth.mdx
+                   │
+                   └── @./setup.mdx            relative to this page
+```
+
+**`@/`** always starts at the git repository root, so the path stays valid if you move the MDX file. **`@./`** and **`@../`** start at the MDX file. A file reference selects the page when that file changes. A folder reference selects it when any tracked file inside the folder changes. GitHub release events and explicit routine runs can select matching URL references.
 
 The **Holocron skill adds this field by default** when an AI coding agent creates a new MDX page. It records the real sources used to produce the page, so future agents can reproduce and update the content instead of guessing its intent. See [skill discovery](../docs/ai/skill-discovery.mdx) for agent setup.
 

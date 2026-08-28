@@ -57,6 +57,71 @@ describe('maintain prompt references', () => {
     `)
   })
 
+  test('resolves @/ paths from the repository root', () => {
+    const repoRoot = createRepo()
+    const pagePath = path.join(repoRoot, 'docs/guides/authentication.mdx')
+    fs.writeFileSync(pagePath, '---\ntitle: Authentication\n---\n')
+    const prompt = [
+      'Write an authentication guide from @/src/api/ and @/src/config.ts.',
+      'Contact docs@example.com for questions.',
+    ].join('\n')
+
+    expect(extractPromptReferences({ prompt, pagePath, repoRoot })).toMatchInlineSnapshot(`
+      {
+        "local": [
+          {
+            "kind": "directory",
+            "path": "src/api",
+          },
+          {
+            "kind": "file",
+            "path": "src/config.ts",
+          },
+        ],
+        "urls": [],
+      }
+    `)
+  })
+
+  test('mixes repo-root and page-relative references', () => {
+    const repoRoot = createRepo()
+    const pagePath = path.join(repoRoot, 'docs/guides/authentication.mdx')
+    fs.writeFileSync(pagePath, '---\ntitle: Authentication\n---\n')
+    fs.writeFileSync(path.join(repoRoot, 'docs/guides/sessions.mdx'), '---\ntitle: Sessions\n---\n')
+
+    expect(extractPromptReferences({
+      prompt: 'Use @/src/config.ts and @./sessions.mdx.',
+      pagePath,
+      repoRoot,
+    })).toMatchInlineSnapshot(`
+      {
+        "local": [
+          {
+            "kind": "file",
+            "path": "src/config.ts",
+          },
+          {
+            "kind": "file",
+            "path": "docs/guides/sessions.mdx",
+          },
+        ],
+        "urls": [],
+      }
+    `)
+  })
+
+  test('rejects @/ paths that escape the repository', () => {
+    const repoRoot = createRepo()
+    const pagePath = path.join(repoRoot, 'docs/guides/authentication.mdx')
+    fs.writeFileSync(pagePath, '---\ntitle: Authentication\n---\n')
+
+    expect(() => extractPromptReferences({
+      prompt: 'Do not read @/../secret.ts.',
+      pagePath,
+      repoRoot,
+    })).toThrowError(/escapes the repository/)
+  })
+
   test('matches full folders and individual files', () => {
     const references = {
       local: [

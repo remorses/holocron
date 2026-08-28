@@ -314,17 +314,17 @@ records the instruction and sources used to generate that page. When editing an
 older page without one, add it when you can identify the real sources. Write the
 original generation recipe, not a maintenance instruction.
 
-Use `@./path` or `@../path` for source files and folders. Paths resolve relative
-to the MDX page. Include full URLs when a remote source informed the page. Do
-not invent sources, and update the prompt when source locations or page scope
-change.
+Use **`@/path`** for source files and folders from the **repository root**.
+Use `@./path` or `@../path` only when the source sits next to the MDX page.
+Include full URLs when a remote source informed the page. Do not invent
+sources, and update the prompt when source locations or page scope change.
 
 ```yaml
 ---
 title: Authentication
 prompt: |
-  Write the authentication guide from @../../../src/auth/ and
-  @../../../src/middleware/session.ts.
+  Write the authentication guide from @/src/auth/ and
+  @/src/middleware/session.ts.
 
   Explain sessions, API keys, and GitHub Actions OIDC.
   Include a complete TypeScript example for every method.
