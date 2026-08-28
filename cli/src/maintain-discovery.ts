@@ -154,29 +154,45 @@ export function matchChangedReferences({
 
 const GIT_TIMEOUT_MS = 30_000
 const GIT_PATCH_TIMEOUT_MS = 60_000
-const GIT_MAX_BUFFER = 64 * 1024 * 1024
+const GIT_MAX_BUFFER = 256 * 1024 * 1024
+const GIT_PATH_CHUNK = 50
+const GIT_PREFIX = [
+  '--no-pager',
+  '--literal-pathspecs',
+  '-c', 'core.quotepath=false',
+  '-c', 'color.ui=never',
+]
+const GIT_DIFF_FLAGS = ['--no-ext-diff', '--no-textconv', '--no-color']
+const GIT_ENV = {
+  ...process.env,
+  GIT_TERMINAL_PROMPT: '0',
+  GIT_OPTIONAL_LOCKS: '0',
+  GIT_PAGER: '',
+  PAGER: '',
+}
 
 // execFileSync only, never a shell. Path lists always use -z. Porcelain v1
-// `entry.slice(3)` breaks on rename records. Critique uses the same execFileSync
-// + maxBuffer pattern in cli/src/diff-utils.ts.
-function runGit(repoRoot: string, args: string[]) {
-  return childProcess.execFileSync('git', args, {
+// `entry.slice(3)` breaks on rename records. --no-ext-diff blocks GIT_EXTERNAL_DIFF
+// (difftastic). Critique uses the same pattern in cli/src/diff-utils.ts.
+function gitExecOptions(repoRoot: string, timeout: number) {
+  return {
     cwd: repoRoot,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    timeout: GIT_TIMEOUT_MS,
+    encoding: 'utf8' as const,
+    stdio: ['ignore', 'pipe', 'pipe'] as const,
+    timeout,
     maxBuffer: GIT_MAX_BUFFER,
-  })
+    killSignal: 'SIGKILL' as const,
+    windowsHide: true,
+    env: GIT_ENV,
+  }
+}
+
+function runGit(repoRoot: string, args: string[]) {
+  return childProcess.execFileSync('git', [...GIT_PREFIX, ...args], gitExecOptions(repoRoot, GIT_TIMEOUT_MS))
 }
 
 function runGitPatch(repoRoot: string, args: string[]) {
-  return childProcess.execFileSync('git', args, {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    timeout: GIT_PATCH_TIMEOUT_MS,
-    maxBuffer: GIT_MAX_BUFFER,
-  })
+  return childProcess.execFileSync('git', [...GIT_PREFIX, ...args], gitExecOptions(repoRoot, GIT_PATCH_TIMEOUT_MS))
 }
 
 function parseNulPaths(output: string) {
@@ -191,9 +207,7 @@ export function findRepoRoot(cwd: string) {
 }
 
 export function listTrackedFiles(repoRoot: string) {
-  return runGit(repoRoot, ['ls-files', '-z'])
-    .split('\0')
-    .filter(Boolean)
+  return parseNulPaths(runGit(repoRoot, ['ls-files', '-z']))
 }
 
 function isHolocronSiteConfig(raw: string) {
@@ -253,17 +267,17 @@ export function discoverMaintainPages(repoRoot: string, baseSha?: string): Maint
 
 export function getChangedFiles(repoRoot: string, range?: { from: string; to: string; pullRequest?: boolean }) {
   if (!range) {
-    return parseNulPaths(runGit(repoRoot, ['diff', '--name-only', '-z', 'HEAD']))
+    return parseNulPaths(runGit(repoRoot, ['diff', ...GIT_DIFF_FLAGS, '--name-only', '-z', 'HEAD']))
   }
   if (/^0+$/.test(range.from)) {
-    return parseNulPaths(runGit(repoRoot, ['diff-tree', '--root', '--no-commit-id', '--name-only', '-r', '-z', range.to]))
+    return parseNulPaths(runGit(repoRoot, ['diff-tree', ...GIT_DIFF_FLAGS, '--root', '--no-commit-id', '--name-only', '-r', '-z', range.to]))
   }
   const separator = range.pullRequest ? '...' : '..'
-  return parseNulPaths(runGit(repoRoot, ['diff', '--name-only', '-z', `${range.from}${separator}${range.to}`]))
+  return parseNulPaths(runGit(repoRoot, ['diff', ...GIT_DIFF_FLAGS, '--name-only', '-z', `${range.from}${separator}${range.to}`]))
 }
 
 export function getWorkingTreeChanges(repoRoot: string) {
-  const tracked = parseNulPaths(runGit(repoRoot, ['diff', '--name-only', '-z', 'HEAD']))
+  const tracked = parseNulPaths(runGit(repoRoot, ['diff', ...GIT_DIFF_FLAGS, '--name-only', '-z', 'HEAD']))
   const untracked = parseNulPaths(runGit(repoRoot, ['ls-files', '-z', '--others', '--exclude-standard']))
   return [...new Set([...tracked, ...untracked])]
 }
@@ -278,17 +292,23 @@ export function getCurrentBranch(repoRoot: string) {
 
 export function getChangedPatches(repoRoot: string, range: { from: string; to: string; pullRequest?: boolean }, files: string[]) {
   if (files.length === 0) return ''
-  if (/^0+$/.test(range.from)) {
-    return runGitPatch(repoRoot, ['show', '--format=', '--unified=20', range.to, '--', ...files]).slice(0, 300_000)
+  const patches: string[] = []
+  for (let i = 0; i < files.length; i += GIT_PATH_CHUNK) {
+    const chunk = files.slice(i, i + GIT_PATH_CHUNK)
+    if (/^0+$/.test(range.from)) {
+      patches.push(runGitPatch(repoRoot, ['show', ...GIT_DIFF_FLAGS, '--format=', '--unified=20', range.to, '--', ...chunk]))
+      continue
+    }
+    const separator = range.pullRequest ? '...' : '..'
+    patches.push(runGitPatch(repoRoot, ['diff', ...GIT_DIFF_FLAGS, '--unified=20', `${range.from}${separator}${range.to}`, '--', ...chunk]))
   }
-  const separator = range.pullRequest ? '...' : '..'
-  return runGitPatch(repoRoot, ['diff', '--unified=20', `${range.from}${separator}${range.to}`, '--', ...files]).slice(0, 300_000)
+  return patches.join('').slice(0, 300_000)
 }
 
 export function didGenerationPromptChange(repoRoot: string, page: MaintainPage, baseSha: string) {
   const currentPrompt = page.prompt ?? ''
   try {
-    const previous = runGit(repoRoot, ['show', `${baseSha}:${page.path}`])
+    const previous = runGit(repoRoot, ['show', '--no-textconv', `${baseSha}:${page.path}`])
     const previousPrompt = parseFrontmatterObject(previous).prompt
     return currentPrompt !== (typeof previousPrompt === 'string' ? previousPrompt : '')
   } catch {
