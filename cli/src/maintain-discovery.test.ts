@@ -8,6 +8,8 @@ import { afterEach, describe, expect, test } from 'vitest'
 import {
   discoverMaintainPages,
   extractPromptReferences,
+  getChangedFiles,
+  getWorkingTreeChanges,
   matchChangedReferences,
   parseFrontmatterObject,
 } from './maintain-discovery.ts'
@@ -311,6 +313,51 @@ describe('maintain site discovery', () => {
           "path": "index.mdx",
           "siteRoot": ".",
         },
+      ]
+    `)
+  })
+})
+
+describe('maintain git path lists', () => {
+  function git(repoRoot: string, args: string[]) {
+    return childProcess.execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8' })
+  }
+
+  function commitAll(repoRoot: string, message: string) {
+    git(repoRoot, ['add', '.'])
+    git(repoRoot, [
+      '-c', 'user.name=Holocron', '-c', 'user.email=maintain@example.com',
+      'commit', '-m', message,
+    ])
+  }
+
+  test('lists deleted files in the changed range', () => {
+    const repoRoot = createRepo()
+    git(repoRoot, ['init'])
+    commitAll(repoRoot, 'initial')
+    const from = git(repoRoot, ['rev-parse', 'HEAD']).trim()
+    fs.unlinkSync(path.join(repoRoot, 'src/config.ts'))
+    commitAll(repoRoot, 'delete config')
+    const to = git(repoRoot, ['rev-parse', 'HEAD']).trim()
+
+    expect(getChangedFiles(repoRoot, { from, to }).sort()).toMatchInlineSnapshot(`
+      [
+        "src/config.ts",
+      ]
+    `)
+  })
+
+  test('keeps rename and untracked paths intact', () => {
+    const repoRoot = createRepo()
+    git(repoRoot, ['init'])
+    commitAll(repoRoot, 'initial')
+    git(repoRoot, ['mv', 'src/config.ts', 'src/settings.ts'])
+    fs.writeFileSync(path.join(repoRoot, 'src/new file.ts'), 'export {}\n')
+
+    expect(getWorkingTreeChanges(repoRoot).sort()).toMatchInlineSnapshot(`
+      [
+        "src/new file.ts",
+        "src/settings.ts",
       ]
     `)
   })

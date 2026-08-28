@@ -2,7 +2,6 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import childProcess from 'node:child_process'
 import * as clack from '@clack/prompts'
 import { createOpencodeClient } from '@opencode-ai/sdk/v2/client'
 import { createOpencodeServer } from '@opencode-ai/sdk/v2/server'
@@ -20,6 +19,9 @@ import {
   findRepoRoot,
   getChangedFiles,
   getChangedPatches,
+  getCurrentBranch,
+  getHeadSha,
+  getWorkingTreeChanges,
   extractPromptReferences,
   matchChangedReferences,
   type MaintainPage,
@@ -303,13 +305,6 @@ async function runOpenCode({
   }
 }
 
-function getWorkingTreeChanges(repoRoot: string) {
-  return childProcess.execFileSync('git', ['status', '--porcelain=v1', '-z', '--untracked-files=all'], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-  }).split('\0').filter(Boolean).map((entry) => entry.slice(3).replaceAll('\\', '/'))
-}
-
 function validateChangedPages({ repoRoot, pages }: { repoRoot: string; pages: MaintainPage[] }) {
   const parser = remark().use(remarkFrontmatter).use(remarkMdx)
   for (const page of pages) {
@@ -327,7 +322,7 @@ function validateChangedPages({ repoRoot, pages }: { repoRoot: string; pages: Ma
 }
 
 function manualGithubEvent(repoRoot: string): GithubMaintainEvent {
-  const sha = childProcess.execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim()
-  const branch = childProcess.execFileSync('git', ['branch', '--show-current'], { cwd: repoRoot, encoding: 'utf8' }).trim() || 'main'
+  const sha = getHeadSha(repoRoot)
+  const branch = getCurrentBranch(repoRoot)
   return { runId: sha.slice(0, 12), all: false, changedUrls: [], baseBranch: branch, range: { from: sha, to: sha } }
 }

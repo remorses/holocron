@@ -152,12 +152,38 @@ export function matchChangedReferences({
   return matches
 }
 
+const GIT_TIMEOUT_MS = 30_000
+const GIT_PATCH_TIMEOUT_MS = 60_000
+const GIT_MAX_BUFFER = 64 * 1024 * 1024
+
+// execFileSync only, never a shell. Path lists always use -z. Porcelain v1
+// `entry.slice(3)` breaks on rename records. Critique uses the same execFileSync
+// + maxBuffer pattern in cli/src/diff-utils.ts.
 function runGit(repoRoot: string, args: string[]) {
   return childProcess.execFileSync('git', args, {
     cwd: repoRoot,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
+    timeout: GIT_TIMEOUT_MS,
+    maxBuffer: GIT_MAX_BUFFER,
   })
+}
+
+function runGitPatch(repoRoot: string, args: string[]) {
+  return childProcess.execFileSync('git', args, {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    timeout: GIT_PATCH_TIMEOUT_MS,
+    maxBuffer: GIT_MAX_BUFFER,
+  })
+}
+
+function parseNulPaths(output: string) {
+  return output
+    .split('\0')
+    .filter(Boolean)
+    .map((file) => file.replace(/^\.\//, '').replaceAll('\\', '/'))
 }
 
 export function findRepoRoot(cwd: string) {
@@ -227,28 +253,36 @@ export function discoverMaintainPages(repoRoot: string, baseSha?: string): Maint
 
 export function getChangedFiles(repoRoot: string, range?: { from: string; to: string; pullRequest?: boolean }) {
   if (!range) {
-    return runGit(repoRoot, ['diff', '--name-only', '--diff-filter=ACMR', 'HEAD'])
-      .split('\n')
-      .filter(Boolean)
+    return parseNulPaths(runGit(repoRoot, ['diff', '--name-only', '-z', 'HEAD']))
   }
   if (/^0+$/.test(range.from)) {
-    return runGit(repoRoot, ['diff-tree', '--root', '--no-commit-id', '--name-only', '-r', range.to])
-      .split('\n')
-      .filter(Boolean)
+    return parseNulPaths(runGit(repoRoot, ['diff-tree', '--root', '--no-commit-id', '--name-only', '-r', '-z', range.to]))
   }
   const separator = range.pullRequest ? '...' : '..'
-  return runGit(repoRoot, ['diff', '--name-only', '--diff-filter=ACMR', `${range.from}${separator}${range.to}`])
-    .split('\n')
-    .filter(Boolean)
+  return parseNulPaths(runGit(repoRoot, ['diff', '--name-only', '-z', `${range.from}${separator}${range.to}`]))
+}
+
+export function getWorkingTreeChanges(repoRoot: string) {
+  const tracked = parseNulPaths(runGit(repoRoot, ['diff', '--name-only', '-z', 'HEAD']))
+  const untracked = parseNulPaths(runGit(repoRoot, ['ls-files', '-z', '--others', '--exclude-standard']))
+  return [...new Set([...tracked, ...untracked])]
+}
+
+export function getHeadSha(repoRoot: string) {
+  return runGit(repoRoot, ['rev-parse', 'HEAD']).trim()
+}
+
+export function getCurrentBranch(repoRoot: string) {
+  return runGit(repoRoot, ['branch', '--show-current']).trim() || 'main'
 }
 
 export function getChangedPatches(repoRoot: string, range: { from: string; to: string; pullRequest?: boolean }, files: string[]) {
   if (files.length === 0) return ''
   if (/^0+$/.test(range.from)) {
-    return runGit(repoRoot, ['show', '--format=', '--unified=20', range.to, '--', ...files]).slice(0, 300_000)
+    return runGitPatch(repoRoot, ['show', '--format=', '--unified=20', range.to, '--', ...files]).slice(0, 300_000)
   }
   const separator = range.pullRequest ? '...' : '..'
-  return runGit(repoRoot, ['diff', '--unified=20', `${range.from}${separator}${range.to}`, '--', ...files]).slice(0, 300_000)
+  return runGitPatch(repoRoot, ['diff', '--unified=20', `${range.from}${separator}${range.to}`, '--', ...files]).slice(0, 300_000)
 }
 
 export function didGenerationPromptChange(repoRoot: string, page: MaintainPage, baseSha: string) {
