@@ -102,6 +102,37 @@ test.describe("deep nested sidebar", () => {
     await expectActiveLinkInNavViewport(page, /Level 5 Nesting/);
   });
 
+  test("aligns page icons with the first line of wrapped labels", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 800 });
+    await page.goto("/reference/config", { waitUntil: "domcontentloaded" });
+
+    const link = page.getByRole("navigation", { name: "Navigation" })
+      .getByRole("link", { name: "Advanced Configuration Reference" });
+    await expect(link).toBeVisible();
+
+    const alignment = await link.evaluate((element) => {
+      const icon = element.querySelector("svg");
+      const label = Array.from(element.children).find((child) =>
+        child.textContent?.includes("Advanced Configuration Reference"),
+      );
+      if (!(icon instanceof SVGElement) || !(label instanceof HTMLElement)) return null;
+
+      const iconRect = icon.getBoundingClientRect();
+      const labelRect = label.getBoundingClientRect();
+      const lineHeight = Number.parseFloat(getComputedStyle(label).lineHeight);
+      return {
+        iconTop: iconRect.top,
+        expectedIconTop: labelRect.top + (lineHeight - iconRect.height) / 2,
+        labelHeight: labelRect.height,
+        lineHeight,
+      };
+    });
+
+    expect(alignment).not.toBeNull();
+    expect(alignment!.labelHeight).toBeGreaterThan(alignment!.lineHeight);
+    expect(alignment!.iconTop).toBeCloseTo(alignment!.expectedIconTop, 0);
+  });
+
   test("client navigation scrolls the destination page into the sidebar", async ({
     page,
   }) => {

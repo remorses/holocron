@@ -323,6 +323,7 @@ function NavPageLink({
   // When a badge is present, truncate the title so the badge + title never overflow
   // the sidebar width. Without a badge, text wraps normally.
   const hasBadge = typeof frontmatter.api === 'string' || frontmatter.deprecated || (frontmatter.tag && typeof frontmatter.api !== 'string')
+  const iconColor = page.icon ? resolveIconColor(frontmatter.iconColor) : undefined
 
   // --sidebar-active-background marks only the DEEPEST active item: when the
   // TOC is expanded under this page, the active heading inside it gets the
@@ -344,22 +345,18 @@ function NavPageLink({
           background: isHighlighted ? 'var(--accent)' : showActivePill ? 'var(--sidebar-active-background)' : undefined,
         }}
       >
-        {page.icon && (() => {
-          const iconColor = resolveIconColor(frontmatter.iconColor)
-          return iconColor ? (
-            <span
-              className={cn(
-                'inline-flex transition-[filter] duration-150',
-                !isActive && '[filter:saturate(0.7)]',
-                !isActive && 'group-hover:[filter:saturate(1)]',
-              )}
-            >
-              <Icon icon={page.icon} size='var(--sidebar-icon-size)' color={iconColor} />
-            </span>
-          ) : (
-            <Icon icon={page.icon} size='var(--sidebar-icon-size)' />
-          )
-        })()}
+        {page.icon && (
+          <span
+            className={cn(
+              'inline-flex shrink-0 self-start transition-[filter] duration-150',
+              iconColor && !isActive && '[filter:saturate(0.7)]',
+              iconColor && !isActive && 'group-hover:[filter:saturate(1)]',
+            )}
+            style={{ marginBlockStart: 'calc((1lh - var(--sidebar-icon-size)) / 2)' }}
+          >
+            <Icon icon={page.icon} size='var(--sidebar-icon-size)' color={iconColor} />
+          </span>
+        )}
         <span className={cn('font-medium', hasBadge && 'truncate min-w-0')}>{frontmatter.sidebarTitle ?? page.title}</span>
         <span className='ml-auto inline-flex items-center gap-1'>
           {typeof frontmatter.api === 'string' && <MethodBadge method={frontmatter.api.split(' ')[0]!} />}
