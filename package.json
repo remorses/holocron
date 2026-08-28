@@ -18,6 +18,7 @@
     "license": "MIT",
     "pnpm": {
         "onlyBuiltDependencies": [
+            "opencode-ai",
             "sharp"
         ]
     }

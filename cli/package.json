@@ -45,18 +45,21 @@
   },
   "scripts": {
     "build": "tsc && chmod +x dist/bin.js && tsx scripts/copy-template.ts",
+    "test": "vitest run",
     "prepublishOnly": "rimraf dist \"*.tsbuildinfo\" && pnpm build",
     "cli": "tsx src/bin",
     "typecheck": "tsc -b"
   },
   "dependencies": {
     "@clack/prompts": "^1.0.0",
+    "@opencode-ai/sdk": "1.18.5",
     "fflate": "^0.8.2",
     "goke": "^6.14.0",
     "mdast-util-frontmatter": "^2.0.1",
     "mdast-util-gfm": "^3.1.0",
     "mdast-util-mdx": "^3.0.0",
     "mdast-util-to-markdown": "^2.1.2",
+    "opencode-ai": "1.18.5",
     "remark": "^15.0.1",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",

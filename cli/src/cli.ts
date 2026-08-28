@@ -7,6 +7,7 @@ import packageJson from '../package.json' with { type: 'json' }
 import { loginCli } from './login.ts'
 import { keysCli } from './keys.ts'
 import { projectsCli } from './projects.ts'
+import { maintainCli } from './maintain.ts'
 import { createCli } from './create.ts'
 import { deployCli } from './deploy.ts'
 import { subscribeCli } from './subscribe.ts'
@@ -23,6 +24,7 @@ export const cli = goke('holocron')
   .use(loginCli)
   .use(keysCli)
   .use(projectsCli)
+  .use(maintainCli)
   .use(createCli)
   .use(deployCli)
   .use(subscribeCli)
