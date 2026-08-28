@@ -1,5 +1,4 @@
-// Full-bleed hero with VideoBackgroundShader, serif title, and centered CTA.
-// Breaks out of the Above column constraint via w-screen + negative margin.
+// Full-bleed video hero with configurable serif heading text and centered CTA.
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -17,12 +16,16 @@ function GitHubIcon({ className }: { className?: string }) {
   )
 }
 
-export function HeroSection({}) {
+export function HeroSection({
+  lines = ['delightful docs', 'for humans & agents'],
+}: {
+  lines?: [string, string]
+}) {
   const [fontsReady, setFontsReady] = useState(false)
 
   useEffect(() => {
     const timeout = setTimeout(() => setFontsReady(true), 3000)
-    document.fonts.ready.then(() => setFontsReady(true))
+    void document.fonts.ready.then(() => setFontsReady(true))
     return () => clearTimeout(timeout)
   }, [])
 
@@ -47,7 +50,7 @@ export function HeroSection({}) {
 
       {/* Foreground content */}
       <div
-        className='relative z-[2] flex flex-col items-center justify-center text-center max-w-[820px] mx-auto w-full px-5 py-20 sm:py-28 lg:py-[140px] gap-6'
+        className='relative z-[2] flex flex-col items-center justify-center text-center max-w-[820px] mx-auto w-full px-5 py-16 sm:py-24 lg:py-30 gap-6'
         style={{
           opacity: fontsReady ? 1 : 0,
           transition: 'opacity 0.3s cubic-bezier(0.23, 1, 0.32, 1)',
@@ -57,8 +60,8 @@ export function HeroSection({}) {
           className='flex flex-col items-center leading-none text-[40px] sm:text-[56px] md:text-[68px] text-foreground'
           style={{ fontFamily: HERO_FONT }}
         >
-          <span>delightful docs</span>
-          <span>for humans &amp; agents</span>
+          <span>{lines[0]}</span>
+          <span>{lines[1]}</span>
         </h1>
 
         {/* CTAs */}
