@@ -168,9 +168,7 @@ export function TableOfContentsPanel({
                 )}
                 style={{
                   paddingInlineStart: getItemPadding(heading.depth),
-                  color: isActive
-                    ? 'var(--primary)'
-                    : 'var(--muted-foreground)',
+                  color: 'var(--foreground)',
                 }}
               >
                 {heading.text}

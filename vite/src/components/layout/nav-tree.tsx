@@ -236,7 +236,7 @@ function TocInline({
             const isMatched = !isSearchActive || searchState.matchedHrefs.has(headingHref)
             const isDimmed = hasMatchedHeading && !isMatched
             const isHighlighted = highlightedHref === headingHref
-            const isEmphasized = isActive || (isSearchActive && isMatched)
+            const isEmphasized = isSearchActive && isMatched
             return (
               <li key={heading.slug} style={{ opacity: isDimmed ? 0.3 : 1, transition: animate ? 'opacity 0.15s ease' : 'none' }}>
                 <Link
