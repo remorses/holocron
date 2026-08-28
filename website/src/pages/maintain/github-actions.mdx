@@ -1,0 +1,120 @@
+---
+title: Run documentation maintenance in GitHub Actions
+sidebarTitle: GitHub Actions
+description: Maintain documentation after every main-branch push, inside pull requests, or on a recurring GitHub Actions schedule.
+icon: lucide:github
+prompt: |
+  Write GitHub Actions examples from @../../../../cli/src/maintain-github.ts and
+  @../../../../cli/src/maintain.ts.
+
+  Cover default-branch pushes, same-repository pull requests, schedules, OIDC
+  authentication, full Git history, and concurrency behavior.
+---
+
+GitHub Actions provides the **Git range, repository identity, OIDC authentication, and GitHub token**. No stored Holocron key is needed.
+
+## After every main-branch push
+
+A push event contains exact **`before` and `after` commit SHAs**. Holocron compares those states, reviews pages whose referenced sources changed, and opens one pull request when it finds updates.
+
+```yaml
+name: Maintain documentation
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - run: npx -y "@holocron.so/cli" maintain --pull-request
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+```
+
+Keep **`fetch-depth: 0`** so Git can inspect every source change in a multi-commit push.
+
+## On every pull request
+
+For a same-repository pull request, Holocron compares the PR merge base with its head commit. Validated documentation fixes are committed to the **existing PR branch**, so reviewers see code and documentation together.
+
+```yaml
+name: Maintain pull request documentation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - run: npx -y "@holocron.so/cli" maintain --pull-request
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+```
+
+GitHub gives fork pull requests a **restricted token**. The first release supports pull requests whose head branch belongs to the same repository.
+
+## Scheduled maintenance
+
+Use a schedule for **routine audits** that do not depend on a specific source change.
+
+```yaml
+name: Weekly documentation review
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - run: |
+          npx -y "@holocron.so/cli" maintain \
+            --all \
+            --prompt-file .holocron/prompts/weekly-review.md \
+            --pull-request
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+```
+
+## Do not cancel active runs
+
+Do not set **`cancel-in-progress: true`** for push maintenance. A later push compares only its own `before` and `after` states, so cancelling the preceding run can leave its source changes unreviewed.
+
+Every completed run creates or updates **one pull request**. A run that changes nothing creates nothing.

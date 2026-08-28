@@ -3,6 +3,12 @@ $schema: https://holocron.so/frontmatter.json
 title: Pricing
 description: Holocron is free to try and $99/month per site for the full AI assistant and unlimited preview deployments.
 icon: credit-card
+prompt: |
+  Write the pricing page from @../../../../website/src/lib/credits.ts,
+  @../../../../website/src/deploy-api.ts, and @../../../../website/src/maintain-api.ts.
+
+  Explain the Free and Pro plans, monthly and yearly prices, AI credits,
+  deployments, custom domains, subpath hosting, and Holocron Maintain.
 ---
 
 # Pricing
@@ -20,6 +26,7 @@ Subscriptions are **per site**. You only pay for sites you actively maintain.
 |                                 | **Free**           | **Pro**                             |
 | ------------------------------- | ------------------ | ----------------------------------- |
 | Hosted AI chat                  | Trial only         | Full model, 50,000 credits / month  |
+| Holocron Maintain               | —                  | Source-aware documentation updates  |
 | Preview deployments             | 1 trial deployment | Unlimited, every branch and PR      |
 | Custom domains                  | —                  | Point your own domain at your docs  |
 | Subpath hosting (`--base-path`) | —                  | Host docs at `/docs` on your domain |
@@ -33,6 +40,10 @@ The **yearly plan** is **$990 / year**, two months free compared to paying month
 ### Full AI chat assistant
 
 The built-in **AI assistant** answers questions about your docs using your content. Free sites include a trial so you can see the chat in action, but it uses a temporary model and shows an upgrade notice. **Pro** sites get the full model with no notice and **50,000 credits per month**. Credits are tracked per site, so one project hitting its limit never affects another.
+
+### Holocron Maintain
+
+**Holocron Maintain** reruns versioned page generation prompts when their referenced source files change. It can also run scheduled grammar, SEO, link, translation, and style reviews. GitHub Actions authenticates through OIDC, so CI workflows do not store a Holocron key.
 
 ### Unlimited preview deployments
 

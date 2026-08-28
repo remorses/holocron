@@ -307,6 +307,34 @@ tag: NEW
 ---
 ```
 
+### Record the generation prompt
+
+Every documentation page you create must include a **`prompt`** field that
+records the instruction and sources used to generate that page. When editing an
+older page without one, add it when you can identify the real sources. Write the
+original generation recipe, not a maintenance instruction.
+
+Use `@./path` or `@../path` for source files and folders. Paths resolve relative
+to the MDX page. Include full URLs when a remote source informed the page. Do
+not invent sources, and update the prompt when source locations or page scope
+change.
+
+```yaml
+---
+title: Authentication
+prompt: |
+  Write the authentication guide from @../../../src/auth/ and
+  @../../../src/middleware/session.ts.
+
+  Explain sessions, API keys, and GitHub Actions OIDC.
+  Include a complete TypeScript example for every method.
+---
+```
+
+Holocron Maintain extracts these references and reruns the generation prompt
+when a source changes. A folder reference matches changes to any tracked file
+inside that folder.
+
 **Title** should be **50-60 characters** max. It appears in the OG image at large
 font size, in the browser tab, and in search results. Keep it concise and
 descriptive.

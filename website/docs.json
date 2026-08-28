@@ -183,6 +183,20 @@
                 ]
             },
             {
+                "tab": "Maintain",
+                "icon": "book-check",
+                "groups": [
+                    {
+                        "group": "Maintain",
+                        "icon": "file-cog",
+                        "pages": [
+                            "maintain/index",
+                            "maintain/github-actions"
+                        ]
+                    }
+                ]
+            },
+            {
                 "tab": "Pricing",
                 "icon": "dollar-sign",
                 "pages": ["docs/pricing"]
