@@ -266,7 +266,7 @@ async function runOpenCode({
 
       First create a task list. Split independent page or reference groups into parallel tasks. Give each task exclusive ownership of its target pages. Never assign one page to two tasks. Tasks may read the repository but may only edit their assigned selected MDX pages.
 
-      Resolve @./ and @../ references in a page prompt relative to that page. Resolve @/ references from the repository root. Resolve references in a named run-instruction file relative to that instruction file, except @/ which still means the repository root.
+      Resolve @./ and @../ references in a page prompt relative to that page. Resolve @/ references from the repository root. Resolve @https:// and @http:// URL references as remote sources. Bare URLs without @ are not references. Resolve references in a named run-instruction file relative to that instruction file, except @/ which still means the repository root.
 
       Update a page's frontmatter prompt when its source paths or intended coverage changed. Do not use Git or GitHub. Do not create commits. Do not edit files outside the selected pages.
     `

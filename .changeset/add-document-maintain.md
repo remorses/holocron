@@ -12,6 +12,7 @@ Pages can record the source files, folders, and URLs used to generate them:
 ---
 prompt: |
   Write the authentication guide from @/src/auth/.
+  Use @https://github.com/example/project/releases for recent behavior.
   Explain sessions, API keys, and GitHub Actions OIDC.
 ---
 ```

@@ -24,8 +24,11 @@ export type MaintainPage = {
 }
 
 const LOCAL_REFERENCE_RE = /@((?:\.\.?\/|\/)[^\s<>"'`()\[\]{}]+)/g
-const URL_REFERENCE_RE = /https?:\/\/[^\s<>"'`]+/g
+const URL_REFERENCE_RE = /@(https?:\/\/[^\s<>"'`()\[\]{}]+)/g
 const FRONTMATTER_RE = /^---\s*\n([\s\S]*?)\n---(?:\s*\n|$)/
+const CONFIG_FILE_NAMES = new Set(['docs.json', 'docs.jsonc', 'holocron.jsonc'])
+const stringOrCommentRe = /("(?:\\?[^])*?")|(\/\/.*)|(\/\*[^]*?\*\/)/g
+const stringOrTrailingCommaRe = /("(?:\\?[^])*?")|(,\s*)(?=]|})/g
 
 export function parseFrontmatterObject(content: string): Record<string, unknown> {
   const match = content.match(FRONTMATTER_RE)
@@ -118,7 +121,7 @@ export function extractPromptReferences({
   }
 
   const urls = [...new Set(
-    [...prompt.matchAll(URL_REFERENCE_RE)].map((match) => normalizeUrl(match[0])),
+    [...prompt.matchAll(URL_REFERENCE_RE)].map((match) => normalizeUrl(match[1]!)),
   )]
 
   return { local: [...localByPath.values()], urls }
@@ -167,12 +170,38 @@ export function listTrackedFiles(repoRoot: string) {
     .filter(Boolean)
 }
 
+function isHolocronSiteConfig(raw: string) {
+  let parsed: { name?: string; $schema?: string }
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    try {
+      parsed = JSON.parse(
+        raw
+          .replace(stringOrCommentRe, '$1')
+          .replace(stringOrTrailingCommaRe, '$1'),
+      )
+    } catch {
+      return false
+    }
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return false
+  if (typeof parsed.name !== 'string' || !parsed.name.trim()) return false
+  return typeof parsed.$schema === 'string' && /holocron\.so\/docs\.json/i.test(parsed.$schema)
+}
+
 export function discoverMaintainPages(repoRoot: string, baseSha?: string): MaintainPage[] {
   const trackedFiles = listTrackedFiles(repoRoot)
-  const configNames = new Set(['docs.json', 'docs.jsonc', 'holocron.jsonc'])
   const siteRoots = [...new Set(
     trackedFiles
-      .filter((file) => configNames.has(path.posix.basename(file)))
+      .filter((file) => CONFIG_FILE_NAMES.has(path.posix.basename(file)))
+      .filter((file) => {
+        try {
+          return isHolocronSiteConfig(fs.readFileSync(path.join(repoRoot, file), 'utf8'))
+        } catch {
+          return false
+        }
+      })
       .map((file) => path.posix.dirname(file)),
   )]
 

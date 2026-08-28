@@ -316,8 +316,9 @@ original generation recipe, not a maintenance instruction.
 
 Use **`@/path`** for source files and folders from the **repository root**.
 Use `@./path` or `@../path` only when the source sits next to the MDX page.
-Include full URLs when a remote source informed the page. Do not invent
-sources, and update the prompt when source locations or page scope change.
+Prefix remote sources with **`@https://`**. Bare URLs are not references. Do
+not invent sources, and update the prompt when source locations or page scope
+change.
 
 ```yaml
 ---
@@ -325,6 +326,7 @@ title: Authentication
 prompt: |
   Write the authentication guide from @/src/auth/ and
   @/src/middleware/session.ts.
+  Use @https://github.com/example/project/releases for recent behavior.
 
   Explain sessions, API keys, and GitHub Actions OIDC.
   Include a complete TypeScript example for every method.

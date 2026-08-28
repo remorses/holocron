@@ -34,7 +34,7 @@ When a referenced source changes, Maintain gives the **current page, its generat
 
 ## Generate a maintainable page
 
-The page-level **`prompt`** is the original instruction used to generate the page. Use **`@/path`** for files and folders from the **repository root**. Use `@./path` or `@../path` when the source sits next to the MDX page. Put remote source URLs directly in the prompt.
+The page-level **`prompt`** is the original instruction used to generate the page. Use **`@/path`** for files and folders from the **repository root**. Use `@./path` or `@../path` when the source sits next to the MDX page. Prefix remote sources with **`@https://`**. Bare URLs in prose are not references.
 
 ```mdx
 ---
@@ -44,7 +44,7 @@ description: Authenticate requests with sessions, API keys, and GitHub Actions O
 prompt: |
   Write the authentication guide from @/src/auth/ and
   @/src/middleware/session.ts.
-  Use https://github.com/example/project/releases for recent behavior changes.
+  Use @https://github.com/example/project/releases for recent behavior changes.
   Explain sessions, API keys, and GitHub Actions OIDC authentication.
   Include a complete TypeScript example for every method.
 ---
@@ -64,7 +64,7 @@ Use a session or API key to authenticate API requests.
                    └── @./setup.mdx            relative to this page
 ```
 
-**`@/`** always starts at the git repository root, so the path stays valid if you move the MDX file. **`@./`** and **`@../`** start at the MDX file. A file reference selects the page when that file changes. A folder reference selects it when any tracked file inside the folder changes. GitHub release events and explicit routine runs can select matching URL references.
+**`@/`** always starts at the git repository root, so the path stays valid if you move the MDX file. **`@./`** and **`@../`** start at the MDX file. **`@https://`** marks a remote source. A file reference selects the page when that file changes. A folder reference selects it when any tracked file inside the folder changes. GitHub release events and explicit routine runs can select matching `@https://` URL references.
 
 The **Holocron skill adds this field by default** when an AI coding agent creates a new MDX page. It records the real sources used to produce the page, so future agents can reproduce and update the content instead of guessing its intent. See [skill discovery](../docs/ai/skill-discovery.mdx) for agent setup.
 

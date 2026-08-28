@@ -6,6 +6,7 @@ import path from 'node:path'
 import childProcess from 'node:child_process'
 import { afterEach, describe, expect, test } from 'vitest'
 import {
+  discoverMaintainPages,
   extractPromptReferences,
   matchChangedReferences,
   parseFrontmatterObject,
@@ -50,6 +51,23 @@ describe('maintain prompt references', () => {
             "path": "src/config.ts",
           },
         ],
+        "urls": [],
+      }
+    `)
+  })
+
+  test('extracts only @https URL references', () => {
+    const repoRoot = createRepo()
+    const pagePath = path.join(repoRoot, 'docs/guides/authentication.mdx')
+    fs.writeFileSync(pagePath, '---\ntitle: Authentication\n---\n')
+    const prompt = [
+      'Write from @https://github.com/Example/Project/releases/.',
+      'Ignore https://github.com/Example/Project and [docs](https://example.com/docs).',
+    ].join('\n')
+
+    expect(extractPromptReferences({ prompt, pagePath, repoRoot })).toMatchInlineSnapshot(`
+      {
+        "local": [],
         "urls": [
           "https://github.com/example/project/releases",
         ],
@@ -202,6 +220,98 @@ describe('maintain prompt references', () => {
       ",
         "title": "Authentication",
       }
+    `)
+  })
+
+  test('matches @https URL references against changed URLs', () => {
+    expect(matchChangedReferences({
+      references: {
+        local: [],
+        urls: ['https://github.com/example/project/releases'],
+      },
+      changedFiles: [],
+      changedUrls: ['https://github.com/Example/Project/releases/'],
+    })).toMatchInlineSnapshot(`
+      [
+        "https://github.com/example/project/releases",
+      ]
+    `)
+
+    expect(matchChangedReferences({
+      references: {
+        local: [],
+        urls: ['https://github.com/example/project/releases'],
+      },
+      changedFiles: [],
+      changedUrls: ['https://github.com/example/project'],
+    })).toMatchInlineSnapshot(`
+      []
+    `)
+  })
+})
+
+describe('maintain site discovery', () => {
+  function writePage(repoRoot: string, file = 'index.mdx') {
+    fs.writeFileSync(path.join(repoRoot, file), '---\ntitle: Home\nprompt: Write from @/src/config.ts.\n---\n')
+  }
+
+  function track(repoRoot: string) {
+    childProcess.execFileSync('git', ['init'], { cwd: repoRoot })
+    childProcess.execFileSync('git', ['add', '.'], { cwd: repoRoot })
+  }
+
+  test('discovers pages under a Holocron docs.json with name and schema', () => {
+    const repoRoot = createRepo()
+    fs.writeFileSync(path.join(repoRoot, 'docs.json'), JSON.stringify({
+      $schema: 'https://holocron.so/docs.json',
+      name: 'Acme',
+    }))
+    writePage(repoRoot)
+    track(repoRoot)
+
+    expect(discoverMaintainPages(repoRoot).map((page) => page.path)).toMatchInlineSnapshot(`
+      [
+        "index.mdx",
+      ]
+    `)
+  })
+
+  test('ignores docs.json without a name or Holocron schema', () => {
+    const repoRoot = createRepo()
+    fs.writeFileSync(path.join(repoRoot, 'docs.json'), JSON.stringify({
+      $schema: 'https://mintlify.com/docs.json',
+      name: 'Mintlify site',
+    }))
+    fs.mkdirSync(path.join(repoRoot, 'other'), { recursive: true })
+    fs.writeFileSync(path.join(repoRoot, 'other/docs.json'), JSON.stringify({
+      $schema: 'https://holocron.so/docs.json',
+    }))
+    fs.writeFileSync(path.join(repoRoot, 'other/index.mdx'), '---\ntitle: Other\n---\n')
+    writePage(repoRoot)
+    track(repoRoot)
+
+    expect(discoverMaintainPages(repoRoot)).toMatchInlineSnapshot(`
+      []
+    `)
+  })
+
+  test('accepts docs.jsonc with a Holocron schema query string', () => {
+    const repoRoot = createRepo()
+    fs.writeFileSync(path.join(repoRoot, 'docs.jsonc'), `{
+      // Holocron site
+      "$schema": "https://holocron.so/docs.json?v=1",
+      "name": "Acme",
+    }`)
+    writePage(repoRoot)
+    track(repoRoot)
+
+    expect(discoverMaintainPages(repoRoot).map((page) => ({ path: page.path, siteRoot: page.siteRoot }))).toMatchInlineSnapshot(`
+      [
+        {
+          "path": "index.mdx",
+          "siteRoot": ".",
+        },
+      ]
     `)
   })
 })
