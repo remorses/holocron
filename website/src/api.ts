@@ -29,6 +29,7 @@ import {
 import { gatewayApp } from './gateway.ts'
 import { deployApp } from './deploy-api.ts'
 import { domainApp } from './domain-api.ts'
+import { maintainApi } from './maintain-api.ts'
 import { resolveGithubOidcDeployAuth, validateCustomSubdomain } from './deploy-auth.ts'
 
 // ── Shared schemas (derived from Drizzle tables) ────────────────────────
@@ -125,6 +126,7 @@ export const apiApp = new Spiceflow()
   .use(gatewayApp)
   .use(deployApp)
   .use(domainApp)
+  .use(maintainApi)
   .use(
     openapi({
       path: '/openapi.json',
