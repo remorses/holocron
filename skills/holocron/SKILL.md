@@ -182,6 +182,7 @@ README as the index page:
 
 ```mdx
 ---
+$schema: https://holocron.so/frontmatter.json
 title: My Project
 ---
 
@@ -304,6 +305,8 @@ title: Quickstart
 description: Build and deploy your first Holocron docs site.
 icon: lucide:rocket
 tag: NEW
+prompt: |
+  Write the Quickstart from @/cli/src/create.ts.
 ---
 ```
 
@@ -322,6 +325,7 @@ change.
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Authentication
 prompt: |
   Write the authentication guide from @/src/auth/ and
@@ -349,6 +353,7 @@ the full title still appears in the page heading, browser tab, and OG image.
 
 ```mdx
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Configuring Authentication Providers
 sidebarTitle: Auth Providers
 ---
@@ -372,6 +377,7 @@ sidebar and often wraps or looks verbose.
 
 ```mdx
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Open-source browser automation for AI agents
 sidebarTitle: Home
 description: Automate any browser with a simple TypeScript API.
@@ -399,6 +405,7 @@ In both modes the content can feel too wide. Use **`maxWidth`** to constrain it:
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 mode: "custom"
 maxWidth: 700
 ---

@@ -10,6 +10,7 @@ Pages can record the source files, folders, and URLs used to generate them:
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 prompt: |
   Write the authentication guide from @/src/auth/.
   Use @https://github.com/example/project/releases for recent behavior.

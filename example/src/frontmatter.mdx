@@ -8,6 +8,7 @@ Every MDX page can include a YAML frontmatter block at the top. Frontmatter cont
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Getting Started
 description: Learn how to set up your first project.
 icon: rocket
@@ -24,6 +25,7 @@ icon: rocket
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Authentication
 description: Learn how to authenticate API requests.
 icon: lock
@@ -42,6 +44,7 @@ icon: lock
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 title: List Users
 api: GET /users
 ---
@@ -49,6 +52,7 @@ api: GET /users
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Sidebar Override
 sidebarTitle: Short Name
 tag: BETA
@@ -72,6 +76,7 @@ The `center` layout hides the left navigation sidebar and centers the content wi
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Changelog
 mode: center
 ---
@@ -91,6 +96,7 @@ Holocron only implements two real layouts (`default` and `center`). The other Mi
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Internal Guide
 hidden: true
 ---
@@ -98,6 +104,7 @@ hidden: true
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Draft Page
 noindex: true
 ---
@@ -109,6 +116,7 @@ noindex: true
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Configuration
 keywords: ["setup", "config", "options"]
 ---
@@ -130,6 +138,7 @@ Override the default OpenGraph tags for social sharing previews. These are rende
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 title: API Overview
 "og:title": Custom Social Title
 "og:description": A custom description for social cards.
@@ -155,6 +164,7 @@ Override the default Twitter Card tags. These are rendered as `<meta name="twitt
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 "twitter:card": summary
 "twitter:site": "@mycompany"
 "twitter:image": https://example.com/twitter.png
@@ -169,6 +179,7 @@ With `ssr`, the page is rendered on every request, so it can react to per-reques
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Changelog
 rendering: static
 ---
@@ -182,6 +193,7 @@ rendering: static
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Real-time Dashboard
 cache-control: "s-maxage=0, no-store"
 gridGap: 40
@@ -194,6 +206,7 @@ The frontmatter schema uses `.passthrough()`, so any additional YAML fields you 
 
 ```yaml
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Custom Page
 myCustomField: hello
 myList:

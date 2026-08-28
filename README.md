@@ -69,6 +69,7 @@ Write your first page as `index.mdx`:
 
 ```mdx
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Welcome
 description: My documentation site.
 ---

@@ -1,4 +1,5 @@
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Pages
 description: Frontmatter fields, page slugs, sidebar titles, icons, tags, and metadata options for MDX documentation pages.
 icon: file-text
@@ -45,6 +46,8 @@ description: How to set up auth in your app.
 icon: lucide:lock
 sidebarTitle: Auth
 tag: New
+prompt: |
+  Write the authentication guide from @/src/auth/.
 ---
 ```
 
@@ -52,7 +55,9 @@ tag: New
 
 | Field                 | Type      | Description                                                                                                                                                                 |
 | --------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `$schema`             | string    | JSON Schema URL. Use `https://holocron.so/frontmatter.json` for editor validation                                                                                           |
 | `title`               | string    | Page title, used in sidebar and `<title>` tag                                                                                                                               |
+| `prompt`              | string    | Original generation recipe for [Holocron Maintain](/maintain). Use `@/path` and `@https://` references                                                                      |
 | `description`         | string    | SEO description and subtitle                                                                                                                                                |
 | `icon`                | string    | Icon name displayed in the sidebar                                                                                                                                          |
 | `iconColor`           | string    | Color for the sidebar icon. Named colors (`green`, `blue`, `red`, `purple`, `orange`, `yellow`, `pink`) or any CSS color string                                             |
@@ -83,6 +88,7 @@ To use a **custom image** instead, set `og:image` in the page frontmatter. Both 
 
 ```mdx
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Getting Started
 "og:image": /images/getting-started-og.png
 "og:image:width": 1200
@@ -102,6 +108,7 @@ The `title` field controls the `<title>` tag, which is what Google shows in sear
 
 ```mdx
 ---
+$schema: https://holocron.so/frontmatter.json
 title: Authentication — Setting Up OAuth and API Keys
 sidebarTitle: Authentication
 ---
