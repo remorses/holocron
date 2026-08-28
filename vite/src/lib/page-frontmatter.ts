@@ -29,6 +29,7 @@ export const pageFrontmatterSchema = z.object({
   title: z.string().optional().describe('The page title displayed in the sidebar, browser tab, and heading'),
   hideTitle: z.boolean().optional().describe('Hide the generated page title heading'),
   description: z.string().optional().describe('Page description used for SEO meta tags and search indexing'),
+  prompt: z.string().optional().describe('Original generation prompt for maintaining this page from referenced files, folders, and URLs'),
   icon: z.string().optional().describe('Sidebar icon. A library name (e.g. "rocket"), a prefixed name (e.g. "lucide:rocket"), an emoji, or an image URL / root-absolute path.'),
   iconColor: z.string().optional().describe('Color for the sidebar icon. Accepts named colors (green, blue, red, purple, orange, yellow, pink) or any CSS color string (hex, rgb, etc.). Sidebar page icons with a color are desaturated by default and become fully saturated on hover or when the page is active.'),
   sidebarTitle: z.string().optional().describe('Override the title shown in the sidebar navigation. Use this to keep the sidebar label short while using a longer, SEO-friendly title in the title field for search engines and browser tabs.'),

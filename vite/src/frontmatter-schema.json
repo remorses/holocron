@@ -18,6 +18,10 @@
       "description": "Page description used for SEO meta tags and search indexing",
       "type": "string"
     },
+    "prompt": {
+      "description": "Original generation prompt for maintaining this page from referenced files, folders, and URLs",
+      "type": "string"
+    },
     "icon": {
       "description": "Sidebar icon. A library name (e.g. \"rocket\"), a prefixed name (e.g. \"lucide:rocket\"), an emoji, or an image URL / root-absolute path.",
       "type": "string"
