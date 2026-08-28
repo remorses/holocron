@@ -1124,8 +1124,21 @@ export const sidebarSchema = z
 
 /* ── Layout ───────────────────────────────────────────────────────────── */
 
+export const pageModeSchema = z
+  .enum(['default', 'compact', 'wide', 'custom', 'frame', 'center'])
+  .describe('Page layout mode')
+
 export const layoutSchema = z
   .object({
+    mode: pageModeSchema
+      .optional()
+      .describe(
+        dedent`
+          Default page layout mode. Individual pages can override this with
+          the \`mode\` frontmatter field. \`compact\` keeps the left navigation
+          and removes the optional right aside. Defaults to \`default\`
+        `,
+      ),
     maxWidth: z
       .number()
       .optional()
@@ -1168,6 +1181,8 @@ export const layoutSchema = z
     dedent`
       Page grid layout and geometry. The content column width is derived
       automatically: content = maxWidth - sidebarWidth - rightSidebar - 2 × columnGap.
+      Compact mode removes the right sidebar and one column gap from maxWidth,
+      which preserves the content width in a narrower page frame.
       Increasing maxWidth grows the content column up to its 720px cap,
       then extra space becomes gap
     `,

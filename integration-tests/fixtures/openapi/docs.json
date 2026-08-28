@@ -1,5 +1,8 @@
 {
   "name": "Acme API Docs",
+  "layout": {
+    "mode": "compact"
+  },
   "navigation": {
     "tabs": [
       {

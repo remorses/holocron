@@ -5,6 +5,7 @@
  */
 
 import path from 'node:path'
+import { pageModeSchema } from '../schema.ts'
 import { getDefaultTypeIcon } from './collect-icons.ts'
 import { formatHolocronWarning, logger } from './logger.ts'
 
@@ -797,6 +798,7 @@ function normalizeSidebar(raw: unknown): HolocronConfig['sidebar'] {
 
 function normalizeLayout(raw: unknown): HolocronConfig['layout'] {
   const defaults: HolocronConfig['layout'] = {
+    mode: 'default',
     maxWidth: 1200,
     sidebarWidth: 230,
     columnGap: 60,
@@ -804,7 +806,9 @@ function normalizeLayout(raw: unknown): HolocronConfig['layout'] {
   }
   if (!raw || typeof raw !== 'object') return defaults
   const obj = raw as Record<string, unknown>
+  const mode = pageModeSchema.safeParse(obj.mode)
   return {
+    mode: mode.success ? mode.data : defaults.mode,
     maxWidth: typeof obj.maxWidth === 'number' ? obj.maxWidth : defaults.maxWidth,
     sidebarWidth: typeof obj.sidebarWidth === 'number' ? obj.sidebarWidth : defaults.sidebarWidth,
     columnGap: typeof obj.columnGap === 'number' ? obj.columnGap : defaults.columnGap,

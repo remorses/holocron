@@ -53,7 +53,7 @@ import {
 import { deduplicateRedirects, interpolateDestination, redirectSourceMatches } from './lib/redirects.ts'
 import { isAgentRequest, stripVisibilityForAgents } from './lib/raw-markdown.ts'
 import { zipSync, strToU8 } from 'fflate'
-import { buildSections, isAboveNode } from './lib/mdx-sections.ts'
+import { buildSections, isAboveNode, isAsideNode } from './lib/mdx-sections.ts'
 import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
 import { visit } from 'unist-util-visit'
 import { RenderNodes, mdxComponents, renderNode } from './lib/mdx-components-map.tsx'
@@ -319,7 +319,7 @@ function renderMdxPage({
 
   const mdast = preParsedMdast
 
-  const pageMode = loaderData.currentPageFrontmatter?.mode
+  const configuredPageMode = loaderData.currentPageFrontmatter?.mode ?? site.config.layout.mode
 
   // Compute the baseUrl for resolving relative imports in MDX.
   // The slug mirrors the file path inside pagesDir (e.g. 'api/overview'
@@ -331,7 +331,7 @@ function renderMdxPage({
   // Custom mode: skip section splitting, aside extraction, and all editorial
   // processing. Render the raw mdast directly so the AST stays unmutated
   // (buildSections injects AI widget / page nav into <Aside> nodes).
-  if (pageMode === 'custom') {
+  if (configuredPageMode === 'custom') {
     const maxWidth = loaderData.currentPageFrontmatter?.maxWidth
     return (
       <>
@@ -351,7 +351,7 @@ function renderMdxPage({
           <Head.Meta name='twitter:image' content={pageTwitterImage} />
           <Head.Meta name='twitter:card' content={pageTwitterCard} />
         </Head>
-        <EditorialPage mode={pageMode} bannerContent={bannerJsx} maxWidth={maxWidth}>
+        <EditorialPage mode={configuredPageMode} bannerContent={bannerJsx} maxWidth={maxWidth}>
           <RenderNodes markdown={pageMdx} nodes={mdast.children} modules={modules} baseUrl={mdxBaseUrl} source={mdxSourcePath} />
         </EditorialPage>
       </>
@@ -361,7 +361,14 @@ function renderMdxPage({
   const aboveNodes = mdast.children.filter(isAboveNode)
   const contentChildren = mdast.children.filter((node) => !isAboveNode(node))
   const contentMdast: Root = { type: 'root', children: contentChildren }
-  const mdastSections = buildSections(contentMdast, { enableAssistant: site.config.assistant.enabled })
+  const hasRequiredRightAside = contentChildren.some(isAsideNode)
+  const pageMode = configuredPageMode === 'compact' && hasRequiredRightAside
+    ? 'default'
+    : configuredPageMode
+  const mdastSections = buildSections(contentMdast, {
+    enableAssistant: site.config.assistant.enabled,
+    includePageChrome: pageMode !== 'compact',
+  })
 
   // Check if the page content already starts with a heading. If not, we
   // prepend a rendered <SectionHeading> component at the top of the first

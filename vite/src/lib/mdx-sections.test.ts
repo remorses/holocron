@@ -10,9 +10,9 @@ import { buildSections } from './mdx-sections.ts'
 import { remarkInlineImports, type InlineImportEntry } from './remark-inline-imports.ts'
 import { formatSectionsToMdx } from './test-mdx-util.ts'
 
-function parseAndBuild(mdx: string) {
+function parseAndBuild(mdx: string, options?: Parameters<typeof buildSections>[1]) {
   const root: Root = mdxParse(mdx)
-  return buildSections(root)
+  return buildSections(root, options)
 }
 
 function parseInlineAndBuild(pageMdx: string, imports: Map<string, InlineImportEntry>) {
@@ -27,6 +27,28 @@ function parseInlineAndBuild(pageMdx: string, imports: Map<string, InlineImportE
 }
 
 describe('buildSections', () => {
+  test('does not inject page chrome when the right aside is disabled', () => {
+    const mdx = `Intro
+
+## Section
+
+Body
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx, { includePageChrome: false }))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## Section
+
+      Body"
+    `)
+  })
+
   test('splits on markdown headings', () => {
     const mdx = `Intro
 

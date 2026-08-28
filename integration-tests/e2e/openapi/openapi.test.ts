@@ -104,6 +104,12 @@ test.describe('OpenAPI tab', () => {
     expect(html).toContain('POST')
   })
 
+  test('endpoint examples keep the required right aside in compact site mode', async ({ page }) => {
+    await page.goto('/api/post-users')
+    await expect(page.getByRole('tablist', { name: 'Request example' })).toBeVisible()
+    await expect(page.locator('.slot-aside')).toBeVisible()
+  })
+
   test('deprecated endpoint shows deprecated badge', async ({ request }) => {
     // DELETE /users/{userId} is deprecated
     const res = await request.get('/api/delete-users-userid')

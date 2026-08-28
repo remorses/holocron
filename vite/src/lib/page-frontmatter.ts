@@ -1,10 +1,9 @@
 import { z } from 'zod'
+import { pageModeSchema } from '../schema.ts'
 import { parseFrontmatterObject } from './frontmatter.ts'
 import { formatHolocronWarning, logger } from './logger.ts'
 
 const stringOrNumberToStringSchema = z.union([z.string(), z.number()]).transform(String)
-const pageModeSchema = z.enum(['default', 'wide', 'custom', 'frame', 'center'])
-
 const pageSeoMetaKeys = [
   'robots',
   'og:title',
@@ -36,7 +35,7 @@ export const pageFrontmatterSchema = z.object({
   mode: pageModeSchema
     .optional()
     .describe(
-      'Page layout mode. "default" keeps the full layout (left navigation sidebar, right table of contents, footer). "center" hides the left navigation sidebar and centers the content. "custom" gives full control over the page content — only navbar and footer are rendered, no editorial grid, no sections, no prose styling. Useful for landing pages and custom layouts. "wide" and "frame" alias to the default layout.',
+      'Page layout mode. "default" keeps the full layout. "compact" keeps the left navigation and removes the optional right aside while preserving content width. Pages with authored aside content keep the right aside. "center" hides the left navigation. "custom" removes the editorial grid. "wide" and "frame" alias to the default layout.',
     ),
   deprecated: z.boolean().optional().describe('Mark the page as deprecated'),
   sidebarToc: z

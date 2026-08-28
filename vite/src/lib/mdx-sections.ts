@@ -101,7 +101,13 @@ function groupBySections(root: Root): MdastSection[] {
  * Sections BEFORE the first full aside still use normal per-section asides
  * (asideRowSpan = 1).
  */
-export function buildSections(root: Root, { enableAssistant = true }: { enableAssistant?: boolean } = {}): MdastSection[] {
+export function buildSections(
+  root: Root,
+  {
+    enableAssistant = true,
+    includePageChrome = true,
+  }: { enableAssistant?: boolean; includePageChrome?: boolean } = {},
+): MdastSection[] {
   // Strip invisible nodes (frontmatter, link definitions, ESM imports) from
   // the top level so they don't get swept into a leading empty section by
   // groupBySections. Import nodes are handled separately by app-factory.tsx
@@ -110,61 +116,56 @@ export function buildSections(root: Root, { enableAssistant = true }: { enableAs
     return node.type !== 'yaml' && node.type !== 'definition' && node.type !== 'mdxjsEsm'
   })
 
-  // Build the list of nodes to inject into the first section's aside.
-  // The page nav row (copy MD + prev/next) is always injected; the AI
-  // assistant widget is only injected when enabled.
-  const injectedNodes: FlowJsxNode[] = []
-  if (enableAssistant) {
+  if (includePageChrome) {
+    // Build the list of nodes to inject into the first section's aside.
+    const injectedNodes: FlowJsxNode[] = []
+    if (enableAssistant) {
+      injectedNodes.push({
+        type: 'mdxJsxFlowElement',
+        name: 'HolocronAIAssistantWidget',
+        attributes: [],
+        children: [],
+      })
+    }
     injectedNodes.push({
       type: 'mdxJsxFlowElement',
-      name: 'HolocronAIAssistantWidget',
+      name: 'HolocronPageNavRow',
       attributes: [],
       children: [],
     })
-  }
-  injectedNodes.push({
-    type: 'mdxJsxFlowElement',
-    name: 'HolocronPageNavRow',
-    attributes: [],
-    children: [],
-  })
 
-  // Skip a leading heading so the first section's body (intro paragraphs +
-  // intro `<Aside>`) is scanned. Otherwise a heading-first page (`# Pricing`)
-  // sets firstSectionEnd=0 and misses an authored intro `<Aside full>`.
-  const scanStart = children[0] && isHeadingNode(children[0]) ? 1 : 0
-  let firstSectionEnd = children.length
-  for (let i = scanStart; i < children.length; i++) {
-    if (isHeadingNode(children[i]!) || isFullWidthNode(children[i]!)) {
-      firstSectionEnd = i
-      break
+    // Skip a leading heading so the first section's body is scanned.
+    const scanStart = children[0] && isHeadingNode(children[0]) ? 1 : 0
+    let firstSectionEnd = children.length
+    for (let i = scanStart; i < children.length; i++) {
+      if (isHeadingNode(children[i]!) || isFullWidthNode(children[i]!)) {
+        firstSectionEnd = i
+        break
+      }
     }
-  }
 
-  let firstFullAsideIdx = -1
-  for (let i = 0; i < firstSectionEnd; i++) {
-    if (isAsideNode(children[i]!) && hasFullProp(children[i]!)) {
-      firstFullAsideIdx = i
-      break
+    let firstFullAsideIdx = -1
+    for (let i = 0; i < firstSectionEnd; i++) {
+      if (isAsideNode(children[i]!) && hasFullProp(children[i]!)) {
+        firstFullAsideIdx = i
+        break
+      }
     }
-  }
 
-  // Ask AI + page nav behaves like a regular aside in the first section.
-  // An authored first-section `<Aside full>` still owns the full sidebar range,
-  // so prepend the page chrome there instead of adding a competing aside.
-  if (firstFullAsideIdx !== -1) {
-    const asideNode = children[firstFullAsideIdx]
-    if (asideNode && isAsideNode(asideNode)) {
-      asideNode.children.unshift(...injectedNodes)
+    if (firstFullAsideIdx !== -1) {
+      const asideNode = children[firstFullAsideIdx]
+      if (asideNode && isAsideNode(asideNode)) {
+        asideNode.children.unshift(...injectedNodes)
+      }
+    } else {
+      const syntheticAside: FlowJsxNode = {
+        type: 'mdxJsxFlowElement',
+        name: 'Aside',
+        attributes: [],
+        children: [...injectedNodes],
+      }
+      children.splice(scanStart, 0, syntheticAside)
     }
-  } else {
-    const syntheticAside: FlowJsxNode = {
-      type: 'mdxJsxFlowElement',
-      name: 'Aside',
-      attributes: [],
-      children: [...injectedNodes],
-    }
-    children.splice(scanStart, 0, syntheticAside)
   }
 
   // Find indices of all <Aside full> nodes

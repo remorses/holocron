@@ -8,13 +8,46 @@ icon: arrow-left-right
 
 Every page can set a **mode** in its frontmatter to control how much of the editorial layout is rendered.
 
-| Mode      | Left sidebar | Right aside | Editorial grid | Use case                      |
-| --------- | ------------ | ----------- | -------------- | ----------------------------- |
-| `default` | Yes          | Yes         | Yes            | Standard docs pages           |
-| `center`  | No           | Yes         | Yes (2-column) | Focused content without nav   |
-| `custom`  | No           | No          | No             | Landing pages, custom layouts |
+| Mode      | Left sidebar | Right aside | Editorial grid | Use case                         |
+| --------- | ------------ | ----------- | -------------- | -------------------------------- |
+| `default` | Yes          | Yes         | Yes            | Standard docs pages              |
+| `compact` | Yes          | No          | Yes (2-column) | Focused docs with a narrow frame |
+| `center`  | No           | Yes         | Yes (2-column) | Focused content without nav      |
+| `custom`  | No           | No          | No             | Landing pages, custom layouts    |
 
 `wide` and `frame` are accepted for Mintlify compatibility and alias to `default`.
+
+### Compact mode
+
+Use **`compact`** to keep the left navigation while removing the optional right aside. The content column keeps its normal reading width, so the full page frame becomes narrower and the header aligns with the content on the right.
+
+```yaml
+---
+mode: "compact"
+---
+```
+
+Set the same mode in **`docs.json`** to make it the default for the full site:
+
+```json
+{
+  "layout": {
+    "mode": "compact"
+  }
+}
+```
+
+Page frontmatter overrides the site default. Use `mode: "default"` on a specific page to restore the full three-column layout.
+
+Pages with **required aside content** keep the right rail automatically. This includes authored `<Aside>` blocks, table-of-contents panels, and generated API request or response examples.
+
+With the default geometry, compact mode derives a **910px frame** from the existing layout values:
+
+```text
+1200px max width - 230px right aside - 60px column gap = 910px
+```
+
+There is no separate compact width setting. Changes to `layout.maxWidth` or `layout.columnGap` update the compact frame automatically.
 
 ### Custom mode
 

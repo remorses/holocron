@@ -28,7 +28,7 @@ function makeBaseConfig(overrides: Partial<HolocronConfig> = {}): HolocronConfig
     seo: {},
     assistant: { enabled: true },
     decorativeLines: 'lines-with-dots',
-    layout: { maxWidth: 1200, sidebarWidth: 230, columnGap: 60, radius: 10 },
+    layout: { mode: 'default', maxWidth: 1200, sidebarWidth: 230, columnGap: 60, radius: 10 },
     integrations: {},
     ...overrides,
   }

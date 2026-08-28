@@ -82,7 +82,14 @@ All three follow the same schema, which is compatible with Mintlify's `docs.json
   "seo": {
     "metatags": { "author": "My Company" }
   },
-  "assistant": { "enabled": true }
+  "assistant": { "enabled": true },
+  "layout": {
+    "mode": "compact",
+    "maxWidth": 1200,
+    "sidebarWidth": 230,
+    "columnGap": 60,
+    "radius": 10
+  }
 }
 ```
 
@@ -97,6 +104,20 @@ Point your editor at the JSON Schema for autocomplete and validation:
 ```
 
 The schema is generated from the Zod definitions in `vite/src/schema.ts`.
+
+## Default page mode
+
+Set **`layout.mode`** to choose the default layout for every page:
+
+```json
+{
+  "layout": {
+    "mode": "compact"
+  }
+}
+```
+
+`compact` keeps the left navigation and removes the optional right aside. A page can override the default with its frontmatter `mode` field. Pages with authored asides or generated API examples keep the right rail automatically.
 
 ## Passthrough behavior
 

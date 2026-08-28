@@ -6,12 +6,11 @@
  * `.slot-page` by calling `buildGridTokenStyle()`. `globals.css` owns the
  * default responsive `--grid-gap`; page frontmatter can override it inline.
  *
- * Content width is DERIVED, not configured:
- *   content = max-width - nav - sidebar - 2*gap
+ * Content width is DERIVED, not configured. Compact pages remove the
+ * right-sidebar track and its adjacent gap from both formulas.
  *
  * This means changing `--grid-max-width` automatically grows the content
- * column, and widening the sidebar (e.g. for OpenAPI pages) automatically
- * shrinks it — the overall page width never jumps.
+ * column, while compact mode preserves that column and narrows the shell.
  *
  * It also computes the required right-sidebar width for a page by
  * scanning aside mdast nodes for known components that need extra
@@ -85,9 +84,10 @@ export function computeSidebarWidthFromAsideNodes(
  * Build the inline-style CSS custom properties for the page grid.
  *
  * Emits all `--grid-*` tokens so `globals.css` does not need defaults.
- * Content width is a CSS calc() derived from the other four tokens:
+ * Content width is a CSS calc() derived from the visible grid tracks:
  *
- *   content = max-width - nav - sidebar - 2*gap
+ *   default: content = max-width - nav - sidebar - 2*gap
+ *   compact: content = max-width - nav - gap
  *
  * This keeps the page max-width constant regardless of sidebar width.
  * Bump `--grid-max-width` and the content column grows automatically.
@@ -95,22 +95,32 @@ export function computeSidebarWidthFromAsideNodes(
  * When `configLayout` is provided, its values override the hardcoded
  * GRID_TOKENS defaults.
  */
-export function buildGridTokenStyle(
-  sidebarWidth: number,
-  gridGap?: number,
-  configLayout?: HolocronConfig['layout'],
-): HolocronCSSProperties {
+export function buildGridTokenStyle({
+  sidebarWidth,
+  gridGap,
+  configLayout,
+  compact = false,
+}: {
+  sidebarWidth: number
+  gridGap?: number
+  configLayout?: HolocronConfig['layout']
+  compact?: boolean
+}): HolocronCSSProperties {
   const nav = configLayout?.sidebarWidth ?? GRID_TOKENS['--grid-nav-width']
   const maxW = configLayout?.maxWidth ?? GRID_TOKENS['--grid-max-width']
   const gap = gridGap ?? configLayout?.columnGap ?? GRID_TOKENS['--grid-gap']
   const radius = configLayout?.radius
+  const shellMaxWidth = compact ? maxW - DEFAULT_SIDEBAR_WIDTH - gap : maxW
+  const contentWidth = compact
+    ? 'minmax(0, min(720px, calc(var(--grid-max-width) - var(--grid-nav-width) - var(--grid-gap))))'
+    : 'minmax(0, min(720px, calc(var(--grid-max-width) - var(--grid-nav-width) - var(--grid-sidebar-width) - 2 * var(--grid-gap))))'
 
   return {
     '--grid-nav-width': `${nav}px`,
     '--grid-gap': `${gap}px`,
     '--grid-sidebar-width': `${sidebarWidth}px`,
-    '--grid-max-width': `min(calc(100vw - 60px), ${maxW}px)`,
-    '--grid-content-width': `minmax(0, min(720px, calc(var(--grid-max-width) - var(--grid-nav-width) - var(--grid-sidebar-width) - 2 * var(--grid-gap))))`,
+    '--grid-max-width': `min(calc(100vw - 60px), ${shellMaxWidth}px)`,
+    '--grid-content-width': contentWidth,
     ...(radius !== undefined && { '--radius': `${radius / 16}rem` }),
   }
 }

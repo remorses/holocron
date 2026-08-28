@@ -1689,6 +1689,18 @@
     "layoutSchema": {
       "type": "object",
       "properties": {
+        "mode": {
+          "description": "Default page layout mode. Individual pages can override this with\nthe `mode` frontmatter field. `compact` keeps the left navigation\nand removes the optional right aside. Defaults to `default`",
+          "type": "string",
+          "enum": [
+            "default",
+            "compact",
+            "wide",
+            "custom",
+            "frame",
+            "center"
+          ]
+        },
         "maxWidth": {
           "description": "Maximum page width in pixels. The page grid is capped at this\nvalue. Content, sidebars, and gaps all live inside this\nconstraint. Defaults to `1200`",
           "type": "number"
@@ -1707,7 +1719,7 @@
         }
       },
       "additionalProperties": false,
-      "description": "Page grid layout and geometry. The content column width is derived\nautomatically: content = maxWidth - sidebarWidth - rightSidebar - 2 × columnGap.\nIncreasing maxWidth grows the content column up to its 720px cap,\nthen extra space becomes gap"
+      "description": "Page grid layout and geometry. The content column width is derived\nautomatically: content = maxWidth - sidebarWidth - rightSidebar - 2 × columnGap.\nCompact mode removes the right sidebar and one column gap from maxWidth,\nwhich preserves the content width in a narrower page frame.\nIncreasing maxWidth grows the content column up to its 720px cap,\nthen extra space becomes gap"
     },
     "integrationsSchema": {
       "type": "object",

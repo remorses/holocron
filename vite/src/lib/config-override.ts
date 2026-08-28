@@ -263,6 +263,7 @@ export function configOverrideToDocsJsonPartial(override: ConfigOverride): Recor
 
   if (override.layout) {
     const layout: Record<string, unknown> = {}
+    if (override.layout.mode !== undefined) layout.mode = override.layout.mode
     if (override.layout.maxWidth !== undefined) layout.maxWidth = override.layout.maxWidth
     if (override.layout.radius !== undefined) layout.radius = override.layout.radius
     if (override.layout.sidebarWidth !== undefined) layout.sidebarWidth = override.layout.sidebarWidth

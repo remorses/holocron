@@ -36,20 +36,22 @@ import {
   DEFAULT_SIDEBAR_WIDTH,
   buildGridTokenStyle,
 } from '../../lib/sidebar-widths.ts'
-import type { HolocronCSSProperties } from '../../lib/css-vars.ts'
+import { cn, type HolocronCSSProperties } from '../../lib/css-vars.ts'
 import { sharedAsideRange } from '../../lib/mdx-sections.ts'
 import type { PageMode } from '../../lib/page-frontmatter.ts'
 import { GridLinesFrame, TabBarDots, NavbarLines, AboveBottomDots } from './grid-lines.tsx'
 
-function resolveEditorialPageMode(mode: PageMode | undefined): 'default' | 'center' | 'custom' {
-  // Three resolved modes:
+function resolveEditorialPageMode(mode: PageMode | undefined): 'default' | 'compact' | 'center' | 'custom' {
+  // Four resolved modes:
   // - "default" (+ "wide", "frame"): full editorial layout with left nav,
   //   sections grid, right aside column.
+  // - "compact": keeps left nav and removes the optional right aside.
   // - "center": hides left nav, centers content in 2-column grid.
   // - "custom": strips the editorial grid entirely. Only navbar + footer are
   //   rendered; content is a plain full-width container. For landing pages
   //   and custom layouts where the user controls everything.
   if (mode === 'custom') return 'custom'
+  if (mode === 'compact') return 'compact'
   if (mode === 'center') return 'center'
   return 'default'
 }
@@ -114,10 +116,7 @@ export function EditorialPage({
   above?: React.ReactNode
   /** Pre-rendered banner JSX (parsed server-side via safe-mdx). */
   bannerContent?: React.ReactNode
-  /** Right-sidebar width in px. When larger than the default, the
-   *  page-level grid-max-width is bumped so the grid can actually widen
-   *  to accommodate it. When undefined, the default sidebar width is
-   *  used (same as the TOC column width). */
+  /** Right-sidebar width in px. Defaults to the TOC column width. */
   sidebarWidth?: number
   /** Optional page-level grid gap from frontmatter. */
   gridGap?: number
@@ -146,9 +145,10 @@ export function EditorialPage({
   const hasTabBar = tabs.length > 0
   const banner = siteConfig.banner
   const decorativeLines = siteConfig.decorativeLines
-  const pageMode = resolveEditorialPageMode(mode)
+  const pageMode = resolveEditorialPageMode(mode ?? siteConfig.layout.mode)
   const isCustomMode = pageMode === 'custom'
-  const showLeftNav = pageMode === 'default'
+  const showLeftNav = pageMode === 'default' || pageMode === 'compact'
+  const showRightAside = pageMode !== 'compact'
   // In center mode the content + right rail occupy the page width without the
   // left navigation column, so cap the grid width to drop that column's width.
   const centerMaxWidthClass = 'lg:max-w-[calc(var(--grid-max-width)_-_var(--grid-nav-width)_-_var(--grid-gap))]'
@@ -159,9 +159,13 @@ export function EditorialPage({
   const aboveClass = showLeftNav
     ? 'relative mx-auto w-full max-w-full px-(--mobile-padding) lg:max-w-(--grid-max-width) lg:px-0'
     : `relative mx-auto w-full max-w-full px-(--mobile-padding) ${centerMaxWidthClass} lg:px-0`
-  const pageGridClass = showLeftNav
-    ? 'grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between lg:px-0'
-    : `grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:grid-cols-[var(--grid-content-width)_var(--grid-sidebar-width)] lg:gap-x-(--grid-gap) lg:justify-between ${centerMaxWidthClass} lg:px-0`
+  const pageGridClass = cn(
+    'grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:gap-x-(--grid-gap) lg:justify-between lg:px-0',
+    showLeftNav && showRightAside && 'lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)]',
+    showLeftNav && !showRightAside && 'lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)]',
+    !showLeftNav && 'lg:grid-cols-[var(--grid-content-width)_var(--grid-sidebar-width)]',
+    !showLeftNav && centerMaxWidthClass,
+  )
   const contentGridClass = showLeftNav
     ? 'grid grid-cols-1 gap-y-(--section-gap) lg:col-[2/-1] lg:grid-cols-subgrid lg:self-stretch'
     : 'grid grid-cols-1 gap-y-(--section-gap) lg:col-[1/-1] lg:grid-cols-subgrid lg:self-stretch'
@@ -169,8 +173,6 @@ export function EditorialPage({
   // truth in `lib/sidebar-widths.ts`. `globals.css` intentionally does
   // NOT declare `--grid-*` defaults — everything flows from this one
   // object so there's only one place to edit. `buildGridTokenStyle`
-  // also bumps `--grid-max-width` when the right sidebar is wider than
-  // the default (e.g. pages with RequestExample / ResponseExample).
   // Font size overrides from config.fonts
   const bodyFontSize = siteConfig.fonts?.fontSize
   const headingFontSize = siteConfig.fonts?.heading?.fontSize
@@ -185,7 +187,12 @@ export function EditorialPage({
       '--type-heading-2-size': `${headingFontSize}px`,
       '--type-heading-3-size': `${headingFontSize}px`,
     }),
-    ...buildGridTokenStyle(sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH, gridGap, siteConfig.layout),
+    ...buildGridTokenStyle({
+      sidebarWidth: sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH,
+      gridGap,
+      configLayout: siteConfig.layout,
+      compact: pageMode === 'compact',
+    }),
   }
 
   return (
@@ -493,7 +500,7 @@ export function EditorialPage({
                 <ContentFooter />
               </div>
 
-              <div className='slot-sidebar-right lg:!col-[2] lg:self-stretch'>
+              {showRightAside && <div className='slot-sidebar-right lg:!col-[2] lg:self-stretch'>
                 <div
                   style={{
                     position: 'sticky',
@@ -503,7 +510,7 @@ export function EditorialPage({
                 >
                   {sidebar}
                 </div>
-              </div>
+              </div>}
             </>
           )}
         </div>

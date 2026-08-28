@@ -31,6 +31,7 @@ import type {
   bannerSchema,
   integrationsSchema,
   layoutSchema,
+  pageModeSchema,
 } from './schema.ts'
 import { holocronConfigSchema } from './schema.ts'
 import { parseJsonc } from './lib/jsonc.ts'
@@ -184,7 +185,13 @@ export type HolocronConfig = {
   assistant: { enabled: boolean; suggestions?: string[] }
   decorativeLines: 'none' | 'lines' | 'dashed' | 'lines-with-dots'
   sidebar: { animate: boolean }
-  layout: { maxWidth: number; sidebarWidth: number; columnGap: number; radius: number }
+  layout: {
+    mode: z.output<typeof pageModeSchema>
+    maxWidth: number
+    sidebarWidth: number
+    columnGap: number
+    radius: number
+  }
   integrations: z.output<typeof integrationsSchema>
   /** Raw CSS injected as a <style> tag. For multi-tenant sites that cannot
    *  bundle user CSS at build time. */

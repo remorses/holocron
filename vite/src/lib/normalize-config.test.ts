@@ -34,3 +34,10 @@ describe('normalize() — tab base slug', () => {
     ).toBe('docs/changelog')
   })
 })
+
+describe('normalize() — layout mode', () => {
+  test('defaults to the full layout and accepts compact mode', () => {
+    expect(normalize({ name: 'Docs' }).layout.mode).toBe('default')
+    expect(normalize({ name: 'Docs', layout: { mode: 'compact' } }).layout.mode).toBe('compact')
+  })
+})

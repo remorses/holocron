@@ -1,5 +1,8 @@
 {
   "name": "Page Modes Docs",
+  "layout": {
+    "mode": "compact"
+  },
   "footer": {
     "links": [
       {
@@ -12,7 +15,7 @@
     "groups": [
       {
         "group": "Modes",
-        "pages": ["index", "wide", "center", "custom"]
+        "pages": ["index", "default", "required-aside", "wide", "center", "custom"]
       }
     ]
   }
