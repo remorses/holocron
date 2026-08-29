@@ -29,6 +29,33 @@ import {
 import { loadGithubEvent, type GithubMaintainRelease } from './maintain-github.ts'
 
 const RUN_TIMEOUT_MS = 25 * 60 * 1000
+const HOSTED_PROVIDER = 'holocron'
+const EMPTY_MODEL_MESSAGE = 'Pass a model id, for example glm-5.3-flash or anthropic/claude-sonnet-4.'
+
+export type MaintainModelChoice =
+  | { kind: 'hosted'; modelId?: string }
+  | { kind: 'byok'; providerId: string; modelId: string }
+
+export function parseMaintainModel(value?: string): MaintainModelChoice | Error {
+  if (value === undefined) return { kind: 'hosted' }
+  const trimmed = value.trim()
+  if (!trimmed) return new Error(EMPTY_MODEL_MESSAGE)
+  if (trimmed.startsWith(`${HOSTED_PROVIDER}/`)) {
+    const modelId = trimmed.slice(HOSTED_PROVIDER.length + 1)
+    if (!modelId) return new Error(EMPTY_MODEL_MESSAGE)
+    return { kind: 'hosted', modelId }
+  }
+  const slash = trimmed.indexOf('/')
+  if (slash === -1) return { kind: 'hosted', modelId: trimmed }
+  if (slash === 0 || slash === trimmed.length - 1) {
+    return new Error('Use provider/model, for example anthropic/claude-sonnet-4.')
+  }
+  return {
+    kind: 'byok',
+    providerId: trimmed.slice(0, slash),
+    modelId: trimmed.slice(slash + 1),
+  }
+}
 
 export const maintainCli = goke()
 
@@ -39,12 +66,20 @@ maintainCli
   .option('--prompt [text]', 'Add instructions for this run without changing page frontmatter')
   .option('--prompt-file [path]', 'Read run instructions from a Markdown file')
   .option('--dry-run', 'Show matched pages without calling a model')
+  .option('--model [id]', 'Holocron-hosted model, or `provider/model` for your own OpenCode keys')
   .option('--project [projectId]', 'Project ID (only needed with session auth when multiple projects exist)')
   .example('holocron maintain --since origin/main --dry-run')
   .example('holocron maintain --all --prompt-file .holocron/prompts/weekly-review.md')
+  .example('holocron maintain --model glm-5.3-flash')
+  .example('holocron maintain --model anthropic/claude-sonnet-4')
   .action(async (options, { console: output, process: proc }) => {
     if (options.prompt && options.promptFile) {
       output.error(logger.error('Use either --prompt or --prompt-file, not both.'))
+      return proc.exit(2)
+    }
+    const modelChoice = parseMaintainModel(options.model)
+    if (modelChoice instanceof Error) {
+      output.error(logger.error(modelChoice.message))
       return proc.exit(2)
     }
 
@@ -80,28 +115,6 @@ maintainCli
     for (const page of selectedPages) output.log(`  ${page.path}`)
     if (options.dryRun || selectedPages.length === 0) return
 
-    let clientResult: Awaited<ReturnType<typeof getDeployClient>>
-    try {
-      clientResult = await getDeployClient()
-    } catch (error) {
-      output.error(logger.error(error instanceof Error ? error.message : String(error)))
-      return proc.exit(1)
-    }
-
-    const projectId = clientResult.auth.type === 'session'
-      ? await resolveProjectId({ safeFetch: clientResult.safeFetch, explicit: options.project, output })
-      : undefined
-    if (projectId instanceof Error) return proc.exit(1)
-
-    const run = await clientResult.safeFetch('/api/v0/maintain/runs', {
-      method: 'POST',
-      body: { ...(projectId && { projectId }) },
-    })
-    if (run instanceof Error) {
-      printActionableError(output, actionableDetailFromFetchError(run), run.message)
-      return proc.exit(1)
-    }
-
     const beforeChangedFiles = new Set(getWorkingTreeChanges(repoRoot))
     const startSha = getHeadSha(repoRoot)
     const patches = range ? getChangedPatches(repoRoot, range, changedFiles) : ''
@@ -111,39 +124,91 @@ maintainCli
         targetBranch: githubEvent && !githubEvent.existingPullRequest ? githubEvent.baseBranch : 'main',
       }
       : undefined
+    const openCodeArgs = {
+      repoRoot,
+      pages: selectedPages,
+      runPrompt,
+      runPromptFile,
+      changedFiles,
+      patches,
+      gitDiffRange: gitDiffRangeSpec(range),
+      release: githubEvent?.release,
+      githubActions,
+    }
     let runError: Error | undefined
-    try {
+
+    if (modelChoice.kind === 'byok') {
+      output.log(logger.step(`Using ${c.bold(`${modelChoice.providerId}/${modelChoice.modelId}`)} with your OpenCode keys`))
       output.log(logger.step('Starting OpenCode...'))
       const result = await runOpenCode({
-        repoRoot,
-        pages: selectedPages,
-        runPrompt,
-        runPromptFile,
-        changedFiles,
-        patches,
-        gitDiffRange: gitDiffRangeSpec(range),
-        release: githubEvent?.release,
-        githubActions,
-        apiKey: run.apiKey,
-        baseUrl: run.baseUrl,
-        providerId: run.providerId,
-        modelId: run.modelId,
-        models: run.models ?? [],
+        ...openCodeArgs,
+        model: modelChoice,
       })
       if (result instanceof Error) runError = result
-    } finally {
-      const completionClient = clientResult.auth.type === 'github-oidc'
-        ? await getDeployClient().catch((error) => error instanceof Error ? error : new Error(String(error)))
-        : clientResult
-      if (completionClient instanceof Error) {
-        runError ??= completionClient
-      } else {
-        const completed = await completionClient.safeFetch(`/api/v0/maintain/runs/${run.runId}/complete`, {
+    } else {
+      let clientResult: Awaited<ReturnType<typeof getDeployClient>>
+      try {
+        clientResult = await getDeployClient()
+      } catch (error) {
+        output.error(logger.error(error instanceof Error ? error.message : String(error)))
+        return proc.exit(1)
+      }
+
+      const projectId = clientResult.auth.type === 'session'
+        ? await resolveProjectId({ safeFetch: clientResult.safeFetch, explicit: options.project, output })
+        : undefined
+      if (projectId instanceof Error) return proc.exit(1)
+
+      const run = await clientResult.safeFetch('/api/v0/maintain/runs', {
+        method: 'POST',
+        body: { ...(projectId && { projectId }) },
+      })
+      if (run instanceof Error) {
+        printActionableError(output, actionableDetailFromFetchError(run), run.message)
+        return proc.exit(1)
+      }
+
+      const modelId = modelChoice.modelId ?? run.modelId
+      if (modelChoice.modelId && !(run.models ?? []).includes(modelChoice.modelId)) {
+        output.error(logger.error(`Unknown Holocron model ${modelChoice.modelId}. Available: ${(run.models ?? []).join(', ')}`))
+        const completed = await clientResult.safeFetch(`/api/v0/maintain/runs/${run.runId}/complete`, {
           method: 'POST',
           params: { runId: run.runId },
           body: { projectId: run.projectId },
         })
-        if (completed instanceof Error) runError ??= completed
+        if (completed instanceof Error) output.error(logger.error(completed.message))
+        return proc.exit(2)
+      }
+
+      output.log(logger.step(`Using Holocron-hosted ${c.bold(modelId)}. Billed to this project's subscription.`))
+      try {
+        output.log(logger.step('Starting OpenCode...'))
+        const result = await runOpenCode({
+          ...openCodeArgs,
+          model: {
+            kind: 'hosted',
+            apiKey: run.apiKey,
+            baseUrl: run.baseUrl,
+            providerId: run.providerId,
+            modelId,
+            models: run.models ?? [],
+          },
+        })
+        if (result instanceof Error) runError = result
+      } finally {
+        const completionClient = clientResult.auth.type === 'github-oidc'
+          ? await getDeployClient().catch((error) => error instanceof Error ? error : new Error(String(error)))
+          : clientResult
+        if (completionClient instanceof Error) {
+          runError ??= completionClient
+        } else {
+          const completed = await completionClient.safeFetch(`/api/v0/maintain/runs/${run.runId}/complete`, {
+            method: 'POST',
+            params: { runId: run.runId },
+            body: { projectId: run.projectId },
+          })
+          if (completed instanceof Error) runError ??= completed
+        }
       }
     }
     if (runError) {
@@ -228,11 +293,7 @@ async function runOpenCode({
   gitDiffRange,
   release,
   githubActions,
-  apiKey,
-  baseUrl,
-  providerId,
-  modelId,
-  models,
+  model,
 }: {
   repoRoot: string
   pages: MaintainPage[]
@@ -243,11 +304,16 @@ async function runOpenCode({
   gitDiffRange: string
   release?: GithubMaintainRelease
   githubActions?: { branch: string; targetBranch: string }
-  apiKey: string
-  baseUrl: string
-  providerId: string
-  modelId: string
-  models: string[]
+  model:
+    | {
+      kind: 'hosted'
+      apiKey: string
+      baseUrl: string
+      providerId: string
+      modelId: string
+      models: string[]
+    }
+    | Extract<MaintainModelChoice, { kind: 'byok' }>
 }) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), RUN_TIMEOUT_MS)
@@ -277,20 +343,26 @@ async function runOpenCode({
     ))),
   ]
 
+  const providerId = model.providerId
+  const modelId = model.modelId
   const server = await createOpencodeServer({
     hostname: '127.0.0.1',
     port: 0,
     timeout: 30_000,
     signal: controller.signal,
-    config: {
-      provider: {
-        [providerId]: {
-          npm: '@ai-sdk/openai-compatible',
-          options: { apiKey, baseURL: baseUrl },
-          models: Object.fromEntries((models.length > 0 ? models : [modelId]).map((id) => [id, { name: id }])),
+    config: model.kind === 'hosted'
+      ? {
+        provider: {
+          [providerId]: {
+            npm: '@ai-sdk/openai-compatible',
+            options: { apiKey: model.apiKey, baseURL: model.baseUrl },
+            models: Object.fromEntries(
+              (model.models.length > 0 ? model.models : [modelId]).map((id) => [id, { name: id }]),
+            ),
+          },
         },
-      },
-    },
+      }
+      : undefined,
   }).catch((error) => new Error('OpenCode server failed to start.', { cause: error }))
   if (server instanceof Error) {
     clearTimeout(timeout)
@@ -323,7 +395,13 @@ async function runOpenCode({
       tools: { bash: true, websearch: false, task: true, read: true, glob: true, grep: true, edit: true, webfetch: true },
       parts: [{ type: 'text', text: prompt }],
     })
-    if (result.error || !result.data) return new Error('OpenCode failed to maintain the selected pages.')
+    if (result.error || !result.data) {
+      return new Error(
+        model.kind === 'byok'
+          ? 'OpenCode failed to maintain the selected pages. Set the provider API key from https://opencode.ai/docs/providers/'
+          : 'OpenCode failed to maintain the selected pages.',
+      )
+    }
   } catch (error) {
     return new Error('OpenCode maintain run failed.', { cause: error })
   } finally {

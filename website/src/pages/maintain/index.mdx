@@ -3,7 +3,7 @@ $schema: https://holocron.so/frontmatter.json
 prompt: |
   Write the Maintain overview from @/cli/src/maintain.ts, @/cli/src/maintain-discovery.ts, and @/website/src/maintain-api.ts. Follow the Holocron authoring rules in @/skills/holocron/SKILL.md.
   Explain that every page with prompt frontmatter is maintained from its path and URL references. Explain that the Holocron skill adds generation prompts to new MDX pages by default.
-  Cover two run modes: the normal parent-agent flow (Maintain only edits MDX; the parent opens the PR) and GitHub Actions (no-args maintain reads before/after from the push event and OpenCode opens the PR). Cover routine prompts, paid model access, and the command flags. Include a complete MDX example. Use the shared homepage hero from @/website/src/components/hero-section.tsx with a Maintain heading.
+  Cover two run modes: the normal parent-agent flow (Maintain only edits MDX; the parent opens the PR) and GitHub Actions (no-args maintain reads before/after from the push event and OpenCode opens the PR). Cover routine prompts, paid Holocron-hosted models as the default, --model for hosted ids or OpenCode provider/model BYOK, and the command flags. Include a complete MDX example. Use the shared homepage hero from @/website/src/components/hero-section.tsx with a Maintain heading.
 title: Maintain documentation from source changes
 sidebarTitle: Overview
 description: Rerun page generation prompts when sources change. Run it from a parent agent, or let GitHub Actions open the pull request.
@@ -126,21 +126,55 @@ Maintain uses **one OpenCode session** for the complete run. The main agent grou
 
 **Parent-agent** runs omit that prompt block. Git commit, push, and `gh` stay denied. The parent continues with its own PR setup after the command exits.
 
+## Models
+
+By default Maintain uses a **Holocron-hosted model**. That call goes through Holocron and is **billed to the site's Pro subscription**. You do not set an Anthropic or OpenAI key for this path.
+
+```bash
+npx -y "@holocron.so/cli" maintain --since origin/main
+npx -y "@holocron.so/cli" maintain --model glm-5.3-flash
+```
+
+Pass **`--model provider/model`** to use your own OpenCode provider instead. Holocron does not create a run, does not bill credits, and does not need Pro. OpenCode reads the provider key from the environment or from `opencode /connect`.
+
+```bash
+npx -y "@holocron.so/cli" maintain --model anthropic/claude-sonnet-4
+```
+
+```diagram
+  holocron maintain
+         │
+         ├── no --model / glm-5.3-flash ──> Holocron-hosted model (Pro bill)
+         │
+         └── --model anthropic/claude-sonnet-4
+                   │
+                   └──> OpenCode provider + your ANTHROPIC_API_KEY
+```
+
+<Aside>
+<Info>
+See the OpenCode **[providers](https://opencode.ai/docs/providers/)** page for the env vars each backend accepts (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, AWS keys, and the rest). Model ids use the **`provider/model`** form from the OpenCode **[models](https://opencode.ai/docs/models/)** page.
+</Info>
+</Aside>
+
 ## Authentication and billing
 
-Maintain is a **Holocron Pro feature** when using Holocron-hosted models. GitHub Actions authenticates through OIDC with `id-token: write`, so the workflow does not need a stored Holocron key.
+**Holocron-hosted models** need **Holocron Pro**. GitHub Actions authenticates through OIDC with `id-token: write`, so the workflow does not need a stored Holocron key.
 
 Other CI systems can set **`HOLOCRON_KEY`**. Local runs use the existing `holocron login` session. Pass `--project` only when the local account has multiple projects.
 
+**`--model provider/model`** skips Holocron auth. Set the provider key from the [OpenCode providers](https://opencode.ai/docs/providers/) docs instead.
+
 ## Options
 
-| Option                 | Purpose                                                               |
-| ---------------------- | --------------------------------------------------------------------- |
-| `--all`                | Review all prompted pages, or every page when used with a run prompt. |
-| `--since <ref>`        | Detect source changes between the ref merge base and `HEAD`.          |
-| `--prompt <text>`      | Add temporary instructions for this run.                              |
-| `--prompt-file <path>` | Read temporary instructions from a Markdown file.                     |
-| `--dry-run`            | Report selected pages without a model call.                           |
-| `--project <id>`       | Select a project for a local session with multiple projects.          |
+| Option                 | Purpose                                                                |
+| ---------------------- | ---------------------------------------------------------------------- |
+| `--all`                | Review all prompted pages, or every page when used with a run prompt.  |
+| `--since <ref>`        | Detect source changes between the ref merge base and `HEAD`.           |
+| `--prompt <text>`      | Add temporary instructions for this run.                               |
+| `--prompt-file <path>` | Read temporary instructions from a Markdown file.                      |
+| `--dry-run`            | Report selected pages without a model call.                            |
+| `--model <id>`         | Holocron-hosted model, or `provider/model` for your own OpenCode keys. |
+| `--project <id>`       | Select a project for a local session with multiple projects.           |
 
 See [GitHub Actions](./github-actions.mdx) for the no-args push range and the workflow that opens the pull request.

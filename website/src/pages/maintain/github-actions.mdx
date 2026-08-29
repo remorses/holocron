@@ -6,6 +6,7 @@ prompt: |
   Explain that no-args `holocron maintain` on a push reads before and after SHAs from GITHUB_EVENT_PATH and diffs that whole push, not HEAD~1.
   Explain that in GitHub Actions the session prompt tells OpenCode to create holocron/maintain-<timestamp> and open a PR when MDX files change. Never update main or other existing branches.
   Contrast with the parent-agent flow on @/website/src/pages/maintain/index.mdx, where Maintain only edits MDX and the parent opens the PR.
+  Cover the default Holocron-hosted model (Pro + OIDC) and `--model provider/model` BYOK with provider env vars from OpenCode providers docs.
   Do not document --pull-request. Do not document a pull_request workflow that commits onto the existing PR branch.
 title: Run documentation maintenance in GitHub Actions
 sidebarTitle: GitHub Actions
@@ -138,3 +139,18 @@ jobs:
 Do not set **`cancel-in-progress: true`** for push maintenance. A later push compares only its own `before` and `after` states, so cancelling the preceding run can leave its source changes unreviewed.
 
 A run that changes no MDX files creates no branch and no pull request.
+
+## Use your own model
+
+The workflows above use the **Holocron-hosted model** and bill the project's Pro subscription. OIDC is enough. No provider API key.
+
+To run **Anthropic, OpenAI, or any other OpenCode provider**, pass `--model provider/model` and set that provider's env var. Holocron auth is not used. See the OpenCode **[providers](https://opencode.ai/docs/providers/)** page for the supported keys.
+
+```yaml
+- run: npx -y "@holocron.so/cli" maintain --model anthropic/claude-sonnet-4
+  env:
+    ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    GITHUB_TOKEN: ${{ github.token }}
+```
+
+You can drop `id-token: write` when the Holocron-hosted model is not used. Keep `contents: write` and `pull-requests: write` so OpenCode can still open the pull request.
