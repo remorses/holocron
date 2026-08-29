@@ -1,0 +1,457 @@
+---
+$schema: https://holocron.so/frontmatter.json
+title: Image rendering gallery
+sidebarTitle: Images
+description: Local, remote, and nested images across aspect ratios, props, and wrappers.
+icon: image
+---
+
+Kitchen-sink page for **image rendering**. Each block is a real MDX pattern a user would write. Look for layout shift, overflow, zoom, placeholders, and wrapper clipping.
+
+```diagram
+  MDX source                     Build                           Render
+  ![alt](./local.png)  ──────>   process + copy  ──────>         Image + placeholder
+  ![alt](/public.png)  ──────>   process, keep URL ────>         Image + placeholder
+  ![alt](https://…)    ──────>   skip metadata  ───────>         raw img, no size
+  <img src="https://…"> ─────>   fetch + metadata ─────>         Image + placeholder
+```
+
+<Aside>
+<Tip>
+Local files next to this page live in `src/images/`. Public files use `/screenshot@2x.png` and `/images/…`. Remote URLs use Unsplash.
+</Tip>
+</Aside>
+
+## Local relative files
+
+Markdown image syntax with a **relative path**. These files sit next to the page and get copied to `/_holocron/images/`.
+
+### 16:9 landscape
+
+![16:9 landscape](./images/landscape-16x9.jpg)
+
+### 21:9 ultrawide
+
+![21:9 ultrawide](./images/ultrawide-21x9.jpg)
+
+### 4:3 landscape
+
+![4:3 landscape](./images/landscape-4x3.jpg)
+
+### 1:1 square
+
+![1:1 square](./images/square-1x1.jpg)
+
+### 9:16 portrait
+
+![9:16 portrait](./images/portrait-9x16.jpg)
+
+### 3:4 portrait
+
+![3:4 portrait](./images/portrait-3x4.jpg)
+
+### 4:1 banner
+
+![4:1 banner](./images/banner-4x1.jpg)
+
+### Tiny 32×32
+
+![Tiny 32 pixel icon](./images/tiny-32.jpg)
+
+### JPEG
+
+![JPEG 16:9](./images/landscape-jpeg.jpg)
+
+### WebP
+
+![WebP 3:2](./images/landscape-webp.webp)
+
+### SVG
+
+![Local SVG logo](./images/logo.svg)
+
+### Transparent WebP
+
+Page background should show through the **alpha** around the circle.
+
+![Transparent circle](./images/transparent-circle.webp)
+
+## Public directory
+
+Same markdown syntax, but the file already lives in `public/` so the **URL stays** `/screenshot@2x.png`.
+
+![Playwriter screenshot from public](/screenshot@2x.png)
+
+A moodboard photo from `public/images/`:
+
+![Animated icons](/images/animated-icons.png)
+
+Public SVG logo:
+
+![Playwriter logo](/playwriter-logo.svg)
+
+Tiny favicon:
+
+![Favicon 32](/favicon-32.png)
+
+## HTML img and Image
+
+JSX `<img>` and the Holocron `<Image>` component. Build-time rewrite turns `<img>` into `Image` when metadata is available.
+
+<img src="./images/landscape-16x9.jpg" alt="JSX img, relative 16:9" />
+
+<Image src="./images/square-1x1.jpg" alt="Image component, relative square" />
+
+<img src="/screenshot@2x.png" alt="JSX img, public screenshot" />
+
+## Author size props
+
+These override the **intrinsic** pixel size. The frame should stay inside the content column.
+
+### Width only, 200px
+
+<img src="./images/landscape-16x9.jpg" alt="Width 200" width={200} />
+
+### Width as string 200
+
+<img src="./images/landscape-16x9.jpg" alt="Width string 200" width="200" />
+
+### Width 50 percent
+
+<img src="./images/landscape-16x9.jpg" alt="Width 50 percent" width="50%" />
+
+### Height only, 80px
+
+<img src="./images/landscape-16x9.jpg" alt="Height 80" height={80} />
+
+### Width and height, stretched box
+
+<img src="./images/landscape-16x9.jpg" alt="200 by 200 box" width={200} height={200} />
+
+### disableZoom
+
+Click should **not** open the zoom dialog.
+
+<img src="./images/square-1x1.jpg" alt="Zoom disabled" disableZoom />
+
+### loading lazy
+
+<img src="./images/portrait-3x4.jpg" alt="Lazy loaded portrait" loading="lazy" />
+
+### className rounded
+
+<img src="./images/square-1x1.jpg" alt="Rounded square" className="rounded-xl" width={160} />
+
+## Inline and mixed markdown
+
+A sentence with an **inline** image ![tiny inline](./images/tiny-32.jpg) in the middle of the prose. The icon should sit on the baseline and not blow up the line height.
+
+Linked image, click goes to example.com:
+
+[![Linked square](./images/square-1x1.jpg)](https://example.com)
+
+Inside a list:
+
+- Landscape in a list item:
+
+  ![List landscape](./images/landscape-4x3.jpg)
+
+- Portrait in a list item:
+
+  ![List portrait](./images/portrait-3x4.jpg)
+
+Two images stacked with no wrapper:
+
+![Stacked first](./images/banner-4x1.jpg)
+
+![Stacked second](./images/landscape-16x9.jpg)
+
+## External images
+
+Markdown remote URLs skip build-time metadata. JSX remote URLs are **fetched** at build time when the host allows it.
+
+### Markdown remote, no processing
+
+![Unsplash landscape markdown](https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=450&fit=crop&q=80)
+
+![Unsplash portrait markdown](https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=700&fit=crop&q=80)
+
+### JSX remote, processed when fetch works
+
+<img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=500&h=500&fit=crop&q=80" alt="Unsplash square JSX" />
+
+<img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&h=400&fit=crop&q=80" alt="Unsplash panoramic JSX" />
+
+### Remote SVG
+
+<img src="https://cdn.jsdelivr.net/npm/simple-icons@11.14.0/icons/github.svg" alt="GitHub simple-icons SVG" width={80} />
+
+### Remote PNG with alpha
+
+<img src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f600.png" alt="Twemoji PNG with alpha" />
+
+## Columns
+
+Direct image children, then `Column` wrappers, then mixed aspect ratios.
+
+### Three squares
+
+<Columns cols={3}>
+  ![Column square A](./images/square-1x1.jpg)
+
+  ![Column square B](./images/square-1x1.jpg)
+
+  ![Column square C](./images/square-1x1.jpg)
+</Columns>
+
+### Mixed aspects, two columns
+
+<Columns cols={2}>
+  <Column>
+    **Landscape** in a column.
+
+    ![Column landscape](./images/landscape-16x9.jpg)
+  </Column>
+  <Column>
+    **Portrait** in a column.
+
+    ![Column portrait](./images/portrait-9x16.jpg)
+  </Column>
+</Columns>
+
+### Four tiny plus banner
+
+<Columns cols={4}>
+  ![Tiny A](./images/tiny-32.jpg)
+
+  ![Tiny B](./images/tiny-32.jpg)
+
+  ![Tiny C](./images/tiny-32.jpg)
+
+  ![Tiny D](./images/tiny-32.jpg)
+</Columns>
+
+![Banner under columns](./images/banner-4x1.jpg)
+
+### Public photos in columns
+
+<Columns cols={2}>
+  ![Hover effects](/images/hover-effects.png)
+
+  ![Squeeze page](/images/squeeze-page.png)
+</Columns>
+
+### External images in columns
+
+<Columns cols={3}>
+  <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=300&fit=crop&q=80" alt="Column remote A" />
+
+  <img src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=400&h=300&fit=crop&q=80" alt="Column remote B" />
+
+  <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop&q=80" alt="Column remote C" />
+</Columns>
+
+## Frame
+
+<Frame caption="Relative 16:9 inside Frame">
+  ![Framed landscape](./images/landscape-16x9.jpg)
+</Frame>
+
+<Frame caption="Portrait inside Frame">
+  ![Framed portrait](./images/portrait-9x16.jpg)
+</Frame>
+
+<Frame caption="Transparent PNG inside Frame">
+  ![Framed alpha](./images/transparent-circle.webp)
+</Frame>
+
+<Frame caption="Public screenshot inside Frame">
+  ![Framed screenshot](/screenshot@2x.png)
+</Frame>
+
+<Frame caption="JSX img inside Frame">
+  <img src="./images/ultrawide-21x9.jpg" alt="Framed ultrawide JSX" />
+</Frame>
+
+<Frame caption="Two images in columns inside Frame">
+  <Columns cols={2}>
+    ![Frame column A](./images/square-1x1.jpg)
+
+    ![Frame column B](./images/landscape-4x3.jpg)
+  </Columns>
+</Frame>
+
+<Frame caption="Remote Unsplash inside Frame">
+  <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=450&fit=crop&q=80" alt="Framed remote landscape" />
+</Frame>
+
+<Frame caption="Bleed frame" className="bleed">
+  ![Bleed framed landscape](./images/landscape-16x9.jpg)
+</Frame>
+
+## Callouts
+
+<Note>
+Local landscape inside a **Note**. The image should stay inside the callout and not bleed out.
+
+![Note landscape](./images/landscape-16x9.jpg)
+</Note>
+
+<Warning>
+Portrait inside a **Warning**.
+
+![Warning portrait](./images/portrait-3x4.jpg)
+</Warning>
+
+<Tip>
+Square plus a tiny icon inside a **Tip**.
+
+![Tip square](./images/square-1x1.jpg)
+
+Inline ![tiny](./images/tiny-32.jpg) after the square.
+</Tip>
+
+<Info>
+Public screenshot inside **Info**.
+
+![Info screenshot](/screenshot@2x.png)
+</Info>
+
+<Check>
+Transparent PNG inside **Check**. Alpha should still show the callout tint.
+
+![Check alpha](./images/transparent-circle.webp)
+</Check>
+
+<Danger>
+Remote image inside **Danger**.
+
+<img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=500&fit=crop&q=80" alt="Danger remote portrait" />
+</Danger>
+
+## Card
+
+`Card` `img` prop (raw `<img>`, not the Image pipeline):
+
+<CardGroup cols={2}>
+  <Card title="Card img prop" img="/images/ai-button.png">
+    This uses the **img** prop. It does not go through the Image component.
+  </Card>
+  <Card title="Relative img prop" img="./images/square-1x1.jpg">
+    Relative path on the **img** prop. Check whether this resolves.
+  </Card>
+</CardGroup>
+
+Markdown image as **card children**:
+
+<Columns cols={2}>
+  <Card title="Child markdown image">
+    ![Card child landscape](./images/landscape-16x9.jpg)
+  </Card>
+  <Card title="Child JSX image">
+    <img src="./images/portrait-3x4.jpg" alt="Card child portrait" />
+  </Card>
+</Columns>
+
+## Accordion, Expandable, Steps, Tabs
+
+<AccordionGroup>
+  <Accordion title="Image inside Accordion" defaultOpen>
+    ![Accordion landscape](./images/landscape-16x9.jpg)
+  </Accordion>
+  <Accordion title="Portrait inside Accordion">
+    ![Accordion portrait](./images/portrait-9x16.jpg)
+  </Accordion>
+</AccordionGroup>
+
+<Expandable title="Image inside Expandable" defaultOpen>
+  ![Expandable square](./images/square-1x1.jpg)
+</Expandable>
+
+<Steps>
+  <Step title="Landscape step">
+    Take a wide screenshot.
+
+    ![Step landscape](./images/landscape-16x9.jpg)
+  </Step>
+  <Step title="Portrait step">
+    Then a tall crop.
+
+    ![Step portrait](./images/portrait-3x4.jpg)
+  </Step>
+</Steps>
+
+<Tabs>
+  <Tab title="Local">
+    ![Tab local](./images/landscape-4x3.jpg)
+  </Tab>
+  <Tab title="Public">
+    ![Tab public](/images/tooltips.png)
+  </Tab>
+  <Tab title="Remote">
+    <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=450&fit=crop&q=80" alt="Tab remote" />
+  </Tab>
+</Tabs>
+
+## Bleed, Panel, Marquee
+
+Explicit **Bleed** wrapper around a wide image:
+
+<Bleed>
+  ![Bleed ultrawide](./images/ultrawide-21x9.jpg)
+</Bleed>
+
+<Panel title="Image inside Panel">
+  ![Panel landscape](./images/landscape-16x9.jpg)
+</Panel>
+
+Marquee of **SVG logos**. Zoom should stay off if `disableZoom` is honored.
+
+<Marquee duration={18} slowOnHover gap={24}>
+  <img src="/logos/acme.svg" alt="ACME" height="32" className="dark:invert" disableZoom />
+  <img src="/logos/globex.svg" alt="Globex" height="32" className="dark:invert" disableZoom />
+  <img src="./images/logo.svg" alt="Local SVG" height="32" disableZoom />
+  <img src="/logos/stark.svg" alt="Stark" height="32" className="dark:invert" disableZoom />
+  <img src="/logos/wayne.svg" alt="Wayne" height="32" className="dark:invert" disableZoom />
+</Marquee>
+
+## Nested combinations
+
+Callout inside a **Frame**:
+
+<Frame caption="Note inside Frame, with an image">
+  <Note>
+    Nested **Note** plus image.
+
+    ![Nested note image](./images/square-1x1.jpg)
+  </Note>
+</Frame>
+
+Frame inside a **Callout**:
+
+<Warning>
+Framed portrait inside a warning.
+
+<Frame caption="Inner frame">
+  ![Warning framed portrait](./images/portrait-3x4.jpg)
+</Frame>
+</Warning>
+
+Columns of Frames:
+
+<Columns cols={2}>
+  <Frame caption="Left frame">
+    ![Left framed](./images/landscape-16x9.jpg)
+  </Frame>
+  <Frame caption="Right frame">
+    ![Right framed](./images/portrait-9x16.jpg)
+  </Frame>
+</Columns>
+
+## Dark mode logos
+
+PNG logo that should **not** invert, plus SVGs that invert in dark mode.
+
+<img src="/logos/nexus.png" alt="Nexus PNG logo" height={32} disableZoom />
+
+<img src="/logos/initech.svg" alt="Initech SVG" height={32} className="dark:invert" disableZoom />
