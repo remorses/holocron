@@ -1,7 +1,16 @@
-// Parses GitHub events and publishes validated documentation changes with REST.
+// Parses GitHub Actions events so Maintain can select pages from the push or schedule range.
 
 import fs from 'node:fs'
-import path from 'node:path'
+
+export type GithubMaintainRelease = {
+  tagName?: string
+  name?: string
+  body?: string
+  htmlUrl?: string
+  publishedAt?: string
+  author?: string
+  targetCommitish?: string
+}
 
 export type GithubMaintainEvent = {
   runId: string
@@ -11,7 +20,7 @@ export type GithubMaintainEvent = {
   baseBranch: string
   headBranch?: string
   existingPullRequest?: number
-  release?: Record<string, unknown>
+  release?: GithubMaintainRelease
 }
 
 type GithubPayload = {
@@ -112,140 +121,4 @@ export function loadGithubEvent(): GithubMaintainEvent | undefined {
     runId: process.env.GITHUB_RUN_ID ?? process.env.GITHUB_SHA?.slice(0, 12) ?? 'manual',
     payload,
   })
-}
-
-async function githubRequest<T>({
-  repository,
-  token,
-  route,
-  method = 'GET',
-  body,
-  allowNotFound,
-}: {
-  repository: string
-  token: string
-  route: string
-  method?: string
-  body?: unknown
-  allowNotFound?: boolean
-}): Promise<T | undefined> {
-  const response = await fetch(`https://api.github.com/repos/${repository}${route}`, {
-    method,
-    headers: {
-      authorization: `Bearer ${token}`,
-      accept: 'application/vnd.github+json',
-      'x-github-api-version': '2022-11-28',
-      'content-type': 'application/json',
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  })
-  if (allowNotFound && response.status === 404) return undefined
-  if (!response.ok) throw new Error(`GitHub ${method} ${route} failed (${response.status}): ${await response.text()}`)
-  return await response.json() as T
-}
-
-function refRoute(branch: string) {
-  return `/git/ref/heads/${branch.split('/').map(encodeURIComponent).join('/')}`
-}
-
-export async function publishMaintainChanges({
-  repoRoot,
-  files,
-  event,
-}: {
-  repoRoot: string
-  files: string[]
-  event: GithubMaintainEvent
-}) {
-  const repository = process.env.GITHUB_REPOSITORY
-  const token = process.env.GITHUB_TOKEN
-  if (!repository || !token) throw new Error('--pull-request requires GITHUB_REPOSITORY and GITHUB_TOKEN.')
-
-  const branch = event.headBranch ?? `holocron/maintain/${event.runId}`
-  const existingRef = await githubRequest<{ object: { sha: string } }>({
-    repository,
-    token,
-    route: refRoute(branch),
-    allowNotFound: true,
-  })
-  const baseSha = existingRef?.object.sha ?? event.range?.to ?? process.env.GITHUB_SHA
-  if (!baseSha) throw new Error('Could not determine the GitHub commit for the maintain branch.')
-
-  const commit = await githubRequest<{ tree: { sha: string } }>({
-    repository,
-    token,
-    route: `/git/commits/${baseSha}`,
-  })
-  const treeEntries = await Promise.all(files.map(async (file) => {
-    const blob = await githubRequest<{ sha: string }>({
-      repository,
-      token,
-      route: '/git/blobs',
-      method: 'POST',
-      body: { content: fs.readFileSync(path.join(repoRoot, file), 'base64'), encoding: 'base64' },
-    })
-    return { path: file, mode: '100644', type: 'blob', sha: blob!.sha }
-  }))
-  const tree = await githubRequest<{ sha: string }>({
-    repository,
-    token,
-    route: '/git/trees',
-    method: 'POST',
-    body: { base_tree: commit!.tree.sha, tree: treeEntries },
-  })
-  const nextCommit = await githubRequest<{ sha: string }>({
-    repository,
-    token,
-    route: '/git/commits',
-    method: 'POST',
-    body: {
-      message: 'Maintain documentation from changed sources',
-      tree: tree!.sha,
-      parents: [baseSha],
-    },
-  })
-
-  if (existingRef) {
-    await githubRequest({
-      repository,
-      token,
-      route: refRoute(branch),
-      method: 'PATCH',
-      body: { sha: nextCommit!.sha, force: false },
-    })
-  } else {
-    await githubRequest({
-      repository,
-      token,
-      route: '/git/refs',
-      method: 'POST',
-      body: { ref: `refs/heads/${branch}`, sha: nextCommit!.sha },
-    })
-  }
-
-  if (event.existingPullRequest) {
-    return `https://github.com/${repository}/pull/${event.existingPullRequest}`
-  }
-
-  const owner = repository.split('/')[0]
-  const openPulls = await githubRequest<Array<{ html_url: string }>>({
-    repository,
-    token,
-    route: `/pulls?state=open&head=${encodeURIComponent(`${owner}:${branch}`)}&base=${encodeURIComponent(event.baseBranch)}`,
-  })
-  if (openPulls?.[0]) return openPulls[0].html_url
-
-  const pullRequest = await githubRequest<{ html_url: string }>({
-    repository,
-    token,
-    route: '/pulls',
-    method: 'POST',
-    body: {
-      title: 'Maintain documentation from changed sources',
-      head: branch,
-      base: event.baseBranch,
-      body: `Holocron reviewed generation prompts and updated ${files.length} documentation file${files.length === 1 ? '' : 's'}.`,
-    },
-  })
-  return pullRequest!.html_url
 }

@@ -1,4 +1,4 @@
-// Maintains MDX pages by rerunning their generation prompts with OpenCode.
+// Maintains MDX pages by updating them from their generation prompts with OpenCode.
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -19,7 +19,6 @@ import {
   findRepoRoot,
   getChangedFiles,
   getChangedPatches,
-  getCurrentBranch,
   getHeadSha,
   getWorkingTreeChanges,
   extractPromptReferences,
@@ -27,7 +26,7 @@ import {
   matchChangedReferences,
   type MaintainPage,
 } from './maintain-discovery.ts'
-import { loadGithubEvent, publishMaintainChanges, type GithubMaintainEvent } from './maintain-github.ts'
+import { loadGithubEvent, type GithubMaintainRelease } from './maintain-github.ts'
 
 const RUN_TIMEOUT_MS = 25 * 60 * 1000
 
@@ -40,11 +39,9 @@ maintainCli
   .option('--prompt [text]', 'Add instructions for this run without changing page frontmatter')
   .option('--prompt-file [path]', 'Read run instructions from a Markdown file')
   .option('--dry-run', 'Show matched pages without calling a model')
-  .option('--pull-request', 'Update the current GitHub PR or open one pull request for the run')
   .option('--project [projectId]', 'Project ID (only needed with session auth when multiple projects exist)')
-  .example('holocron maintain --pull-request')
   .example('holocron maintain --since origin/main --dry-run')
-  .example('holocron maintain --all --prompt-file .holocron/prompts/weekly-review.md --pull-request')
+  .example('holocron maintain --all --prompt-file .holocron/prompts/weekly-review.md')
   .action(async (options, { console: output, process: proc }) => {
     if (options.prompt && options.promptFile) {
       output.error(logger.error('Use either --prompt or --prompt-file, not both.'))
@@ -106,7 +103,14 @@ maintainCli
     }
 
     const beforeChangedFiles = new Set(getWorkingTreeChanges(repoRoot))
+    const startSha = getHeadSha(repoRoot)
     const patches = range ? getChangedPatches(repoRoot, range, changedFiles) : ''
+    const githubActions = process.env.GITHUB_ACTIONS === 'true'
+      ? {
+        branch: `holocron/maintain-${Date.now()}`,
+        targetBranch: githubEvent && !githubEvent.existingPullRequest ? githubEvent.baseBranch : 'main',
+      }
+      : undefined
     let runError: Error | undefined
     try {
       output.log(logger.step('Starting OpenCode...'))
@@ -117,7 +121,9 @@ maintainCli
         runPromptFile,
         changedFiles,
         patches,
+        gitDiffRange: gitDiffRangeSpec(range),
         release: githubEvent?.release,
+        githubActions,
         apiKey: run.apiKey,
         baseUrl: run.baseUrl,
         providerId: run.providerId,
@@ -145,10 +151,13 @@ maintainCli
       return proc.exit(1)
     }
 
-    const changedPages = selectedPages.filter((page) => getWorkingTreeChanges(repoRoot).includes(page.path))
-    const unexpected = getWorkingTreeChanges(repoRoot).filter((file) =>
-      !beforeChangedFiles.has(file) && !selectedPages.some((page) => page.path === file),
-    )
+    const committed = getChangedFiles(repoRoot, { from: startSha, to: 'HEAD' })
+    const working = getWorkingTreeChanges(repoRoot)
+    const changedPages = selectedPages.filter((page) => committed.includes(page.path) || working.includes(page.path))
+    const unexpected = [...new Set([
+      ...committed.filter((file) => !selectedPages.some((page) => page.path === file)),
+      ...working.filter((file) => !beforeChangedFiles.has(file) && !selectedPages.some((page) => page.path === file)),
+    ])]
     if (unexpected.length > 0) {
       output.error(logger.error(`OpenCode changed files outside the selected pages: ${unexpected.join(', ')}`))
       return proc.exit(1)
@@ -164,15 +173,6 @@ maintainCli
     }
 
     output.log(logger.success(`Updated ${changedPages.length} page${changedPages.length === 1 ? '' : 's'}.`))
-    if (options.pullRequest) {
-      const event = githubEvent ?? manualGithubEvent(repoRoot)
-      const pullRequestUrl = await publishMaintainChanges({
-        repoRoot,
-        files: changedPages.map((page) => page.path),
-        event,
-      })
-      output.log(logger.success(`Pull request: ${pullRequestUrl}`))
-    }
   })
 
 async function resolveProjectId({
@@ -225,7 +225,9 @@ async function runOpenCode({
   runPromptFile,
   changedFiles,
   patches,
+  gitDiffRange,
   release,
+  githubActions,
   apiKey,
   baseUrl,
   providerId,
@@ -238,7 +240,9 @@ async function runOpenCode({
   runPromptFile?: string
   changedFiles: string[]
   patches: string
-  release?: Record<string, unknown>
+  gitDiffRange: string
+  release?: GithubMaintainRelease
+  githubActions?: { branch: string; targetBranch: string }
   apiKey: string
   baseUrl: string
   providerId: string
@@ -254,6 +258,16 @@ async function runOpenCode({
     { permission: 'grep', pattern: '*', action: 'allow' as const },
     { permission: 'task', pattern: '*', action: 'allow' as const },
     { permission: 'todowrite', pattern: '*', action: 'allow' as const },
+    { permission: 'bash', pattern: 'git diff *', action: 'allow' as const },
+    { permission: 'bash', pattern: 'git log *', action: 'allow' as const },
+    ...(githubActions
+      ? [
+        { permission: 'bash', pattern: 'git *', action: 'allow' as const },
+        { permission: 'bash', pattern: 'gh *', action: 'allow' as const },
+        { permission: 'bash', pattern: `git push * ${githubActions.targetBranch}`, action: 'deny' as const },
+        { permission: 'bash', pattern: `git push origin ${githubActions.targetBranch}`, action: 'deny' as const },
+      ]
+      : []),
     ...pages.flatMap((page) => [
       { permission: 'edit', pattern: page.path, action: 'allow' as const },
       { permission: 'edit', pattern: page.absolutePath, action: 'allow' as const },
@@ -291,38 +305,22 @@ async function runOpenCode({
     })
     if (sessionResult.error || !sessionResult.data) return new Error('OpenCode could not create a session.')
 
-    const system = dedent`
-      You maintain documentation from versioned generation prompts.
-
-      Review the selected MDX pages against the changed source files. The page frontmatter prompt is the original recipe used to generate that page. Re-run that recipe against the current sources while preserving correct existing content. Leave a page unchanged when the source changes do not affect it.
-
-      First create a task list. Split independent page or reference groups into parallel tasks. Give each task exclusive ownership of its target pages. Never assign one page to two tasks. Tasks may read the repository but may only edit their assigned selected MDX pages.
-
-      Resolve @./ and @../ references in a page prompt relative to that page. Resolve @/ references from the repository root. Resolve @https:// and @http:// URL references as remote sources. Bare URLs without @ are not references. Resolve references in a named run-instruction file relative to that instruction file, except @/ which still means the repository root.
-
-      Update a page's frontmatter prompt when its source paths or intended coverage changed. Do not use Git or GitHub. Do not create commits. Do not edit files outside the selected pages.
-    `
-    const prompt = dedent`
-      ## Selected pages
-
-      ${JSON.stringify(pages.map((page) => ({ path: page.path, prompt: page.prompt, references: page.references })), null, 2)}
-
-      ## Changed files
-
-      ${JSON.stringify(changedFiles, null, 2)}
-
-      ${runPrompt ? `## Run instructions${runPromptFile ? ` from ${runPromptFile}` : ''}\n\n${runPrompt}` : ''}
-
-      ${release ? `## GitHub release\n\n${JSON.stringify(release, null, 2)}` : ''}
-
-      ${patches ? `## Bounded source patches\n\n\`\`\`diff\n${patches}\n\`\`\`` : ''}
-    `
+    const system = buildMaintainSystemPrompt({ gitDiffRange })
+    const prompt = buildMaintainUserPrompt({
+      pages,
+      changedFiles,
+      patches,
+      runPrompt,
+      runPromptFile,
+      release,
+      githubActions,
+    })
     const result = await client.session.prompt({
       sessionID: sessionResult.data.id,
       model: { providerID: providerId, modelID: modelId },
       agent: 'build',
       system,
-      tools: { bash: false, websearch: false, task: true, read: true, glob: true, grep: true, edit: true, webfetch: true },
+      tools: { bash: true, websearch: false, task: true, read: true, glob: true, grep: true, edit: true, webfetch: true },
       parts: [{ type: 'text', text: prompt }],
     })
     if (result.error || !result.data) return new Error('OpenCode failed to maintain the selected pages.')
@@ -332,6 +330,99 @@ async function runOpenCode({
     clearTimeout(timeout)
     server.close()
   }
+}
+
+function githubActionsPublishPrompt({
+  branch,
+  targetBranch,
+}: {
+  branch: string
+  targetBranch: string
+}) {
+  return dedent`
+    You are running in GitHub Actions.
+
+    After the page updates finish, if any selected MDX files were updated, publish them. If none were updated, do not create a branch, commit, or pull request.
+
+    If files were updated:
+    1. Create and switch to this new branch before any commit: ${branch}
+    2. If git user.name is unset, set user.name to github-actions[bot] and user.email to 41898282+github-actions[bot]@users.noreply.github.com
+    3. Commit only the updated MDX files
+    4. Push only that branch. Never push to ${targetBranch}. Never push to any other existing branch. Never commit on ${targetBranch}.
+    5. Open one pull request into ${targetBranch} with gh pr create.
+       Title: short. Prefix with [holocron], unless this repository already has a clear PR title convention, then follow that.
+       Body: a short bullet list of the changes. No headings.
+
+    Do this yourself after tasks finish. Do not ask tasks to commit, create branches, or open pull requests.
+  `
+}
+
+function buildMaintainSystemPrompt({ gitDiffRange }: { gitDiffRange: string }) {
+  return dedent`
+    You update Holocron documentation pages. You do not generate pages from scratch.
+
+    Each selected page has a frontmatter prompt. Use that prompt to update the existing page. Keep the same @/ paths and @https:// URLs unless the sources or coverage actually changed. Leave a page unchanged when the source changes do not affect it.
+
+    Split the work with tasks. Each task owns exclusive pages. Never assign one page to two tasks. Tasks may read the repository. Tasks may only edit their assigned selected MDX pages. Tasks must not commit.
+
+    Resolve @./ and @../ relative to that page. Resolve @/ from the repository root. Resolve @https:// and @http:// as remote sources. Bare URLs without @ are not references. In a run-instruction file, relative refs are relative to that file. @/ still means the repository root.
+
+    To see what changed in a source file, run git.
+
+    git diff ${gitDiffRange} -- path/to/file
+    git log -p ${gitDiffRange} -- path/to/file
+
+    Update a page's frontmatter prompt only when its source paths or intended coverage changed. Do not edit files outside the selected pages.
+  `
+}
+
+function buildMaintainUserPrompt({
+  pages,
+  changedFiles,
+  patches,
+  runPrompt,
+  runPromptFile,
+  release,
+  githubActions,
+}: {
+  pages: Pick<MaintainPage, 'path' | 'prompt' | 'references'>[]
+  changedFiles: string[]
+  patches: string
+  runPrompt?: string
+  runPromptFile?: string
+  release?: GithubMaintainRelease
+  githubActions?: { branch: string; targetBranch: string }
+}) {
+  return [
+    '<selected_pages>',
+    JSON.stringify(pages.map((page) => ({ path: page.path, prompt: page.prompt, references: page.references })), null, 2),
+    '</selected_pages>',
+    '',
+    '<changed_files>',
+    JSON.stringify(changedFiles, null, 2),
+    '</changed_files>',
+    '',
+    'Run the selected page updates in tasks. Tell each task not to commit.',
+    runPrompt
+      ? `\n<run_instructions>\n${JSON.stringify({ file: runPromptFile ?? null, text: runPrompt }, null, 2)}\n</run_instructions>`
+      : '',
+    release
+      ? `\n<github_release>\n${JSON.stringify(release, null, 2)}\n</github_release>`
+      : '',
+    patches
+      ? `\n<source_patches>\n${JSON.stringify({ diff: patches }, null, 2)}\n</source_patches>`
+      : '',
+    githubActions
+      ? `\n<github_actions>\n${githubActionsPublishPrompt(githubActions)}\n</github_actions>`
+      : '',
+  ].filter((block) => block !== '').join('\n')
+}
+
+function gitDiffRangeSpec(range?: { from: string; to: string; pullRequest?: boolean }) {
+  if (!range) return 'HEAD'
+  if (/^0+$/.test(range.from)) return range.to
+  const separator = range.pullRequest ? '...' : '..'
+  return `${range.from}${separator}${range.to}`
 }
 
 function validateChangedPages({ repoRoot, pages }: { repoRoot: string; pages: MaintainPage[] }) {
@@ -350,8 +441,4 @@ function validateChangedPages({ repoRoot, pages }: { repoRoot: string; pages: Ma
   }
 }
 
-function manualGithubEvent(repoRoot: string): GithubMaintainEvent {
-  const sha = getHeadSha(repoRoot)
-  const branch = getCurrentBranch(repoRoot)
-  return { runId: sha.slice(0, 12), all: false, changedUrls: [], baseBranch: branch, range: { from: sha, to: sha } }
-}
+

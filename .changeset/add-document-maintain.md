@@ -18,6 +18,6 @@ prompt: |
 ---
 ```
 
-`holocron maintain` detects changed references, runs one OpenCode session with parallel tasks, validates resulting MDX, and can open one GitHub pull request. GitHub Actions authenticates through OIDC without a stored Holocron key.
+`holocron maintain` detects changed references, runs one OpenCode session with parallel tasks, and validates resulting MDX. In GitHub Actions the session prompt tells OpenCode to create `holocron/maintain-<timestamp>` and open a pull request when MDX files changed. It never updates `main` or other existing branches. Local runs do not create a branch or pull request. GitHub Actions authenticates through OIDC without a stored Holocron key.
 
 Use `--all` with `--prompt` or `--prompt-file` for scheduled grammar, SEO, link, translation, and style reviews.

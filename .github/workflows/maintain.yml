@@ -1,0 +1,36 @@
+name: Maintain documentation
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: maintain-${{ github.ref }}
+
+jobs:
+  maintain:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm --filter @holocron.so/cli build
+      - run: pnpm --filter @holocron.so/cli exec holocron maintain
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

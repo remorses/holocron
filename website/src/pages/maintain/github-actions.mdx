@@ -1,19 +1,69 @@
 ---
 $schema: https://holocron.so/frontmatter.json
 prompt: |
-  Write GitHub Actions examples from @/cli/src/maintain-github.ts and @/cli/src/maintain.ts.
-  Cover default-branch pushes, same-repository pull requests, schedules, OIDC authentication, full Git history, and concurrency behavior.
+  Write GitHub Actions examples from @/cli/src/maintain.ts and @/cli/src/maintain-github.ts.
+  Cover default-branch pushes, schedules, OIDC authentication, and full Git history.
+  Explain that no-args `holocron maintain` on a push reads before and after SHAs from GITHUB_EVENT_PATH and diffs that whole push, not HEAD~1.
+  Explain that in GitHub Actions the session prompt tells OpenCode to create holocron/maintain-<timestamp> and open a PR when MDX files change. Never update main or other existing branches.
+  Contrast with the parent-agent flow on @/website/src/pages/maintain/index.mdx, where Maintain only edits MDX and the parent opens the PR.
+  Do not document --pull-request. Do not document a pull_request workflow that commits onto the existing PR branch.
 title: Run documentation maintenance in GitHub Actions
 sidebarTitle: GitHub Actions
-description: Maintain documentation after every main-branch push, inside pull requests, or on a recurring GitHub Actions schedule.
+description: No-args Maintain on a push diffs that push's before and after SHAs, then OpenCode opens a pull request when MDX pages change.
 icon: lucide:github
 ---
 
+This is the **GitHub Actions** path. Maintain reads the push event, updates matching MDX pages, and opens a pull request. For a parent agent that should open the PR itself, use the [parent-agent flow](./index.mdx#parent-agent-flow).
+
 GitHub Actions provides the **Git range, repository identity, OIDC authentication, and GitHub token**. No stored Holocron key is needed.
+
+On a GitHub Actions run, Maintain adds **publish instructions to the session prompt**. OpenCode updates the selected MDX pages, then opens a pull request when those files changed. Local and parent-agent runs do not get those instructions, so they never create a branch or pull request.
+
+```diagram
+  push to main
+        │
+        v
+  holocron maintain
+        │
+        v
+  OpenCode updates MDX pages
+        │
+        ├── no MDX changes ──> stop
+        └── MDX files changed
+                │
+                v
+         branch holocron/maintain-<timestamp>
+                │
+                v
+         gh pr create into main
+```
+
+Keep **`GITHUB_TOKEN`** on the Maintain step so OpenCode can push the new branch and open the pull request. Leave checkout credentials enabled. Do not set `persist-credentials: false`.
 
 ## After every main-branch push
 
-A push event contains exact **`before` and `after` commit SHAs**. Holocron compares those states, reviews pages whose referenced sources changed, and opens one pull request when it finds updates.
+Run **`holocron maintain` with no args**. GitHub writes the push payload to **`GITHUB_EVENT_PATH`**. Maintain reads `before` (the branch tip before this push) and `after` (the new tip, this checkout), then runs `git diff before..after`.
+
+That range is the **whole push**. Five commits in one push all count. It is not `HEAD~1`.
+
+```diagram
+  git push (one or more commits)
+           │
+           v
+  GITHUB_EVENT_PATH
+    before  = old tip of the branch
+    after   = new tip
+           │
+           v
+  git diff before..after
+           │
+           v
+  pages whose @/ sources sit in that diff
+```
+
+Checkout needs **`fetch-depth: 0`** so those SHAs exist locally. A new-branch push has `before` all zeros. Maintain then uses `git diff-tree --root` on `after`.
+
+If MDX files change, OpenCode creates **`holocron/maintain-<timestamp>`** and opens one pull request into `main`. It never commits on `main` or on any other existing branch.
 
 ```yaml
 name: Maintain documentation
@@ -34,47 +84,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
 
-      - run: npx -y "@holocron.so/cli" maintain --pull-request
+      - run: npx -y "@holocron.so/cli" maintain
         env:
           GITHUB_TOKEN: ${{ github.token }}
 ```
 
-Keep **`fetch-depth: 0`** so Git can inspect every source change in a multi-commit push.
+`contents: write` lets OpenCode create the maintain branch. `pull-requests: write` lets it open the pull request. `id-token: write` authenticates Holocron over OIDC.
 
-## On every pull request
+Protect `main` with a ruleset that requires a pull request and does not let GitHub Actions bypass it. The token can still create `holocron/maintain-*` branches.
 
-For a same-repository pull request, Holocron compares the PR merge base with its head commit. Validated documentation fixes are committed to the **existing PR branch**, so reviewers see code and documentation together.
-
-```yaml
-name: Maintain pull request documentation
-
-on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-
-permissions:
-  contents: write
-  pull-requests: write
-  id-token: write
-
-jobs:
-  maintain:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          fetch-depth: 0
-          persist-credentials: false
-
-      - run: npx -y "@holocron.so/cli" maintain --pull-request
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-```
-
-GitHub gives fork pull requests a **restricted token**. The first release supports pull requests whose head branch belongs to the same repository.
+<Aside>
+<Warning>
+GitHub blocks pull requests from Actions until you enable **Allow GitHub Actions to create and approve pull requests** in Settings, Actions, General, Workflow permissions. See the [GitHub docs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#preventing-github-actions-from-creating-or-approving-pull-requests).
+</Warning>
+</Aside>
 
 ## Scheduled maintenance
 
@@ -100,13 +124,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: false
 
       - run: |
           npx -y "@holocron.so/cli" maintain \
             --all \
-            --prompt-file .holocron/prompts/weekly-review.md \
-            --pull-request
+            --prompt-file .holocron/prompts/weekly-review.md
         env:
           GITHUB_TOKEN: ${{ github.token }}
 ```
@@ -115,4 +137,4 @@ jobs:
 
 Do not set **`cancel-in-progress: true`** for push maintenance. A later push compares only its own `before` and `after` states, so cancelling the preceding run can leave its source changes unreviewed.
 
-Every completed run creates or updates **one pull request**. A run that changes nothing creates nothing.
+A run that changes no MDX files creates no branch and no pull request.

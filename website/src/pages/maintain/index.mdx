@@ -2,10 +2,11 @@
 $schema: https://holocron.so/frontmatter.json
 prompt: |
   Write the Maintain overview from @/cli/src/maintain.ts, @/cli/src/maintain-discovery.ts, and @/website/src/maintain-api.ts. Follow the Holocron authoring rules in @/skills/holocron/SKILL.md.
-  Explain that every page with prompt frontmatter is maintained from its path and URL references. Explain that the Holocron skill adds generation prompts to new MDX pages by default. Cover routine prompts, paid model access, local use, and the command flags. Include a complete MDX example. Use the shared homepage hero from @/website/src/components/hero-section.tsx with a Maintain heading.
+  Explain that every page with prompt frontmatter is maintained from its path and URL references. Explain that the Holocron skill adds generation prompts to new MDX pages by default.
+  Cover two run modes: the normal parent-agent flow (Maintain only edits MDX; the parent opens the PR) and GitHub Actions (no-args maintain reads before/after from the push event and OpenCode opens the PR). Cover routine prompts, paid model access, and the command flags. Include a complete MDX example. Use the shared homepage hero from @/website/src/components/hero-section.tsx with a Maintain heading.
 title: Maintain documentation from source changes
 sidebarTitle: Overview
-description: Rerun versioned page generation prompts when source files change, or review every page with a scheduled maintenance prompt.
+description: Rerun page generation prompts when sources change. Run it from a parent agent, or let GitHub Actions open the pull request.
 icon: lucide:book-open-check
 ---
 
@@ -19,11 +20,24 @@ import { HeroSection } from '../../components/hero-section.tsx'
 
 Holocron Maintain watches every documentation page that includes a **`prompt` field in its frontmatter**. The prompt records how the page was generated and identifies its source files, folders, and URLs.
 
-```bash
-npx -y "@holocron.so/cli" maintain --since origin/main
+When a referenced source changes, Maintain gives the **current page, its generation prompt, and the relevant source changes** to OpenCode. The page remains unchanged when the source change does not affect its content.
+
+There are **two ways to run** it. Maintain never opens a pull request outside GitHub Actions.
+
+```diagram
+                         holocron maintain
+                                │
+                 ┌──────────────┴──────────────┐
+                 v                             v
+          parent agent                   GitHub Actions
+          --since origin/main            no args on push
+                 │                             │
+                 v                             v
+          edit MDX only                  edit MDX, then PR
+          parent opens the PR            holocron/maintain-<timestamp>
 ```
 
-When a referenced source changes, Maintain gives the **current page, its generation prompt, and the relevant source changes** to OpenCode. The page remains unchanged when the source change does not affect its content.
+Use the **parent-agent** path in a coding session or custom CI. Use **GitHub Actions** when you want Maintain to open the pull request itself. See [GitHub Actions](./github-actions.mdx) for the no-args push workflow.
 
 ## Generate a maintainable page
 
@@ -51,8 +65,8 @@ Use a session or API key to authenticate API requests.
 ```diagram
   repository root
        │
-       ├── src/auth/                         ◄── @/src/auth/
-       ├── src/middleware/session.ts         ◄── @/src/middleware/session.ts
+       ├── src/auth/                         <── @/src/auth/
+       ├── src/middleware/session.ts         <── @/src/middleware/session.ts
        └── website/src/pages/docs/auth.mdx
                    │
                    └── @./setup.mdx            relative to this page
@@ -62,19 +76,29 @@ Use a session or API key to authenticate API requests.
 
 The **Holocron skill adds this field by default** when an AI coding agent creates a new MDX page. It records the real sources used to produce the page, so future agents can reproduce and update the content instead of guessing its intent. See [skill discovery](../docs/ai/skill-discovery.mdx) for agent setup.
 
-## Review changed sources
+## Parent agent flow
 
-Pass a Git reference when running locally or in another CI system. Holocron compares its merge base with `HEAD`, selects affected pages, and starts one OpenCode session.
+Run Maintain from a **parent agent** that already owns git and GitHub. The command only updates selected MDX files. It does not create a branch, commit, or pull request. The parent agent reviews the working tree and opens a PR with whatever process that repo already uses.
 
 ```bash
 npx -y "@holocron.so/cli" maintain --since origin/main
 ```
 
-Use **`--dry-run`** to inspect the selection without authentication or model usage.
+`--since` compares the **merge base** of that ref with `HEAD`. Pages whose `@/` sources sit in that range are selected.
+
+With **no flags**, Maintain diffs the working tree against `HEAD`. That is useful when the parent already changed source files in the same session.
+
+Use **`--dry-run`** to inspect the selection without authentication or a model call.
 
 ```bash
 npx -y "@holocron.so/cli" maintain --since origin/main --dry-run
 ```
+
+<Aside>
+<Tip>
+Keep git write tools on the **parent**. Maintain's OpenCode session can only edit the selected MDX pages.
+</Tip>
+</Aside>
 
 ## Run a routine review
 
@@ -96,9 +120,11 @@ The run prompt is **temporary**. It does not replace page generation prompts.
 
 ## OpenCode execution
 
-Maintain uses **one OpenCode session** for the complete run. The main agent groups independent pages by source, delegates those groups as parallel tasks, and validates every changed MDX file before publication.
+Maintain uses **one OpenCode session** for the complete run. The main agent groups independent pages by source and delegates those groups as parallel tasks. Holocron then validates every changed MDX file.
 
-If no page needs an update, the command exits successfully without creating a branch or pull request.
+**GitHub Actions** adds publish instructions to the session prompt, not the system prompt, so tasks never try to open a pull request. The parent session creates `holocron/maintain-<timestamp>` and runs `gh pr create` only when MDX files changed. The [GitHub Actions](./github-actions.mdx) page covers the no-args push range.
+
+**Parent-agent** runs omit that prompt block. Git commit, push, and `gh` stay denied. The parent continues with its own PR setup after the command exits.
 
 ## Authentication and billing
 
@@ -115,7 +141,6 @@ Other CI systems can set **`HOLOCRON_KEY`**. Local runs use the existing `holocr
 | `--prompt <text>`      | Add temporary instructions for this run.                              |
 | `--prompt-file <path>` | Read temporary instructions from a Markdown file.                     |
 | `--dry-run`            | Report selected pages without a model call.                           |
-| `--pull-request`       | Update the current PR or open one PR for this run.                    |
 | `--project <id>`       | Select a project for a local session with multiple projects.          |
 
-See [GitHub Actions](./github-actions.mdx) for push, pull request, and scheduled workflows.
+See [GitHub Actions](./github-actions.mdx) for the no-args push range and the workflow that opens the pull request.

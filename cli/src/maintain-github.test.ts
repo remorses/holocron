@@ -1,4 +1,4 @@
-// Tests GitHub event ranges and publication targets for maintain runs.
+// Tests GitHub event ranges used to select Maintain pages.
 
 import { describe, expect, test } from 'vitest'
 import { parseGithubEvent } from './maintain-github.ts'
