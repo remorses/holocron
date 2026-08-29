@@ -1,20 +1,12 @@
 ---
 $schema: https://holocron.so/frontmatter.json
+prompt: |
+  Write the Maintain overview from @/cli/src/maintain.ts, @/cli/src/maintain-discovery.ts, and @/website/src/maintain-api.ts. Follow the Holocron authoring rules in @/skills/holocron/SKILL.md.
+  Explain that every page with prompt frontmatter is maintained from its path and URL references. Explain that the Holocron skill adds generation prompts to new MDX pages by default. Cover routine prompts, paid model access, local use, and the command flags. Include a complete MDX example. Use the shared homepage hero from @/website/src/components/hero-section.tsx with a Maintain heading.
 title: Maintain documentation from source changes
 sidebarTitle: Overview
 description: Rerun versioned page generation prompts when source files change, or review every page with a scheduled maintenance prompt.
 icon: lucide:book-open-check
-prompt: |
-  Write the Maintain overview from @/cli/src/maintain.ts,
-  @/cli/src/maintain-discovery.ts, and
-  @/website/src/maintain-api.ts. Follow the Holocron authoring rules
-  in @/skills/holocron/SKILL.md.
-
-  Explain that every page with prompt frontmatter is maintained from its path
-  and URL references. Explain that the Holocron skill adds generation prompts
-  to new MDX pages by default. Cover routine prompts, paid model access, local
-  use, and the command flags. Include a complete MDX example. Use the shared
-  homepage hero from @/website/src/components/hero-section.tsx with a Maintain heading.
 ---
 
 import { HeroSection } from '../../components/hero-section.tsx'
@@ -66,7 +58,7 @@ Use a session or API key to authenticate API requests.
                    └── @./setup.mdx            relative to this page
 ```
 
-**`@/`** always starts at the git repository root, so the path stays valid if you move the MDX file. **`@./`** and **`@../`** start at the MDX file. **`@https://`** marks a remote source. A file reference selects the page when that file changes. A folder reference selects it when any tracked file inside the folder changes. GitHub release events and explicit routine runs can select matching `@https://` URL references.
+**`@/`** always starts at the git repository root, so the path stays valid if you move the MDX file. **`@./`** and **`@../`** start at the MDX file. **`@https://`** marks a remote source. A file reference selects the page when that file changes. A folder reference selects it when any tracked file inside that folder changes, including files inside a git submodule. Use the parent-root path for submodule sources, for example `@/template/src/index.mdx`. GitHub release events and explicit routine runs can select matching `@https://` URL references.
 
 The **Holocron skill adds this field by default** when an AI coding agent creates a new MDX page. It records the real sources used to produce the page, so future agents can reproduce and update the content instead of guessing its intent. See [skill discovery](../docs/ai/skill-discovery.mdx) for agent setup.
 
