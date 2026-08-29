@@ -135,7 +135,7 @@ export function CodeBlock({
         <div
           className='font-mono pb-1'
           style={{
-            fontSize: 'var(--code-font-size)',
+            fontSize: 'var(--type-code-size)',
             color: 'var(--muted-foreground)',
             // Align title with code text start. With border-box the flex
             // item width equals the total gutter space (padding included).
