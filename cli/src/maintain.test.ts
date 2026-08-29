@@ -30,11 +30,20 @@ describe('parseMaintainModel', () => {
     `)
   })
 
+  test('treats Holocron/ as hosted ignoring case', () => {
+    expect(parseMaintainModel('Holocron/glm-5.3-flash')).toMatchInlineSnapshot(`
+      {
+        "kind": "hosted",
+        "modelId": "glm-5.3-flash",
+      }
+    `)
+  })
+
   test('treats provider/model as OpenCode BYOK', () => {
-    expect(parseMaintainModel('anthropic/claude-sonnet-4')).toMatchInlineSnapshot(`
+    expect(parseMaintainModel('anthropic/claude-sonnet-4-5')).toMatchInlineSnapshot(`
       {
         "kind": "byok",
-        "modelId": "claude-sonnet-4",
+        "modelId": "claude-sonnet-4-5",
         "providerId": "anthropic",
       }
     `)
@@ -51,13 +60,26 @@ describe('parseMaintainModel', () => {
   })
 
   test('rejects an empty model flag', () => {
-    expect(parseMaintainModel('')).toBeInstanceOf(Error)
-    expect((parseMaintainModel('') as Error).message).toMatchInlineSnapshot(
-      `"Pass a model id, for example glm-5.3-flash or anthropic/claude-sonnet-4."`,
+    const parsed = parseMaintainModel('')
+    if (!(parsed instanceof Error)) throw new Error('expected Error')
+    expect(parsed.message).toMatchInlineSnapshot(
+      `"Pass a model id, for example glm-5.3-flash or anthropic/claude-sonnet-4-5."`,
     )
   })
 
   test('rejects a trailing slash', () => {
-    expect(parseMaintainModel('anthropic/')).toBeInstanceOf(Error)
+    const parsed = parseMaintainModel('anthropic/')
+    if (!(parsed instanceof Error)) throw new Error('expected Error')
+    expect(parsed.message).toMatchInlineSnapshot(
+      `"Use provider/model, for example anthropic/claude-sonnet-4-5."`,
+    )
+  })
+
+  test('rejects a leading slash', () => {
+    const parsed = parseMaintainModel('/claude-sonnet-4-5')
+    if (!(parsed instanceof Error)) throw new Error('expected Error')
+    expect(parsed.message).toMatchInlineSnapshot(
+      `"Use provider/model, for example anthropic/claude-sonnet-4-5."`,
+    )
   })
 })

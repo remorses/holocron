@@ -30,7 +30,9 @@ import { loadGithubEvent, type GithubMaintainRelease } from './maintain-github.t
 
 const RUN_TIMEOUT_MS = 25 * 60 * 1000
 const HOSTED_PROVIDER = 'holocron'
-const EMPTY_MODEL_MESSAGE = 'Pass a model id, for example glm-5.3-flash or anthropic/claude-sonnet-4.'
+const BYOK_MODEL_EXAMPLE = 'anthropic/claude-sonnet-4-5'
+const EMPTY_MODEL_MESSAGE = `Pass a model id, for example glm-5.3-flash or ${BYOK_MODEL_EXAMPLE}.`
+const PROVIDER_MODEL_MESSAGE = `Use provider/model, for example ${BYOK_MODEL_EXAMPLE}.`
 
 export type MaintainModelChoice =
   | { kind: 'hosted'; modelId?: string }
@@ -40,15 +42,15 @@ export function parseMaintainModel(value?: string): MaintainModelChoice | Error 
   if (value === undefined) return { kind: 'hosted' }
   const trimmed = value.trim()
   if (!trimmed) return new Error(EMPTY_MODEL_MESSAGE)
-  if (trimmed.startsWith(`${HOSTED_PROVIDER}/`)) {
-    const modelId = trimmed.slice(HOSTED_PROVIDER.length + 1)
+  if (trimmed.toLowerCase().startsWith(`${HOSTED_PROVIDER}/`)) {
+    const modelId = trimmed.slice(trimmed.indexOf('/') + 1)
     if (!modelId) return new Error(EMPTY_MODEL_MESSAGE)
     return { kind: 'hosted', modelId }
   }
   const slash = trimmed.indexOf('/')
   if (slash === -1) return { kind: 'hosted', modelId: trimmed }
   if (slash === 0 || slash === trimmed.length - 1) {
-    return new Error('Use provider/model, for example anthropic/claude-sonnet-4.')
+    return new Error(PROVIDER_MODEL_MESSAGE)
   }
   return {
     kind: 'byok',
@@ -71,7 +73,7 @@ maintainCli
   .example('holocron maintain --since origin/main --dry-run')
   .example('holocron maintain --all --prompt-file .holocron/prompts/weekly-review.md')
   .example('holocron maintain --model glm-5.3-flash')
-  .example('holocron maintain --model anthropic/claude-sonnet-4')
+  .example(`holocron maintain --model ${BYOK_MODEL_EXAMPLE}`)
   .action(async (options, { console: output, process: proc }) => {
     if (options.prompt && options.promptFile) {
       output.error(logger.error('Use either --prompt or --prompt-file, not both.'))
@@ -138,6 +140,9 @@ maintainCli
     let runError: Error | undefined
 
     if (modelChoice.kind === 'byok') {
+      if (options.project) {
+        output.log(logger.warn('--project is ignored when using your own OpenCode provider.'))
+      }
       output.log(logger.step(`Using ${c.bold(`${modelChoice.providerId}/${modelChoice.modelId}`)} with your OpenCode keys`))
       output.log(logger.step('Starting OpenCode...'))
       const result = await runOpenCode({
@@ -169,32 +174,28 @@ maintainCli
       }
 
       const modelId = modelChoice.modelId ?? run.modelId
-      if (modelChoice.modelId && !(run.models ?? []).includes(modelChoice.modelId)) {
-        output.error(logger.error(`Unknown Holocron model ${modelChoice.modelId}. Available: ${(run.models ?? []).join(', ')}`))
-        const completed = await clientResult.safeFetch(`/api/v0/maintain/runs/${run.runId}/complete`, {
-          method: 'POST',
-          params: { runId: run.runId },
-          body: { projectId: run.projectId },
-        })
-        if (completed instanceof Error) output.error(logger.error(completed.message))
-        return proc.exit(2)
-      }
-
-      output.log(logger.step(`Using Holocron-hosted ${c.bold(modelId)}. Billed to this project's subscription.`))
+      const hostedModels = run.models ?? []
       try {
-        output.log(logger.step('Starting OpenCode...'))
-        const result = await runOpenCode({
-          ...openCodeArgs,
-          model: {
-            kind: 'hosted',
-            apiKey: run.apiKey,
-            baseUrl: run.baseUrl,
-            providerId: run.providerId,
-            modelId,
-            models: run.models ?? [],
-          },
-        })
-        if (result instanceof Error) runError = result
+        if (modelChoice.modelId && !hostedModels.includes(modelChoice.modelId)) {
+          runError = new Error(
+            `Unknown Holocron model ${modelChoice.modelId}. Available: ${hostedModels.join(', ')}. To use your own provider key, pass provider/model, for example anthropic/${modelChoice.modelId}.`,
+          )
+        } else {
+          output.log(logger.step(`Using Holocron-hosted ${c.bold(modelId)}. Billed to this project's subscription.`))
+          output.log(logger.step('Starting OpenCode...'))
+          const result = await runOpenCode({
+            ...openCodeArgs,
+            model: {
+              kind: 'hosted',
+              apiKey: run.apiKey,
+              baseUrl: run.baseUrl,
+              providerId: run.providerId,
+              modelId,
+              models: hostedModels,
+            },
+          })
+          if (result instanceof Error) runError = result
+        }
       } finally {
         const completionClient = clientResult.auth.type === 'github-oidc'
           ? await getDeployClient().catch((error) => error instanceof Error ? error : new Error(String(error)))
@@ -350,9 +351,10 @@ async function runOpenCode({
     port: 0,
     timeout: 30_000,
     signal: controller.signal,
-    config: model.kind === 'hosted'
-      ? {
-        provider: {
+    config: {
+      model: `${providerId}/${modelId}`,
+      provider: model.kind === 'hosted'
+        ? {
           [providerId]: {
             npm: '@ai-sdk/openai-compatible',
             options: { apiKey: model.apiKey, baseURL: model.baseUrl },
@@ -360,9 +362,9 @@ async function runOpenCode({
               (model.models.length > 0 ? model.models : [modelId]).map((id) => [id, { name: id }]),
             ),
           },
-        },
-      }
-      : undefined,
+        }
+        : undefined,
+    },
   }).catch((error) => new Error('OpenCode server failed to start.', { cause: error }))
   if (server instanceof Error) {
     clearTimeout(timeout)
@@ -375,7 +377,13 @@ async function runOpenCode({
       model: { id: modelId, providerID: providerId },
       permission,
     })
-    if (sessionResult.error || !sessionResult.data) return new Error('OpenCode could not create a session.')
+    if (sessionResult.error || !sessionResult.data) {
+      return openCodeFailed({
+        kind: model.kind,
+        prefix: 'OpenCode could not create a session.',
+        detail: sessionResult.error ? ` ${JSON.stringify(sessionResult.error)}` : '',
+      })
+    }
 
     const system = buildMaintainSystemPrompt({ gitDiffRange })
     const prompt = buildMaintainUserPrompt({
@@ -396,11 +404,11 @@ async function runOpenCode({
       parts: [{ type: 'text', text: prompt }],
     })
     if (result.error || !result.data) {
-      return new Error(
-        model.kind === 'byok'
-          ? 'OpenCode failed to maintain the selected pages. Set the provider API key from https://opencode.ai/docs/providers/'
-          : 'OpenCode failed to maintain the selected pages.',
-      )
+      return openCodeFailed({
+        kind: model.kind,
+        prefix: 'OpenCode failed to maintain the selected pages.',
+        detail: result.error ? ` ${JSON.stringify(result.error)}` : '',
+      })
     }
   } catch (error) {
     return new Error('OpenCode maintain run failed.', { cause: error })
@@ -408,6 +416,21 @@ async function runOpenCode({
     clearTimeout(timeout)
     server.close()
   }
+}
+
+function openCodeFailed({
+  kind,
+  prefix,
+  detail,
+}: {
+  kind: 'hosted' | 'byok'
+  prefix: string
+  detail: string
+}) {
+  const hint = kind === 'byok'
+    ? ' Check the model id (`opencode models`) and the provider key: https://opencode.ai/docs/providers/'
+    : ''
+  return new Error(`${prefix}${detail}${hint}`)
 }
 
 function githubActionsPublishPrompt({

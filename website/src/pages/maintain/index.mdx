@@ -130,15 +130,20 @@ Maintain uses **one OpenCode session** for the complete run. The main agent grou
 
 By default Maintain uses a **Holocron-hosted model**. That call goes through Holocron and is **billed to the site's Pro subscription**. You do not set an Anthropic or OpenAI key for this path.
 
+| Hosted id           | Notes    |
+| ------------------- | -------- |
+| `deepseek-v4-flash` | Default  |
+| `glm-5.3-flash`     | Cheapest |
+
 ```bash
 npx -y "@holocron.so/cli" maintain --since origin/main
 npx -y "@holocron.so/cli" maintain --model glm-5.3-flash
 ```
 
-Pass **`--model provider/model`** to use your own OpenCode provider instead. Holocron does not create a run, does not bill credits, and does not need Pro. OpenCode reads the provider key from the environment or from `opencode /connect`.
+Pass **`--model provider/model`** to use your own OpenCode provider instead. Holocron does not create a run, does not bill credits, and does not need Pro. OpenCode reads the provider key from the environment, or from `opencode auth login` (`/connect` inside the OpenCode TUI).
 
 ```bash
-npx -y "@holocron.so/cli" maintain --model anthropic/claude-sonnet-4
+npx -y "@holocron.so/cli" maintain --model anthropic/claude-sonnet-4-5
 ```
 
 ```diagram
@@ -146,7 +151,7 @@ npx -y "@holocron.so/cli" maintain --model anthropic/claude-sonnet-4
          │
          ├── no --model / glm-5.3-flash ──> Holocron-hosted model (Pro bill)
          │
-         └── --model anthropic/claude-sonnet-4
+         └── --model anthropic/claude-sonnet-4-5
                    │
                    └──> OpenCode provider + your ANTHROPIC_API_KEY
 ```

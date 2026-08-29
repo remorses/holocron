@@ -146,8 +146,10 @@ The workflows above use the **Holocron-hosted model** and bill the project's Pro
 
 To run **Anthropic, OpenAI, or any other OpenCode provider**, pass `--model provider/model` and set that provider's env var. Holocron auth is not used. See the OpenCode **[providers](https://opencode.ai/docs/providers/)** page for the supported keys.
 
+Use a **dedicated provider key**. The OpenCode session can run `git` and `gh`, and it can read the environment.
+
 ```yaml
-- run: npx -y "@holocron.so/cli" maintain --model anthropic/claude-sonnet-4
+- run: npx -y "@holocron.so/cli" maintain --model anthropic/claude-sonnet-4-5
   env:
     ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     GITHUB_TOKEN: ${{ github.token }}
