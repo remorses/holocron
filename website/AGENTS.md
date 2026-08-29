@@ -15,12 +15,12 @@ Key references:
 
 ## Supported models
 
-Allowed models are defined in `src/lib/ai-models.ts` (`ALLOWED_MODELS`). Chat and Maintain both import that file. Each entry maps a friendly name to a Vercel AI Gateway model id in `provider/model` format (e.g. `zai/glm-5.3-flash`). The first entry is the primary model; the rest are fallbacks.
+Allowed chat models are defined in `src/lib/ai-models.ts` (`ALLOWED_MODELS`). Maintain uses a separate `MAINTAIN_MODELS` list. Do not reuse `ALLOWED_MODELS` for `/runs` or `/models`. Each entry maps a friendly name to a Vercel AI Gateway model id in `provider/model` format (e.g. `zai/glm-5.3-flash`). For chat, the first entry is the primary model; the rest are fallbacks.
 
 To add a new model:
-1. Add its gateway id to `ALLOWED_MODELS` in `src/lib/ai-models.ts`
-2. Add its per-million-token USD rate to `MODEL_USD_PER_1M_TOKENS` in the same file (the test asserts every model has a rate)
-3. Chat fallback and Maintain `/v1/models` pick it up automatically
+1. Add its gateway id to `ALLOWED_MODELS` (chat) and/or `MAINTAIN_MODELS` (Maintain) in `src/lib/ai-models.ts`
+2. Add its per-million-token USD rate to `MODEL_USD_PER_1M_TOKENS` in the same file (the test asserts every chat model has a rate)
+3. Chat fallback picks up `ALLOWED_MODELS`. Maintain `/v1/models` picks up `MAINTAIN_MODELS` only.
 
 ## Error tracking with strada
 

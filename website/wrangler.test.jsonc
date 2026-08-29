@@ -1,8 +1,8 @@
 {
   // Minimal wrangler config used ONLY by vitest.config.ts (the workers test
   // pool). Strips the production-only bindings the test runtime can't provide
-  // (OG_WORKER service binding, send_email, ratelimits, AI, routes, real IDs).
-  // Keeps DB + KV + Durable Objects since the worker code touches them.
+  // (OG_WORKER service binding, send_email, AI, routes, real IDs).
+  // Keeps DB + KV + Durable Objects + CHAT_RATE_LIMITER since the worker code touches them.
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "holocron-website-test",
   "main": "./src/server.tsx",
@@ -33,5 +33,15 @@
     { "tag": "v1", "new_sqlite_classes": ["UsageCounter"] },
     { "tag": "v2", "new_sqlite_classes": ["ConfigOverrideDO"] },
     { "tag": "v3", "new_sqlite_classes": ["ChatSessionDO"] }
+  ],
+  "ratelimits": [
+    {
+      "name": "CHAT_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 1000,
+        "period": 60
+      }
+    }
   ]
 }

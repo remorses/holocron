@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { ALLOWED_MODELS, MODEL_USD_PER_1M_TOKENS, buildUpstreamChatBody, resolveAllowedModel } from './ai-models.ts'
+import { ALLOWED_MODELS, MAINTAIN_MODELS, MODEL_USD_PER_1M_TOKENS, buildMaintainChatBody, buildUpstreamChatBody, resolveAllowedModel } from './ai-models.ts'
 
 describe('buildUpstreamChatBody', () => {
   test('drops gateway routing fields that would pick another model', () => {
@@ -55,5 +55,25 @@ describe('ALLOWED_MODELS', () => {
   test('unknown names fall back to the default', () => {
     expect(resolveAllowedModel('nope')).toBe('deepseek-v4-flash')
     expect(resolveAllowedModel('zai/glm-5.3-flash')).toBe('glm-5.3-flash')
+  })
+})
+
+describe('MAINTAIN_MODELS', () => {
+  test('is an explicit list, not ALLOWED_MODELS', () => {
+    expect(MAINTAIN_MODELS).not.toBe(ALLOWED_MODELS)
+    expect(Object.keys(MAINTAIN_MODELS)).toEqual(['deepseek-v4-flash', 'glm-5.3-flash'])
+    for (const name of Object.keys(MAINTAIN_MODELS)) {
+      expect(MODEL_USD_PER_1M_TOKENS[name], name).toBeDefined()
+    }
+  })
+
+  test('unknown model is rejected', () => {
+    expect(buildMaintainChatBody({ model: 'anthropic/claude-sonnet-4', messages: [] })).toBeNull()
+  })
+
+  test('accepts a maintain model', () => {
+    const result = buildMaintainChatBody({ model: 'glm-5.3-flash', messages: [] })
+    expect(result?.friendlyModel).toBe('glm-5.3-flash')
+    expect(result?.body.model).toBe('zai/glm-5.3-flash')
   })
 })

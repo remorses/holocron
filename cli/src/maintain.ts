@@ -108,7 +108,6 @@ maintainCli
     const beforeChangedFiles = new Set(getWorkingTreeChanges(repoRoot))
     const patches = range ? getChangedPatches(repoRoot, range, changedFiles) : ''
     let runError: Error | undefined
-    let reportedCostUsd = 0
     try {
       output.log(logger.step('Starting OpenCode...'))
       const result = await runOpenCode({
@@ -126,7 +125,6 @@ maintainCli
         models: run.models ?? [],
       })
       if (result instanceof Error) runError = result
-      else reportedCostUsd = result.costUsd
     } finally {
       const completionClient = clientResult.auth.type === 'github-oidc'
         ? await getDeployClient().catch((error) => error instanceof Error ? error : new Error(String(error)))
@@ -137,7 +135,7 @@ maintainCli
         const completed = await completionClient.safeFetch(`/api/v0/maintain/runs/${run.runId}/complete`, {
           method: 'POST',
           params: { runId: run.runId },
-          body: { projectId: run.projectId, reportedCostUsd },
+          body: { projectId: run.projectId },
         })
         if (completed instanceof Error) runError ??= completed
       }
@@ -328,7 +326,6 @@ async function runOpenCode({
       parts: [{ type: 'text', text: prompt }],
     })
     if (result.error || !result.data) return new Error('OpenCode failed to maintain the selected pages.')
-    return { costUsd: result.data.info.cost }
   } catch (error) {
     return new Error('OpenCode maintain run failed.', { cause: error })
   } finally {

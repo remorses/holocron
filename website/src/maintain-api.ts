@@ -1,28 +1,37 @@
 // Paid OpenAI-compatible model access for Holocron Maintain.
 // OpenCode talks to this worker. The Vercel AI Gateway key never leaves the worker.
 
-import { createGateway } from '@ai-sdk/gateway'
 import { env, waitUntil } from 'cloudflare:workers'
 import { captureException } from '@strada.sh/sdk'
+import { createParser } from 'eventsource-parser'
 import { json, Spiceflow } from 'spiceflow'
 import { ulid } from 'ulid'
 import { z } from 'zod'
 import { getProjectBillingContext } from './db.ts'
 import { resolveCreateDeployAuth, requireDeployAccess } from './deploy-auth.ts'
 import { subscriptionRequiredPayload } from './lib/billing-rules.ts'
-import { ALLOWED_MODELS, DEFAULT_MODEL, buildUpstreamChatBody } from './lib/ai-models.ts'
+import { DEFAULT_MODEL, MAINTAIN_MODELS, MAX_OUTPUT_TOKENS, buildMaintainChatBody } from './lib/ai-models.ts'
 import { computeUsdCost, creditsToUsd, monthlyCreditBudget } from './lib/credits.ts'
 import type { UsageCounter } from './usage-counter-do.ts'
 
 const ACCESS_LIFETIME_MS = 30 * 60 * 1000
 const UPSTREAM_CHAT_COMPLETIONS = 'https://ai-gateway.vercel.sh/v1/chat/completions'
 const TOKEN_PREFIX = 'mnt_'
+const TOKEN_SIGNING_PREFIX = 'holocron.maintain.run-token.v1.'
+const MAX_BODY_BYTES = 1_500_000
 
 type MaintainRunToken = {
   runId: string
   projectId: string
   orgId: string
   exp: number
+}
+
+export type ChatUsage = {
+  inputTokens: number
+  outputTokens: number
+  cachedInputTokens: number
+  costUsd?: number
 }
 
 function getMonthStartMs() {
@@ -50,7 +59,7 @@ function base64UrlToBytes(value: string) {
   return bytes
 }
 
-async function hmacSign(secret: string, data: string) {
+async function hmacSign(secret: string, body: string) {
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(secret),
@@ -58,7 +67,21 @@ async function hmacSign(secret: string, data: string) {
     false,
     ['sign'],
   )
-  return bytesToBase64Url(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data)))
+  return bytesToBase64Url(await crypto.subtle.sign(
+    'HMAC',
+    key,
+    new TextEncoder().encode(`${TOKEN_SIGNING_PREFIX}${body}`),
+  ))
+}
+
+function timingSafeEqualString(left: string, right: string) {
+  const encoder = new TextEncoder()
+  const a = encoder.encode(left)
+  const b = encoder.encode(right)
+  const n = Math.max(a.byteLength, b.byteLength)
+  let diff = a.byteLength ^ b.byteLength
+  for (let i = 0; i < n; i++) diff |= (a[i] ?? 0) ^ (b[i] ?? 0)
+  return diff === 0
 }
 
 export async function signMaintainRunToken(payload: MaintainRunToken, secret = env.BETTER_AUTH_SECRET) {
@@ -75,7 +98,7 @@ export async function verifyMaintainRunToken(token: string, secret = env.BETTER_
   const body = encoded.slice(0, dot)
   const signature = encoded.slice(dot + 1)
   const expected = await hmacSign(secret, body)
-  if (signature !== expected) return new Error('invalid maintain token')
+  if (!timingSafeEqualString(signature, expected)) return new Error('invalid maintain token')
   let payload: MaintainRunToken
   try {
     payload = JSON.parse(new TextDecoder().decode(base64UrlToBytes(body)))
@@ -107,10 +130,13 @@ async function assertPaidAndUnderLimit(projectId: string, orgId: string, origin:
   })
   if (!limit.allowed) {
     throw json({
-      error: 'This project used all monthly AI credits for Holocron Maintain.',
+      error: {
+        message: 'This project used all monthly AI credits for Holocron Maintain.',
+        type: 'insufficient_quota',
+      },
       hint: 'Credits reset at the start of the next month. Check usage on the billing page.',
       upgradeUrl: `${origin}/dashboard/projects/${projectId}/billing`,
-    }, { status: 429 })
+    }, { status: 402 })
   }
   return billing
 }
@@ -121,80 +147,89 @@ function bearerToken(request: Request) {
   return match?.[1] ?? ''
 }
 
-// OpenAI `id` is the Vercel generation id. Usage is looked up via GET /v1/generation.
-export async function extractGenerationId(body: ReadableStream<Uint8Array> | null, stream: boolean) {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+function chatUsageFromUnknown(value: unknown): ChatUsage | null {
+  if (!isRecord(value) || !isRecord(value.usage)) return null
+  const promptTokens = value.usage.prompt_tokens
+  const completionTokens = value.usage.completion_tokens
+  if (typeof promptTokens !== 'number' || typeof completionTokens !== 'number') return null
+  const details = value.usage.prompt_tokens_details
+  const cached = isRecord(details) ? details.cached_tokens : 0
+  const cost = value.usage.cost
+  return {
+    inputTokens: promptTokens,
+    outputTokens: completionTokens,
+    cachedInputTokens: typeof cached === 'number' ? cached : 0,
+    costUsd: typeof cost === 'number' ? cost : undefined,
+  }
+}
+
+export async function extractChatUsage(body: ReadableStream<Uint8Array> | null, stream: boolean) {
   if (!body) return null
-  const text = await new Response(body).text()
-  if (!stream) {
-    try {
-      const parsed = JSON.parse(text) as { id?: unknown }
-      return typeof parsed.id === 'string' ? parsed.id : null
-    } catch {
-      return null
-    }
-  }
-  for (const line of text.split('\n')) {
-    if (!line.startsWith('data: ')) continue
-    const data = line.slice(6).trim()
-    if (!data || data === '[DONE]') continue
-    try {
-      const chunk = JSON.parse(data) as { id?: unknown }
-      if (typeof chunk.id === 'string') return chunk.id
-    } catch {
-      // incomplete SSE line
-    }
-  }
-  return null
-}
-
-async function lookupGatewayGeneration(id: string) {
-  const gateway = createGateway({ apiKey: env.AI_GATEWAY_API_KEY })
-  for (let attempt = 0; attempt < 6; attempt++) {
-    try {
-      return await gateway.getGenerationInfo({ id })
-    } catch {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-    }
-  }
-  return null
-}
-
-function recordCompletionUsage({
-  orgId,
-  projectId,
-  runId,
-  generation,
-  model,
-}: {
-  orgId: string
-  projectId: string
-  runId: string
-  generation: { promptTokens: number; completionTokens: number; cachedTokens: number } | null
-  model: string
-}) {
-  const inputTokens = generation?.promptTokens ?? 0
-  const outputTokens = generation?.completionTokens ?? 0
-  const cachedInputTokens = generation?.cachedTokens ?? 0
-  const costUsd = computeUsdCost(model, { inputTokens, outputTokens, cachedInputTokens })
-  if (inputTokens === 0 && outputTokens === 0) {
-    captureException(new Error(`zero AI usage recorded for maintain run ${runId}`), {
-      tags: { route: 'maintain', projectId, model },
+  try {
+    const text = await new Response(body).text()
+    if (!stream) return chatUsageFromUnknown(JSON.parse(text))
+    let last: ChatUsage | null = null
+    const parser = createParser({
+      onEvent(event) {
+        if (!event.data || event.data === '[DONE]') return
+        try {
+          const parsed = chatUsageFromUnknown(JSON.parse(event.data))
+          if (parsed) last = parsed
+        } catch {
+          // incomplete SSE JSON
+        }
+      },
     })
+    parser.feed(text)
+    parser.reset({ consume: true })
+    return last
+  } catch {
+    return null
   }
-  return getUsageStub(orgId).recordUsage({
-    projectId,
-    model,
-    pageSlug: `maintain:${runId}`,
-    inputTokens,
-    outputTokens,
-    costUsd,
-  })
+}
+
+export function estimateMaintainUsage(upstreamBody: object) {
+  const inputTokens = Math.max(1, Math.floor(JSON.stringify(upstreamBody).length / 4))
+  const maxTokens = Reflect.get(upstreamBody, 'max_tokens')
+  const outputTokens = typeof maxTokens === 'number' && Number.isFinite(maxTokens)
+    ? Math.min(Math.max(1, Math.floor(maxTokens)), MAX_OUTPUT_TOKENS)
+    : MAX_OUTPUT_TOKENS
+  return { inputTokens, outputTokens, cachedInputTokens: 0 }
+}
+
+export function billedMaintainUsage({
+  usage,
+  model,
+  upstreamBody,
+}: {
+  usage: ChatUsage | null
+  model: string
+  upstreamBody: object
+}) {
+  if (!usage) {
+    const estimated = estimateMaintainUsage(upstreamBody)
+    return {
+      ...estimated,
+      costUsd: computeUsdCost(model, estimated),
+      estimated: true as const,
+    }
+  }
+  return {
+    inputTokens: usage.inputTokens,
+    outputTokens: usage.outputTokens,
+    cachedInputTokens: usage.cachedInputTokens,
+    costUsd: Math.max(computeUsdCost(model, usage), usage.costUsd ?? 0),
+    estimated: false as const,
+  }
 }
 
 const createRunBody = z.object({ projectId: z.string().optional() })
 const completeRunBody = z.object({
   projectId: z.string(),
-  reportedCostUsd: z.number().nonnegative().optional(),
 })
 
 export const maintainApi = new Spiceflow()
@@ -224,7 +259,7 @@ export const maintainApi = new Spiceflow()
         apiKey,
         providerId: 'holocron',
         modelId: DEFAULT_MODEL,
-        models: Object.keys(ALLOWED_MODELS),
+        models: Object.keys(MAINTAIN_MODELS),
         expiresAt,
       }
     },
@@ -244,7 +279,7 @@ export const maintainApi = new Spiceflow()
       await assertPaidAndUnderLimit(payload.projectId, payload.orgId, new URL(request.url).origin)
       return {
         object: 'list',
-        data: Object.keys(ALLOWED_MODELS).map((id) => ({ id, object: 'model' as const, owned_by: 'holocron' })),
+        data: Object.keys(MAINTAIN_MODELS).map((id) => ({ id, object: 'model' as const, owned_by: 'holocron' })),
       }
     },
   })
@@ -263,11 +298,29 @@ export const maintainApi = new Spiceflow()
       await assertPaidAndUnderLimit(payload.projectId, payload.orgId, new URL(request.url).origin)
       if (!env.AI_GATEWAY_API_KEY) throw new Error('AI_GATEWAY_API_KEY is not configured.')
 
-      const incoming = await request.json()
-      if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) {
+      const { success } = await env.CHAT_RATE_LIMITER.limit({ key: `maintain:${payload.runId}` })
+      if (!success) {
+        throw json({ error: { message: 'Rate limit exceeded.', type: 'rate_limit_exceeded' } }, { status: 429 })
+      }
+
+      const raw = await request.text()
+      if (raw.length > MAX_BODY_BYTES) {
+        throw json({ error: { message: 'Request body too large.', type: 'invalid_request_error' } }, { status: 413 })
+      }
+      let incoming: unknown
+      try {
+        incoming = JSON.parse(raw)
+      } catch {
         throw json({ error: 'invalid JSON body' }, { status: 400 })
       }
-      const { body: upstreamBody, friendlyModel, stream } = buildUpstreamChatBody(incoming)
+      if (!isRecord(incoming)) {
+        throw json({ error: 'invalid JSON body' }, { status: 400 })
+      }
+      const built = buildMaintainChatBody(incoming)
+      if (!built) {
+        throw json({ error: { message: 'Unknown model.', type: 'invalid_request_error' } }, { status: 400 })
+      }
+      const { body: upstreamBody, friendlyModel, stream } = built
       const upstream = await fetch(UPSTREAM_CHAT_COMPLETIONS, {
         method: 'POST',
         headers: {
@@ -286,15 +339,23 @@ export const maintainApi = new Spiceflow()
 
       const [clientBody, usageBody] = upstream.body.tee()
       waitUntil(
-        extractGenerationId(usageBody, stream)
-          .then((id) => id ? lookupGatewayGeneration(id) : null)
-          .then((generation) => recordCompletionUsage({
-            orgId: payload.orgId,
-            projectId: payload.projectId,
-            runId: payload.runId,
-            generation,
-            model: friendlyModel,
-          }))
+        extractChatUsage(usageBody, stream)
+          .then((usage) => {
+            const billed = billedMaintainUsage({ usage, model: friendlyModel, upstreamBody })
+            if (billed.estimated) {
+              captureException(new Error(`missing AI usage for maintain run ${payload.runId}; billed estimate`), {
+                tags: { route: 'maintain', projectId: payload.projectId, model: friendlyModel },
+              })
+            }
+            return getUsageStub(payload.orgId).recordUsage({
+              projectId: payload.projectId,
+              model: friendlyModel,
+              pageSlug: `maintain:${payload.runId}`,
+              inputTokens: billed.inputTokens,
+              outputTokens: billed.outputTokens,
+              costUsd: billed.costUsd,
+            })
+          })
           .catch((error) => {
             captureException(error instanceof Error ? error : new Error(String(error)), {
               tags: { route: 'maintain', reason: 'record-usage-failed' },
