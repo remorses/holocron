@@ -959,6 +959,17 @@ export const assistantSchema = z
           on the site name are shown
         `,
       ),
+    display: z
+      .enum(['sidebar', 'floating'])
+      .optional()
+      .describe(
+        dedent`
+          Where the AI chat trigger appears. \`sidebar\` (default) shows the
+          Ask AI widget in the right aside. \`floating\` uses the same bottom
+          pill as the embeddable ChatWidget instead, and hides the sidebar
+          widget
+        `,
+      ),
   })
   .describe('AI chat assistant settings')
   .meta({ id: 'assistantSchema' })

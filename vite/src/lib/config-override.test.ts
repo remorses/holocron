@@ -26,7 +26,7 @@ function makeBaseConfig(overrides: Partial<HolocronConfig> = {}): HolocronConfig
     footer: { socials: {}, links: [] },
     search: {},
     seo: {},
-    assistant: { enabled: true },
+    assistant: { enabled: true, display: 'sidebar' },
     decorativeLines: 'lines-with-dots',
     layout: { mode: 'default', maxWidth: 1200, sidebarWidth: 230, columnGap: 60, radius: 10 },
     integrations: {},
@@ -125,7 +125,7 @@ describe('configToDialConfig roundtrip', () => {
     const base = makeBaseConfig({
       colors: { primary: '#ff5500', light: '#ffffff', dark: '#000000', _hasUserColors: true },
       decorativeLines: 'dashed',
-      assistant: { enabled: false },
+      assistant: { enabled: false, display: 'sidebar' },
     })
     const dialConfig = configToDialConfig(base)
     // DialKit shows: light = color for light mode (Mintlify dark), dark = color for dark mode (Mintlify light)

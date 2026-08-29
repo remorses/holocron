@@ -161,7 +161,7 @@ export function ChatDemo() {
         <p style={{ margin: '8px 0 0', color: '#666' }}>
           This page tests the <code>{'<ChatWidget>'}</code> component from{' '}
           <code>@holocron.so/vite/chat</code> in a plain spiceflow app. Type in
-          the pill (bottom-right, bottom-center on mobile) to open the chat
+          the pill (bottom center) to send a message and open the chat
           drawer, or use the controls below.
         </p>
       </div>

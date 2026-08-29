@@ -183,7 +183,7 @@ export type HolocronConfig = {
   }
   search: { prompt?: string }
   seo: { indexing?: 'navigable' | 'all'; metatags?: Record<string, string> }
-  assistant: { enabled: boolean; suggestions?: string[] }
+  assistant: { enabled: boolean; suggestions?: string[]; display: 'sidebar' | 'floating' }
   decorativeLines: 'none' | 'lines' | 'dashed' | 'lines-with-dots'
   sidebar: { animate: boolean }
   layout: {

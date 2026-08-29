@@ -13,6 +13,9 @@
   "sidebar": {
     "animate": true
   },
+  "assistant": {
+    "display": "floating"
+  },
   "navbar": {
     "links": [
       { "type": "github", "href": "https://github.com/remorses/playwriter" },

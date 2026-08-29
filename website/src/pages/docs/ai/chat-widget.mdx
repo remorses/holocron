@@ -435,11 +435,8 @@ On the first message of a new conversation, the gateway generates a short title 
 
 ## Default pill behavior
 
-When no custom `trigger` is provided, the widget shows a **textarea pill** at the bottom of the page:
+When no custom `trigger` is provided, the widget shows a **textarea pill** at the **bottom center** of the page, 300px wide (full width minus padding on small screens).
 
-- **Desktop**: bottom-right corner, 300px wide
-- **Mobile**: bottom-center, full width minus padding
-
-On focus or when text is entered, the pill **expands** to 400px with a smooth width transition. Pressing Enter or clicking the send button submits the message and morphs the pill into the full chat drawer via a [view transition](https://developer.chrome.com/docs/web-platform/view-transitions).
+On focus or when text is entered, the pill **expands** to 400px with a smooth width transition. The drawer stays closed while you type. Pressing Enter or clicking the send button submits the message and morphs the pill into the full chat drawer.
 
 The pill uses a `backdrop-filter: blur(10px)` surface with layered shadows for depth, matching the design language of [fin.ai](https://fin.ai).

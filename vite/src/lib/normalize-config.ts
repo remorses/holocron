@@ -763,13 +763,14 @@ function normalizeSeo(raw: unknown): HolocronConfig['seo'] {
 }
 
 function normalizeAssistant(raw: unknown): HolocronConfig['assistant'] {
-  if (!raw || typeof raw !== 'object') return { enabled: true }
+  if (!raw || typeof raw !== 'object') return { enabled: true, display: 'sidebar' }
   const obj = raw as Record<string, unknown>
   const suggestions = Array.isArray(obj.suggestions)
     ? obj.suggestions.filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
     : undefined
   return {
     enabled: obj.enabled !== false,
+    display: obj.display === 'floating' ? 'floating' : 'sidebar',
     ...(suggestions && suggestions.length > 0 ? { suggestions } : {}),
   }
 }

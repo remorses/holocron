@@ -9,7 +9,7 @@ icon: message-circle
 
 # AI Assistant
 
-Holocron includes a built-in AI chat assistant that appears as a sidebar widget. Users can ask questions about your documentation and get answers based on the docs content.
+Holocron includes a built-in AI chat assistant. Users can ask questions about your documentation and get answers based on the docs content. By default it appears as a **sidebar widget**. Set `assistant.display` to `floating` to show a bottom pill instead.
 
 To embed the chat on an **external website** (outside your docs site), see the [Chat Widget](./chat-widget.mdx) page.
 
@@ -26,6 +26,25 @@ The assistant is enabled by default. To disable it:
 ```
 
 When disabled, the sidebar widget, chat drawer, and mobile "Ask AI" button are hidden. The chat route still exists and returns `404 Assistant is disabled`.
+
+## Display location
+
+By default the assistant sits in the **right sidebar**. Set `assistant.display` to `floating` to use the same bottom pill as the [embeddable ChatWidget](./chat-widget.mdx) instead:
+
+```json
+{
+  "assistant": {
+    "display": "floating"
+  }
+}
+```
+
+| Value      | Trigger                                                      |
+| ---------- | ------------------------------------------------------------ |
+| `sidebar`  | Ask AI widget in the right aside (default)                   |
+| `floating` | Bottom-center textarea pill that morphs into the chat drawer |
+
+Floating mode hides the sidebar widget and the mobile "Ask AI" button. The pill is the trigger on every screen size.
 
 ## Suggested prompts
 
@@ -59,7 +78,7 @@ Hosted chat uses Cloudflare Workers AI. Authenticated sites send `HOLOCRON_KEY`;
 
 ## Table of contents in the sidebar
 
-By default, the AI assistant widget occupies the right sidebar. If you prefer a traditional **table of contents** instead (or alongside the widget), add the `TableOfContentsPanel` component to your page:
+With `display: "sidebar"` (the default), the AI assistant widget occupies the right sidebar. If you prefer a traditional **table of contents** instead (or alongside the widget), add the `TableOfContentsPanel` component to your page:
 
 ```mdx
 <Aside full>
@@ -67,7 +86,7 @@ By default, the AI assistant widget occupies the right sidebar. If you prefer a 
 </Aside>
 ```
 
-This renders a sticky "On this page" panel with heading links and active-state highlighting as the user scrolls. When the AI widget is enabled, it appears above the TOC panel automatically. When disabled, the TOC panel takes the full sidebar.
+This renders a sticky "On this page" panel with heading links and active-state highlighting as the user scrolls. When the sidebar AI widget is enabled, it appears above the TOC panel automatically. With `display: "floating"` or `enabled: false`, the TOC panel takes the full sidebar.
 
 See the [Table of Contents component page](/docs/components/table-of-contents) for all props and usage patterns.
 

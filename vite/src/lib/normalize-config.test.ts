@@ -42,6 +42,16 @@ describe('normalize() — layout mode', () => {
   })
 })
 
+describe('normalize() — assistant display', () => {
+  test('defaults to sidebar and accepts floating', () => {
+    expect(normalize({ name: 'Docs' }).assistant).toEqual({ enabled: true, display: 'sidebar' })
+    expect(normalize({ name: 'Docs', assistant: { display: 'floating' } }).assistant).toEqual({
+      enabled: true,
+      display: 'floating',
+    })
+  })
+})
+
 describe('normalize() — version language', () => {
   test('preserves a BCP 47 language tag on a version', () => {
     const config = normalize({

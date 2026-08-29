@@ -403,7 +403,7 @@ function renderMdxPage({
     ? 'default'
     : configuredPageMode
   const mdastSections = buildSections(contentMdast, {
-    enableAssistant: site.config.assistant.enabled,
+    enableAssistant: site.config.assistant.enabled && site.config.assistant.display !== 'floating',
     includePageChrome: pageMode !== 'compact',
   })
 

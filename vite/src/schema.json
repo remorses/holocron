@@ -1665,6 +1665,14 @@
           "items": {
             "type": "string"
           }
+        },
+        "display": {
+          "description": "Where the AI chat trigger appears. `sidebar` (default) shows the\nAsk AI widget in the right aside. `floating` uses the same bottom\npill as the embeddable ChatWidget instead, and hides the sidebar\nwidget",
+          "type": "string",
+          "enum": [
+            "sidebar",
+            "floating"
+          ]
         }
       },
       "additionalProperties": false,

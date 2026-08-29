@@ -26,34 +26,38 @@
   background: var(--background);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  /* Soft lift: hairline edge + tight contact + wide ambient (low alpha) */
+  --pill-ring: color-mix(in srgb, var(--foreground) 16%, transparent);
   box-shadow:
-    0 0 0 1px rgb(0 0 0 / 0.05),
+    0 0 0 1px var(--pill-ring),
     0 1px 2px rgb(0 0 0 / 0.04),
     0 4px 12px rgb(0 0 0 / 0.06),
     0 12px 28px rgb(0 0 0 / 0.05);
-  transition: width 0.2s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition:
+    width 0.2s cubic-bezier(0.22, 0.61, 0.36, 1),
+    box-shadow 0.2s ease;
+}
+
+.holocron-chat-pill:focus-within {
+  --pill-ring: color-mix(in srgb, var(--foreground) 34%, transparent);
 }
 
 :host(.dark) .holocron-chat-pill,
 :where(.dark) .holocron-chat-pill {
+  --pill-ring: color-mix(in srgb, var(--foreground) 22%, transparent);
   box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.07),
+    0 0 0 1px var(--pill-ring),
     0 1px 2px rgb(0 0 0 / 0.2),
     0 6px 16px rgb(0 0 0 / 0.22),
     0 16px 36px rgb(0 0 0 / 0.18);
 }
 
-.holocron-chat-pill[data-expanded] {
-  width: min(calc(var(--pill-width, 300px) + var(--pill-expand, 100px)), calc(100vw - 32px));
+:host(.dark) .holocron-chat-pill:focus-within,
+:where(.dark) .holocron-chat-pill:focus-within {
+  --pill-ring: color-mix(in srgb, var(--foreground) 42%, transparent);
 }
 
-@media (min-width: 640px) {
-  .holocron-chat-pill {
-    left: auto;
-    right: 24px;
-    margin-inline: 0;
-  }
+.holocron-chat-pill[data-expanded] {
+  width: min(calc(var(--pill-width, 300px) + var(--pill-expand, 100px)), calc(100vw - 32px));
 }
 
 /* Hairline via box-shadow; a real border smears during the morph. */

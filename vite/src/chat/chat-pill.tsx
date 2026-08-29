@@ -4,7 +4,7 @@
  * ChatPill — widget-mode trigger. Outer shell owns layoutId; inner `layout` child counter-scales.
  */
 
-import React, { useCallback, useRef, useState, useSyncExternalStore } from 'react'
+import React, { useRef, useState, useSyncExternalStore } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import {
   chatStore,
@@ -14,7 +14,6 @@ import {
   CHAT_CONTENT_EXIT,
 } from './chat-store.ts'
 import { chatWidgetStore } from './chat-widget-store.ts'
-import { ensureSessionRestored } from './chat-submit.ts'
 import { ArrowUpIcon } from './chat-icons.tsx'
 
 const getDrawerState = () => chatStore.getState().drawerState
@@ -34,26 +33,6 @@ export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: st
     setInputValue('')
     textareaRef.current?.blur()
     chatStore.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' })
-  }
-
-  const openDrawerIfConversationExists = () => {
-    if (chatStore.getState().messages.length > 0) {
-      chatStore.setState({ drawerState: 'open' })
-      return
-    }
-    void ensureSessionRestored().then(() => {
-      if (
-        chatStore.getState().messages.length > 0 &&
-        chatStore.getState().drawerState === 'closed'
-      ) {
-        chatStore.setState({ drawerState: 'open' })
-      }
-    })
-  }
-
-  const handleFocus = () => {
-    setFocused(true)
-    openDrawerIfConversationExists()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -104,7 +83,7 @@ export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: st
             chatStore.setState({ draftText: e.target.value })
           }}
           onKeyDown={handleKeyDown}
-          onFocus={handleFocus}
+          onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           placeholder={placeholder}
           aria-label='Ask AI'

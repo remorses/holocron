@@ -21,6 +21,27 @@ import { LayoutGroup } from 'motion/react'
 
 import { chatCssBundle } from './chat-css-bundle.ts'
 
+export function ChatLayoutRoot({
+  children,
+  onMountPoint,
+}: {
+  children: React.ReactNode
+  onMountPoint?: (mount: HTMLElement) => void
+}) {
+  const portalRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    if (portalRef.current) onMountPoint?.(portalRef.current)
+  }, [onMountPoint])
+
+  return (
+    <LayoutGroup id='holocron-chat'>
+      <div ref={portalRef} data-holocron-chat-portal='' />
+      {children}
+    </LayoutGroup>
+  )
+}
+
 export function ChatShadowHost({
   children,
   className,
@@ -35,7 +56,6 @@ export function ChatShadowHost({
   onMountPoint?: (mount: HTMLElement) => void
 }) {
   const hostRef = useRef<HTMLDivElement>(null)
-  const portalRef = useRef<HTMLDivElement>(null)
   const [mountPoint, setMountPoint] = useState<HTMLElement | null>(null)
 
   useLayoutEffect(() => {
@@ -67,11 +87,6 @@ export function ChatShadowHost({
     }
   }, [dark])
 
-  // Drawer portals here (inside LayoutGroup), not onto the outer mount.
-  useLayoutEffect(() => {
-    if (portalRef.current) onMountPoint?.(portalRef.current)
-  }, [onMountPoint, mountPoint])
-
   return (
     <div
       ref={hostRef}
@@ -81,10 +96,7 @@ export function ChatShadowHost({
     >
       {mountPoint
         ? createPortal(
-            <LayoutGroup id='holocron-chat'>
-              <div ref={portalRef} data-holocron-chat-portal='' />
-              {children}
-            </LayoutGroup>,
+            <ChatLayoutRoot onMountPoint={onMountPoint}>{children}</ChatLayoutRoot>,
             mountPoint,
           )
         : null}

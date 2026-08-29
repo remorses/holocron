@@ -114,6 +114,7 @@ export function EditorialPage({
   const { site, currentPageHref, activeTabHref, activeVersionHref, activeDropdownHref, showConfigPanel, githubStars } = useHolocronData()
   const siteConfig = site.config
   const enableAssistant = siteConfig.assistant.enabled
+  const floatingAssistant = enableAssistant && siteConfig.assistant.display === 'floating'
   const siteLogo = getResolvedLogo(site)
   const siteTabs = buildTabItems(site, currentPageHref)
   const siteHeaderLinks = buildHeaderLinks(site)
@@ -288,7 +289,7 @@ export function EditorialPage({
         </div>
 
         {/* Mobile bar: Ask AI + Menu — shown under logo bar on mobile */}
-        {(showLeftNav || isCustomMode) && <MobileBar enableAssistant={enableAssistant} />}
+        {(showLeftNav || isCustomMode) && <MobileBar enableAssistant={enableAssistant && !floatingAssistant} />}
 
         {/* Tab row — hidden on mobile, shown in nav drawer instead */}
         {hasTabBar ? (

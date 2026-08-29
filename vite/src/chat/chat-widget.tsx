@@ -50,7 +50,7 @@ export type ChatWidgetProps = {
   domain: string
   /** Custom trigger component. Receives onClick to toggle the chat drawer.
    *  When omitted, the default fin.ai-style textarea pill is shown
-   *  (bottom-right on desktop, bottom-center on mobile). */
+   *  at the bottom center of the page. */
   trigger?: React.ComponentType<{ onClick: () => void }>
   /** Site name shown in the chat panel header */
   siteName?: string

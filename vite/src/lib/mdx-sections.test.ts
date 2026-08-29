@@ -49,6 +49,33 @@ Body
     `)
   })
 
+  test('skips HolocronAIAssistantWidget when assistant is disabled', () => {
+    const mdx = `Intro
+
+## Section
+
+Body
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx, { enableAssistant: false }))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      [ASIDE]
+      <Aside>
+        <HolocronPageNavRow />
+      </Aside>
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## Section
+
+      Body"
+    `)
+  })
+
   test('splits on markdown headings', () => {
     const mdx = `Intro
 
