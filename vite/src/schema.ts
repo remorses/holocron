@@ -576,6 +576,7 @@ const innerNavigationFields = {
 export const versionSchema = z
   .object({
     version: z.string().min(1).describe('Display name of the version'),
+    lang: z.string().min(2).optional().describe('BCP 47 language tag used for pages in this version'),
     default: z
       .boolean()
       .optional()

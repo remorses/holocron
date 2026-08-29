@@ -75,6 +75,16 @@ test.describe("versions fixture — navigation.versions with version switcher", 
     expect(html).toContain("v2 Overview");
   });
 
+  test("uses the active version language and sidebar tree", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await openVersionPage(page, "/v2/overview");
+
+    await expect(page.locator("html")).toHaveAttribute("lang", "nl");
+    const nav = page.getByRole("navigation", { name: "Navigation" });
+    await expect(nav.locator('a[href^="/v1/"]')).toHaveCount(0);
+    await expect(nav.locator('a[href^="/v2/"]')).toHaveCount(2);
+  });
+
   test("HTML response contains version selector markup", async ({
     request,
   }) => {

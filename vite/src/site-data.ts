@@ -182,14 +182,29 @@ function collectTabPageHrefs(tab: NavTab): string[] {
   return hrefs
 }
 
-export function buildTabItems(site: HolocronSiteData): TabItem[] {
-  // All version/dropdown inner tabs are flattened into site.navigation.
-  // Named tabs (tab !== '') are shown in the tab bar; unnamed tabs (from
-  // versions that use groups directly) are filtered out.
-  // TODO: when multiple versions each have named tabs, all of them show at
-  // once (duplicate labels). Fix by scoping to the active version's tabs
-  // using pageHref + resolveActiveSwitcherTabs().
-  const navTabs: TabItem[] = site.navigation
+export function findActiveVersion(site: HolocronSiteData, pageHref: string | undefined): NavVersionItem | undefined {
+  if (pageHref) {
+    return site.switchers.versions.find((version) => version.pageHrefs.includes(pageHref))
+  }
+  return site.switchers.versions.find((version) => version.default) ?? site.switchers.versions[0]
+}
+
+export function resolveActiveNavigationTabs(site: HolocronSiteData, pageHref: string | undefined): NavTab[] {
+  const version = findActiveVersion(site, pageHref)
+  if (version) return version.navigation.tabs
+
+  if (pageHref) {
+    const dropdown = site.switchers.dropdowns.find((item) =>
+      item.navigation && item.navigation.tabs.some((tab) => collectTabPageHrefs(tab).includes(pageHref)),
+    )
+    if (dropdown?.navigation) return dropdown.navigation.tabs
+  }
+
+  return site.navigation
+}
+
+export function buildTabItems(site: HolocronSiteData, pageHref?: string): TabItem[] {
+  const navTabs: TabItem[] = resolveActiveNavigationTabs(site, pageHref)
     .filter((t) => t.tab !== '' && !t.hidden)
     .map((t) => {
       const firstPage = findFirstPageInTab(t)
@@ -248,9 +263,9 @@ export function buildHeaderLinks(site: HolocronSiteData): HeaderLink[] {
   }))
 }
 
-export function buildSearchEntries(site: HolocronSiteData): SearchEntry[] {
+export function buildSearchEntries(site: HolocronSiteData, pageHref?: string): SearchEntry[] {
   const entries: SearchEntry[] = []
-  for (const tab of site.navigation) {
+  for (const tab of resolveActiveNavigationTabs(site, pageHref)) {
     collectEntriesFromGroups(tab.groups, '', entries)
   }
   return entries
@@ -360,7 +375,7 @@ export function buildDropdownItems(site: HolocronSiteData): DropdownSelectItem[]
 }
 
 export function resolveActiveTabHref(site: HolocronSiteData, pageHref: string | undefined): string | undefined {
-  const tabs = buildTabItems(site)
+  const tabs = buildTabItems(site, pageHref)
   if (!pageHref) return tabs[0]?.href
   // Match by page membership first (exact), then fall back to href prefix matching
   const memberMatch = tabs.find((t) => t.pageHrefs?.includes(pageHref))
@@ -371,25 +386,9 @@ export function resolveActiveTabHref(site: HolocronSiteData, pageHref: string | 
 export function resolveActiveVersionHref(site: HolocronSiteData, pageHref: string | undefined): string | undefined {
   const versionItems = buildVersionItems(site)
   if (!pageHref || versionItems.length === 0) return undefined
-  const match = versionItems.find((v) => v.pageHrefs.includes(pageHref))
-  if (match) return match.href
-  // Fallback: hidden pages are stripped from the visible nav tree, so their
-  // hrefs won't appear in pageHrefs. Match by shared path prefix instead —
-  // if a version's pages all live under `/v1/...`, a hidden `/v1/hidden-page`
-  // should still resolve to that version.
-  const prefixMatch = versionItems.find((v) =>
-    v.pageHrefs.some((h) => {
-      const prefix = h.substring(0, h.lastIndexOf('/') + 1)
-      return prefix.length > 1 && pageHref.startsWith(prefix)
-    }),
-  )
-  if (prefixMatch) return prefixMatch.href
-  const defaultVersion = site.switchers.versions.find((v) => v.default)
-  if (defaultVersion) {
-    const item = versionItems.find((vi) => vi.label === defaultVersion.version)
-    return item?.href
-  }
-  return versionItems[0]?.href
+  const owner = site.switchers.versions.find((version) => version.pageHrefs.includes(pageHref))
+  if (owner) return versionItems.find((item) => item.label === owner.version)?.href
+  return undefined
 }
 
 export function resolveActiveDropdownHref(site: HolocronSiteData, pageHref: string | undefined): string | undefined {

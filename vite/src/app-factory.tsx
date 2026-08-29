@@ -64,12 +64,13 @@ import { convertChunksToParts } from './lib/chat-stream.ts'
 import dedent from 'string-dedent'
 import { buildOgImageUrl } from './lib/og-utils.ts'
 import { getPageRendering, getPageRobots, getPageSeoMeta, isIndexablePage, parsePageFrontmatter, serializeKeywords, type PageFrontmatter, type PageRendering } from './lib/page-frontmatter.ts'
-import { holocronUrl, getHolocronApiKey, withBasePath } from './lib/holocron-url.ts'
+import { canonicalizePathname, holocronUrl, getHolocronApiKey, withBasePath } from './lib/holocron-url.ts'
 import { createGitHubStarsPromise } from './lib/github-stars.ts'
 import {
   buildVisibleSiteData,
   type HolocronSiteData,
   collectAncestorGroupKeys,
+  findActiveVersion,
   findFirstPage,
   resolveActiveDropdownHref,
   resolveActiveTabHref,
@@ -1061,6 +1062,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       (!cookieTheme && effectiveConfig.appearance.default === 'dark')
 
     const isNotFound = children === null
+    const pageLanguage = findActiveVersion(loaderData.site, loaderData.currentPageHref)?.lang ?? 'en'
     const bannerJsx = getBannerJsx(loaderData.site, request)
     const notFoundContent = (
       <EditorialPage bannerContent={bannerJsx}>
@@ -1073,7 +1075,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
     return (
       <html
-        lang='en'
+        lang={pageLanguage}
         className={[isDark ? 'dark' : '', effectiveConfig.sidebar.animate ? 'sidebar-animate' : ''].filter(Boolean).join(' ') || undefined}
         data-default-theme={effectiveConfig.appearance.default}
         suppressHydrationWarning

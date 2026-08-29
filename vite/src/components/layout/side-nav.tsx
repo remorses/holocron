@@ -14,7 +14,7 @@ import { useActiveTocState } from '../../hooks/use-active-toc.ts'
 import { getActiveGroups } from '../../navigation.ts'
 import { createSearchDb, searchSidebar, buildFocusableHrefs, type SearchState } from '../../lib/search.ts'
 import { useHolocronData } from '../../router.ts'
-import { buildSearchEntries, buildSidebarAnchors, collectAncestorGroupKeys, collectDefaultExpandedKeys, type SidebarAnchor } from '../../site-data.ts'
+import { buildSearchEntries, buildSidebarAnchors, collectAncestorGroupKeys, collectDefaultExpandedKeys, resolveActiveNavigationTabs, type SidebarAnchor } from '../../site-data.ts'
 import { SearchIcon } from '../markdown/icons.tsx'
 import { Icon, resolveIconColor } from '../icon.tsx'
 import { NavGroupNode, SidebarTreeProvider, sidebarRowSpacing } from './nav-tree.tsx'
@@ -52,12 +52,12 @@ export function SideNav() {
   const { pathname } = useRouterState()
   const effectiveCurrentPageHref = pathname || currentPageHref
   const siteConfig = site.config
-  const searchEntries = useMemo(() => buildSearchEntries(site), [site])
+  const searchEntries = useMemo(() => buildSearchEntries(site, effectiveCurrentPageHref), [effectiveCurrentPageHref, site])
   const sidebarAnchors = useMemo(() => buildSidebarAnchors(site), [site])
 
   // Active tab's groups. Derived from static nav + current href.
   const groups = useMemo(
-    () => getActiveGroups(site.navigation, effectiveCurrentPageHref ?? '/'),
+    () => getActiveGroups(resolveActiveNavigationTabs(site, effectiveCurrentPageHref), effectiveCurrentPageHref ?? '/'),
     [effectiveCurrentPageHref, site],
   )
   const effectiveAncestorGroupKeys = useMemo(() => {

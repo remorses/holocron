@@ -22,6 +22,7 @@ import {
   type NavVersionItem,
   type NavDropdownItem,
   type NavIcon,
+  collectAllPages,
   slugToHref,
 } from '../navigation.ts'
 import { formatHolocronWarning, logger } from './logger.ts'
@@ -113,9 +114,11 @@ export async function buildEnrichedNavigation({
     const innerTabs = await Promise.all(version.navigation.tabs.map(enrichTab))
     return {
       version: version.version,
+      ...(version.lang !== undefined && { lang: version.lang }),
       ...(version.default !== undefined && { default: version.default }),
       ...(version.tag !== undefined && { tag: version.tag }),
       ...(version.hidden !== undefined && { hidden: version.hidden }),
+      pageHrefs: collectAllPages(innerTabs).map((page) => page.href),
       navigation: { tabs: innerTabs, anchors: version.navigation.anchors },
     }
   }

@@ -131,6 +131,7 @@ export type FooterLinkColumn = { header?: string; items: FooterLinkItem[] }
 
 export type ConfigVersionItem = {
   version: string
+  lang?: string
   default?: boolean
   tag?: string
   hidden?: boolean

@@ -67,6 +67,7 @@ export type NavHeading = {
 }
 
 export type NavVersionItem = Omit<ConfigVersionItem, 'navigation'> & {
+  pageHrefs: string[]
   navigation: { tabs: NavTab[]; anchors: ConfigVersionItem['navigation']['anchors'] }
 }
 

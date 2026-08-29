@@ -15,6 +15,7 @@ import {
   type Navigation,
 } from './navigation.ts'
 import { parsePageFrontmatter } from './lib/page-frontmatter.ts'
+import { buildTabItems, findActiveVersion, resolveActiveNavigationTabs, resolveActiveVersionHref, type HolocronSiteData } from './site-data.ts'
 
 /* ── Test fixtures ───────────────────────────────────────────────────── */
 
@@ -63,6 +64,41 @@ const guidesTab: NavTab = {
     ]),
   ],
 }
+
+describe('version-owned navigation', () => {
+  const v1Tab: NavTab = { tab: 'Guides', groups: [makeGroup('V1', [makePage('v1/intro')])] }
+  const v2Tab: NavTab = { tab: 'Guides', groups: [makeGroup('V2', [makePage('v2/intro')])] }
+  const dropdownTab: NavTab = { tab: 'API', groups: [makeGroup('API', [makePage('v1/api')])] }
+  const site = {
+    navigation: [v1Tab, v2Tab],
+    switchers: {
+      versions: [
+        { version: 'English', lang: 'en', pageHrefs: ['/v1/intro'], navigation: { tabs: [v1Tab], anchors: [] } },
+        { version: 'Nederlands', lang: 'nl', pageHrefs: ['/v2/intro', '/hidden'], navigation: { tabs: [v2Tab], anchors: [] } },
+      ],
+      dropdowns: [
+        { dropdown: 'API', navigation: { tabs: [dropdownTab], anchors: [] } },
+      ],
+    },
+    config: { navigation: { anchors: [] } },
+  } as unknown as HolocronSiteData
+
+  test('tab bar only includes tabs owned by the active version', () => {
+    expect(buildTabItems(site, '/v2/intro').map((item) => item.label)).toEqual(['Guides'])
+    expect(buildTabItems(site, '/v2/intro')[0]?.pageHrefs).toEqual(['/v2/intro'])
+  })
+
+  test('finds the active version and its language', () => {
+    expect(findActiveVersion(site, '/v2/intro')?.lang).toBe('nl')
+    expect(findActiveVersion(site, '/hidden')?.lang).toBe('nl')
+  })
+
+  test('does not claim a dropdown page that shares a version path prefix', () => {
+    expect(findActiveVersion(site, '/v1/api')).toBeUndefined()
+    expect(resolveActiveVersionHref(site, '/v1/api')).toBeUndefined()
+    expect(resolveActiveNavigationTabs(site, '/v1/api')).toEqual([dropdownTab])
+  })
+})
 
 const twoTabNav = makeNav([docsTab, guidesTab])
 

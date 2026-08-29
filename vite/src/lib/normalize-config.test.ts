@@ -41,3 +41,16 @@ describe('normalize() — layout mode', () => {
     expect(normalize({ name: 'Docs', layout: { mode: 'compact' } }).layout.mode).toBe('compact')
   })
 })
+
+describe('normalize() — version language', () => {
+  test('preserves a BCP 47 language tag on a version', () => {
+    const config = normalize({
+      name: 'Docs',
+      navigation: {
+        versions: [{ version: 'Nederlands', lang: 'nl-BE', pages: ['nl/index'] }],
+      },
+    })
+
+    expect(config.navigation.versions[0]?.lang).toBe('nl-BE')
+  })
+})

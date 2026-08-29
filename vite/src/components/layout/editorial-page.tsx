@@ -127,11 +127,11 @@ export function EditorialPage({
   /** Mintlify-compatible page mode from MDX frontmatter. */
   mode?: PageMode
 }) {
-  const { site, activeTabHref, activeVersionHref, activeDropdownHref, showConfigPanel, githubStars } = useHolocronData()
+  const { site, currentPageHref, activeTabHref, activeVersionHref, activeDropdownHref, showConfigPanel, githubStars } = useHolocronData()
   const siteConfig = site.config
   const enableAssistant = siteConfig.assistant.enabled
   const siteLogo = getResolvedLogo(site)
-  const siteTabs = buildTabItems(site)
+  const siteTabs = buildTabItems(site, currentPageHref)
   const siteHeaderLinks = buildHeaderLinks(site)
   const siteVersionItems = buildVersionItems(site)
   const siteDropdownItems = buildDropdownItems(site)

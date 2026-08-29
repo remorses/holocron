@@ -240,6 +240,7 @@ function normalizeVersions(rawVersions: unknown[], defaultLibrary: IconLibrary):
     }
     return [{
       version,
+      ...(typeof obj.lang === 'string' && { lang: obj.lang }),
       ...(obj.default === true && { default: true }),
       ...(typeof obj.tag === 'string' && { tag: obj.tag }),
       ...(obj.hidden === true && { hidden: true }),

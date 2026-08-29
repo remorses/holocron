@@ -19,6 +19,7 @@ function useChatStore<T>(selector: (s: ChatState) => T): T {
 }
 import { useHolocronData } from '../router.ts'
 import { collectAllPages, isVisibleNavPage } from '../navigation.ts'
+import { resolveActiveNavigationTabs } from '../site-data.ts'
 import { cn } from '../lib/css-vars.ts'
 import {
   InfoCircleIcon,
@@ -26,6 +27,7 @@ import {
   CopyIcon,
   CheckIcon,
 } from '../chat/chat-icons.tsx'
+import { NavTooltip } from '../chat/chat-input.tsx'
 
 // Re-export from chat/ so existing consumers don't break
 export { ChatInput, hideChildrenForSnapshot, NavTooltip } from '../chat/chat-input.tsx'
@@ -153,8 +155,7 @@ export function SidebarAssistant() {
 // ── Page navigation row (copy MD + prev/next arrows) ─────────────────
 //
 // Injected into the right aside alongside the AI assistant widget.
-// Shows a "Copy as MD" button and chevron arrows for prev/next page
-// navigation based on the navigation tree order.
+// Page names stay in tooltips and accessible labels.
 
 function ChevronLeftIcon() {
   return (
@@ -172,21 +173,19 @@ function ChevronRightIcon() {
   )
 }
 
-import { NavTooltip } from '../chat/chat-input.tsx'
-
 export function PageNavRow() {
   const { site, currentPageHref } = useHolocronData()
   const [copied, setCopied] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   const { prevPage, nextPage } = useMemo(() => {
-    const allPages = collectAllPages(site.navigation).filter(isVisibleNavPage)
+    const allPages = collectAllPages(resolveActiveNavigationTabs(site, currentPageHref)).filter(isVisibleNavPage)
     const idx = allPages.findIndex((p) => p.href === currentPageHref)
     return {
       prevPage: idx > 0 ? allPages[idx - 1] : undefined,
       nextPage: idx >= 0 && idx < allPages.length - 1 ? allPages[idx + 1] : undefined,
     }
-  }, [site.navigation, currentPageHref])
+  }, [site, currentPageHref])
 
   const handleCopyMd = useCallback(async () => {
     if (copied || isLoading) return
@@ -232,6 +231,7 @@ export function PageNavRow() {
         <NavTooltip label={prevPage.title}>
           <Link
             href={prevPage.href}
+            aria-label={`Previous: ${prevPage.title}`}
             className='no-underline inline-flex items-center justify-center size-6 rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-accent'
           >
             <ChevronLeftIcon />
@@ -247,6 +247,7 @@ export function PageNavRow() {
         <NavTooltip label={nextPage.title}>
           <Link
             href={nextPage.href}
+            aria-label={`Next: ${nextPage.title}`}
             className='no-underline inline-flex items-center justify-center size-6 rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-accent'
           >
             <ChevronRightIcon />

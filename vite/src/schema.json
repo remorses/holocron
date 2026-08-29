@@ -1292,6 +1292,11 @@
           "minLength": 1,
           "description": "Display name of the version"
         },
+        "lang": {
+          "description": "BCP 47 language tag used for pages in this version",
+          "type": "string",
+          "minLength": 2
+        },
         "default": {
           "description": "Whether this is the default version",
           "type": "boolean"
