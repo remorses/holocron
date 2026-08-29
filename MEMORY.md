@@ -650,6 +650,8 @@ flex column. Keep `<Aside full>` using the grid-row span approach.
 As of 2026-08-26, Ask AI intentionally uses a regular first-section Aside.
 Accept this row-height coupling rather than restoring a page-wide overlay.
 
+**Flex `self-start` shrinks aside WIDTH.** `align-self: start` on a **grid** item is vertical. The same class on a **flex-col** child is horizontal, so the sticky inner wrapper shrinks to the copy-button min-content instead of the 230px track. Use `w-full`, never `self-start`, on that inner wrapper.
+
 ## `.editorial-prose { margin: 0 }` SHADOWS Tailwind margin utilities (cascade trap)
 
 In `vite/src/styles/editorial.css` the `.editorial-prose` class sets `margin: 0`.

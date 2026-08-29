@@ -431,8 +431,9 @@ export function EditorialPage({
                       </div>
                       {hasPerSectionAside && (
                         <div className={`${asideClass} lg:col-[2]`}>
+                          {/* w-full: flex-col + self-start would shrink to copy-button min-content. */}
                           <div
-                            className='flex flex-col gap-3 lg:sticky lg:self-start lg:overflow-y-auto scrollbar-none [&>*]:shrink-0'
+                            className='flex w-full flex-col gap-3 lg:sticky lg:overflow-y-auto scrollbar-none [&>*]:shrink-0'
                             style={{
                               top: stickyBase,
                               maxHeight: hasTabBar ? 'calc(100vh - var(--sticky-top))' : 'calc(100vh - var(--header-row-height) - var(--layout-gap))',
