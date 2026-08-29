@@ -64,12 +64,16 @@ test.describe("page navigation", () => {
     await page.goto("/getting-started", { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
 
-    const previous = page.getByRole("link", { name: /Previous: Welcome to Test Docs/ });
-    const next = page.getByRole("link", { name: /Next: Markdown Page/ });
+    const footer = page.locator("footer");
+    const previous = footer.getByRole("link", { name: /Previous: Welcome to Test Docs/ });
+    const next = footer.getByRole("link", { name: /Next: Markdown Page/ });
     await expect(previous).toBeVisible();
     await expect(next).toBeVisible();
+    await expect(previous).toContainText("Prev page");
+    await expect(next).toContainText("Next page");
     await previous.hover();
     await expect(page.getByRole("tooltip", { name: "Welcome to Test Docs" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Copy page as Markdown/ })).toBeVisible();
   });
 });
 

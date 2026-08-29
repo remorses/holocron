@@ -1,9 +1,7 @@
 'use client'
 
-import React, { useState, useRef, useMemo, useCallback } from 'react'
-import { createPortal } from 'react-dom'
+import React, { useState, useRef, useCallback } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
-import { Link } from './link.tsx'
 import { useSyncExternalStore } from 'react'
 import {
   chatStore,
@@ -18,8 +16,6 @@ function useChatStore<T>(selector: (s: ChatState) => T): T {
   return useSyncExternalStore(chatStore.subscribe, () => selector(chatStore.getState()), () => selector(chatStore.getState()))
 }
 import { useHolocronData } from '../router.ts'
-import { collectAllPages, isVisibleNavPage } from '../navigation.ts'
-import { resolveActiveNavigationTabs } from '../site-data.ts'
 import { cn } from '../lib/css-vars.ts'
 import {
   InfoCircleIcon,
@@ -27,7 +23,6 @@ import {
   CopyIcon,
   CheckIcon,
 } from '../chat/chat-icons.tsx'
-import { NavTooltip } from '../chat/chat-input.tsx'
 
 // Re-export from chat/ so existing consumers don't break
 export { ChatInput, hideChildrenForSnapshot, NavTooltip } from '../chat/chat-input.tsx'
@@ -152,40 +147,11 @@ export function SidebarAssistant() {
   )
 }
 
-// ── Page navigation row (copy MD + prev/next arrows) ─────────────────
-//
-// Injected into the right aside alongside the AI assistant widget.
-// Page names stay in tooltips and accessible labels.
-
-function ChevronLeftIcon() {
-  return (
-    <svg aria-hidden='true' viewBox='0 0 16 16' width='14' height='14' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
-      <path d='M10 4l-4 4 4 4' />
-    </svg>
-  )
-}
-
-function ChevronRightIcon() {
-  return (
-    <svg aria-hidden='true' viewBox='0 0 16 16' width='14' height='14' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
-      <path d='M6 4l4 4-4 4' />
-    </svg>
-  )
-}
+// ── Copy-page row (injected into the right aside under the AI widget)
 
 export function PageNavRow() {
-  const { site, currentPageHref } = useHolocronData()
   const [copied, setCopied] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-
-  const { prevPage, nextPage } = useMemo(() => {
-    const allPages = collectAllPages(resolveActiveNavigationTabs(site, currentPageHref)).filter(isVisibleNavPage)
-    const idx = allPages.findIndex((p) => p.href === currentPageHref)
-    return {
-      prevPage: idx > 0 ? allPages[idx - 1] : undefined,
-      nextPage: idx >= 0 && idx < allPages.length - 1 ? allPages[idx + 1] : undefined,
-    }
-  }, [site, currentPageHref])
 
   const handleCopyMd = useCallback(async () => {
     if (copied || isLoading) return
@@ -221,43 +187,9 @@ export function PageNavRow() {
         )}
         title='Copy page as Markdown'
       >
-        <span>{copied ? 'Copied' : 'Copy as Markdown'}</span>
+        <span>{copied ? 'Copied' : 'Copy page as Markdown'}</span>
         {copied ? <CheckIcon size={13} /> : <CopyIcon size={13} />}
       </button>
-
-      <div className='grow' />
-
-      {prevPage ? (
-        <NavTooltip label={prevPage.title}>
-          <Link
-            href={prevPage.href}
-            aria-label={`Previous: ${prevPage.title}`}
-            className='no-underline inline-flex items-center justify-center size-6 rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-accent'
-          >
-            <ChevronLeftIcon />
-          </Link>
-        </NavTooltip>
-      ) : (
-        <span className='inline-flex items-center justify-center size-6 text-muted-foreground/30'>
-          <ChevronLeftIcon />
-        </span>
-      )}
-
-      {nextPage ? (
-        <NavTooltip label={nextPage.title}>
-          <Link
-            href={nextPage.href}
-            aria-label={`Next: ${nextPage.title}`}
-            className='no-underline inline-flex items-center justify-center size-6 rounded-md text-muted-foreground transition-colors hover:text-foreground hover:bg-accent'
-          >
-            <ChevronRightIcon />
-          </Link>
-        </NavTooltip>
-      ) : (
-        <span className='inline-flex items-center justify-center size-6 text-muted-foreground/30'>
-          <ChevronRightIcon />
-        </span>
-      )}
     </div>
   )
 }
