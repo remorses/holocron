@@ -144,7 +144,7 @@ export function EditorialPage({
     ? 'relative mx-auto w-full max-w-full px-(--mobile-padding) lg:max-w-(--grid-max-width) lg:px-0'
     : `relative mx-auto w-full max-w-full px-(--mobile-padding) ${centerMaxWidthClass} lg:px-0`
   const pageGridClass = cn(
-    'grid grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:gap-x-(--grid-gap) lg:justify-between lg:px-0',
+    'grid grow grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:gap-x-(--grid-gap) lg:justify-between lg:px-0',
     showLeftNav && showRightAside && 'lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)]',
     showLeftNav && !showRightAside && 'lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)]',
     !showLeftNav && 'lg:grid-cols-[var(--grid-content-width)_var(--grid-sidebar-width)]',
@@ -181,7 +181,7 @@ export function EditorialPage({
 
   return (
     <div
-      className='slot-page flex flex-col gap-(--layout-gap) min-h-screen bg-background text-foreground [font-family:var(--font-sans)] antialiased [text-rendering:optimizeLegibility] overflow-x-clip'
+      className='slot-page flex flex-col gap-(--layout-gap) grow bg-background text-foreground [font-family:var(--font-sans)] antialiased [text-rendering:optimizeLegibility] overflow-x-clip'
       style={pageStyle}
     >
       {!!bannerContent && (
@@ -319,10 +319,10 @@ export function EditorialPage({
            When maxWidth is set via frontmatter, the container is narrower
            and centered within the page. */
         <div
-          className='relative grow w-full max-w-full mx-auto px-(--mobile-padding) lg:px-0'
+          className='relative grow flex flex-col w-full max-w-full mx-auto px-(--mobile-padding) lg:px-0'
           style={{ maxWidth: maxWidth ? (typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth) : 'var(--grid-max-width)' }}
         >
-          <div className='flex flex-col gap-(--prose-gap)'>
+          <div className='flex flex-col gap-(--prose-gap) grow'>
             {children}
           </div>
           <Footer />
@@ -335,7 +335,7 @@ export function EditorialPage({
            Negative top margin closes the flex gap so the vertical lines
            connect seamlessly to the tab-bar border; inner pt restores the
            visual spacing for content. */
-      <div className={`relative grow w-full max-w-full mx-auto lg:max-w-(--grid-max-width) lg:-mt-(--layout-gap) ${above ? '' : 'lg:pt-(--layout-gap)'} overflow-y-clip`}>
+      <div className={`relative grow flex flex-col w-full max-w-full mx-auto lg:max-w-(--grid-max-width) lg:-mt-(--layout-gap) ${above ? '' : 'lg:pt-(--layout-gap)'} overflow-y-clip`}>
         <GridLinesFrame mode={decorativeLines} />
 
         {/* Above: rendered above the 3-column grid, spanning the full grid

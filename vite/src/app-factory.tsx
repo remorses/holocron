@@ -253,11 +253,19 @@ function getMdastText(node: TextNode): string {
   return node.children?.map(getMdastText).join('') ?? ''
 }
 
-function isDuplicateTitleHeading(node: Root['children'][number], title: string): boolean {
-  const isHeading = node.type === 'heading'
+function isPageHeadingNode(node: Root['children'][number]): boolean {
+  return node.type === 'heading'
     || (node.type === 'mdxJsxFlowElement'
       && (node.name === 'Heading' || /^h[1-6]$/.test(node.name ?? '')))
-  if (!isHeading) return false
+}
+
+function isInvisibleLeadNode(node: Root['children'][number]): boolean {
+  if (node.type === 'yaml' || node.type === 'definition' || node.type === 'mdxjsEsm') return true
+  return node.type === 'html' && /^\s*<!--/.test(node.value)
+}
+
+function isDuplicateTitleHeading(node: Root['children'][number], title: string): boolean {
+  if (!isPageHeadingNode(node)) return false
   const normalize = (value: string) => value.trim().replace(/\s+/g, ' ').toLocaleLowerCase()
   return normalize(getMdastText(node)) === normalize(title)
 }
@@ -376,13 +384,16 @@ function renderMdxPage({
 
   const aboveNodes = mdast.children.filter(isAboveNode)
   const contentChildren: Root['children'] = mdast.children.filter((node) => !isAboveNode(node))
-  if (loaderData.currentPageFrontmatter?.hideTitle !== true && loaderData.currentPageTitle) {
-    const firstHeadingIndex = contentChildren.findIndex((node) =>
-      node.type === 'heading'
-      || (node.type === 'mdxJsxFlowElement'
-        && (node.name === 'Heading' || /^h[1-6]$/.test(node.name ?? ''))),
-    )
-    if (firstHeadingIndex !== -1 && isDuplicateTitleHeading(contentChildren[firstHeadingIndex]!, loaderData.currentPageTitle)) {
+  const firstContentNode = contentChildren.find((node) => !isInvisibleLeadNode(node))
+  const startsWithHeading = !!firstContentNode && isPageHeadingNode(firstContentNode)
+  // Frontmatter title is the generated H1. Skip it when the body already
+  // starts with any heading. Authors can also opt out with `hideTitle: true`.
+  const shouldInjectH1 = loaderData.currentPageFrontmatter?.hideTitle !== true
+    && !!loaderData.currentPageTitle
+    && !startsWithHeading
+  if (shouldInjectH1) {
+    const firstHeadingIndex = contentChildren.findIndex(isPageHeadingNode)
+    if (firstHeadingIndex !== -1 && isDuplicateTitleHeading(contentChildren[firstHeadingIndex]!, loaderData.currentPageTitle!)) {
       contentChildren.splice(firstHeadingIndex, 1)
     }
   }
@@ -395,11 +406,6 @@ function renderMdxPage({
     enableAssistant: site.config.assistant.enabled,
     includePageChrome: pageMode !== 'compact',
   })
-
-  // The frontmatter title is the page's only generated H1. Body H1 headings
-  // are rendered as H2, and authors can opt out with `hideTitle: true`.
-  const shouldInjectH1 = loaderData.currentPageFrontmatter?.hideTitle !== true
-    && !!loaderData.currentPageTitle
 
   // Extract import nodes (mdxjsEsm) from the full mdast so they can be
   // prepended to each section. Section splitting separates import statements

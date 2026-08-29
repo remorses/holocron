@@ -339,10 +339,14 @@
     scrollbar-color: --alpha(var(--text-tertiary) / 15%) transparent;
   }
   html {
+    height: 100%;
     scrollbar-gutter: stable;
   }
   body {
     @apply bg-background text-foreground;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 }
 
