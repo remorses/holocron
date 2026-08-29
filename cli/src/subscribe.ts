@@ -22,7 +22,8 @@ async function resolveProject(opts: {
 
   const nonInteractive = isAgent || !process.stdin.isTTY
   if (nonInteractive) {
-    opts.output.error(logger.error('Missing --project. Usage: holocron <command> --project <projectId>'))
+    opts.output.error(logger.error('Missing --project. Usage: holocron subscribe --project <projectId>'))
+    opts.output.error(logger.error('Run `holocron whoami` to list project IDs.'))
     opts.exit(1)
     return undefined
   }

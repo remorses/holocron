@@ -24,7 +24,7 @@ import { env, waitUntil } from 'cloudflare:workers'
 import { ulid } from 'ulid'
 import { unzipSync } from 'fflate'
 import { getDb } from './db.ts'
-import { canDeploy, ACTIVE_SUBSCRIPTION_STATUSES } from './lib/billing-rules.ts'
+import { canDeploy, ACTIVE_SUBSCRIPTION_STATUSES, subscriptionRequiredPayload } from './lib/billing-rules.ts'
 import { resolveProjectSubdomain, resolveCreateDeployAuth, requireDeployAccess, sanitizeForDns, TEMPLATE_DEFAULT_SITE_NAME } from './deploy-auth.ts'
 
 /** Build a subdomain for a base-path deployment.
@@ -157,9 +157,12 @@ export const deployApp = new Spiceflow()
         orgPlan,
       })
       if (!decision.allowed) {
-        const upgradeUrl = `${new URL(request.url).origin}/dashboard/projects/${auth.projectId}/billing`
         throw json(
-          { error: decision.reason, code: decision.code, upgradeUrl },
+          subscriptionRequiredPayload({
+            reason: decision.reason,
+            projectId: auth.projectId,
+            origin: new URL(request.url).origin,
+          }),
           { status: 402 },
         )
       }

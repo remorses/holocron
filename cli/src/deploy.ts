@@ -22,7 +22,7 @@ import * as clack from '@clack/prompts'
 import { goke, isAgent } from 'goke'
 import { zipSync } from 'fflate'
 import { getDeployAuthHeaders, getDeployClient, type DeployAuth } from './api-client.ts'
-import { logger, colors as c, formatBytes } from './logger.ts'
+import { logger, colors as c, formatBytes, printActionableError } from './logger.ts'
 
 export const deployCli = goke()
 
@@ -135,13 +135,10 @@ deployCli
           ? (value as { error?: string; code?: string; upgradeUrl?: string })
           : undefined
       if (detail?.code === 'SUBSCRIPTION_REQUIRED') {
-        output.error(logger.error(detail.error ?? 'A Holocron Pro subscription is required for this deployment.'))
-        if (detail.upgradeUrl) {
-          output.error(logger.error(`Subscribe to continue: ${c.bold(detail.upgradeUrl)}`))
-        }
+        printActionableError(output, detail, 'A Holocron Pro subscription is required for this deployment.')
         return proc.exit(1)
       }
-      output.error(logger.error(`Failed to create deployment: ${detail?.error ?? createRes.message}`))
+      printActionableError(output, detail ?? {}, `Failed to create deployment: ${createRes.message}`)
       return proc.exit(1)
     }
     const { deploymentId, version, existingHashes } = createRes
@@ -295,8 +292,9 @@ async function resolveProjectId(ctx: {
   }
   if (projects.length === 1) return projects[0]!.projectId
   if (ctx.nonInteractive) {
-    ctx.output.error(logger.error('Multiple projects found. Pass --project <id> to select one.'))
-    ctx.output.error(logger.error('Run `holocron whoami` to see all projects and their IDs.'))
+    ctx.output.error(logger.error('Multiple projects found. Pass --project <projectId>.'))
+    ctx.output.error(logger.error('Usage: holocron deploy --project <projectId>'))
+    ctx.output.error(logger.error('Run `holocron whoami` to list project IDs.'))
     return new Error('Multiple projects')
   }
 

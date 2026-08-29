@@ -31,6 +31,32 @@ export const logger = {
   },
 }
 
+export type ActionableApiError = {
+  error?: string
+  hint?: string
+  command?: string
+  upgradeUrl?: string
+  projectId?: string
+  code?: string
+}
+
+export function actionableDetailFromFetchError(error: Error): ActionableApiError {
+  const value = (error as { value?: unknown }).value
+  if (value && typeof value === 'object') return value as ActionableApiError
+  return { error: error.message }
+}
+
+export function printActionableError(
+  output: { error: (msg: string) => void },
+  detail: ActionableApiError,
+  fallback: string,
+) {
+  output.error(logger.error(detail.error ?? fallback))
+  if (detail.hint) output.error(logger.error(detail.hint))
+  if (detail.command) output.error(logger.error(`Run: ${detail.command}`))
+  if (detail.upgradeUrl) output.error(logger.error(detail.upgradeUrl))
+}
+
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`

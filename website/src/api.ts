@@ -740,7 +740,12 @@ export const apiApp = new Spiceflow()
     },
     async handler({ request }) {
       const auth = await resolveGithubOidcDeployAuth(request, { upsertProject: true })
-      if (!auth) return json({ error: 'invalid or missing GitHub OIDC authentication' }, { status: 401 })
+      if (!auth) {
+        return json({
+          error: 'Missing GitHub OIDC authentication.',
+          hint: 'Add `permissions: { id-token: write }` to the GitHub Actions job. Holocron mints the token automatically. Do not set HOLOCRON_KEY in CI if you want OIDC.',
+        }, { status: 401 })
+      }
       return { ok: true, projectId: auth.projectId, branch: auth.branch, preview: auth.preview || undefined }
     },
   })
