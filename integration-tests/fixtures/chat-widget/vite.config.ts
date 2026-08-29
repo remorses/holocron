@@ -27,6 +27,6 @@ export default defineConfig(async ({ command }) => {
     process.env.HOLOCRON_URL = process.env.E2E_CHAT_URL;
   }
   return createE2EViteConfig({
-    plugins: [holocron()],
+    plugins: [holocron({ pageCache: false })],
   });
 });

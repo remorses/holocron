@@ -75,6 +75,12 @@ export type HolocronPluginOptions = {
    * classNames so those utilities are compiled into the shell CSS.
    */
   tailwindSources?: string[]
+  /**
+   * Reuse processed navigation and MDX from dist/. Default true.
+   * Image metadata still caches. Set false while developing Holocron itself
+   * so processor changes are not hidden by a stale page cache.
+   */
+  pageCache?: boolean
 }
 
 const VIRTUAL_CONFIG = 'virtual:holocron-config'
@@ -562,6 +568,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         logParseErrors: true,
         deferProviders: false,
         customProviders,
+        pageCache: options.pageCache,
       })
 
       // In production builds, fail after ALL errors have been logged so
@@ -1053,6 +1060,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             distDir: distDirPath,
             deferProviders: true,
             customProviders: freshCustomProviders,
+            pageCache: options.pageCache,
           })
           if (syncResult.providerWatchPaths.length === 0) {
             syncResult.providerWatchPaths = prevProviderWatchPaths

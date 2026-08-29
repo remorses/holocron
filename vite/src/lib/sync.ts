@@ -179,6 +179,7 @@ export async function syncNavigation({
   logParseErrors = true,
   deferProviders = false,
   customProviders = [],
+  pageCache = true,
 }: {
   config: HolocronConfig
   pagesDir: string
@@ -195,13 +196,16 @@ export async function syncNavigation({
   /** Static custom providers loaded from user files (tab.provider with
    *  static: true). Processed at build time alongside built-in providers. */
   customProviders?: Array<{ tab: ConfigNavTab; provider: CustomTabProvider }>
+  /** Reuse processed navigation and MDX from dist/. Default true.
+   *  Image metadata still caches. Set false while developing Holocron itself. */
+  pageCache?: boolean
 }): Promise<SyncResult> {
   // 1. Load caches from previous build
   const cachePath = path.join(distDir, CACHE_FILENAME)
   const mdxCachePath = path.join(distDir, MDX_CACHE_FILENAME)
-  const oldNav = readCache(cachePath)
+  const oldNav = pageCache ? readCache(cachePath) : null
   const oldPages = oldNav ? buildPageIndex(oldNav) : new Map<string, NavPage>()
-  const oldMdxCache = readMdxCache(mdxCachePath)
+  const oldMdxCache = pageCache ? readMdxCache(mdxCachePath) : emptyMdxCache()
   const oldMdxContent = oldMdxCache.content
   const oldPageIconRefs = oldMdxCache.pageIconRefs
   const oldPageImportSources = oldMdxCache.pageImportSources
@@ -416,7 +420,6 @@ export async function syncNavigation({
           ? `asset:${ref.src}:${path.relative(projectRoot, resolved.filePath)}:${resolved.needsCopy}:${assetFileSha(resolved.filePath)}`
           : `asset:${ref.src}:missing`)
       }
-      if (parts.length === 0) return contentSha
       return gitBlobSha(contentSha + '\n' + parts.sort().join('\n'))
     }
     const sha = computeSha(oldPageAssetRefs[slug])
@@ -1851,8 +1854,8 @@ type MdxCacheData = {
 
 const EMPTY_ICON_ATLAS: IconAtlas = { icons: {} }
 
-function readMdxCache(cachePath: string): MdxCacheData {
-  const empty: MdxCacheData = {
+function emptyMdxCache(): MdxCacheData {
+  return {
     content: {},
     pageIconRefs: {},
     pageImportSources: {},
@@ -1861,6 +1864,10 @@ function readMdxCache(cachePath: string): MdxCacheData {
     icons: EMPTY_ICON_ATLAS,
     unresolvedIconRefs: [],
   }
+}
+
+function readMdxCache(cachePath: string): MdxCacheData {
+  const empty = emptyMdxCache()
   if (!fs.existsSync(cachePath)) return empty
   try {
     const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))

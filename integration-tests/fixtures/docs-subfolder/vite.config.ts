@@ -11,6 +11,6 @@ cleanupFixtureRunPaths(resolveFixtureRunPaths())
 
 export default defineConfig(createE2EViteConfig({
   plugins: [
-    holocron({ entry: './server.tsx' }),
+    holocron({ entry: './server.tsx', pageCache: false }),
   ],
 }))

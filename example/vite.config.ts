@@ -8,7 +8,7 @@ export default defineConfig({
   clearScreen: false,
   build: analyzeBundle ? { sourcemap: true } : undefined,
   plugins: [
-    holocron({ pagesDir: './src' }),
+    holocron({ pagesDir: './src', pageCache: false }),
     analyzeBundle
       ? visualizer({
           emitFile: true,

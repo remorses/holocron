@@ -572,6 +572,87 @@ title: Cached Page
     expect(page2.headings).toEqual(page1.headings)
   })
 
+  test('pageCache: false re-parses pages even when files are unchanged', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Fresh Page
+---
+
+## Heading`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const args = {
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+      pageCache: false as const,
+    }
+
+    const first = await syncNavigation(args)
+    const second = await syncNavigation(args)
+
+    expect(first.parsedCount).toBe(1)
+    expect(first.cachedCount).toBe(0)
+    expect(second.parsedCount).toBe(1)
+    expect(second.cachedCount).toBe(0)
+  })
+
+  test('reprocesses MDX after the Holocron package version changes', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Versioned Cache
+---
+
+## Heading`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const sync = () => syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    await sync()
+
+    for (const filename of ['holocron-cache.json', 'holocron-mdx.json']) {
+      const cachePath = path.join(project.distDir, filename)
+      const cache = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
+      fs.writeFileSync(cachePath, JSON.stringify({ ...cache, version: '0.0.0-previous' }))
+    }
+
+    const result = await sync()
+    const navCache = JSON.parse(fs.readFileSync(path.join(project.distDir, 'holocron-cache.json'), 'utf-8'))
+    const mdxCache = JSON.parse(fs.readFileSync(path.join(project.distDir, 'holocron-mdx.json'), 'utf-8'))
+
+    expect({
+      parsedCount: result.parsedCount,
+      cachedCount: result.cachedCount,
+      navCacheVersion: navCache.version,
+      mdxCacheVersion: mdxCache.version,
+    }).toMatchInlineSnapshot(`
+      {
+        "cachedCount": 0,
+        "mdxCacheVersion": "${PACKAGE_VERSION}",
+        "navCacheVersion": "${PACKAGE_VERSION}",
+        "parsedCount": 1,
+      }
+    `)
+  })
+
   test('generates placeholders for remote root-level JSX img urls', async () => {
     const sharp = (await import('sharp')).default
     const png = await sharp({

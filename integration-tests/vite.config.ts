@@ -38,7 +38,7 @@ const testDeployChunks = process.env.E2E_START === "1"
 export default defineConfig(createE2EViteConfig({
   build: analyzeBundle ? { sourcemap: true } : undefined,
   plugins: [
-    holocron({ externalizeShared: true, codeSplitting: testDeployChunks }),
+    holocron({ externalizeShared: true, codeSplitting: testDeployChunks, pageCache: false }),
     analyzeBundle
       ? visualizer({
           emitFile: true,

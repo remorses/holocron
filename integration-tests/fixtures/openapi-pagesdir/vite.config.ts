@@ -11,5 +11,5 @@ import {
 cleanupFixtureRunPaths(resolveFixtureRunPaths())
 
 export default defineConfig(createE2EViteConfig({
-  plugins: [holocron({ pagesDir: './src' })],
+  plugins: [holocron({ pagesDir: './src', pageCache: false })],
 }))

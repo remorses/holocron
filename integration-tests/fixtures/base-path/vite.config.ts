@@ -10,5 +10,5 @@ cleanupFixtureRunPaths(resolveFixtureRunPaths());
 
 export default defineConfig(createE2EViteConfig({
   base: "/docs",
-  plugins: [holocron()],
+  plugins: [holocron({ pageCache: false })],
 }));

@@ -20,6 +20,6 @@ cleanupFixtureRunPaths(resolveFixtureRunPaths());
 export default defineConfig(async () => {
   await startMockGitHubServer();
   return createE2EViteConfig({
-    plugins: [holocron()],
+    plugins: [holocron({ pageCache: false })],
   });
 });

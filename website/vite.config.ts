@@ -15,7 +15,7 @@ export default defineConfig({
 
   },
   plugins: [
-    holocron({ entry: './src/server.tsx', pagesDir: 'src/pages' }),
+    holocron({ entry: './src/server.tsx', pagesDir: 'src/pages', pageCache: false }),
     stradaVitePlugin(),
     tailwindcss(),
     cloudflare({
