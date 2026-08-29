@@ -5,21 +5,21 @@
  */
 
 import { createHolocronApp, type HolocronApp } from './app-factory.tsx'
-import { getHolocronDataContract } from './build-navigation-data.ts'
-import { getConfig as dataEntry } from 'virtual:holocron-data'
-
-const data = getHolocronDataContract<(typeof dataEntry)['holocronData']>(dataEntry)
+import { base, getConfig } from 'virtual:holocron-config'
+import { getNavigationData, runtimeTabEntries } from 'virtual:holocron-navigation'
+import { getMdxSlugs, getMdxSource, getPageIconRefs, getIconAtlas } from 'virtual:holocron-mdx'
+import { getModules, pagesDirPrefix } from 'virtual:holocron-modules'
 
 export const app = await createHolocronApp({
-  base: data.base,
-  getConfig: data.getConfig,
-  getNavigationData: data.getNavigationData,
-  getMdxSlugs: data.getMdxSlugs,
-  getMdxSource: data.getMdxSource,
-  getPageIconRefs: data.getPageIconRefs,
-  getIconAtlas: data.getIconAtlas,
-  getModules: data.getModules,
-  pagesDirPrefix: data.pagesDirPrefix,
-  runtimeTabs: data.runtimeTabEntries,
+  base,
+  getConfig,
+  getNavigationData,
+  getMdxSlugs,
+  getMdxSource,
+  getPageIconRefs,
+  getIconAtlas,
+  getModules,
+  pagesDirPrefix,
+  runtimeTabs: runtimeTabEntries,
 })
 export type App = HolocronApp
