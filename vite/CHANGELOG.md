@@ -1,5 +1,111 @@
 # @holocron.so/vite
 
+## 0.33.0
+
+1. **Compact page mode** — keep the left navigation, drop the optional right aside, and narrow the page frame without changing the reading column width.
+
+   Set it for the full site in `docs.json`:
+
+   ```json
+   {
+     "layout": {
+       "mode": "compact"
+     },
+     "assistant": {
+       "display": "floating"
+     }
+   }
+   ```
+
+   Or set `mode: "compact"` in page frontmatter. Pages with authored asides, table-of-contents panels, or generated API examples keep their required right rail. Compact hides the default sidebar assistant, so pair it with `assistant.display: "floating"` if you still want Ask AI.
+
+2. **Floating Ask AI pill** — `assistant.display` in `docs.json` can use the same bottom-center chat pill as the embeddable ChatWidget:
+
+   ```json
+   {
+     "assistant": {
+       "display": "floating"
+     }
+   }
+   ```
+
+   `sidebar` (default) keeps the Ask AI widget in the right aside. `floating` hides that widget and the mobile Ask AI button, and shows the bottom-center textarea pill that morphs into the chat drawer.
+
+3. **Locale-aware version navigation** with `navigation.versions[].lang`:
+
+   ```json
+   {
+     "navigation": {
+       "versions": [
+         { "version": "English", "lang": "en", "pages": ["en/index"] },
+         { "version": "Nederlands", "lang": "nl", "pages": ["nl/index"] }
+       ]
+     }
+   }
+   ```
+
+   Holocron sets the document `lang` from the version that owns the current page. The tab bar, sidebar, search, and previous/next navigation use only that version's tree.
+
+4. **`prompt` frontmatter for Holocron Maintain** — pages can record the source files, folders, and URLs used to generate them:
+
+   ```yaml
+   ---
+   $schema: https://holocron.so/frontmatter.json
+   prompt: |
+     Write the authentication guide from @/src/auth/.
+     Use @https://github.com/example/project/releases for recent behavior.
+   ---
+   ```
+
+   `holocron maintain` in `@holocron.so/cli` reruns those prompts when the referenced sources change.
+
+5. **`pageCache` plugin option** — set `pageCache: false` to skip reuse of processed navigation and MDX during Holocron development. Image metadata still caches. The default remains `true` for published sites:
+
+   ```ts
+   import { holocron } from '@holocron.so/vite/vite'
+
+   export default defineConfig({
+     plugins: [holocron({ pageCache: false })],
+   })
+   ```
+
+6. **Report every invalid MDX page** through a typed `HolocronDataGenerationError` instead of stopping at the first parser failure.
+
+   Multi-tenant deploy pipelines can import the narrow data API and inspect every page failure without parsing error messages:
+
+   ```ts
+   import {
+     generateHolocronData,
+     isHolocronDataGenerationError,
+   } from '@holocron.so/vite/data'
+
+   try {
+     await generateHolocronData({ config, slugs, getMdxSource })
+   } catch (error) {
+     if (!isHolocronDataGenerationError(error)) throw error
+
+     for (const { slug, error: parseError } of error.pageErrors) {
+       console.error(slug, parseError.line, parseError.reason)
+     }
+   }
+   ```
+
+   Each page is parsed once. Each parse error includes a stable code, source location, reason, code frame, and raw MDX source.
+
+7. **Previous/next links move to the footer** — they now sit next to **Powered by Holocron**, with compact **Prev page** / **Next page** labels, chevrons, and tooltips for the target title. The sidebar copy action reads **Copy page as Markdown**. The Ask AI widget stays the full 230px aside width. Short pages pin the footer to the bottom of the viewport instead of leaving a gap below it.
+
+8. **Markdown tables bleed into the right content gap** the same way fenced code blocks do, so wide tables use the space before the sidebar before they start scrolling.
+
+9. **Code block titles match the code font size** — filename and language labels above fenced blocks now use `--type-code-size`.
+
+10. **Softer scrollbar thumbs** in the page and chat widget. Hover no longer jumps to a bright opaque thumb.
+
+11. **Sidebar page icons align with the first line** of wrapped labels instead of centering against the full multi-line label. Table of contents labels stay at full opacity instead of muting outside the active section.
+
+12. **Fix markdown images, nested links, and callout icons** — images keep author `width`, `height`, and `style` separate from placeholder dimensions, and responsive height follows the constrained frame so `object-fit: contain` does not leave blank bands. Card, Tile, and linked Badge content can contain valid interactive links without nested anchors. Unknown-language code blocks keep their controls, and custom callout icons fall back cleanly.
+
+13. **Fix page titles, encoded routes, and sitemaps** for large migrated sites. One frontmatter H1 is generated when MDX starts with a callout or has no body heading; it is skipped when the body already starts with a heading. Percent-encoded apostrophes and parentheses resolve through one canonical route. Sitemap entries come from the same valid page manifest as HTML and `.md` routes. Missing root-relative icon files are validated, and development recovers loader data after RSC program reloads instead of returning a transient 500.
+
 ## 0.32.0
 
 1. **Customize generated OpenAPI pages with `x-holocron`** — override page metadata, insert compatible Markdown and MDX content, or choose the endpoint URL directly on an OpenAPI operation:

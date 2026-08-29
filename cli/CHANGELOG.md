@@ -1,3 +1,50 @@
+## 0.22.0
+
+1. **New `holocron maintain` command** — keep documentation in sync with the source files, folders, and URLs that generated each page.
+
+   Add a generation prompt to page frontmatter:
+
+   ```yaml
+   ---
+   $schema: https://holocron.so/frontmatter.json
+   prompt: |
+     Write the authentication guide from @/src/auth/.
+     Use @https://github.com/example/project/releases for recent behavior.
+     Explain sessions, API keys, and GitHub Actions OIDC.
+   ---
+   ```
+
+   `holocron maintain` finds pages whose referenced sources changed, runs one OpenCode session, and validates the resulting MDX. `@/path` refs resolve from the repo root, including files inside git submodules. `@https://` refs match changed remote URLs.
+
+   ```bash
+   npx -y "@holocron.so/cli" maintain --since origin/main
+   npx -y "@holocron.so/cli" maintain --since origin/main --dry-run
+   npx -y "@holocron.so/cli" maintain --all --prompt-file .holocron/prompts/weekly-review.md
+   ```
+
+   By default Maintain uses a **Holocron-hosted model** and bills the site's Pro subscription. Pass a hosted id such as `glm-5.3-flash`, or `provider/model` to use your own OpenCode keys with no Holocron auth or credits:
+
+   ```bash
+   npx -y "@holocron.so/cli" maintain --model glm-5.3-flash
+   npx -y "@holocron.so/cli" maintain --model anthropic/claude-sonnet-4
+   ```
+
+   ```
+   holocron maintain
+          │
+          ├── no --model / glm-5.3-flash ──► Holocron-hosted model (Pro bill)
+          │
+          └── --model anthropic/claude-sonnet-4
+                    │
+                    └──► OpenCode provider + your ANTHROPIC_API_KEY
+   ```
+
+   In **GitHub Actions**, no-args `holocron maintain` diffs the whole push from `GITHUB_EVENT_PATH`. The session prompt tells OpenCode to create `holocron/maintain-<timestamp>` and open a pull request when MDX files changed. It never updates `main` or other existing branches. Actions authenticates through OIDC, so the workflow does not need a stored Holocron key. Local runs only edit MDX; they do not create a branch or pull request.
+
+   Use `--all` with `--prompt` or `--prompt-file` for scheduled grammar, SEO, link, translation, and style reviews.
+
+2. **Copy-paste commands on deploy and subscribe errors** — a missing Pro subscription, missing `--project`, org-scoped key, or GitHub OIDC 401 now prints the exact `holocron` command to run, plus the billing URL when a subscription is required.
+
 ## 0.21.1
 
 1. **Update the bundled Spiceflow RSC runtime** to `1.26.0-rsc.18`, including the latest Vite RSC plugin fixes.
