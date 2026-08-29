@@ -440,7 +440,7 @@ describe('rewriteMdxImages', () => {
     const images = new Map([['./images/screenshot.png', testMeta]])
     const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
-      "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="screenshot" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
+      "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="screenshot" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       "
     `)
   })
@@ -455,12 +455,12 @@ describe('rewriteMdxImages', () => {
     `)
   })
 
-  test('adds width/height/placeholder to existing JSX Image without user dims', () => {
+  test('adds intrinsic dimensions and placeholder without author dimensions', () => {
     const { mdast } = processMdx(`<Image src="./screenshot.png" alt="test" />`)
     const images = new Map([['./screenshot.png', testMeta]])
     const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
-      "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="test" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
+      "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="test" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       "
     `)
   })
@@ -471,29 +471,50 @@ describe('rewriteMdxImages', () => {
     const result = rewriteMdxImages(mdast, images)
     // User specified 92x31 — should NOT be overridden with natural 1200x800
     expect(result).toMatchInlineSnapshot(`
-      "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="logo" width="92" height="31" placeholder="data:image/png;base64,abc123" />
+      "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="logo" width="92" height="31" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       "
     `)
   })
 
-  test('falls back to natural dims when user width is non-numeric', () => {
+  test('keeps one author dimension separate from intrinsic dimensions', () => {
+    const { mdast } = processMdx(`<Image src="./screenshot.png" alt="logo" width="92" />`)
+    const images = new Map([['./screenshot.png', testMeta]])
+    const result = rewriteMdxImages(mdast, images)
+
+    expect(result).toContain('width="92"')
+    expect(result).not.toContain('height="61"')
+    expect(result).toContain('intrinsicWidth="1200"')
+    expect(result).toContain('intrinsicHeight="800"')
+  })
+
+  test('preserves style dimensions without replacing them with natural dimensions', () => {
+    const { mdast } = processMdx(`<img src="./screenshot.png" style={{ width: '20px' }} />`)
+    const images = new Map([['./screenshot.png', testMeta]])
+    const result = rewriteMdxImages(mdast, images)
+
+    expect(result).toContain('style={{ width: \'20px\' }}')
+    expect(result).not.toContain('width="1200"')
+    expect(result).not.toContain('height="800"')
+    expect(result).toContain('intrinsicWidth="1200"')
+    expect(result).toContain('intrinsicHeight="800"')
+  })
+
+  test('preserves a non-numeric author width', () => {
     const { mdast } = processMdx(`<img src="./screenshot.png" width="100%" />`)
     const images = new Map([['./screenshot.png', testMeta]])
     const result = rewriteMdxImages(mdast, images)
-    // "100%" is not a finite number — fall back to natural 1200x800, never emit NaN
     expect(result).toMatchInlineSnapshot(`
-      "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
+      "<Image width="100%" src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       "
     `)
   })
 
-  test('converts root-level JSX img to responsive Image while preserving user height', () => {
+  test('converts root-level JSX img while preserving only the author height', () => {
     const { mdast } = processMdx(`<img className="hero" height="200" src="./screenshot.png" />`)
     const images = new Map([['./screenshot.png', testMeta]])
     const result = rewriteMdxImages(mdast, images)
-    // User specified height="200" — preserved. Width computed proportionally: 200 * 1200/800 = 300.
     expect(result).toMatchInlineSnapshot(`
-      "<Image className="hero" src="/_holocron/images/a1b2c3-screenshot.png" alt="" width="300" height="200" placeholder="data:image/png;base64,abc123" />
+      "<Image className="hero" height="200" src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       "
     `)
   })
@@ -507,7 +528,7 @@ describe('rewriteMdxImages', () => {
     const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
       "<Step title="Create account">
-        <Image className="hero" src="/_holocron/images/a1b2c3-screenshot.png" alt="" width="300" height="200" placeholder="data:image/png;base64,abc123" />
+        <Image className="hero" height="200" src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       </Step>
       "
     `)
@@ -538,7 +559,7 @@ description: A description
       description: A description
       ---
 
-      <Image src="/_holocron/images/a1b2c3-screenshot.png" alt="shot" width="1200" height="800" placeholder="data:image/png;base64,abc123" />
+      <Image src="/_holocron/images/a1b2c3-screenshot.png" alt="shot" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       "
     `)
   })

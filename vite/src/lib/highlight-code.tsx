@@ -348,5 +348,6 @@ export function highlightCode(code: string, lang?: string): string | undefined {
 }
 
 export function HighlightedCodeBlock(props: ComponentProps<typeof CodeBlock>) {
-  return <CodeBlock {...props} highlightedHtml={highlightCode(props.children, props.lang)} />
+  const highlightedHtml = highlightCode(props.children, props.lang)
+  return <CodeBlock {...props} title={props.title ?? props.lang} highlightedHtml={highlightedHtml} />
 }

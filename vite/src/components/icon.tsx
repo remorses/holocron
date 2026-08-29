@@ -8,11 +8,12 @@
  * bypass the project default. Emoji and URL/path icons render inline.
  */
 
-import React from 'react'
+import React, { type ReactElement } from 'react'
 import type { ConfigIcon } from '../config.ts'
 import { iconToRefs, isEmoji, isUrl } from '../lib/collect-icons.ts'
 import type { IconAtlas } from '../lib/resolve-icons.ts'
 import { useHolocronDataSafe } from '../router.ts'
+import { withBasePath } from '../lib/holocron-url.ts'
 
 export type IconProps = {
   icon: ConfigIcon | undefined
@@ -23,10 +24,16 @@ export type IconProps = {
   iconType?: string
   /** Foreground color as a CSS value (hex, var(), Tailwind arbitrary). */
   color?: string
+  /** Rendered when a named icon is absent from the request-scoped atlas. */
+  fallback?: ReactElement
 }
 
 function cssSize(size: number | string): string {
   return typeof size === 'number' ? `${size}px` : size
+}
+
+function hideBrokenImage(event: React.SyntheticEvent<HTMLImageElement>) {
+  event.currentTarget.hidden = true
 }
 
 function renderLibraryIcon(
@@ -72,7 +79,7 @@ export function resolveIconColor(iconColor: string | undefined): string | undefi
   return NAMED_ICON_COLORS[iconColor] ?? iconColor
 }
 
-export function Icon({ icon, size = 16, className, iconType, color }: IconProps): React.ReactElement | null {
+export function Icon({ icon, size = 16, className, iconType, color, fallback }: IconProps): React.ReactElement | null {
   const data = useHolocronDataSafe()
   const iconAtlas = data?.site?.icons
   const colorStyle = color ? { color } : undefined
@@ -104,8 +111,11 @@ export function Icon({ icon, size = 16, className, iconType, color }: IconProps)
       const length = cssSize(size)
       return (
         <img
-          src={icon}
+          src={withBasePath(icon)}
           alt=''
+          loading='lazy'
+          decoding='async'
+          onError={hideBrokenImage}
           width={typeof size === 'number' ? size : undefined}
           height={typeof size === 'number' ? size : undefined}
           className={className}
@@ -120,5 +130,5 @@ export function Icon({ icon, size = 16, className, iconType, color }: IconProps)
     defaultLibrary,
     iconType,
   })[0]
-  return ref && iconAtlas ? renderLibraryIcon(iconAtlas, ref, size, className, colorStyle) : null
+  return ref && iconAtlas ? renderLibraryIcon(iconAtlas, ref, size, className, colorStyle) ?? fallback ?? null : fallback ?? null
 }

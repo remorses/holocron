@@ -263,6 +263,151 @@ describe('MDX paragraph rendering — full production pipeline', () => {
   })
 })
 
+describe('interactive MDX components — full production pipeline', () => {
+  function expectSeparateLinks(html: string, overlayHref: string, innerHref: string) {
+    const overlayStart = html.indexOf(`href="${overlayHref}"`)
+    const overlayEnd = html.indexOf('</a>', overlayStart)
+    const innerStart = html.indexOf(`href="${innerHref}"`)
+
+    expect(overlayStart).toBeGreaterThan(-1)
+    expect(overlayEnd).toBeGreaterThan(overlayStart)
+    expect(innerStart).toBeGreaterThan(overlayEnd)
+    expect(html.match(/<a\b/g)).toHaveLength(2)
+  }
+
+  it('renders Card, Tile, and linked Badge children outside their overlay links', () => {
+    const card = renderMdx(dedent`
+      <Card href="/card" title="Card">
+      [Inner card link](/card-inner)
+      </Card>
+    `).html
+    const tile = renderMdx(dedent`
+      <Tile href="/tile" title="Tile">
+      [Inner tile link](/tile-inner)
+      </Tile>
+    `).html
+    const badge = renderMdx(dedent`
+      <Badge href="/badge">
+      [Inner badge link](/badge-inner)
+      </Badge>
+    `).html
+
+    expectSeparateLinks(card, '/card', '/card-inner')
+    expectSeparateLinks(tile, '/tile', '/tile-inner')
+    expectSeparateLinks(badge, '/badge', '/badge-inner')
+  })
+
+  it('does not nest the overlay link when Card requests an interactive root element', () => {
+    const html = renderMdx(dedent`
+      <Card as="a" href="/card" title="Card">
+      [Inner card link](/card-inner)
+      </Card>
+    `).html
+
+    expectSeparateLinks(html, '/card', '/card-inner')
+    expect(html).not.toMatch(/<a[^>]*>\s*<a/)
+  })
+
+  it('renders a disabled Card with an interactive root as a non-interactive div', () => {
+    const html = renderMdx(dedent`
+      <Card as="button" href="/card" title="Disabled" disabled>
+      Disabled body
+      </Card>
+    `).html
+
+    expect(html).toContain('<div')
+    expect(html).not.toContain('<button')
+    expect(html).not.toContain('href="/card"')
+  })
+})
+
+describe('Image rendering — full production pipeline', () => {
+  it('derives intrinsic height from the responsive frame width', () => {
+    const { html } = renderMdx(dedent`
+      <Image src="/screenshot.png" alt="Screenshot" intrinsicWidth="1280" intrinsicHeight="800" />
+    `)
+
+    expect(html).toContain('width:1280px')
+    expect(html).toContain('height:auto')
+    expect(html).toContain('aspect-ratio:1280 / 800')
+  })
+
+  it('preserves a style width and keeps the real image and placeholder uncropped', () => {
+    const { html } = renderMdx(dedent`
+      <Image
+        src="/logo.png"
+        alt="Logo"
+        intrinsicWidth="1200"
+        intrinsicHeight="800"
+        placeholder="data:image/png;base64,abc123"
+        style={{ width: '20px' }}
+      />
+    `)
+
+    expect(html).toContain('width:20px')
+    expect(html).toContain('object-fit:contain')
+    expect(html).not.toContain('object-fit:cover')
+    expect(html).toContain('max-width:100%')
+  })
+
+  it('uses auto for the missing author dimension', () => {
+    const { html } = renderMdx(dedent`
+      <Image src="/logo.png" alt="Logo" width="20" intrinsicWidth="1200" intrinsicHeight="800" />
+    `)
+
+    expect(html).toContain('width:20px')
+    expect(html).toContain('height:auto')
+  })
+
+  it('uses auto width when only author height is set', () => {
+    const { html } = renderMdx(dedent`
+      <Image src="/logo.png" alt="Logo" height="20" intrinsicWidth="1200" intrinsicHeight="800" />
+    `)
+
+    expect(html).toContain('width:auto')
+    expect(html).toContain('height:20px')
+  })
+
+  it('constrains a large explicit width to the content column', () => {
+    const { html } = renderMdx(dedent`
+      <Image src="/large.png" alt="Large" width="900" intrinsicWidth="1200" intrinsicHeight="800" />
+    `)
+
+    expect(html).toContain('width:900px')
+    expect(html).toContain('max-width:100%')
+    expect(html).toContain('height:auto')
+  })
+})
+
+describe('Callout icons — full production pipeline', () => {
+  it('preserves ZWJ emoji and URL icons', () => {
+    const emoji = renderMdx(dedent`
+      <Note icon="👩🏽‍💻">
+      Emoji icon
+      </Note>
+    `).html
+    const custom = renderMdx(dedent`
+      <Info icon="https://example.com/custom.svg">
+      Custom icon
+      </Info>
+    `).html
+
+    expect(emoji).toContain('👩🏽‍💻')
+    expect(custom).toContain('src="https://example.com/custom.svg"')
+  })
+
+  it('uses the callout type icon when a named atlas icon is unavailable', () => {
+    const { html } = renderMdx(dedent`
+      <Warning icon="not-a-real-icon">
+      Fallback icon
+      </Warning>
+    `)
+
+    expect(html).toContain('<svg')
+    expect(html).toContain('Fallback icon')
+  })
+})
+
 describe('createRenderNode code block options', () => {
   const md = dedent`
     \`\`\`ts

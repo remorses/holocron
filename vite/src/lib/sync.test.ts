@@ -706,7 +706,7 @@ title: Remote image
       distDir: project.distDir,
     })
 
-    expect(result.mdxContent.page).toContain(`<Image src="${imageUrl}" alt="" width="1" height="1" placeholder="data:image/webp;base64,`)
+    expect(result.mdxContent.page).toContain(`<Image src="${imageUrl}" alt="" intrinsicWidth="1" intrinsicHeight="1" placeholder="data:image/webp;base64,`)
   })
 
   test('cache invalidation when MDX file changes', async () => {
@@ -878,7 +878,7 @@ title: Image Page
     const secondSrc = second.mdxContent.page!.match(/src="([^"]+)"/)?.[1]
     expect(secondSrc).toMatch(/^\/_holocron\/images\/[0-9a-f]{8}-art\.svg$/)
     expect(secondSrc).not.toBe(firstSrc)
-    expect(second.mdxContent.page).toContain('width="16"')
+    expect(second.mdxContent.page).toContain('intrinsicWidth="16"')
 
     // Unchanged third sync hits the cache
     const third = await syncNavigation({
@@ -1220,8 +1220,8 @@ import Snippet from '/snippets/guide.md'
     expect(pageMdx).toBeDefined()
     expect(pageMdx).toContain('Some guide content.')
     expect(pageMdx).toContain('<Image')
-    expect(pageMdx).toContain('width="24"')
-    expect(pageMdx).toContain('height="12"')
+    expect(pageMdx).toContain('intrinsicWidth="24"')
+    expect(pageMdx).toContain('intrinsicHeight="12"')
   })
 
   test('inlines imported .md headings into page TOC', async () => {

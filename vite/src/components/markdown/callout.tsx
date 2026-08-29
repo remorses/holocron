@@ -106,7 +106,7 @@ function resolveCalloutIcon({
   if (icon === undefined || icon === null) return fallback
   if (typeof icon !== 'string') return icon
   // String icon → delegate to <Icon> (handles emoji, URL, atlas lookup)
-  return <Icon icon={icon} iconType={iconType} size={16} color={colorStyle?.color} />
+  return <Icon icon={icon} iconType={iconType} size={16} color={colorStyle?.color} fallback={React.isValidElement(fallback) ? fallback : undefined} />
 }
 
 export function Callout({ children, type, variant, title, color, icon, iconType, ariaLabel, className }: CalloutProps) {

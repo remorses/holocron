@@ -5,7 +5,7 @@
  * map so native Markdown keeps one editorial rendering implementation.
  */
 
-import { Children, isValidElement, type ReactNode } from 'react'
+import { Children, isValidElement, type CSSProperties, type ReactNode } from 'react'
 import {
   A,
   Blockquote,
@@ -30,8 +30,11 @@ export function EditorialImage(props: {
   alt: string
   width?: string | number
   height?: string | number
+  intrinsicWidth?: string | number
+  intrinsicHeight?: string | number
   placeholder?: string
   className?: string
+  style?: CSSProperties
   loading?: 'lazy' | 'eager'
 }) {
   return (
@@ -40,8 +43,11 @@ export function EditorialImage(props: {
       alt={props.alt}
       width={props.width}
       height={props.height}
+      intrinsicWidth={props.intrinsicWidth}
+      intrinsicHeight={props.intrinsicHeight}
       placeholder={props.placeholder}
       className={props.className || ''}
+      style={props.style}
       loading={props.loading}
     />
   )

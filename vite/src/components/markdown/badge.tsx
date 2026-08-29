@@ -60,10 +60,19 @@ export function Badge({
     const content = <>{leading}{children}{trailing || (iconColor && icon ? <Icon icon={String(icon)} iconType={iconType} size={iconSize} color={iconColor} /> : null)}</>
     if (href && !disabled) {
       const external = isExternalHref(href, site?.origin)
-      if (external) {
-        return <a className={badgeClass} href={href} onClick={onClick} target='_blank' rel='noopener noreferrer'>{content}</a>
-      }
-      return <Link className={badgeClass} href={stripOriginIfSameHost(href, site?.origin)} onClick={onClick}>{content}</Link>
+      const resolvedHref = stripOriginIfSameHost(href, site?.origin)
+      return (
+        <span className={cn('relative isolate', badgeClass)}>
+          <Link
+            className='absolute inset-0 z-0 rounded-[inherit]'
+            href={resolvedHref}
+            aria-label={typeof children === 'string' ? children : resolvedHref}
+            onClick={onClick}
+            {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+          />
+          <span className='pointer-events-none relative z-10 inline-flex items-center gap-1 [&_a]:pointer-events-auto [&_button]:pointer-events-auto [&_[role=button]]:pointer-events-auto'>{content}</span>
+        </span>
+      )
     }
     if (onClick && !disabled) {
       return <button type='button' className={badgeClass} onClick={onClick}>{content}</button>

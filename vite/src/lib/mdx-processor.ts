@@ -1,7 +1,7 @@
 /**
  * MDX processor — extracts frontmatter, headings, and image srcs.
  * Also provides AST-based image rewriting: mutates mdast image nodes
- * in place (converting markdown images to JSX, injecting dimensions),
+ * in place (converting markdown images to JSX, injecting intrinsic metadata),
  * then serializes back to MDX string.
  */
 
@@ -468,8 +468,8 @@ export type ResolvedImage = {
 /**
  * Mutate the mdast tree in place:
  * - Markdown images (![alt](src)) → converted to mdxJsxFlowElement Image
- * - Root-level JSX img → converted to responsive Image while preserving non-sizing attrs
- * - Existing JSX Image → src updated, width/height/placeholder attrs added
+ * - Root-level JSX img → converted to Image while preserving author attributes
+ * - Existing JSX Image → src updated, intrinsic dimensions and placeholder added
  *
  * Then serializes the mutated tree back to MDX string.
  */
@@ -531,23 +531,8 @@ function rewriteNode(
       }
       setJsxAttr({ node, attrName: 'src', value: resolved.publicSrc })
       if (node.name === 'Image') {
-        // Preserve user-specified dimensions. When only one is set, compute
-        // the other proportionally from the natural aspect ratio. Non-numeric
-        // values like "100%" or expression attrs are preserved but not used
-        // for proportional computation (would produce NaN).
-        const userW = getJsxAttrValue(node, 'width')
-        const userH = getJsxAttrValue(node, 'height')
-        const userWNum = parseNumericDimension(userW)
-        const userHNum = parseNumericDimension(userH)
-        const { width: natW, height: natH } = resolved.meta
-        if (!userW) {
-          const w = userHNum ? Math.round(userHNum * natW / natH) : natW
-          setJsxAttr({ node, attrName: 'width', value: String(w) })
-        }
-        if (!userH) {
-          const h = userWNum ? Math.round(userWNum * natH / natW) : natH
-          setJsxAttr({ node, attrName: 'height', value: String(h) })
-        }
+        setJsxAttr({ node, attrName: 'intrinsicWidth', value: String(resolved.meta.width) })
+        setJsxAttr({ node, attrName: 'intrinsicHeight', value: String(resolved.meta.height) })
         setJsxAttr({ node, attrName: 'placeholder', value: resolved.meta.placeholder })
       }
     }
@@ -583,8 +568,8 @@ function createImageNode({ src, alt, meta }: { src: string; alt: string; meta: I
     attributes: [
       { type: 'mdxJsxAttribute', name: 'src', value: src },
       { type: 'mdxJsxAttribute', name: 'alt', value: alt },
-      { type: 'mdxJsxAttribute', name: 'width', value: String(meta.width) },
-      { type: 'mdxJsxAttribute', name: 'height', value: String(meta.height) },
+      { type: 'mdxJsxAttribute', name: 'intrinsicWidth', value: String(meta.width) },
+      { type: 'mdxJsxAttribute', name: 'intrinsicHeight', value: String(meta.height) },
       { type: 'mdxJsxAttribute', name: 'placeholder', value: meta.placeholder },
     ],
     children: [],
@@ -593,39 +578,14 @@ function createImageNode({ src, alt, meta }: { src: string; alt: string; meta: I
 }
 
 function createImageNodeFromJsxImage(node: JsxNode, resolved: ResolvedImage): RootContent {
-  // Preserve user-specified width/height if present (e.g. <img height="24"> for logos).
-  // When only one dimension is specified, compute the other proportionally from the
-  // natural aspect ratio so the image doesn't distort.
-  const userWidth = getJsxAttrValue(node, 'width')
-  const userHeight = getJsxAttrValue(node, 'height')
-  const userWNum = parseNumericDimension(userWidth)
-  const userHNum = parseNumericDimension(userHeight)
-  const { width: natW, height: natH } = resolved.meta
-  let finalWidth: string
-  let finalHeight: string
-  if (userWidth && userHeight) {
-    finalWidth = userWidth
-    finalHeight = userHeight
-  } else if (userWNum) {
-    finalWidth = userWidth!
-    finalHeight = String(Math.round(userWNum * natH / natW))
-  } else if (userHNum) {
-    finalWidth = String(Math.round(userHNum * natW / natH))
-    finalHeight = userHeight!
-  } else {
-    // Non-numeric user values (like "100%") or no values at all — use natural dims
-    finalWidth = String(natW)
-    finalHeight = String(natH)
-  }
-
-  const attributes = copyJsxAttrsExcept(node, ['src', 'width', 'height', 'placeholder', 'intrinsicWidth', 'intrinsicHeight'])
+  const attributes = copyJsxAttrsExcept(node, ['src', 'placeholder', 'intrinsicWidth', 'intrinsicHeight'])
   attributes.push({ type: 'mdxJsxAttribute', name: 'src', value: resolved.publicSrc })
   if (!attributes.some((attr) => attr.type === 'mdxJsxAttribute' && attr.name === 'alt')) {
     attributes.push({ type: 'mdxJsxAttribute', name: 'alt', value: '' })
   }
   attributes.push(
-    { type: 'mdxJsxAttribute', name: 'width', value: finalWidth },
-    { type: 'mdxJsxAttribute', name: 'height', value: finalHeight },
+    { type: 'mdxJsxAttribute', name: 'intrinsicWidth', value: String(resolved.meta.width) },
+    { type: 'mdxJsxAttribute', name: 'intrinsicHeight', value: String(resolved.meta.height) },
     { type: 'mdxJsxAttribute', name: 'placeholder', value: resolved.meta.placeholder },
   )
   const imageNode: FlowJsxNode = {
@@ -668,13 +628,6 @@ function getJsxAttrValue(node: JsxNode, attrName: string): string | undefined {
     }
   }
   return undefined
-}
-
-/** Parse a JSX attr value as a finite number, returning undefined for non-numeric strings like "100%" or expression values. */
-function parseNumericDimension(value: string | undefined): number | undefined {
-  if (!value) return undefined
-  const n = Number(value)
-  return Number.isFinite(n) ? n : undefined
 }
 
 function setJsxAttr({ node, attrName, value }: { node: JsxNode; attrName: string; value: string }): void {

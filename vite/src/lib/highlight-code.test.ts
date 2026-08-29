@@ -209,6 +209,20 @@ describe('highlightCode', () => {
     }))
     expect(rendered).toContain('token keyword')
     expect(rendered).toContain('token string')
+    expect(rendered).toContain('>ts</div>')
+    expect(rendered).toContain('aria-label="Copy code"')
+  })
+
+  test('unknown fence languages keep the frame, language label, and copy action', () => {
+    const rendered = renderToStaticMarkup(createElement(HighlightedCodeBlock, {
+      lang: 'magento',
+      children: 'bin/magento cache:flush',
+    }))
+
+    expect(rendered).toContain('<figure')
+    expect(rendered).toContain('>magento</div>')
+    expect(rendered).toContain('aria-label="Copy code"')
+    expect(rendered).toContain('bin/magento cache:flush')
   })
 
   test('grammar registration is safe to re-run on RSC remount', () => {

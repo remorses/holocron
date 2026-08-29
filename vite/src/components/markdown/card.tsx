@@ -49,24 +49,31 @@ export function Card({
   const data = useHolocronDataSafe()
   const external = isExternalHref(href, data?.site?.origin)
   const showArrow = arrow ?? external
-  const content = (
-    <div className={cn('group/card relative flex h-full flex-col gap-2 rounded-lg bg-card transition-colors duration-150', href && !disabled && 'hover:bg-accent', horizontal && 'flex-row items-center', disabled && 'opacity-50', className)} style={{ padding: 'var(--card-padding)', border: 'var(--card-border)', boxShadow: 'var(--card-shadow)' }}>
-      {img && <img src={withBasePath(img)} alt='' className='w-full rounded-lg border border-border-subtle' style={{ maxWidth: '100%', height: 'auto' }} />}
-      <div className='flex items-center gap-2'>
-        {renderCompatIcon({ icon, iconType, size: 16, color })}
-        {title ? <div className='text-sm font-semibold text-foreground'>{title}</div> : null}
+  const resolvedHref = href ? stripOriginIfSameHost(href, data?.site?.origin) : undefined
+  const Component = disabled || (resolvedHref && (as === 'a' || as === 'button'))
+    ? 'div'
+    : as ?? 'div'
+  return (
+    <Component className={cn('group/card relative isolate h-full rounded-lg bg-card transition-colors duration-150', href && !disabled && 'hover:bg-accent', disabled && 'opacity-50', className)} style={{ padding: 'var(--card-padding)', border: 'var(--card-border)', boxShadow: 'var(--card-shadow)' }}>
+      {resolvedHref && !disabled && (
+        <Link
+          href={resolvedHref}
+          aria-label={typeof title === 'string' ? title : cta ?? resolvedHref}
+          className='absolute inset-0 z-0 rounded-[inherit] no-underline'
+          {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        />
+      )}
+      <div className={cn('pointer-events-none relative z-10 flex h-full flex-col gap-2 [&_a]:pointer-events-auto [&_button]:pointer-events-auto [&_[role=button]]:pointer-events-auto', horizontal && 'flex-row items-center')}>
+        {img && <img src={withBasePath(img)} alt='' className='w-full rounded-lg border border-border-subtle' style={{ maxWidth: '100%', height: 'auto' }} />}
+        <div className='flex items-center gap-2'>
+          {renderCompatIcon({ icon, iconType, size: 16, color })}
+          {title ? <div className='text-sm font-semibold text-foreground'>{title}</div> : null}
+        </div>
+        {children !== undefined && children !== null && <div className='flex flex-col gap-3 text-sm text-muted-foreground'>{children}</div>}
+        {(cta || showArrow) && <div className='flex items-center gap-1 text-xs text-primary'>{cta}{showArrow && <span aria-hidden='true'>↗</span>}</div>}
       </div>
-      {children !== undefined && children !== null && <div className='flex flex-col gap-3 text-sm text-muted-foreground'>{children}</div>}
-      {(cta || showArrow) && <div className='flex items-center gap-1 text-xs text-primary'>{cta}{showArrow && <span aria-hidden='true'>↗</span>}</div>}
-    </div>
+    </Component>
   )
-  if (disabled || !href) {
-    if (!as) return content
-    const Component = as
-    return <Component>{content}</Component>
-  }
-  if (external) return <a href={href} target='_blank' rel='noopener noreferrer' className='no-underline'>{content}</a>
-  return <Link href={stripOriginIfSameHost(href, data?.site?.origin)} className='no-underline'>{content}</Link>
 }
 
 export function Columns({ cols, children }: { cols?: number; children: React.ReactNode }) {

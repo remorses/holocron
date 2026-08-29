@@ -38,6 +38,8 @@ export function Image({
   alt,
   width,
   height,
+  intrinsicWidth,
+  intrinsicHeight,
   className = '',
   style,
   disableZoom = false,
@@ -55,6 +57,9 @@ export function Image({
   alt: string
   width?: number | string
   height?: number | string
+  /** Natural dimensions injected by the build-time image processor. */
+  intrinsicWidth?: number | string
+  intrinsicHeight?: number | string
   className?: string
   style?: React.CSSProperties
   /**
@@ -71,8 +76,12 @@ export function Image({
   loading?: 'lazy' | 'eager'
 }) {
   const [loaded, setLoaded] = useState(false)
-  const sourceWidth = readNumericAttr(width)
-  const sourceHeight = readNumericAttr(height)
+  const processedWidth = readNumericAttr(intrinsicWidth)
+  const processedHeight = readNumericAttr(intrinsicHeight)
+  const sourceWidth = processedWidth ?? readNumericAttr(width)
+  const sourceHeight = processedHeight ?? readNumericAttr(height)
+  const authorWidth = style?.width ?? toAuthorCssDimension(width, processedWidth)
+  const authorHeight = style?.height ?? toAuthorCssDimension(height, processedHeight)
 
   // Root-relative srcs (publicDir files like /images/x.png and copied
   // /_holocron/images/<hash> paths) must be served under the Vite base
@@ -94,12 +103,21 @@ export function Image({
   }, [])
 
   if (!sourceWidth || !sourceHeight) {
-    return <img src={resolvedSrc} alt={alt} loading={loading} className={className} style={{ maxWidth: '100%', height: 'auto', ...style }} />
+    const responsiveStyle = authorWidth === undefined && authorHeight === undefined
+      ? { maxWidth: '100%', height: 'auto' }
+      : authorWidth !== undefined && authorHeight === undefined
+        ? { height: 'auto' }
+        : authorHeight !== undefined && authorWidth === undefined
+          ? { width: 'auto' }
+          : undefined
+    return <img src={resolvedSrc} alt={alt} width={width} height={height} loading={loading} className={className} style={{ display: 'block', objectFit: style?.objectFit ?? 'contain', ...responsiveStyle, ...style }} />
   }
 
   const frameStyle = buildImageFrameStyle({
     sourceWidth,
     sourceHeight,
+    authorWidth,
+    authorHeight,
   })
   const imgWidth = sourceWidth
   const imgHeight = sourceHeight
@@ -119,7 +137,8 @@ export function Image({
         display: 'block',
         width: '100%',
         height: '100%',
-        objectFit: 'cover',
+        objectFit: style?.objectFit ?? 'contain',
+        objectPosition: style?.objectPosition,
         filter: !effectivePlaceholder || loaded ? 'blur(0px)' : 'blur(6px)',
         opacity: !effectivePlaceholder || loaded ? 1 : 0,
         transition: 'opacity 0.16s ease-out, filter 0.16s ease-out',
@@ -151,7 +170,8 @@ export function Image({
             gridArea: '1 / 1',
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
+            objectFit: style?.objectFit ?? 'contain',
+            objectPosition: style?.objectPosition,
             imageRendering: 'pixelated',
             zIndex: 0,
           }}
@@ -177,23 +197,39 @@ function readNumericAttr(value: number | string | undefined): number | undefined
   return undefined
 }
 
+function toAuthorCssDimension(
+  value: number | string | undefined,
+  intrinsic: number | undefined,
+): React.CSSProperties['width'] {
+  const numeric = readNumericAttr(value)
+  if (numeric !== undefined) {
+    return intrinsic !== undefined && numeric !== intrinsic ? `${numeric}px` : undefined
+  }
+  return value
+}
+
 function buildImageFrameStyle({
   sourceWidth,
   sourceHeight,
+  authorWidth,
+  authorHeight,
 }: {
   sourceWidth: number
   sourceHeight: number
+  authorWidth: React.CSSProperties['width']
+  authorHeight: React.CSSProperties['height']
 }): React.CSSProperties {
-  // Use a definite pixel width capped at 100% instead of `width: 100%` +
+  // Default sizing uses a definite pixel width capped at 100% instead of `width: 100%` +
   // `maxWidth: min(...)`. In flex containers (Marquee, card grids), `width: 100%`
   // creates a circular dependency — the flex item auto-sizes from content, but the
   // child's percentage width depends on the parent — causing the flex item to fall
   // back to the image's intrinsic/natural size instead of the constrained size.
-  // A definite width avoids this and works correctly in both flex and block contexts.
+  // That width avoids this and works correctly in both flex and block contexts.
   return {
-    display: 'grid',
+    display: 'inline-grid',
     aspectRatio: `${sourceWidth} / ${sourceHeight}`,
-    width: `${sourceWidth}px`,
+    width: authorWidth ?? (authorHeight === undefined ? `${sourceWidth}px` : 'auto'),
+    height: authorHeight ?? 'auto',
     maxWidth: '100%',
   }
 }

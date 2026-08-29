@@ -3,7 +3,8 @@
  */
 
 import { describe, expect, test } from 'vitest'
-import { iconToRefs, stringIconToRefs } from './collect-icons.ts'
+import { collectLocalIconPaths, iconToRefs, isEmoji, stringIconToRefs } from './collect-icons.ts'
+import { normalize } from './normalize-config.ts'
 
 describe('stringIconToRefs', () => {
   test('uses the configured project library for plain strings', () => {
@@ -26,11 +27,27 @@ describe('stringIconToRefs', () => {
     expect(stringIconToRefs('http://cdn.example.com/rocket.svg', { defaultLibrary: 'lucide' })).toEqual([])
     expect(stringIconToRefs('/icons/rocket.svg', { defaultLibrary: 'fontawesome' })).toEqual([])
   })
+
+  test('keeps ZWJ emoji with skin-tone modifiers out of the icon atlas', () => {
+    expect(isEmoji('👩🏽‍💻')).toBe(true)
+    expect(stringIconToRefs('👩🏽‍💻', { defaultLibrary: 'lucide' })).toEqual([])
+  })
 })
 
 describe('iconToRefs', () => {
   test('uses the configured project library for object icons without a library', () => {
     expect(iconToRefs({ name: 'book' }, { defaultLibrary: 'lucide' })).toEqual(['lucide:book'])
     expect(iconToRefs({ name: 'book' }, { defaultLibrary: 'fontawesome' })).toEqual(['fontawesome:book'])
+  })
+})
+
+describe('collectLocalIconPaths', () => {
+  test('collects root-relative icon values without treating other paths as icons', () => {
+    const config = normalize({
+      name: 'Docs',
+      navbar: { links: [{ label: 'Home', href: '/not-an-icon.svg', icon: '/icons/root.svg' }] },
+      navigation: { groups: [{ group: 'Guide', icon: '/icons/group.svg', pages: ['index'] }] },
+    })
+    expect(collectLocalIconPaths({ config, navigation: [] })).toEqual(['/icons/root.svg', '/icons/group.svg'])
   })
 })

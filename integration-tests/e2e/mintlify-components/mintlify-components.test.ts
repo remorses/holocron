@@ -84,4 +84,21 @@ test.describe("mintlify components fixture", () => {
     expect(html).toContain("Added nested content coverage");
     expect(html).toContain("mdx-logo-test");
   });
+
+  test("link cards keep child links valid during hydration", async ({ page }) => {
+    const hydrationErrors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error" && /hydration|validateDOMNesting|#418/i.test(message.text())) {
+        hydrationErrors.push(message.text());
+      }
+    });
+
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("link", { name: "inner link" })).toHaveAttribute(
+      "href",
+      "https://example.com/inner-link",
+    );
+    await expect(page.locator("a a")).toHaveCount(0);
+    expect(hydrationErrors).toEqual([]);
+  });
 });
