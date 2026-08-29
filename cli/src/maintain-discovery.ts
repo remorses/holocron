@@ -21,6 +21,7 @@ export type MaintainPage = {
   siteRoot: string
   prompt: string | undefined
   references: PromptReferences
+  promptError?: string
 }
 
 const LOCAL_REFERENCE_RE = /@((?:\.\.?\/|\/)[^\s<>"'`()\[\]{}]+)/g
@@ -105,8 +106,10 @@ export function extractPromptReferences({
             catch { return '' }
           })()
         : ''
-      if (previousType !== 'blob' && previousType !== 'tree') throw new Error(`Prompt reference does not exist: ${raw}`)
-      localByPath.set(repoPath, { kind: previousType === 'tree' ? 'directory' : 'file', path: repoPath })
+      localByPath.set(repoPath, {
+        kind: previousType === 'tree' || (previousType !== 'blob' && raw.endsWith('/')) ? 'directory' : 'file',
+        path: repoPath,
+      })
       continue
     }
 
@@ -125,6 +128,10 @@ export function extractPromptReferences({
   )]
 
   return { local: [...localByPath.values()], urls }
+}
+
+export function hasMissingLocalReferences(repoRoot: string, references: PromptReferences) {
+  return references.local.some((reference) => !fs.existsSync(path.join(repoRoot, reference.path)))
 }
 
 export function matchChangedReferences({
@@ -210,6 +217,124 @@ export function listTrackedFiles(repoRoot: string) {
   return parseNulPaths(runGit(repoRoot, ['ls-files', '-z']))
 }
 
+function listGitlinkPaths(repoRoot: string) {
+  try {
+    const paths: string[] = []
+    for (const entry of runGit(repoRoot, ['ls-files', '-s', '-z']).split('\0').filter(Boolean)) {
+      if (!entry.startsWith('160000 ')) continue
+      const tab = entry.indexOf('\t')
+      if (tab === -1) continue
+      paths.push(entry.slice(tab + 1).replace(/^\.\//, '').replaceAll('\\', '/'))
+    }
+    return paths
+  } catch {
+    return []
+  }
+}
+
+function isInitializedSubmodule(repoRoot: string, subPath: string) {
+  return fs.existsSync(path.join(repoRoot, subPath, '.git'))
+}
+
+function prefixSubmodulePath(subPath: string, inner: string) {
+  return `${subPath}/${inner}`
+}
+
+function gitLinkSha({ repoRoot, commit, subPath }: { repoRoot: string; commit: string; subPath: string }) {
+  try {
+    return runGit(repoRoot, ['rev-parse', '--verify', `${commit}:${subPath}`]).trim()
+  } catch {
+    return undefined
+  }
+}
+
+function resolveRangeEnds(repoRoot: string, range: { from: string; to: string; pullRequest?: boolean }) {
+  if (/^0+$/.test(range.from)) return undefined
+  if (range.pullRequest) {
+    try {
+      return { from: runGit(repoRoot, ['merge-base', range.from, range.to]).trim(), to: range.to }
+    } catch {
+      return { from: range.from, to: range.to }
+    }
+  }
+  return { from: range.from, to: range.to }
+}
+
+// Parent `git diff --name-only` reports the gitlink (`template`), not inner files.
+// Run git inside each initialized submodule and prefix paths from the parent root.
+function listSubmoduleInnerChanges({
+  repoRoot,
+  subPath,
+  range,
+}: {
+  repoRoot: string
+  subPath: string
+  range?: { from: string; to: string; pullRequest?: boolean }
+}) {
+  const abs = path.join(repoRoot, subPath)
+  if (!isInitializedSubmodule(repoRoot, subPath)) return []
+  try {
+    if (!range) {
+      return parseNulPaths(runGit(abs, ['diff', ...GIT_DIFF_FLAGS, '--name-only', '-z', 'HEAD']))
+        .map((file) => prefixSubmodulePath(subPath, file))
+    }
+    const ends = resolveRangeEnds(repoRoot, range)
+    if (!ends) return []
+    const fromSha = gitLinkSha({ repoRoot, commit: ends.from, subPath })
+    const toSha = gitLinkSha({ repoRoot, commit: ends.to, subPath })
+    if (!fromSha && toSha) {
+      return parseNulPaths(runGit(abs, ['ls-tree', '-r', '-z', '--name-only', toSha]))
+        .map((file) => prefixSubmodulePath(subPath, file))
+    }
+    if (fromSha && !toSha) {
+      return parseNulPaths(runGit(abs, ['ls-tree', '-r', '-z', '--name-only', fromSha]))
+        .map((file) => prefixSubmodulePath(subPath, file))
+    }
+    if (!fromSha || !toSha || fromSha === toSha) return []
+    return parseNulPaths(runGit(abs, ['diff', ...GIT_DIFF_FLAGS, '--name-only', '-z', `${fromSha}..${toSha}`]))
+      .map((file) => prefixSubmodulePath(subPath, file))
+  } catch {
+    return []
+  }
+}
+
+function listSubmoduleInnerWorkingTree(repoRoot: string, subPath: string) {
+  const abs = path.join(repoRoot, subPath)
+  if (!isInitializedSubmodule(repoRoot, subPath)) return []
+  try {
+    const tracked = parseNulPaths(runGit(abs, ['diff', ...GIT_DIFF_FLAGS, '--name-only', '-z', 'HEAD']))
+    const untracked = parseNulPaths(runGit(abs, ['ls-files', '-z', '--others', '--exclude-standard']))
+    return [...new Set([...tracked, ...untracked])].map((file) => prefixSubmodulePath(subPath, file))
+  } catch {
+    return []
+  }
+}
+
+function expandSubmoduleChangedFiles({
+  repoRoot,
+  parentFiles,
+  range,
+}: {
+  repoRoot: string
+  parentFiles: string[]
+  range?: { from: string; to: string; pullRequest?: boolean }
+}) {
+  const gitlinks = listGitlinkPaths(repoRoot)
+  const gitlinkSet = new Set(gitlinks)
+  const expanded = parentFiles.filter((file) => !gitlinkSet.has(file))
+  const toScan = range ? gitlinks.filter((sub) => parentFiles.includes(sub)) : gitlinks
+  for (const sub of toScan) {
+    const inner = listSubmoduleInnerChanges({ repoRoot, subPath: sub, range })
+    if (inner.length > 0) expanded.push(...inner)
+    else if (parentFiles.includes(sub) && !isInitializedSubmodule(repoRoot, sub)) expanded.push(sub)
+  }
+  return [...new Set(expanded)]
+}
+
+function matchGitlink(file: string, gitlinks: string[]) {
+  return [...gitlinks].sort((a, b) => b.length - a.length).find((sub) => file === sub || file.startsWith(`${sub}/`))
+}
+
 function isHolocronSiteConfig(raw: string) {
   let parsed: { name?: string; $schema?: string }
   try {
@@ -257,29 +382,47 @@ export function discoverMaintainPages(repoRoot: string, baseSha?: string): Maint
       const promptValue = frontmatter.prompt
       const prompt = typeof promptValue === 'string' && promptValue.trim() ? promptValue : undefined
       if (!prompt && typeof frontmatter.title !== 'string') return null
-      const references = prompt
-        ? extractPromptReferences({ prompt, pagePath: absolutePath, repoRoot, baseSha })
-        : { local: [], urls: [] }
-      return { path: file, absolutePath, siteRoot, prompt, references }
+      try {
+        const references = prompt
+          ? extractPromptReferences({ prompt, pagePath: absolutePath, repoRoot, baseSha })
+          : { local: [], urls: [] }
+        return { path: file, absolutePath, siteRoot, prompt, references }
+      } catch (error) {
+        return {
+          path: file,
+          absolutePath,
+          siteRoot,
+          prompt,
+          references: { local: [], urls: [] },
+          promptError: error instanceof Error ? error.message : String(error),
+        }
+      }
     })
     .filter(isTruthy)
 }
 
 export function getChangedFiles(repoRoot: string, range?: { from: string; to: string; pullRequest?: boolean }) {
+  let parentFiles: string[]
   if (!range) {
-    return parseNulPaths(runGit(repoRoot, ['diff', ...GIT_DIFF_FLAGS, '--name-only', '-z', 'HEAD']))
+    parentFiles = parseNulPaths(runGit(repoRoot, ['diff', ...GIT_DIFF_FLAGS, '--name-only', '-z', 'HEAD']))
+  } else if (/^0+$/.test(range.from)) {
+    parentFiles = parseNulPaths(runGit(repoRoot, ['diff-tree', ...GIT_DIFF_FLAGS, '--root', '--no-commit-id', '--name-only', '-r', '-z', range.to]))
+  } else {
+    const separator = range.pullRequest ? '...' : '..'
+    parentFiles = parseNulPaths(runGit(repoRoot, ['diff', ...GIT_DIFF_FLAGS, '--name-only', '-z', `${range.from}${separator}${range.to}`]))
   }
-  if (/^0+$/.test(range.from)) {
-    return parseNulPaths(runGit(repoRoot, ['diff-tree', ...GIT_DIFF_FLAGS, '--root', '--no-commit-id', '--name-only', '-r', '-z', range.to]))
-  }
-  const separator = range.pullRequest ? '...' : '..'
-  return parseNulPaths(runGit(repoRoot, ['diff', ...GIT_DIFF_FLAGS, '--name-only', '-z', `${range.from}${separator}${range.to}`]))
+  return expandSubmoduleChangedFiles({ repoRoot, parentFiles, range })
 }
 
 export function getWorkingTreeChanges(repoRoot: string) {
+  const gitlinks = listGitlinkPaths(repoRoot)
+  const gitlinkSet = new Set(gitlinks)
   const tracked = parseNulPaths(runGit(repoRoot, ['diff', ...GIT_DIFF_FLAGS, '--name-only', '-z', 'HEAD']))
+    .filter((file) => !gitlinkSet.has(file))
   const untracked = parseNulPaths(runGit(repoRoot, ['ls-files', '-z', '--others', '--exclude-standard']))
-  return [...new Set([...tracked, ...untracked])]
+    .filter((file) => !gitlinkSet.has(file))
+  const inner = gitlinks.flatMap((sub) => listSubmoduleInnerWorkingTree(repoRoot, sub))
+  return [...new Set([...tracked, ...untracked, ...inner])]
 }
 
 export function getHeadSha(repoRoot: string) {
@@ -292,15 +435,51 @@ export function getCurrentBranch(repoRoot: string) {
 
 export function getChangedPatches(repoRoot: string, range: { from: string; to: string; pullRequest?: boolean }, files: string[]) {
   if (files.length === 0) return ''
+  const gitlinks = listGitlinkPaths(repoRoot)
+  const parentFiles: string[] = []
+  const innerBySub = new Map<string, string[]>()
+  for (const file of files) {
+    const sub = matchGitlink(file, gitlinks)
+    if (sub && file.startsWith(`${sub}/`)) {
+      const inner = innerBySub.get(sub) ?? []
+      inner.push(file.slice(sub.length + 1))
+      innerBySub.set(sub, inner)
+      continue
+    }
+    parentFiles.push(file)
+  }
+
   const patches: string[] = []
-  for (let i = 0; i < files.length; i += GIT_PATH_CHUNK) {
-    const chunk = files.slice(i, i + GIT_PATH_CHUNK)
+  for (let i = 0; i < parentFiles.length; i += GIT_PATH_CHUNK) {
+    const chunk = parentFiles.slice(i, i + GIT_PATH_CHUNK)
     if (/^0+$/.test(range.from)) {
       patches.push(runGitPatch(repoRoot, ['show', ...GIT_DIFF_FLAGS, '--format=', '--unified=20', range.to, '--', ...chunk]))
       continue
     }
     const separator = range.pullRequest ? '...' : '..'
     patches.push(runGitPatch(repoRoot, ['diff', ...GIT_DIFF_FLAGS, '--unified=20', `${range.from}${separator}${range.to}`, '--', ...chunk]))
+  }
+
+  const ends = resolveRangeEnds(repoRoot, range)
+  for (const [sub, inner] of innerBySub) {
+    if (!isInitializedSubmodule(repoRoot, sub) || !ends) continue
+    const fromSha = gitLinkSha({ repoRoot, commit: ends.from, subPath: sub })
+    const toSha = gitLinkSha({ repoRoot, commit: ends.to, subPath: sub })
+    if (!fromSha || !toSha || fromSha === toSha) continue
+    const abs = path.join(repoRoot, sub)
+    for (let i = 0; i < inner.length; i += GIT_PATH_CHUNK) {
+      const chunk = inner.slice(i, i + GIT_PATH_CHUNK)
+      patches.push(runGitPatch(abs, [
+        'diff',
+        ...GIT_DIFF_FLAGS,
+        `--src-prefix=a/${sub}/`,
+        `--dst-prefix=b/${sub}/`,
+        '--unified=20',
+        `${fromSha}..${toSha}`,
+        '--',
+        ...chunk,
+      ]))
+    }
   }
   return patches.join('').slice(0, 300_000)
 }
