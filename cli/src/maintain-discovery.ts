@@ -185,7 +185,7 @@ function gitExecOptions(repoRoot: string, timeout: number) {
   return {
     cwd: repoRoot,
     encoding: 'utf8' as const,
-    stdio: ['ignore', 'pipe', 'pipe'] as const,
+    stdio: ['ignore', 'pipe', 'pipe'] as ['ignore', 'pipe', 'pipe'],
     timeout,
     maxBuffer: GIT_MAX_BUFFER,
     killSignal: 'SIGKILL' as const,
