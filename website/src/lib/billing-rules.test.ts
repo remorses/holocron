@@ -6,6 +6,7 @@ import {
   FREE_PRODUCTION_DEPLOY_LIMIT,
   hasDeployEntitlement,
   shouldShowHolocronPromotion,
+  subscriptionRequiredPayload,
 } from './billing-rules.ts'
 
 describe('hasDeployEntitlement', () => {
@@ -119,5 +120,24 @@ describe('shouldShowHolocronPromotion', () => {
       hasActiveSubscription: false,
       orgPlan: 'free',
     })).toBe(true)
+  })
+})
+
+describe('subscriptionRequiredPayload', () => {
+  test('includes subscribe command and billing URL', () => {
+    expect(subscriptionRequiredPayload({
+      reason: 'This project is on the free plan. Holocron Maintain needs Holocron Pro.',
+      projectId: 'prj_123',
+      origin: 'https://holocron.so',
+    })).toMatchInlineSnapshot(`
+      {
+        "code": "SUBSCRIPTION_REQUIRED",
+        "command": "npx -y "@holocron.so/cli" subscribe --project prj_123",
+        "error": "This project is on the free plan. Holocron Maintain needs Holocron Pro.",
+        "hint": "Subscribe this project to Holocron Pro, then retry.",
+        "projectId": "prj_123",
+        "upgradeUrl": "https://holocron.so/dashboard/projects/prj_123/billing",
+      }
+    `)
   })
 })

@@ -48,6 +48,7 @@
     "test": "vitest run",
     "prepublishOnly": "rimraf dist \"*.tsbuildinfo\" && pnpm build",
     "cli": "tsx src/bin",
+    "test-maintain-opencode": "tsx scripts/test-maintain-opencode.ts",
     "typecheck": "tsc -b"
   },
   "dependencies": {

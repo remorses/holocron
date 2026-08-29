@@ -48,6 +48,7 @@ export default defineConfig(async () => {
             GITHUB_CLIENT_SECRET: 'test',
             STRIPE_SECRET_KEY: 'sk_test_dummy',
             STRIPE_WEBHOOK_SECRET: 'whsec_test_dummy',
+            AI_GATEWAY_API_KEY: 'test-gateway-key',
           },
         },
       }),

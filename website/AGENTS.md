@@ -15,12 +15,12 @@ Key references:
 
 ## Supported models
 
-Allowed models are defined in `src/lib/credits.ts` (`ALLOWED_MODELS`). Each entry maps a friendly name to a Vercel AI Gateway model id in `provider/model` format (e.g. `moonshotai/kimi-k2.5`). Kimi K2.5 is the primary model; Claude Sonnet 4 and GPT-4.1 Mini are fallbacks.
+Allowed models are defined in `src/lib/ai-models.ts` (`ALLOWED_MODELS`). Chat and Maintain both import that file. Each entry maps a friendly name to a Vercel AI Gateway model id in `provider/model` format (e.g. `zai/glm-5.3-flash`). The first entry is the primary model; the rest are fallbacks.
 
 To add a new model:
-1. Add its gateway id to `ALLOWED_MODELS` in `src/lib/credits.ts`
-2. Add its per-million-token USD rate to `MODEL_USD_PER_1M_TOKENS` (the test asserts every model has a rate)
-3. The model will automatically be included in the fallback chain
+1. Add its gateway id to `ALLOWED_MODELS` in `src/lib/ai-models.ts`
+2. Add its per-million-token USD rate to `MODEL_USD_PER_1M_TOKENS` in the same file (the test asserts every model has a rate)
+3. Chat fallback and Maintain `/v1/models` pick it up automatically
 
 ## Error tracking with strada
 

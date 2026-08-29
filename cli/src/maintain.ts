@@ -11,7 +11,7 @@ import { remark } from 'remark'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkMdx from 'remark-mdx'
 import { getDeployClient } from './api-client.ts'
-import { logger, colors as c } from './logger.ts'
+import { logger, colors as c, actionableDetailFromFetchError, printActionableError } from './logger.ts'
 import {
   didGenerationPromptChange,
   discoverMaintainPages,
@@ -23,6 +23,7 @@ import {
   getHeadSha,
   getWorkingTreeChanges,
   extractPromptReferences,
+  hasMissingLocalReferences,
   matchChangedReferences,
   type MaintainPage,
 } from './maintain-discovery.ts'
@@ -67,12 +68,17 @@ maintainCli
     const changedFiles = all ? [] : getChangedFiles(repoRoot, range)
     const changedUrls = githubEvent?.changedUrls ?? []
     const selectedPages = pages.filter((page) => {
+      if (page.promptError) return false
       if (all) return !!page.prompt || !!runPrompt
+      if (hasMissingLocalReferences(repoRoot, page.references)) return true
       if (range && didGenerationPromptChange(repoRoot, page, range.from)) return true
       return matchChangedReferences({ references: page.references, changedFiles, changedUrls }).length > 0
     })
 
     output.log(logger.step(`Found ${c.bold(String(pages.length))} documentation pages`))
+    for (const page of pages) {
+      if (page.promptError) output.error(logger.error(`${page.path}: ${page.promptError}`))
+    }
     output.log(logger.step(`Matched ${c.bold(String(selectedPages.length))} page${selectedPages.length === 1 ? '' : 's'}`))
     for (const page of selectedPages) output.log(`  ${page.path}`)
     if (options.dryRun || selectedPages.length === 0) return
@@ -95,9 +101,7 @@ maintainCli
       body: { ...(projectId && { projectId }) },
     })
     if (run instanceof Error) {
-      const detail = (run as { value?: { error?: string; upgradeUrl?: string } }).value
-      output.error(logger.error(detail?.error ?? run.message))
-      if (detail?.upgradeUrl) output.error(logger.error(`Subscribe: ${detail.upgradeUrl}`))
+      printActionableError(output, actionableDetailFromFetchError(run), run.message)
       return proc.exit(1)
     }
 
@@ -115,9 +119,11 @@ maintainCli
         changedFiles,
         patches,
         release: githubEvent?.release,
-        gatewayApiKey: run.gatewayApiKey,
+        apiKey: run.apiKey,
+        baseUrl: run.baseUrl,
         providerId: run.providerId,
         modelId: run.modelId,
+        models: run.models ?? [],
       })
       if (result instanceof Error) runError = result
       else reportedCostUsd = result.costUsd
@@ -131,7 +137,7 @@ maintainCli
         const completed = await completionClient.safeFetch(`/api/v0/maintain/runs/${run.runId}/complete`, {
           method: 'POST',
           params: { runId: run.runId },
-          body: { projectId: run.projectId, keyId: run.gatewayKeyId, reportedCostUsd },
+          body: { projectId: run.projectId, reportedCostUsd },
         })
         if (completed instanceof Error) runError ??= completed
       }
@@ -182,10 +188,23 @@ async function resolveProjectId({
 }) {
   if (explicit) return explicit
   const result = await safeFetch('/api/v0/projects')
-  if (result instanceof Error) return result
+  if (result instanceof Error) {
+    printActionableError(output, actionableDetailFromFetchError(result), result.message)
+    return result
+  }
   if (result.projects.length === 1) return result.projects[0]!.projectId
-  if (result.projects.length === 0) return new Error('No projects found. Create one with `holocron projects create`.')
-  if (isAgent || !process.stdin.isTTY) return new Error('Multiple projects found. Pass --project <id>.')
+  if (result.projects.length === 0) {
+    output.error(logger.error('No Holocron projects found.'))
+    output.error(logger.error('Create one, then pass --project <projectId>.'))
+    output.error(logger.error('Run: npx -y "@holocron.so/cli" projects create --name "My Docs"'))
+    return new Error('No projects found. Create one with `holocron projects create`.')
+  }
+  if (isAgent || !process.stdin.isTTY) {
+    output.error(logger.error('Multiple projects found. Pass --project <projectId>.'))
+    output.error(logger.error('Usage: holocron maintain --project <projectId>'))
+    output.error(logger.error('Run `holocron whoami` to list project IDs.'))
+    return new Error('Multiple projects found. Pass --project <id>.')
+  }
   const selected = await clack.select({
     message: 'Select a project for Maintain:',
     options: result.projects.map((project) => ({
@@ -209,9 +228,11 @@ async function runOpenCode({
   changedFiles,
   patches,
   release,
-  gatewayApiKey,
+  apiKey,
+  baseUrl,
   providerId,
   modelId,
+  models,
 }: {
   repoRoot: string
   pages: MaintainPage[]
@@ -220,9 +241,11 @@ async function runOpenCode({
   changedFiles: string[]
   patches: string
   release?: Record<string, unknown>
-  gatewayApiKey: string
+  apiKey: string
+  baseUrl: string
   providerId: string
   modelId: string
+  models: string[]
 }) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), RUN_TIMEOUT_MS)
@@ -242,12 +265,21 @@ async function runOpenCode({
     ))),
   ]
 
-  const previousGatewayKey = process.env.AI_GATEWAY_API_KEY
-  process.env.AI_GATEWAY_API_KEY = gatewayApiKey
-  const server = await createOpencodeServer({ hostname: '127.0.0.1', port: 0, timeout: 30_000, signal: controller.signal })
-    .catch((error) => new Error('OpenCode server failed to start.', { cause: error }))
-  if (previousGatewayKey === undefined) delete process.env.AI_GATEWAY_API_KEY
-  else process.env.AI_GATEWAY_API_KEY = previousGatewayKey
+  const server = await createOpencodeServer({
+    hostname: '127.0.0.1',
+    port: 0,
+    timeout: 30_000,
+    signal: controller.signal,
+    config: {
+      provider: {
+        [providerId]: {
+          npm: '@ai-sdk/openai-compatible',
+          options: { apiKey, baseURL: baseUrl },
+          models: Object.fromEntries((models.length > 0 ? models : [modelId]).map((id) => [id, { name: id }])),
+        },
+      },
+    },
+  }).catch((error) => new Error('OpenCode server failed to start.', { cause: error }))
   if (server instanceof Error) {
     clearTimeout(timeout)
     return server

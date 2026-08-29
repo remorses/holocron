@@ -109,3 +109,19 @@ export function shouldShowHolocronPromotion(opts: {
 }): boolean {
   return !hasDeployEntitlement(opts)
 }
+
+/** JSON body for 402 SUBSCRIPTION_REQUIRED. Includes a copy-paste subscribe command. */
+export function subscriptionRequiredPayload(opts: {
+  reason: string
+  projectId: string
+  origin: string
+}) {
+  return {
+    error: opts.reason,
+    code: 'SUBSCRIPTION_REQUIRED' as const,
+    projectId: opts.projectId,
+    hint: 'Subscribe this project to Holocron Pro, then retry.',
+    command: `npx -y "@holocron.so/cli" subscribe --project ${opts.projectId}`,
+    upgradeUrl: `${opts.origin}/dashboard/projects/${opts.projectId}/billing`,
+  }
+}

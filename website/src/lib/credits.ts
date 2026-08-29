@@ -4,10 +4,8 @@
 // hardcoded per-model USD rate table. Credits are a user-facing layer over
 // dollars; USD_PER_CREDIT is the only exchange-rate knob.
 //
-// Models are accessed via @ai-sdk/gateway (Vercel AI Gateway) which proxies to
-// the upstream provider. The gateway model id format is "provider/model-name"
-// (e.g. "moonshotai/kimi-k2.5"). ai-fallback wraps multiple gateway models so
-// if the primary is down we automatically try the next one.
+// Models live in `./ai-models.ts` (shared with Maintain). Credits wrap those
+// rates as the user-facing dollar layer.
 
 /** Real USD spend one credit represents. The only exchange-rate knob. */
 export const USD_PER_CREDIT = 0.001
@@ -31,38 +29,16 @@ export function monthlyCreditBudget(opts: {
   return FREE_MONTHLY_CREDITS
 }
 
-// Selectable models: friendly name → gateway model id (provider/model format).
-// Kept next to the price table so a model and its rate live together.
-// All models are accessed via @ai-sdk/gateway (Vercel AI Gateway).
-// Order matters: the first entry is the primary model, the rest are fallbacks
-// tried in order by ai-fallback when the primary errors.
-export const ALLOWED_MODELS: Record<string, string> = {
-  'deepseek-v4-flash': 'deepseek/deepseek-v4-flash',
-  'kimi-k2.5': 'moonshotai/kimi-k2.5',
-  'gpt-4.1-mini': 'openai/gpt-4.1-mini',
-  'claude-sonnet-4': 'anthropic/claude-sonnet-4-20250514',
-}
+import { DEFAULT_MODEL, MODEL_USD_PER_1M_TOKENS } from './ai-models.ts'
 
-// Per-million-token USD rates for each model. Keyed by the ALLOWED_MODELS
-// friendly name. A test asserts every selectable model has a rate here, so a
-// model can never reach production without one.
-//
-// `cachedInput` is the (cheaper) cached-prompt rate where the model offers one;
-// computeUsdCost charges cached tokens at it and the rest at `input`.
-export const MODEL_USD_PER_1M_TOKENS: Record<string, { input: number; output: number; cachedInput?: number }> = {
-  'deepseek-v4-flash': { input: 0.2, output: 0.6, cachedInput: 0.05 },
-  'kimi-k2.5': { input: 0.6, output: 3.0, cachedInput: 0.1 },
-  'gpt-4.1-mini': { input: 0.4, output: 1.6, cachedInput: 0.1 },
-  'claude-sonnet-4': { input: 3.0, output: 15.0, cachedInput: 0.3 },
-}
+export { ALLOWED_MODELS, DEFAULT_MODEL, MODEL_USD_PER_1M_TOKENS } from './ai-models.ts'
 
-const DEFAULT_RATE = MODEL_USD_PER_1M_TOKENS['deepseek-v4-flash']!
+const DEFAULT_RATE = MODEL_USD_PER_1M_TOKENS[DEFAULT_MODEL]!
 
 /** Exact USD cost for a request from its token counts and the model's rate.
  *  `cachedInputTokens` (a subset of `inputTokens`) is billed at the model's
- *  cheaper cached rate when it has one. Unknown models fall back to the glm
- *  rate — a test guarantees every selectable model is in the table, so this
- *  only ever applies to a genuine misconfiguration. */
+ *  cheaper cached rate when it has one. Unknown models fall back to the
+ *  default model rate. A test guarantees every selectable model is in the table. */
 export function computeUsdCost(
   model: string,
   tokens: { inputTokens: number; outputTokens: number; cachedInputTokens?: number },

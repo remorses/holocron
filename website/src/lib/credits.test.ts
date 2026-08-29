@@ -43,13 +43,12 @@ describe('monthly budgets', () => {
 })
 
 describe('computeUsdCost — exact tokens × per-model rate', () => {
-  test('kimi default model: 1M in + 1M out', () => {
-    // kimi = $0.60 input + $3.00 output per 1M tokens.
-    expect(computeUsdCost('kimi-k2.5', { inputTokens: 1_000_000, outputTokens: 1_000_000 })).toBeCloseTo(3.6, 10)
+  test('deepseek: 1M in + 1M out', () => {
+    expect(computeUsdCost('deepseek-v4-flash', { inputTokens: 1_000_000, outputTokens: 1_000_000 })).toBeCloseTo(0.8, 10)
   })
 
   test('realistic small request', () => {
-    expect(computeUsdCost('kimi-k2.5', { inputTokens: 3000, outputTokens: 500 })).toMatchInlineSnapshot(`0.0033`)
+    expect(computeUsdCost('deepseek-v4-flash', { inputTokens: 3000, outputTokens: 500 })).toMatchInlineSnapshot(`0.0009`)
   })
 
   test('unknown model falls back to default rate', () => {
@@ -58,12 +57,10 @@ describe('computeUsdCost — exact tokens × per-model rate', () => {
   })
 
   test('cached input tokens billed at the cheaper cached rate', () => {
-    // kimi: 1M input of which 1M cached, at $0.10 cached vs $0.60 normal.
-    const allCached = computeUsdCost('kimi-k2.5', { inputTokens: 1_000_000, outputTokens: 0, cachedInputTokens: 1_000_000 })
-    expect(allCached).toBeCloseTo(0.1, 10)
-    // Half cached: 0.5M × $0.60 + 0.5M × $0.10 = $0.35.
-    const halfCached = computeUsdCost('kimi-k2.5', { inputTokens: 1_000_000, outputTokens: 0, cachedInputTokens: 500_000 })
-    expect(halfCached).toBeCloseTo(0.35, 10)
+    const allCached = computeUsdCost('deepseek-v4-flash', { inputTokens: 1_000_000, outputTokens: 0, cachedInputTokens: 1_000_000 })
+    expect(allCached).toBeCloseTo(0.05, 10)
+    const halfCached = computeUsdCost('deepseek-v4-flash', { inputTokens: 1_000_000, outputTokens: 0, cachedInputTokens: 500_000 })
+    expect(halfCached).toBeCloseTo(0.125, 10)
   })
 
   test('every selectable model (ALLOWED_MODELS) has a rate', () => {

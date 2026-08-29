@@ -28,17 +28,16 @@ import { Spiceflow } from 'spiceflow'
 import { z } from 'zod'
 import { validateApiKey, getProjectBillingContext } from './db.ts'
 import { shouldShowHolocronPromotion } from './lib/billing-rules.ts'
-import { ALLOWED_MODELS, computeUsdCost, creditsToUsd, monthlyCreditBudget, MODEL_USD_PER_1M_TOKENS, usdToCredits } from './lib/credits.ts'
+import { ALLOWED_MODELS, DEFAULT_MODEL, MODEL_USD_PER_1M_TOKENS } from './lib/ai-models.ts'
+import { computeUsdCost, creditsToUsd, monthlyCreditBudget, usdToCredits } from './lib/credits.ts'
 import { createChatBashTool } from './chat-bash-tool.ts'
 import { NOTICE_USAGE_LIMIT_REACHED, type UsageCounter } from './usage-counter-do.ts'
 import { MAX_SNAPSHOT_BYTES, type ChatSessionDO } from './chat-session-do.ts'
 
 const chatLogger = getLogger('chat')
 
-const DEFAULT_MODEL = 'deepseek-v4-flash'
-const TEMPORARY_MODEL = 'deepseek-v4-flash'
-// Cheapest allowed model — used for the one-shot conversation title.
-const TITLE_MODEL = 'deepseek-v4-flash'
+const TEMPORARY_MODEL = DEFAULT_MODEL
+const TITLE_MODEL = DEFAULT_MODEL
 const DOCS_ZIP_CACHE_MS = 5 * 60 * 1000
 
 // All fallback models tried in order when the primary fails. The first model
