@@ -108,6 +108,22 @@ const authApp = new Spiceflow()
     },
   })
 
+  // /signup is the same GitHub OAuth flow as /login. Social sign-in creates
+  // the account automatically, so a dedicated form is unnecessary.
+  .route({
+    method: 'GET',
+    path: '/signup',
+    query: loginQuerySchema,
+    handler({ query }) {
+      const raw = query.callbackURL
+      if (!raw || !raw.startsWith('/') || raw.startsWith('//')) {
+        throw redirect('/login')
+      }
+      const callbackURL = normalizeAuthRedirectPath(raw)
+      throw redirect(`/login?callbackURL=${encodeURIComponent(callbackURL)}`)
+    },
+  })
+
   // Device flow verification page
   .page({
     path: '/device',

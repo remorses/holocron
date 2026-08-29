@@ -11,7 +11,7 @@
     },
     "icons": { "library": "lucide" },
     "assistant": { "enabled": true },
-    "knownPaths": ["/dashboard", "/login"],
+    "knownPaths": ["/dashboard", "/login", "/signup"],
     "redirects": [
         { "source": "/markdown-editor", "destination": "/", "permanent": true }
     ],

@@ -389,3 +389,23 @@ describe('deploy page', () => {
     expect(res.headers.get('location')).toContain('/login')
   })
 })
+
+describe('auth pages', () => {
+  test('GET /signup redirects to /login', async () => {
+    const res = await app.handle(get('/signup'))
+    expectRedirect(res)
+    expect(res.headers.get('location')).toBe('/login')
+  })
+
+  test('GET /signup preserves callbackURL on /login', async () => {
+    const res = await app.handle(get('/signup?callbackURL=/device'))
+    expectRedirect(res)
+    expect(res.headers.get('location')).toBe('/login?callbackURL=%2Fdevice')
+  })
+
+  test('GET /signup rejects open-redirect callbackURL', async () => {
+    const res = await app.handle(get('/signup?callbackURL=https://evil.com'))
+    expectRedirect(res)
+    expect(res.headers.get('location')).toBe('/login')
+  })
+})
