@@ -34,8 +34,9 @@ const ICON_PACKS_REVISION = [
   faRegularPkg.version,
   faSolidPkg.version,
 ].join('+')
+
 import { buildEnrichedNavigation } from './enrich-navigation.ts'
-import { collectIconRefs, dedupeIconRefs, type IconRef } from './collect-icons.ts'
+import { collectIconRefs, collectLocalIconPaths, dedupeIconRefs, type IconRef } from './collect-icons.ts'
 import type { IconAtlas } from './resolve-icons.ts'
 import {
   type HolocronConfig,
@@ -664,6 +665,12 @@ export async function syncNavigation({
     publicDir,
     projectRoot,
   })
+  const brokenIconPaths = collectLocalIconPaths({ config, navigation }).filter((src) =>
+    !resolveLocalAssetPath({ src, mdxDir: projectRoot, publicDir, projectRoot }),
+  )
+  for (const src of brokenIconPaths) {
+    logger.warn(formatHolocronWarning(`broken icon asset → ${colors.yellow(src)} (file not found)`))
+  }
 
   // 4f. Resolve used icon SVG bodies. Reuse holocron-mdx.json hits so a
   // warm dist/ does not parse the Iconify packs again.
@@ -720,6 +727,13 @@ export async function syncNavigation({
     logger.warn(formatHolocronWarning(
       `found ${colors.yellow(String(brokenAssetStats.brokenAssetCount))} broken asset reference${brokenAssetStats.brokenAssetCount === 1 ? '' : 's'} across ${colors.yellow(String(brokenAssetStats.affectedPageCount))} page${brokenAssetStats.affectedPageCount === 1 ? '' : 's'}. ` +
       `Check that image, video, and audio file paths are correct.`,
+    ))
+  }
+  if (brokenIconPaths.length > 0) {
+    logger.warn('')
+    logger.warn(formatHolocronWarning(
+      `found ${colors.yellow(String(brokenIconPaths.length))} broken local icon path${brokenIconPaths.length === 1 ? '' : 's'}. ` +
+      `Add the files to the public directory or use library icons.`,
     ))
   }
   if (iconResolveResult.unresolvedRefs.length > 0) {

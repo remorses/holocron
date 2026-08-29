@@ -41,7 +41,6 @@ import {
   findPage,
   collectAllPages,
   slugToHref,
-  buildHrefToSlugMap,
   type NavHeading,
   type NavPage,
   type NavGroup,
@@ -247,6 +246,22 @@ function escapeMarkdownText(value: string): string {
   return value.replaceAll('\n', ' ').trim()
 }
 
+type TextNode = { type: string; value?: string; children?: TextNode[] }
+
+function getMdastText(node: TextNode): string {
+  if (typeof node.value === 'string') return node.value
+  return node.children?.map(getMdastText).join('') ?? ''
+}
+
+function isDuplicateTitleHeading(node: Root['children'][number], title: string): boolean {
+  const isHeading = node.type === 'heading'
+    || (node.type === 'mdxJsxFlowElement'
+      && (node.name === 'Heading' || /^h[1-6]$/.test(node.name ?? '')))
+  if (!isHeading) return false
+  const normalize = (value: string) => value.trim().replace(/\s+/g, ' ').toLocaleLowerCase()
+  return normalize(getMdastText(node)) === normalize(title)
+}
+
 function stripBaseFromSlug(rawSlug: string, base: string): string {
   const slug = rawSlug.replace(/^\/+/, '')
   const normalizedBase = base === '/' ? '' : base.replace(/^\/+|\/+$/g, '')
@@ -360,7 +375,17 @@ function renderMdxPage({
   }
 
   const aboveNodes = mdast.children.filter(isAboveNode)
-  const contentChildren = mdast.children.filter((node) => !isAboveNode(node))
+  const contentChildren: Root['children'] = mdast.children.filter((node) => !isAboveNode(node))
+  if (loaderData.currentPageFrontmatter?.hideTitle !== true && loaderData.currentPageTitle) {
+    const firstHeadingIndex = contentChildren.findIndex((node) =>
+      node.type === 'heading'
+      || (node.type === 'mdxJsxFlowElement'
+        && (node.name === 'Heading' || /^h[1-6]$/.test(node.name ?? ''))),
+    )
+    if (firstHeadingIndex !== -1 && isDuplicateTitleHeading(contentChildren[firstHeadingIndex]!, loaderData.currentPageTitle)) {
+      contentChildren.splice(firstHeadingIndex, 1)
+    }
+  }
   const contentMdast: Root = { type: 'root', children: contentChildren }
   const hasRequiredRightAside = contentChildren.some(isAsideNode)
   const pageMode = configuredPageMode === 'compact' && hasRequiredRightAside
@@ -371,44 +396,10 @@ function renderMdxPage({
     includePageChrome: pageMode !== 'compact',
   })
 
-  // Check if the page content already starts with a heading. If not, we
-  // prepend a rendered <SectionHeading> component at the top of the first
-  // section so every page always shows a visible title.
-  //
-  // We skip the injection entirely when the page leads with JSX content
-  // (e.g. <Hero />, a custom component, or an expression). Authors who open
-  // with JSX are crafting a custom layout and don't want an auto title pushed
-  // above it. JSX nodes are mdxJsxFlowElement/mdxJsxTextElement (named tags)
-  // and mdxFlowExpression/mdxTextExpression (`{...}` expressions).
-  const firstContentNode = contentChildren.find(
-    (n) => n.type !== 'mdxjsEsm' && n.type !== 'yaml',
-  )
-  const startsWithHeading = (() => {
-    if (!firstContentNode) return false
-    if (firstContentNode.type === 'heading') return true
-    const nodeType: string = firstContentNode.type
-    if (nodeType === 'mdxJsxFlowElement') {
-      const name = Reflect.get(firstContentNode, 'name')
-      return typeof name === 'string' && (/^h[1-6]$/.test(name) || name === 'Heading')
-    }
-    return false
-  })()
-  const startsWithJsx = (() => {
-    if (!firstContentNode) return false
-    const nodeType: string = firstContentNode.type
-    return (
-      nodeType === 'mdxJsxFlowElement' ||
-      nodeType === 'mdxJsxTextElement' ||
-      nodeType === 'mdxFlowExpression' ||
-      nodeType === 'mdxTextExpression'
-    )
-  })()
-  // Non-default page modes ("center") render a bespoke, centered layout
-  // where an auto title would interfere with the author's design.
-  // "wide" and "frame" alias the default layout, so they keep the auto H1.
-  // "custom" is handled above (early return).
-  const isCustomLayoutMode = pageMode === 'center'
-  const shouldInjectH1 = !startsWithHeading && !startsWithJsx && !isCustomLayoutMode && !!loaderData.currentPageTitle
+  // The frontmatter title is the page's only generated H1. Body H1 headings
+  // are rendered as H2, and authors can opt out with `hideTitle: true`.
+  const shouldInjectH1 = loaderData.currentPageFrontmatter?.hideTitle !== true
+    && !!loaderData.currentPageTitle
 
   // Extract import nodes (mdxjsEsm) from the full mdast so they can be
   // prepended to each section. Section splitting separates import statements
@@ -447,8 +438,7 @@ function renderMdxPage({
         <RenderNodes markdown={pageMdx} nodes={sharedAsideSource} modules={modules} baseUrl={mdxBaseUrl} source={mdxSourcePath} />
       ) : undefined
     const renderedContent = <RenderNodes markdown={pageMdx} nodes={contentNodes} modules={modules} baseUrl={mdxBaseUrl} source={mdxSourcePath} />
-    // Prepend a rendered H1 from frontmatter title when the MDX doesn't
-    // start with one. Only the first section gets the heading.
+    // Only the first section gets the generated page title.
     const content = (shouldInjectH1 && i === 0) ? (
       <>
         <SectionHeading id={githubSlug(loaderData.currentPageTitle!)} level={1}>
@@ -465,6 +455,15 @@ function renderMdxPage({
       asideRowSpan: section.asideRowSpan,
     }
   })
+  if (sections.length === 0 && shouldInjectH1) {
+    sections.push({
+      content: (
+        <SectionHeading id={githubSlug(loaderData.currentPageTitle!)} level={1}>
+          {loaderData.currentPageTitle}
+        </SectionHeading>
+      ),
+    })
+  }
 
   // Prepend import nodes to above nodes too, so imported components
   // (like <HeroSection />) used inside <Above> are resolvable.
@@ -696,13 +695,27 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   const githubStarsPromise = createGitHubStarsPromise(config)
 
   const firstPage = findFirstPage(site)
-  const hrefToSlug = buildHrefToSlugMap(slugs)
+  const hrefToSlug = new Map(
+    slugs.map((slug) => [canonicalizePathname(slugToHref(slug)), slug]),
+  )
   const absoluteUrlBase = (() => {
     const routeBase = withBaseRoute(site.base, '/')
     return routeBase === '/' ? '' : routeBase
   })()
   const hrefToMarkdownPath = (href: string) => {
     return href === '/' ? '/index.md' : `${href}.md`
+  }
+
+  function routeVariants(route: string): Set<string> {
+    const canonicalRoute = canonicalizePathname(route)
+    const encodedUrl = new URL('https://holocron.local')
+    encodedUrl.pathname = canonicalRoute
+    return new Set([
+      canonicalRoute,
+      encodedUrl.pathname,
+      withBaseRoute(site.base, canonicalRoute),
+      withBaseRoute(site.base, encodedUrl.pathname),
+    ])
   }
 
   function buildAgentDocsDirective(base: string): string {
@@ -968,9 +981,10 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
   function slugFromRequest(request: Request): string {
     const { pathname } = new URL(request.url)
-    const strippedSlug = stripBaseFromSlug(pathname, site.base)
-    const href = strippedSlug === '' ? '/' : `/${strippedSlug}`
-    return hrefToSlug.get(href) ?? (strippedSlug === '' ? 'index' : strippedSlug)
+    const rawSlug = stripBaseFromSlug(pathname, site.base)
+    const rawHref = rawSlug === '' ? '/' : `/${rawSlug}`
+    const href = canonicalizePathname(rawHref)
+    return hrefToSlug.get(href) ?? (href === '/' ? 'index' : href.slice(1))
   }
 
   // Same function reference is registered for every slug AND the
@@ -1034,6 +1048,24 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       showConfigPanel: showPanel,
       githubStars: githubStarsPromise,
     }
+  }
+
+  const recoveredLoaderData = new WeakMap<Request, Promise<HolocronLoaderData>>()
+  function resolveLoaderData(
+    rawLoaderData: unknown,
+    request: Request,
+    location: string,
+  ): Promise<HolocronLoaderData> {
+    if (isHolocronLoaderData(rawLoaderData)) return Promise.resolve(rawLoaderData)
+    if (!import.meta.env.DEV) {
+      throw new Error(`Holocron loader data missing in ${location}`)
+    }
+    let pending = recoveredLoaderData.get(request)
+    if (!pending) {
+      pending = loaderFn({ request })
+      recoveredLoaderData.set(request, pending)
+    }
+    return pending
   }
 
   // One captured function reference per slug so the server produces
@@ -1107,14 +1139,15 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   }
 
   const layoutFn = async ({ children, request, response, loaderData: rawLoaderData }: { children?: React.ReactNode; request: Request; response: { headers: Headers }; loaderData: unknown }) => {
-    if (!isHolocronLoaderData(rawLoaderData)) {
-      throw new Error('Holocron loader data missing in layout')
-    }
-    const cacheControl = rawLoaderData.currentPageFrontmatter?.['cache-control']
+    // Vite can preserve a layout handler across an RSC program reload while
+    // its matching loader registration is replaced. Re-run the same loader
+    // instead of turning that transient HMR state into a 500 response.
+    const loaderData = await resolveLoaderData(rawLoaderData, request, 'layout')
+    const cacheControl = loaderData.currentPageFrontmatter?.['cache-control']
     if (cacheControl) {
       response.headers.set('cache-control', cacheControl)
     }
-    return renderFullShell({ children: children ?? null, request, loaderData: rawLoaderData })
+    return renderFullShell({ children: children ?? null, request, loaderData })
   }
 
   // Wildcard fallback. `children === null` means no `.page()` matched
@@ -1124,9 +1157,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   // Root redirect lives here (not as a `.get('/')`) so parent-app routes
   // take priority when holocron is mounted as a child.
   const wildcardLayoutFn = async ({ children, request, response, loaderData: rawLoaderData }: { children?: React.ReactNode; request: Request; response: { status?: number; headers: Headers }; loaderData: unknown }) => {
-    if (!isHolocronLoaderData(rawLoaderData)) {
-      throw new Error('Holocron loader data missing in wildcard layout')
-    }
+    const loaderData = await resolveLoaderData(rawLoaderData, request, 'wildcard layout')
     if (children === null || children === undefined) {
       // Redirect `/` (or base route) to the first doc page when no
       // index.mdx exists. This only fires if no parent route handled `/`.
@@ -1142,9 +1173,9 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         }
       }
       response.status = 404
-      return renderFullShell({ children: null, request, loaderData: rawLoaderData })
+      return renderFullShell({ children: null, request, loaderData })
     }
-    const cacheControl = rawLoaderData.currentPageFrontmatter?.['cache-control']
+    const cacheControl = loaderData.currentPageFrontmatter?.['cache-control']
     if (cacheControl) {
       response.headers.set('cache-control', cacheControl)
     }
@@ -1156,10 +1187,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
   function makePageHandler(slug: string, pageHref: string) {
     return async ({ loaderData: rawLoaderData, request }: { loaderData: unknown; request: Request }) => {
-      if (!isHolocronLoaderData(rawLoaderData)) {
-        throw new Error('Holocron loader data missing in page route')
-      }
-      const loaderData = rawLoaderData
+      const loaderData = await resolveLoaderData(rawLoaderData, request, 'page route')
       const effectiveConfig = loaderData.site.config
       const bannerJsx = getBannerJsx(loaderData.site, request)
       const requestUrl = new URL(request.url)
@@ -1228,6 +1256,25 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     rememberCacheOrigin(request.url)
   })
 
+  // Spiceflow matches literal route paths before decoding them. Redirect
+  // optional percent encodings to the canonical path used by the page map.
+  app = app.use(({ request }: { request: Request }) => {
+    if (request.method !== 'GET' && request.method !== 'HEAD') return
+
+    const url = new URL(request.url)
+    const rawSlug = stripBaseFromSlug(url.pathname, site.base)
+    const rawHref = rawSlug === '' ? '/' : `/${rawSlug}`
+    if (site.config.redirects.some((rule) => redirectSourceMatches(rule.source, rawHref))) return
+    const canonicalHref = canonicalizePathname(rawHref)
+    const pageHref = canonicalHref.replace(/\.mdx?$/, '') || '/'
+    if (!hrefToSlug.has(pageHref)) return
+
+    const target = new URL(url)
+    target.pathname = withBaseRoute(site.base, canonicalHref)
+    if (target.pathname === url.pathname) return
+    return Response.redirect(target.href, 308)
+  })
+
   // Agent redirect: when Accept includes text/markdown, 302 to .md URL.
   // No UA sniffing — only fires when the client explicitly asks for markdown.
   app = app.use(({ request }: { request: Request }) => {
@@ -1244,7 +1291,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     const baseRoute = withBaseRoute(site.base, '/')
     const normalizedBase = baseRoute === '/' ? '' : baseRoute
     const hasBase = !!normalizedBase && (pathname === normalizedBase || pathname.startsWith(normalizedBase + '/'))
-    const stripped = hasBase ? pathname.slice(normalizedBase.length) || '/' : pathname
+    const stripped = canonicalizePathname(hasBase ? pathname.slice(normalizedBase.length) || '/' : pathname)
     if (!hrefToSlug.has(stripped)) return
 
     const mdPath = hrefToMarkdownPath(stripped)
@@ -1279,11 +1326,16 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   for (const sitemapRoute of new Set(['/sitemap.xml', withBaseRoute(site.base, '/sitemap.xml')])) {
     app = app.get(sitemapRoute, ({ request }: { request: Request }) => {
       const url = new URL(request.url)
-      const hrefs = collectAllPages(site.navigation)
+      const hrefs = [...new Set(collectAllPages(site.navigation)
         .filter((page) => isIndexablePage(page.frontmatter))
-        .map((page) => page.href)
+        .map((page) => canonicalizePathname(page.href))
+        .filter((href) => hrefToSlug.has(href)))]
       const urls = hrefs
-        .map((href: string) => `  <url><loc>${url.origin}${withBaseRoute(site.base, href)}</loc></url>`)
+        .map((href: string) => {
+          const location = new URL(url.origin)
+          location.pathname = withBaseRoute(site.base, href)
+          return `  <url><loc>${escapeXmlText(location.href)}</loc></url>`
+        })
         .join('\n')
       const siteLinks = collectSiteLinks()
       const linkComments = siteLinks.map((l) => `<!-- Link: ${escapeXmlComment(`${l.label} ${l.href}`)} -->`)
@@ -1352,11 +1404,11 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
   // Per-page .md/.mdx routes (both serve the same raw markdown)
   for (const slug of slugs) {
-    const href = slugToHref(slug)
+    const href = canonicalizePathname(slugToHref(slug))
     const mdPath = hrefToMarkdownPath(href)
     const mdxPath = href === '/' ? '/index.mdx' : `${href}.mdx`
 
-    for (const route of new Set([mdPath, mdxPath, withBaseRoute(site.base, mdPath), withBaseRoute(site.base, mdxPath)])) {
+    for (const route of new Set([...routeVariants(mdPath), ...routeVariants(mdxPath)])) {
       app = app.get(route, async () => {
         const mdx = await providers.getMdxSource(slug)
         if (mdx === undefined) {
@@ -1920,11 +1972,11 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
 
   // Per-slug .loader/.layout/.page with shared fn references for client identity
   for (const slug of slugs) {
-    const pageHref = slugToHref(slug)
+    const pageHref = canonicalizePathname(slugToHref(slug))
     const pageHandler = makePageHandler(slug, pageHref)
     const isStatic = renderingBySlug.get(slug) === 'static'
 
-    for (const route of new Set([pageHref, withBaseRoute(site.base, pageHref)])) {
+    for (const route of routeVariants(pageHref)) {
       app = app.loader(route, loaderFn).layout(route, layoutFn)
       app = isStatic ? app.staticPage(route, pageHandler) : app.page(route, pageHandler)
     }

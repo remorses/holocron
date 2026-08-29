@@ -1,13 +1,20 @@
 {
   "name": "Base Path Test",
   "icons": { "library": "lucide" },
+  "redirects": [
+    {
+      "source": "/questions-%28faq%29",
+      "destination": "/guide"
+    }
+  ],
   "navigation": {
     "groups": [
       {
         "group": "Docs",
         "pages": [
           "intro",
-          "guide/index"
+          "guide/index",
+          "questions-(faq)"
         ]
       }
     ]

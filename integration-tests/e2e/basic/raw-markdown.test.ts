@@ -1,6 +1,28 @@
 import { expect, test } from "../helpers/test.ts";
 
 test.describe("raw markdown via .md path suffix", () => {
+  test("encoded apostrophes and parentheses resolve to the canonical page", async ({ request }) => {
+    const encoded = "/questions-(what%27s-new)";
+    const redirect = await request.get(encoded, { maxRedirects: 0 });
+    expect(redirect.status()).toBe(308);
+    expect(redirect.headers().location).toContain("/questions-(what's-new)");
+
+    const html = await request.get(encoded);
+    expect(html.status()).toBe(200);
+    expect(await html.text()).toContain("What's new");
+
+    const markdown = await request.get(`${encoded}.md`);
+    expect(markdown.status()).toBe(200);
+    expect(markdown.headers()["content-type"]).toContain("text/markdown");
+  });
+
+  test("an explicit encoded redirect wins over canonical path normalization", async ({ request }) => {
+    const response = await request.get("/questions-%28what%27s-new%29", { maxRedirects: 0 });
+
+    expect(response.status()).toBe(302);
+    expect(response.headers().location).toBe("/markdown-page");
+  });
+
   test("GET /index.md returns raw markdown (no redirect)", async ({ request }) => {
     // Must serve markdown directly, NOT be intercepted by the `/index`
     // extensionless redirect alias.
@@ -154,7 +176,7 @@ test.describe("agent detection redirects to .md URL", () => {
 });
 
 test.describe("sitemap.xml", () => {
-  test("GET /sitemap.xml returns valid XML sitemap", async ({ request }) => {
+  test("GET /sitemap.xml returns valid XML with encoded locations", async ({ page, request }) => {
     const res = await request.get("/sitemap.xml");
     expect(res.status()).toBe(200);
     expect(res.headers()["content-type"]).toContain("application/xml");
@@ -162,6 +184,16 @@ test.describe("sitemap.xml", () => {
     expect(body).toContain('<?xml version="1.0"');
     expect(body).toContain("<urlset");
     expect(body).toContain("</urlset>");
+    const parsed = await page.evaluate((xml) => {
+      const document = new DOMParser().parseFromString(xml, "application/xml");
+      return {
+        errors: [...document.querySelectorAll("parsererror")].map((node) => node.textContent),
+        locations: [...document.querySelectorAll("loc")].map((node) => node.textContent),
+      };
+    }, body);
+    expect(parsed.errors).toEqual([]);
+    expect(parsed.locations.some((location) => location?.includes("/caf%C3%A9-&-guide"))).toBe(true);
+    expect(body).toContain("/caf%C3%A9-&amp;-guide</loc>");
   });
 
   test("sitemap contains all page URLs", async ({ request }) => {
@@ -183,6 +215,21 @@ test.describe("sitemap.xml", () => {
     const res = await request.get("/sitemap.xml");
     const cacheControl = res.headers()["cache-control"] || "";
     expect(cacheControl).toContain("s-maxage=3600");
+  });
+
+  test("every sitemap page has matching HTML and markdown routes", async ({ page, request }) => {
+    const sitemap = await (await request.get("/sitemap.xml")).text();
+    const locations = await page.evaluate((xml) => {
+      const document = new DOMParser().parseFromString(xml, "application/xml");
+      return [...document.querySelectorAll("loc")].map((node) => node.textContent).filter(Boolean) as string[];
+    }, sitemap);
+    const paths = locations.map((location) => new URL(location).pathname);
+
+    for (const path of paths) {
+      expect((await request.get(path)).status(), `${path} HTML`).toBe(200);
+      const markdownPath = path === "/" ? "/index.md" : `${path}.md`;
+      expect((await request.get(markdownPath)).status(), `${path} markdown`).toBe(200);
+    }
   });
 });
 

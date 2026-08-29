@@ -58,7 +58,12 @@ describe('heading rendering pipeline', () => {
 
   test('heading renders without P wrapper', () => {
     const { html } = renderMdx('## Getting Started')
-    expect(html).toMatchInlineSnapshot(`"<h1 id="getting-started" class="editorial-heading editorial-h1" data-toc-heading="true" data-toc-level="1"><span>Getting Started</span><span style="flex:1;height:1px;background:var(--divider)"></span></h1>"`)
+    expect(html).toMatchInlineSnapshot(`"<h2 id="getting-started" class="editorial-heading editorial-h2" data-toc-heading="true" data-toc-level="2"><span>Getting Started</span><span style="flex:1;height:1px;background:var(--divider)"></span></h2>"`)
+  })
+
+  test('body h1 is clamped to h2 so the page title remains the only h1', () => {
+    const { html } = renderMdx('# Body title')
+    expect(html).toMatchInlineSnapshot(`"<h2 id="body-title" class="editorial-heading editorial-h2" data-toc-heading="true" data-toc-level="2"><span>Body title</span><span style="flex:1;height:1px;background:var(--divider)"></span></h2>"`)
   })
 
   test('heading with {#custom-id} renders without P wrapper', () => {
@@ -77,7 +82,7 @@ describe('heading rendering pipeline', () => {
 
   test('multiple headings with body text', () => {
     const { html } = renderMdx('## H2 Title\n\n### H3 Title\n\nSome body text.')
-    expect(html).toMatchInlineSnapshot(`"<h1 id="h2-title" class="editorial-heading editorial-h1" data-toc-heading="true" data-toc-level="1"><span>H2 Title</span><span style="flex:1;height:1px;background:var(--divider)"></span></h1><h2 id="h3-title" class="editorial-heading editorial-h2" data-toc-heading="true" data-toc-level="2"><span>H3 Title</span><span style="flex:1;height:1px;background:var(--divider)"></span></h2><div class="editorial-prose">Some body text.</div>"`)
+    expect(html).toMatchInlineSnapshot(`"<h2 id="h2-title" class="editorial-heading editorial-h2" data-toc-heading="true" data-toc-level="2"><span>H2 Title</span><span style="flex:1;height:1px;background:var(--divider)"></span></h2><h3 id="h3-title" class="editorial-heading editorial-h3" data-toc-heading="true" data-toc-level="3"><span>H3 Title</span></h3><div class="editorial-prose">Some body text.</div>"`)
   })
 
   test('details summary markdown renders through mdx components', () => {

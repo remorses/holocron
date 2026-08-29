@@ -222,7 +222,7 @@ export function buildPageIndex(nav: Navigation): Map<string, NavPage> {
  */
 export function slugToHref(slug: string): string {
   if (slug === 'index') return '/'
-  return `/${slug.replace(/\/index$/, '')}`
+  return `/${slug.replace(/\/index$/, '')}`.normalize('NFC')
 }
 
 /**
@@ -237,5 +237,3 @@ export function buildHrefToSlugMap(slugs: string[]): Map<string, string> {
   }
   return map
 }
-
-

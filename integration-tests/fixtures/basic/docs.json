@@ -4,6 +4,12 @@
   "colors": {
     "primary": "#0969da"
   },
+  "redirects": [
+    {
+      "source": "/questions-%28what%27s-new%29",
+      "destination": "/markdown-page"
+    }
+  ],
   "navigation": {
     "groups": [
       {
@@ -11,7 +17,9 @@
         "pages": [
           "index.md",
           "getting-started.mdx",
-          "markdown-page.md"
+          "markdown-page.md",
+          "questions-(what's-new).mdx",
+          "café-&-guide.mdx"
         ]
       }
     ]

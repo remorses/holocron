@@ -10,6 +10,10 @@
       "description": "The page title displayed in the sidebar, browser tab, and heading",
       "type": "string"
     },
+    "hideTitle": {
+      "description": "Hide the generated page title heading",
+      "type": "boolean"
+    },
     "description": {
       "description": "Page description used for SEO meta tags and search indexing",
       "type": "string"

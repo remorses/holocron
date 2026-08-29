@@ -224,7 +224,7 @@ export function renderNode(
     const heading = node
     const text = extractText(heading.children)
     const id = slug(text)
-    const level = Math.min(heading.depth - 1, 3)
+    const level = Math.max(2, heading.depth)
     return (
       <SectionHeading key={id} id={id} level={level}>
         {heading.children.map((child, i) => {
@@ -242,7 +242,7 @@ export function renderNode(
   // the heading's children are [paragraph → [text]] not [text]. We unwrap
   // paragraphs to get the inline content directly.
   if ((node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') && node.name === 'Heading') {
-    const level = Number(getAttributeString(node, 'level') ?? 1)
+    const level = Math.min(6, Math.max(2, Number(getAttributeString(node, 'level') ?? 1)))
     // Unwrap paragraph wrappers: flow element text gets wrapped in paragraphs by the parser
     const inlineChildren: PhrasingContent[] = []
     for (const child of node.children ?? []) {

@@ -204,6 +204,20 @@ More text.
     `)
   })
 
+  test('keeps a repeated page title out of the body TOC', () => {
+    const result = processMdx(`---
+title: Getting Started
+---
+
+## Getting Started
+
+## Installation`)
+
+    expect(result.headings).toEqual([
+      { depth: 2, slug: 'installation', text: 'Installation' },
+    ])
+  })
+
   test('deduplicates heading slugs with postfix', () => {
     const result = processMdx(`## Usage
 

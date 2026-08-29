@@ -27,6 +27,23 @@ export function holocronUrl(path: string): string {
   return new URL(path, getHolocronBaseUrl()).toString()
 }
 
+/** Decode a request path once while leaving malformed segments untouched. */
+export function canonicalizePathname(pathname: string): string {
+  const decoded = pathname
+    .split('/')
+    .map((segment) => {
+      try {
+        return decodeURIComponent(segment).normalize('NFC')
+      } catch {
+        return segment.normalize('NFC')
+      }
+    })
+    .join('/')
+
+  if (decoded === '/') return decoded
+  return decoded.replace(/\/+$/, '') || '/'
+}
+
 /**
  * Environment variable names that can hold a Holocron API key (`holo_xxx`).
  * Checked in order; the first defined value wins. Add new aliases here.

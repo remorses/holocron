@@ -2556,6 +2556,33 @@ API docs here.
 })
 
 describe('broken asset warnings', () => {
+  test('warns about missing root-relative navigation icons', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', icon: '/icons/missing.svg', pages: ['index'] },
+        ],
+      },
+      { index: '---\ntitle: Home\n---\n' },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.flatMap((call) =>
+      typeof call[0] === 'string' && call[0].includes('broken icon asset') ? [call[0]] : [],
+    )
+    expect(warnings).toHaveLength(1)
+    expect(warnings[0]).toContain('/icons/missing.svg')
+  })
+
   test('warns about missing local images', async () => {
     const project = tracked(createProject(
       {

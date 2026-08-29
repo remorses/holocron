@@ -193,6 +193,61 @@ export function isUrl(str: string): boolean {
   )
 }
 
+function addLocalIconPath(icon: ConfigIcon | undefined, paths: Set<string>): void {
+  if (typeof icon === 'string' && icon.startsWith('/') && !icon.startsWith('//')) paths.add(icon)
+}
+
+function collectConfigGroupIconPaths(groups: ConfigNavGroup[], paths: Set<string>): void {
+  for (const group of groups) {
+    addLocalIconPath(group.icon, paths)
+    collectConfigGroupIconPaths(group.pages.filter((page): page is ConfigNavGroup => typeof page !== 'string'), paths)
+  }
+}
+
+/** Collect root-relative image icons from normalized config and navigation. */
+export function collectLocalIconPaths({ config, navigation }: { config: HolocronConfig; navigation: Navigation }): string[] {
+  const paths = new Set<string>()
+
+  for (const link of config.navbar.links) addLocalIconPath(link.icon, paths)
+  addLocalIconPath(config.navbar.primary?.icon, paths)
+  for (const anchor of config.navigation.anchors) addLocalIconPath(anchor.icon, paths)
+  for (const tab of config.navigation.tabs) {
+    addLocalIconPath(tab.icon, paths)
+    collectConfigGroupIconPaths(tab.groups, paths)
+  }
+  for (const version of config.navigation.versions) {
+    for (const tab of version.navigation.tabs) {
+      addLocalIconPath(tab.icon, paths)
+      collectConfigGroupIconPaths(tab.groups, paths)
+    }
+  }
+  for (const dropdown of config.navigation.dropdowns) {
+    addLocalIconPath(dropdown.icon, paths)
+    if (dropdown.navigation) {
+      for (const tab of dropdown.navigation.tabs) {
+        addLocalIconPath(tab.icon, paths)
+        collectConfigGroupIconPaths(tab.groups, paths)
+      }
+    }
+  }
+
+  function collectNavGroupPaths(groups: NavGroup[]): void {
+    for (const group of groups) {
+      addLocalIconPath(group.icon, paths)
+      for (const entry of group.pages) {
+        if (isNavGroup(entry)) collectNavGroupPaths([entry])
+        else addLocalIconPath(entry.icon, paths)
+      }
+    }
+  }
+  for (const tab of navigation) {
+    addLocalIconPath(tab.icon, paths)
+    collectNavGroupPaths(tab.groups)
+  }
+
+  return [...paths]
+}
+
 /** Walk config-level groups (ConfigNavGroup) for version/dropdown inner navigation.
  *  ConfigNavGroup pages are `string | ConfigNavGroup` — strings are slugs (no icon),
  *  nested groups have their own icon + pages. */

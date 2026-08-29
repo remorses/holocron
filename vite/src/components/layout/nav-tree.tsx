@@ -484,11 +484,14 @@ export function NavGroupNode({
         {group.group}
       </button>
       <ExpandableContainer open={isExpanded} animate={animate}>
-        {/* `paddingTop` matches the row-gap rhythm so the first child sits
-            exactly one row-gap under its group label. */}
-        <div className='flex flex-col' style={{ gap: 'var(--sidebar-row-gap)', paddingTop: 'var(--sidebar-row-gap)' }}>
-          {renderChildren(false)}
-        </div>
+        {isExpanded && (
+          /* `paddingTop` matches the row-gap rhythm so the first child sits
+             exactly one row-gap under its group label. Closed subtrees stay
+             out of the DOM, including their remote icon images. */
+          <div className='flex flex-col' style={{ gap: 'var(--sidebar-row-gap)', paddingTop: 'var(--sidebar-row-gap)' }}>
+            {renderChildren(false)}
+          </div>
+        )}
       </ExpandableContainer>
     </div>
   )

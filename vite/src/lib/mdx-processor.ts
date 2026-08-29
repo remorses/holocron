@@ -122,9 +122,22 @@ export function processMdx(
   // GithubSlugger handles dedup: "Usage", "Usage" → "usage", "usage-1"
   const slugger = new GithubSlugger()
   const headings: NavHeading[] = []
+  let isFirstHeading = true
   for (const node of mdast.children) {
     const heading = extractHeading(node, slugger)
-    if (heading) headings.push(heading)
+    if (!heading) continue
+    if (
+      isFirstHeading
+      && frontmatter.hideTitle !== true
+      && frontmatter.title
+      && normalizeHeadingText(heading.text) === normalizeHeadingText(frontmatter.title)
+    ) {
+      isFirstHeading = false
+      slugger.reset()
+      continue
+    }
+    isFirstHeading = false
+    headings.push(heading)
   }
 
   const imageSrcs = collectImageSrcs(mdast)
@@ -165,6 +178,10 @@ export function processMdx(
     hasTocPanel: mdastHasJsxComponent(mdast.children, 'TableOfContentsPanel'),
     mdast,
   }
+}
+
+function normalizeHeadingText(value: string): string {
+  return value.trim().replace(/\s+/g, ' ').toLocaleLowerCase()
 }
 
 /** Deep-scan mdast for a JSX element with the given name (flow or text).

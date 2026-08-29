@@ -245,16 +245,17 @@ test.describe("hidden filters", () => {
 });
 
 test.describe("page frontmatter metadata", () => {
-  test("sidebarTitle and badges render in the sidebar", async ({ request }) => {
-    const response = await request.get("/", {
-      headers: { "sec-fetch-dest": "document" },
-    });
-    const html = await response.text();
+  test("sidebarTitle and badges render in the sidebar", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    const nav = page.getByRole("navigation", { name: "Navigation" });
+    const metaLink = nav.locator('a[href="/meta-page"]');
 
-    expect(html).toContain(">Meta<");
-    expect(html).toContain(">BETA<");
-    expect(html).toContain(">Deprecated<");
-    expect(html).not.toContain(">Meta Page Long Title<");
+    await expect(metaLink).toBeVisible();
+    await expect(metaLink).toContainText("Meta");
+    await expect(metaLink).not.toContainText("Meta Page Long Title");
+    await expect(nav.getByText("BETA", { exact: true })).toBeVisible();
+    await expect(nav.getByText("Deprecated", { exact: true })).toBeVisible();
   });
 
   test("page-level SEO metadata overrides generated defaults", async ({ request }) => {
@@ -434,6 +435,8 @@ test.describe("navbar icon resolution", () => {
     expect(inner).not.toBeNull();
     expect(inner!).toContain('<img');
     expect(inner!).toContain('src="https://example.com/logo.svg"');
+    expect(inner!).toContain('loading="lazy"');
+    expect(html).not.toMatch(/<link[^>]+rel="preload"[^>]+href="https:\/\/example\.com\/logo\.svg"/);
     // Must not render an <svg> — URL icons are raster/image
     expect(inner!).not.toContain("<svg");
   });

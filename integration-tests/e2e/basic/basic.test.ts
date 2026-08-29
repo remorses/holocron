@@ -37,6 +37,40 @@ test.describe("home page", () => {
     await expect(table.getByText("Native tables")).toBeVisible();
     await expect(table.getByText("Styled with editorial tokens")).toBeVisible();
   });
+
+  test("does not enable the right TOC by default", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    await expect(page.getByRole("navigation", { name: "On this page" })).toHaveCount(0);
+    const leftNav = page.getByRole("navigation", { name: "Navigation" });
+    await expect(leftNav.locator('a[href^="/#"]')).toHaveCount(3);
+  });
+});
+
+test.describe("page heading semantics", () => {
+  test("renders one frontmatter h1 before callout-first content", async ({ page }) => {
+    await page.goto("/questions-(what's-new)", { waitUntil: "domcontentloaded" });
+
+    await expect(page.locator("h1")).toHaveCount(1);
+    await expect(page.getByRole("heading", { level: 1, name: "What's new" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Recent changes" })).toBeVisible();
+  });
+});
+
+test.describe("page navigation", () => {
+  test("keeps page names in arrow tooltips and accessible labels", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.goto("/getting-started", { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
+
+    const previous = page.getByRole("link", { name: /Previous: Welcome to Test Docs/ });
+    const next = page.getByRole("link", { name: /Next: Markdown Page/ });
+    await expect(previous).toBeVisible();
+    await expect(next).toBeVisible();
+    await previous.hover();
+    await expect(page.getByRole("tooltip", { name: "Welcome to Test Docs" })).toBeVisible();
+  });
 });
 
 test.describe("HTML comments", () => {

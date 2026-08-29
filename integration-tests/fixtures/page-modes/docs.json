@@ -15,7 +15,7 @@
     "groups": [
       {
         "group": "Modes",
-        "pages": ["index", "default", "required-aside", "wide", "center", "custom"]
+        "pages": ["index", "empty-compact", "default", "required-aside", "wide", "center", "custom"]
       }
     ]
   }

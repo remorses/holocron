@@ -20,6 +20,13 @@ test.describe("pages under base path", () => {
     await page.goto("/docs/guide", { waitUntil: "domcontentloaded" });
     await expect(page).toHaveTitle("Guide — Base Path Test");
   });
+
+  test("explicit encoded redirects win under the base path", async ({ request }) => {
+    const response = await request.get("/docs/questions-%28faq%29", { maxRedirects: 0 });
+
+    expect(response.status()).toBe(302);
+    expect(response.headers().location).toBe("/docs/guide");
+  });
 });
 
 test.describe("images under base path", () => {

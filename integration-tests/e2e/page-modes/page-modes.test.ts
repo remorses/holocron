@@ -35,6 +35,12 @@ test.describe("page frontmatter mode", () => {
     expect(compactHeader!.width).toBeLessThan(defaultHeader!.width);
   });
 
+  test("frontmatter-only compact pages render their generated h1", async ({ page }) => {
+    await page.goto("/empty-compact", { waitUntil: "domcontentloaded" });
+
+    await expect(page.getByRole("heading", { level: 1, name: "Empty compact page" })).toBeVisible();
+  });
+
   test("authored aside content overrides compact mode", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
     await page.goto("/required-aside", { waitUntil: "domcontentloaded" });
