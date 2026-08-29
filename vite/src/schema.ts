@@ -1148,7 +1148,9 @@ export const layoutSchema = z
         dedent`
           Default page layout mode. Individual pages can override this with
           the \`mode\` frontmatter field. \`compact\` keeps the left navigation
-          and removes the optional right aside. Defaults to \`default\`
+          and removes the optional right aside, which also hides the default
+          sidebar assistant. Set \`assistant.display\` to \`floating\` to keep
+          Ask AI available. Defaults to \`default\`
         `,
       ),
     maxWidth: z

@@ -15,3 +15,16 @@ Set it for the full site in `docs.json`:
 ```
 
 Or set it for one page with `mode: "compact"` in frontmatter. Pages with authored asides, table-of-contents panels, or generated API examples keep their required right rail automatically.
+
+Compact mode hides the default sidebar assistant. Set `assistant.display` to `floating` so Ask AI stays available as a bottom pill:
+
+```json
+{
+  "layout": {
+    "mode": "compact"
+  },
+  "assistant": {
+    "display": "floating"
+  }
+}
+```

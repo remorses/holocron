@@ -32,17 +32,20 @@ mode: "compact"
 ---
 ```
 
-Set the same mode in **`docs.json`** to make it the default for the full site:
+Set the same mode in **`docs.json`** to make it the default for the full site. Compact mode removes the right aside, so the default **sidebar** assistant is hidden. Also set `assistant.display` to `floating` so Ask AI stays available as a bottom pill:
 
 ```json
 {
   "layout": {
     "mode": "compact"
+  },
+  "assistant": {
+    "display": "floating"
   }
 }
 ```
 
-Page frontmatter overrides the site default. Use `mode: "default"` on a specific page to restore the full three-column layout.
+See [AI Assistant](../ai/assistant.mdx) for the floating pill. Page frontmatter overrides the site default. Use `mode: "default"` on a specific page to restore the full three-column layout.
 
 Pages with **required aside content** keep the right rail automatically. This includes authored `<Aside>` blocks, table-of-contents panels, and generated API request or response examples.
 

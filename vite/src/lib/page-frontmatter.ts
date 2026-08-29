@@ -37,7 +37,7 @@ export const pageFrontmatterSchema = z.object({
   mode: pageModeSchema
     .optional()
     .describe(
-      'Page layout mode. "default" keeps the full layout. "compact" keeps the left navigation and removes the optional right aside while preserving content width. Pages with authored aside content keep the right aside. "center" hides the left navigation. "custom" removes the editorial grid. "wide" and "frame" alias to the default layout.',
+      'Page layout mode. "default" keeps the full layout. "compact" keeps the left navigation and removes the optional right aside while preserving content width. Compact also hides the default sidebar assistant; set assistant.display to floating to keep Ask AI available. Pages with authored aside content keep the right aside. "center" hides the left navigation. "custom" removes the editorial grid. "wide" and "frame" alias to the default layout.',
     ),
   deprecated: z.boolean().optional().describe('Mark the page as deprecated'),
   sidebarToc: z
