@@ -153,10 +153,21 @@
   overflow: hidden;
 }
 
+/* Tables keep right-edge bleed but must scroll, not clip. The rules above
+   set overflow:hidden and cap children at 100%, which would trap wide tables. */
+.slot-main [data-slot='table-container'].bleed-right {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.slot-main [data-slot='table-container'].bleed-right > * {
+  max-width: none !important;
+}
+
 /* ========================================================================
-   Bleed — code blocks and images extend beyond the prose column so that
-   the code text (after line numbers) aligns with the prose left edge.
-   36px = 8px div padding-left + 28px line-number span (border-box, includes padding).
+   Bleed — code blocks, tables, and images extend beyond the prose column.
+   Code text (after line numbers) and table first-column text align with the
+   prose left edge. Tables use bleed-right only.
    ======================================================================== */
 
 .bleed {

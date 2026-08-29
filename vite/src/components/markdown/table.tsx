@@ -9,7 +9,7 @@ import { cn } from '../../lib/css-vars.ts'
 
 export function Table({ className, ...props }: ComponentProps<'table'>) {
   return (
-    <div data-slot='table-container' className='no-bleed relative w-full overflow-x-auto'>
+    <div data-slot='table-container' className='bleed-right relative overflow-x-auto'>
       <table
         data-slot='table'
         className={cn(

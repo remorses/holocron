@@ -203,7 +203,7 @@ function ChatPartRenderer({
 
   if (part.type === 'text') {
     return (
-      <div className='flex min-w-0 flex-col gap-(--prose-gap) overflow-x-clip overflow-y-visible'>
+      <div className='no-bleed flex min-w-0 flex-col gap-(--prose-gap) overflow-x-clip overflow-y-visible'>
         {part.jsx ?? part.text}
       </div>
     )
