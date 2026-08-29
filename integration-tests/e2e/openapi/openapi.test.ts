@@ -104,10 +104,11 @@ test.describe('OpenAPI tab', () => {
     expect(html).toContain('POST')
   })
 
-  test('endpoint examples keep the required right aside in compact site mode', async ({ page }) => {
+  test('endpoint examples stay in the main column in compact site mode', async ({ page }) => {
     await page.goto('/api/post-users')
     await expect(page.getByRole('tablist', { name: 'Request example' })).toBeVisible()
-    await expect(page.locator('.slot-aside')).toBeVisible()
+    await expect(page.locator('.slot-aside')).toHaveCount(0)
+    await expect(page.locator("[data-chat-shell='sidebar']")).toHaveCount(0)
   })
 
   test('deprecated endpoint shows deprecated badge', async ({ request }) => {

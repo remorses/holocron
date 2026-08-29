@@ -19,6 +19,7 @@ test.describe("page frontmatter mode", () => {
     await expect(page.getByRole("heading", { name: "Compact content" })).toBeVisible();
     await expect(page.locator(".slot-sidebar-left")).toBeVisible();
     await expect(page.locator(".slot-aside")).toHaveCount(0);
+    await expect(page.locator("[data-chat-shell='sidebar']")).toHaveCount(0);
 
     const compactHeader = await page.locator(".slot-navbar > .mx-auto").first().boundingBox();
     const compactMain = await page.locator(".slot-main").first().boundingBox();
@@ -41,13 +42,13 @@ test.describe("page frontmatter mode", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Empty compact page" })).toBeVisible();
   });
 
-  test("authored aside content overrides compact mode", async ({ page }) => {
+  test("callout asides stay in the main column in compact mode", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1000 });
     await page.goto("/required-aside", { waitUntil: "domcontentloaded" });
 
-    const requiredAside = page.getByText("Required right rail content.", { exact: true });
-    await expect(requiredAside).toBeVisible();
-    await expect(requiredAside.locator("xpath=ancestor::*[contains(@class,'slot-aside')][1]")).toBeVisible();
+    await expect(page.getByText("Required right rail content.", { exact: true })).toBeVisible();
+    await expect(page.locator(".slot-aside")).toHaveCount(0);
+    await expect(page.locator("[data-chat-shell='sidebar']")).toHaveCount(0);
   });
 
   test("center mode hides the left navigation sidebar", async ({ page }) => {

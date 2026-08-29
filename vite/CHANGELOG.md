@@ -1,5 +1,11 @@
 # @holocron.so/vite
 
+## 0.33.1
+
+1. **Compact layout never opens a right aside** — `layout.mode: "compact"` used to promote the page back to the full three-column layout when it saw an `<Aside>`. That re-injected the sidebar Ask AI widget.
+
+   Compact now always wins. Authored asides and API examples render in the main column. The sidebar Ask AI widget stays hidden.
+
 ## 0.33.0
 
 1. **Compact page mode** — keep the left navigation, drop the optional right aside, and narrow the page frame without changing the reading column width.

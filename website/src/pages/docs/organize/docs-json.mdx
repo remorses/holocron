@@ -120,7 +120,7 @@ Set **`layout.mode`** to choose the default layout for every page:
 }
 ```
 
-`compact` keeps the left navigation and removes the optional right aside. That also hides the default **sidebar** assistant, so set `assistant.display` to `floating` to keep Ask AI available. A page can override the default with its frontmatter `mode` field. Pages with authored asides or generated API examples keep the right rail automatically.
+`compact` keeps the left navigation and removes the right aside. That also hides the default **sidebar** assistant, so set `assistant.display` to `floating` to keep Ask AI available. A page can override the default with its frontmatter `mode` field. Compact never opens a right rail. Authored asides and API examples render in the main column.
 
 ## Passthrough behavior
 

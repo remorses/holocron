@@ -8,6 +8,7 @@
  */
 
 import type { Root, RootContent } from 'mdast'
+import type { PageMode } from './page-frontmatter.ts'
 
 type FlowJsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
 
@@ -31,6 +32,39 @@ export type MdastSection = {
 
 export function isAsideNode(node: RootContent): node is FlowJsxNode {
   return node.type === 'mdxJsxFlowElement' && node.name === 'Aside'
+}
+
+export function unwrapAsides(nodes: RootContent[]): RootContent[] {
+  const result: RootContent[] = []
+  for (const node of nodes) {
+    if (!isAsideNode(node)) {
+      result.push(node)
+      continue
+    }
+    result.push(...node.children)
+  }
+  return result
+}
+
+export function resolveCompactLayout({
+  configuredPageMode,
+  nodes,
+}: {
+  configuredPageMode: PageMode | undefined
+  nodes: RootContent[]
+}) {
+  if (configuredPageMode !== 'compact') {
+    return {
+      nodes,
+      pageMode: configuredPageMode,
+      hideSidebarAssistant: false,
+    }
+  }
+  return {
+    nodes: unwrapAsides(nodes),
+    pageMode: 'compact' as const,
+    hideSidebarAssistant: true,
+  }
 }
 
 function hasFullProp(node: RootContent): boolean {

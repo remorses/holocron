@@ -91,6 +91,7 @@ export function EditorialPage({
   gridGap,
   mode,
   maxWidth,
+  hideSidebarAssistant = false,
 }: {
   sidebar?: React.ReactNode
   children?: React.ReactNode
@@ -110,11 +111,14 @@ export function EditorialPage({
   maxWidth?: number | string
   /** Mintlify-compatible page mode from MDX frontmatter. */
   mode?: PageMode
+  /** Compact mode hides the sidebar Ask AI widget. */
+  hideSidebarAssistant?: boolean
 }) {
   const { site, currentPageHref, activeTabHref, activeVersionHref, activeDropdownHref, showConfigPanel, githubStars } = useHolocronData()
   const siteConfig = site.config
   const enableAssistant = siteConfig.assistant.enabled
   const floatingAssistant = enableAssistant && siteConfig.assistant.display === 'floating'
+  const sidebarAssistantHidden = hideSidebarAssistant || floatingAssistant
   const siteLogo = getResolvedLogo(site)
   const siteTabs = buildTabItems(site, currentPageHref)
   const siteHeaderLinks = buildHeaderLinks(site)
@@ -289,7 +293,7 @@ export function EditorialPage({
         </div>
 
         {/* Mobile bar: Ask AI + Menu — shown under logo bar on mobile */}
-        {(showLeftNav || isCustomMode) && <MobileBar enableAssistant={enableAssistant && !floatingAssistant} />}
+        {(showLeftNav || isCustomMode) && <MobileBar enableAssistant={enableAssistant && !sidebarAssistantHidden} />}
 
         {/* Tab row — hidden on mobile, shown in nav drawer instead */}
         {hasTabBar ? (
@@ -430,7 +434,7 @@ export function EditorialPage({
                       <div className='slot-main flex flex-col gap-(--prose-gap) lg:col-[1] lg:overflow-visible text-(length:--type-body-size)'>
                         {section.content}
                       </div>
-                      {hasPerSectionAside && (
+                      {hasPerSectionAside && showRightAside && (
                         <div className={`${asideClass} lg:col-[2]`}>
                           {/* w-full: flex-col + self-start would shrink to copy-button min-content. */}
                           <div
@@ -450,7 +454,7 @@ export function EditorialPage({
                         Mobile: grid-row stays `auto` → auto-placed by DOM order,
                         stacks at end of range without forcing an implicit 2nd
                         column in grid-cols-1. */}
-                    {hasSharedAside && (
+                     {hasSharedAside && showRightAside && (
                       <div
                         className={`${asideClass} gap-3 lg:col-[2] lg:[grid-row:var(--shared-row)] lg:sticky lg:self-start lg:overflow-y-auto scrollbar-none [&>*]:shrink-0`}
                         style={{

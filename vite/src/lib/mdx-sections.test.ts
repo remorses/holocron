@@ -6,7 +6,12 @@ import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import remarkMdx from 'remark-mdx'
 import { remark } from 'remark'
-import { buildSections } from './mdx-sections.ts'
+import {
+  buildSections,
+  isAsideNode,
+  resolveCompactLayout,
+  unwrapAsides,
+} from './mdx-sections.ts'
 import { remarkInlineImports, type InlineImportEntry } from './remark-inline-imports.ts'
 import { formatSectionsToMdx } from './test-mdx-util.ts'
 
@@ -25,6 +30,98 @@ function parseInlineAndBuild(pageMdx: string, imports: Map<string, InlineImportE
   const transformed = processor.runSync(parsed) as Root
   return buildSections(transformed)
 }
+
+describe('compact asides', () => {
+  test('unwrapAsides moves callouts into the main flow', () => {
+    const root = mdxParse(`Intro
+
+<Aside>
+<Warning>
+Personal use only.
+</Warning>
+</Aside>
+`)
+    expect(formatSectionsToMdx(buildSections(
+      { type: 'root', children: unwrapAsides(root.children) },
+      { includePageChrome: false },
+    ))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      <Warning>
+        Personal use only.
+      </Warning>"
+    `)
+  })
+
+  test('unwrapAsides moves RequestExample asides into the main flow', () => {
+    const root = mdxParse(`Intro
+
+<Aside>
+<RequestExample>
+\`\`\`bash
+curl
+\`\`\`
+</RequestExample>
+</Aside>
+`)
+    expect(formatSectionsToMdx(buildSections(
+      { type: 'root', children: unwrapAsides(root.children) },
+      { includePageChrome: false },
+    ))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      <RequestExample>
+        \`\`\`bash
+        curl
+        \`\`\`
+      </RequestExample>"
+    `)
+  })
+
+  test('compact layout stays compact for callout asides and hides the assistant', () => {
+    const root = mdxParse(`Intro
+
+<Aside>
+<Warning>
+Personal use only.
+</Warning>
+</Aside>
+`)
+    const layout = resolveCompactLayout({
+      configuredPageMode: 'compact',
+      nodes: root.children,
+    })
+    expect(layout.pageMode).toBe('compact')
+    expect(layout.hideSidebarAssistant).toBe(true)
+    expect(layout.nodes.some(isAsideNode)).toBe(false)
+  })
+
+  test('compact layout stays compact for RequestExample asides', () => {
+    const root = mdxParse(`Intro
+
+<Aside>
+<RequestExample>
+\`\`\`bash
+curl
+\`\`\`
+</RequestExample>
+</Aside>
+`)
+    const layout = resolveCompactLayout({
+      configuredPageMode: 'compact',
+      nodes: root.children,
+    })
+    expect(layout.pageMode).toBe('compact')
+    expect(layout.hideSidebarAssistant).toBe(true)
+    expect(layout.nodes.some(isAsideNode)).toBe(false)
+  })
+})
 
 describe('buildSections', () => {
   test('does not inject page chrome when the right aside is disabled', () => {

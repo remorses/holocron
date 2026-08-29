@@ -52,7 +52,7 @@ import {
 import { deduplicateRedirects, interpolateDestination, redirectSourceMatches } from './lib/redirects.ts'
 import { isAgentRequest, stripVisibilityForAgents } from './lib/raw-markdown.ts'
 import { zipSync, strToU8 } from 'fflate'
-import { buildSections, isAboveNode, isAsideNode } from './lib/mdx-sections.ts'
+import { buildSections, isAboveNode, resolveCompactLayout } from './lib/mdx-sections.ts'
 import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
 import { visit } from 'unist-util-visit'
 import { RenderNodes, mdxComponents, renderNode } from './lib/mdx-components-map.tsx'
@@ -397,13 +397,16 @@ function renderMdxPage({
       contentChildren.splice(firstHeadingIndex, 1)
     }
   }
-  const contentMdast: Root = { type: 'root', children: contentChildren }
-  const hasRequiredRightAside = contentChildren.some(isAsideNode)
-  const pageMode = configuredPageMode === 'compact' && hasRequiredRightAside
-    ? 'default'
-    : configuredPageMode
+  const compactLayout = resolveCompactLayout({
+    configuredPageMode,
+    nodes: contentChildren,
+  })
+  const contentMdast: Root = { type: 'root', children: compactLayout.nodes }
+  const pageMode = compactLayout.pageMode
   const mdastSections = buildSections(contentMdast, {
-    enableAssistant: site.config.assistant.enabled && site.config.assistant.display !== 'floating',
+    enableAssistant: site.config.assistant.enabled
+      && site.config.assistant.display !== 'floating'
+      && !compactLayout.hideSidebarAssistant,
     includePageChrome: pageMode !== 'compact',
   })
 
@@ -540,7 +543,7 @@ function renderMdxPage({
               : <Head.Meta key={name} name={name} content={content} />
           ))}
       </Head>
-      <EditorialPage mode={pageMode} sections={sections} above={above} bannerContent={bannerJsx} sidebarWidth={sidebarWidth} gridGap={gridGap} />
+      <EditorialPage mode={pageMode} hideSidebarAssistant={compactLayout.hideSidebarAssistant} sections={sections} above={above} bannerContent={bannerJsx} sidebarWidth={sidebarWidth} gridGap={gridGap} />
     </>
   )
 }
