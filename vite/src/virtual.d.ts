@@ -42,6 +42,26 @@ declare module 'virtual:holocron-modules' {
   export const pagesDirPrefix: string
 }
 
+declare module 'virtual:holocron-data' {
+  export const holocronDataContractVersion: number
+  export const getConfig: typeof import('virtual:holocron-config').getConfig & {
+    holocronDataContractVersion: number
+    holocronData: {
+      holocronDataContractVersion: number
+      base: typeof import('virtual:holocron-config').base
+      getConfig: typeof import('virtual:holocron-config').getConfig
+      getNavigationData: typeof import('virtual:holocron-navigation').getNavigationData
+      runtimeTabEntries: typeof import('virtual:holocron-navigation').runtimeTabEntries
+      getMdxSlugs: typeof import('virtual:holocron-mdx').getMdxSlugs
+      getMdxSource: typeof import('virtual:holocron-mdx').getMdxSource
+      getPageIconRefs: typeof import('virtual:holocron-mdx').getPageIconRefs
+      getIconAtlas: typeof import('virtual:holocron-mdx').getIconAtlas
+      getModules: typeof import('virtual:holocron-modules').getModules
+      pagesDirPrefix: typeof import('virtual:holocron-modules').pagesDirPrefix
+    }
+  }
+}
+
 declare module 'cloudflare:workers' {
   export const env: any
 }

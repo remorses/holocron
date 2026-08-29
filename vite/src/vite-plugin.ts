@@ -20,6 +20,10 @@ import { syncNavigation, processDeferredProviders, type SyncResult } from './lib
 import { nestClientOutputUnderBase } from './lib/cloudflare-base-assets.ts'
 import { colors, formatHolocronStep, formatHolocronSuccess, formatHolocronWarning, logger } from './lib/logger.ts'
 import { hasHolocronApiKey, HOLOCRON_API_KEY_ENV_NAMES } from './lib/holocron-url.ts'
+import {
+  HOLOCRON_DATA_CONTRACT_VERSION,
+  HOLOCRON_DATA_REQUIRED_EXPORTS,
+} from './build-navigation-data.ts'
 
 import react from '@vitejs/plugin-react'
 import { cloudflare as cloudflarePlugin } from '@cloudflare/vite-plugin'
@@ -97,6 +101,9 @@ const RESOLVED_MDX_PAGE_PREFIX = '\0' + VIRTUAL_MDX_PAGE_PREFIX
 
 const VIRTUAL_MODULES = 'virtual:holocron-modules'
 const RESOLVED_MODULES = '\0' + VIRTUAL_MODULES
+
+const VIRTUAL_DATA = 'virtual:holocron-data'
+const RESOLVED_DATA = '\0' + VIRTUAL_DATA
 
 const VIRTUAL_PROVIDER_PREFIX = 'virtual:holocron-provider/'
 const RESOLVED_PROVIDER_PREFIX = '\0' + VIRTUAL_PROVIDER_PREFIX
@@ -200,7 +207,7 @@ const STABLE_GROUP = {
 // Excludes virtual:holocron-mdx-page/* (per-page chunks stay individual).
 const HOLOCRON_DATA_GROUP = {
   name: 'holocron-data',
-  test: /\0virtual:holocron-(?:config|navigation|mdx(?!-page)|modules)/,
+  test: /\0virtual:holocron-(?:config|navigation|mdx(?!-page)|modules|data)/,
   priority: 30,
 }
 
@@ -657,6 +664,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       if (id === VIRTUAL_MODULES) {
         return RESOLVED_MODULES
       }
+      if (id === VIRTUAL_DATA) {
+        return RESOLVED_DATA
+      }
       if (id === VIRTUAL_APP || id.endsWith('/' + VIRTUAL_APP)) {
         return RESOLVED_APP
       }
@@ -881,6 +891,18 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
           `}`,
           `export function getModules() { return modules }`,
           `export const pagesDirPrefix = ${JSON.stringify(pagesDirPrefix)}`,
+        ].join('\n')
+      }
+      if (id === RESOLVED_DATA) {
+        return [
+          `import { base, getConfig as getConfigSource } from ${JSON.stringify(VIRTUAL_CONFIG)}`,
+          `import { getNavigationData, runtimeTabEntries } from ${JSON.stringify(VIRTUAL_NAVIGATION)}`,
+          `import { getMdxSlugs, getMdxSource, getPageIconRefs, getIconAtlas } from ${JSON.stringify(VIRTUAL_MDX)}`,
+          `import { getModules, pagesDirPrefix } from ${JSON.stringify(VIRTUAL_MODULES)}`,
+          `export const holocronDataContractVersion = ${HOLOCRON_DATA_CONTRACT_VERSION}`,
+          `export async function getConfig() { return getConfigSource() }`,
+          `getConfig.holocronDataContractVersion = holocronDataContractVersion`,
+          `getConfig.holocronData = { ${HOLOCRON_DATA_REQUIRED_EXPORTS.join(', ')} }`,
         ].join('\n')
       }
       if (id === RESOLVED_APP) {

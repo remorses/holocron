@@ -2,11 +2,56 @@
 import { describe, expect, test } from 'vitest'
 import {
     generateHolocronData,
+    getHolocronDataContract,
+    HOLOCRON_DATA_CONTRACT_VERSION,
+    HOLOCRON_DATA_REQUIRED_EXPORTS,
     isHolocronDataGenerationError,
 } from './build-navigation-data.ts'
 import { normalize } from './lib/normalize-config.ts'
 
 describe('generateHolocronData', () => {
+    test('emits the complete generated data contract', async () => {
+        const config = normalize({
+            name: 'Docs',
+            navigation: { pages: ['index'] },
+        })
+        const result = await generateHolocronData({
+            config,
+            slugs: ['index'],
+            getMdxSource: async () => '# Home',
+        })
+        const dataUrl = `data:text/javascript;base64,${Buffer.from(result.dataChunkSource).toString('base64')}`
+        const generated = await import(dataUrl)
+        const contract = getHolocronDataContract(generated.getConfig)
+
+        expect(generated.holocronDataContractVersion).toBe(HOLOCRON_DATA_CONTRACT_VERSION)
+        expect(HOLOCRON_DATA_REQUIRED_EXPORTS.every((name) => name in generated)).toBe(true)
+        expect(HOLOCRON_DATA_REQUIRED_EXPORTS.every((name) => name in contract)).toBe(true)
+    })
+
+    test('rejects a generated module with a missing required export', () => {
+        const generated = Object.fromEntries(
+            HOLOCRON_DATA_REQUIRED_EXPORTS.map((name) => [name, () => undefined]),
+        )
+        const entry = Object.assign(() => undefined, {
+            holocronDataContractVersion: HOLOCRON_DATA_CONTRACT_VERSION,
+            holocronData: generated,
+        })
+        delete generated.runtimeTabEntries
+
+        expect(() => getHolocronDataContract(entry)).toThrow(
+            /missing required export.*runtimeTabEntries.*rebuild.*same @holocron\.so\/vite version\/contract/i,
+        )
+    })
+
+    test('rejects a generated module with a mismatched contract version', () => {
+        expect(() => getHolocronDataContract({
+            holocronDataContractVersion: HOLOCRON_DATA_CONTRACT_VERSION + 1,
+        })).toThrow(
+            /expected contract.*received.*rebuild.*same @holocron\.so\/vite version\/contract/i,
+        )
+    })
+
     test('escapes quotes in import() paths so holocron-data.js is valid JS', async () => {
         const slug =
             'pages-with-weird-chars/page-with-quotes-"-what-a-good-\'-library-slugify-no'
