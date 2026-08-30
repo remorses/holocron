@@ -222,6 +222,39 @@ function installDiagramGrammar() {
   }
 }
 
+// Prism bash colors a Unix allowlist (npx missing; `file` as an arg still hits).
+// Color the first word of each statement instead, like VS Code shellscript.
+function installRicherBashGrammar() {
+  const prism: any = refractor
+  const bash: any = prism.languages.bash
+  if (!bash?.function || prism._holocronRicherCommands) return
+  prism._holocronRicherCommands = true
+
+  // greedy + lookbehind against the full string. Non-greedy `^` is per remaining
+  // chunk, so every word would match. `m` makes `^` a real line start.
+  const command = {
+    greedy: true,
+    lookbehind: true,
+    pattern:
+      /((?:^|[;|&]|[<>]\(|\b(?:then|do|else|elif))\s*)(?!(?:if|then|else|elif|fi|for|while|until|do|done|case|esac|function|select)\b)(?:(?:sudo|doas|nohup|time|exec|command|builtin|env)\s+)?[a-zA-Z_./~][^\s;|&<>()]*/m,
+  }
+  bash.function = command
+  const subst = bash.variable?.[1]?.inside
+  if (subst) subst.function = command
+
+  prism.languages.insertBefore('bash', 'function', {
+    package: {
+      pattern: /(?:npm:)?@[a-zA-Z0-9._-]+\/[a-zA-Z0-9._/-]+/,
+      alias: 'property',
+    },
+  })
+  const bashAfter = prism.languages.bash
+  const substAfter = bashAfter.variable?.[1]?.inside
+  if (substAfter && bashAfter.package && !substAfter.package) {
+    substAfter.package = bashAfter.package
+  }
+}
+
 // Prism markdown has YAML frontmatter, but only if yaml is registered first
 // (`inside: Prism.languages.yaml` is captured at register time). There is no
 // official Prism MDX grammar; the TextMate one is wooorm/markdown-tm-language.
@@ -344,6 +377,7 @@ function ensureLang(id: string): boolean {
 export function highlightCode(code: string, lang?: string): string | undefined {
   const id = lang?.trim().toLowerCase()
   if (!id || !ensureLang(id)) return undefined
+  if (refractor.registered('bash')) installRicherBashGrammar()
   return toHtml(refractor.highlight(code, id))
 }
 

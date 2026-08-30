@@ -598,6 +598,25 @@ describe('highlightCode', () => {
     expect(highlightCode('<style>.a{color:red}</style><script>var a=1</script>', 'html')).toMatchInlineSnapshot(`"<span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;</span>style</span><span class="token punctuation">></span></span><span class="token style"><span class="token language-css"><span class="token selector"><span class="token class">.a</span></span><span class="token punctuation">{</span><span class="token property">color</span><span class="token punctuation">:</span><span class="token color">red</span><span class="token punctuation">}</span></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;/</span>style</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;</span>script</span><span class="token punctuation">></span></span><span class="token script"><span class="token language-javascript"><span class="token keyword">var</span> a<span class="token operator">=</span><span class="token number">1</span></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&#x3C;/</span>script</span><span class="token punctuation">></span></span>"`)
   })
 
+  test('bash colors commands outside the unix allowlist', () => {
+    expect(highlightCode('npx @subrouter/cli login anthropic', 'bash')).toMatchInlineSnapshot(
+      `"<span class="token function">npx</span> <span class="token package property">@subrouter/cli</span> login anthropic"`,
+    )
+  })
+
+  test('bash colors the first command on each pipeline segment', () => {
+    expect(highlightCode('cat file | wrangler deploy', 'bash')).toMatchInlineSnapshot(
+      `"<span class="token function">cat</span> file <span class="token operator">|</span> <span class="token function">wrangler</span> deploy"`,
+    )
+  })
+
+  test('bash keeps flags, strings, and control keywords', () => {
+    expect(highlightCode('git commit -m "x"\nif true; then echo hi; fi', 'bash')).toMatchInlineSnapshot(`
+      "<span class="token function">git</span> commit <span class="token parameter variable">-m</span> <span class="token string">"x"</span>
+      <span class="token keyword">if</span> <span class="token boolean">true</span><span class="token punctuation">;</span> <span class="token keyword">then</span> <span class="token function">echo</span> hi<span class="token punctuation">;</span> <span class="token keyword">fi</span>"
+    `)
+  })
+
   test('http json body uses content-type grammar', () => {
     expect(highlightCode('HTTP/1.1 200 OK\nContent-Type: application/json\n\n{ "id": 1 }\n', 'http')).toMatchInlineSnapshot(`
       "<span class="token response-status"><span class="token http-version property">HTTP/1.1</span> <span class="token status-code number">200</span> <span class="token reason-phrase string">OK</span></span>
