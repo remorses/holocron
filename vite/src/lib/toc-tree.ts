@@ -4,8 +4,8 @@
  * Used by the build pipeline (sync.ts) and server component (app-factory.tsx).
  */
 
-import type { Root, Heading, PhrasingContent } from 'mdast'
-import { slug } from 'github-slugger'
+import type { Root, Heading, PhrasingContent, RootContent } from 'mdast'
+import GithubSlugger, { slug } from 'github-slugger'
 
 /* ── TOC tree types ──────────────────────────────────────────────────── */
 
@@ -22,6 +22,32 @@ export type TocTreeNode = {
 }
 
 /* ── Helper functions ────────────────────────────────────────────────── */
+
+export function getAssignedHeadingId(node: Heading): string | undefined {
+  const props = node.data?.hProperties
+  if (!props || typeof props !== 'object') return undefined
+  const id = Reflect.get(props, 'id')
+  return typeof id === 'string' ? id : undefined
+}
+
+/** GithubSlugger suffixes for duplicate titles (accounts, accounts-1). Mutates heading.data. */
+export function assignUniqueHeadingIds(nodes: RootContent[]): void {
+  const slugger = new GithubSlugger()
+  walk(nodes)
+
+  function walk(list: readonly RootContent[]) {
+    for (const node of list) {
+      if (node.type === 'heading') {
+        const text = extractText(node.children)
+        if (text && !getAssignedHeadingId(node)) {
+          node.data = { ...node.data, hProperties: { id: slugger.slug(text) } }
+        }
+      }
+      const children = Reflect.get(node, 'children')
+      if (Array.isArray(children)) walk(children)
+    }
+  }
+}
 
 /** Extract plain text from mdast phrasing content */
 export function extractText(children: PhrasingContent[]): string {

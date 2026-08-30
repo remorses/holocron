@@ -4,6 +4,7 @@ import { createRenderNode, mdxComponents, renderNode } from './mdx-components-ma
 import { buildCodeFrame, formatMdxError, HolocronMdxParseError } from './logger.ts'
 import { normalizeMdx } from './normalize-mdx.ts'
 import { RenderNodes } from './mdx-components-map.tsx'
+import { assignUniqueHeadingIds } from './toc-tree.ts'
 import { SafeMdxRenderer } from 'safe-mdx'
 import { mdxParse } from 'safe-mdx/parse'
 import type { Root, RootContent } from 'mdast'
@@ -30,6 +31,7 @@ function renderMdx(raw: string) {
 
   // Step 2: mdxParse re-parses serialized content — same as parsePageMdx in app-factory.tsx
   const mdast = mdxParse(normalized.content)
+  assignUniqueHeadingIds(mdast.children)
 
   // Step 3: RenderNodes — same as renderMdxPage (minus section splitting)
   const html = renderToStaticMarkup(
@@ -405,6 +407,11 @@ describe('Callout icons — full production pipeline', () => {
 
     expect(html).toContain('<svg')
     expect(html).toContain('Fallback icon')
+  })
+
+  it('assigns unique ids to duplicate heading titles after re-parse', () => {
+    const { html } = renderMdx('### Accounts\n\n### Accounts')
+    expect(html).toMatchInlineSnapshot(`"<h3 id="accounts" class="editorial-heading editorial-h3" data-toc-heading="true" data-toc-level="3"><span>Accounts</span></h3><h3 id="accounts-1" class="editorial-heading editorial-h3" data-toc-heading="true" data-toc-level="3"><span>Accounts</span></h3>"`)
   })
 })
 

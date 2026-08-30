@@ -53,6 +53,7 @@ import { deduplicateRedirects, interpolateDestination, redirectSourceMatches } f
 import { isAgentRequest, stripVisibilityForAgents } from './lib/raw-markdown.ts'
 import { zipSync, strToU8 } from 'fflate'
 import { buildSections, isAboveNode, resolveCompactLayout } from './lib/mdx-sections.ts'
+import { assignUniqueHeadingIds } from './lib/toc-tree.ts'
 import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
 import { visit } from 'unist-util-visit'
 import { RenderNodes, mdxComponents, renderNode } from './lib/mdx-components-map.tsx'
@@ -342,6 +343,7 @@ function renderMdxPage({
   const pageTwitterCard = pageSeoMeta['twitter:card'] ?? 'summary_large_image'
 
   const mdast = preParsedMdast
+  assignUniqueHeadingIds(mdast.children)
 
   const configuredPageMode = loaderData.currentPageFrontmatter?.mode ?? site.config.layout.mode
 

@@ -1,11 +1,13 @@
 import { describe, test, expect } from 'vitest'
 import {
+  assignUniqueHeadingIds,
   extractText,
   generateTocTree,
+  getAssignedHeadingId,
 } from './toc-tree.ts'
 import { slug } from 'github-slugger'
 import { mdxParse } from 'safe-mdx/parse'
-import type { PhrasingContent } from 'mdast'
+import type { Heading, PhrasingContent } from 'mdast'
 
 /* ── slug (github-slugger) ───────────────────────────────────────────── */
 
@@ -32,6 +34,22 @@ describe('slug', () => {
 
   test('handles already-slugified text', () => {
     expect(slug('already-slugified')).toBe('already-slugified')
+  })
+})
+
+describe('assignUniqueHeadingIds', () => {
+  test('suffixes duplicate titles', () => {
+    const mdast = mdxParse('### Accounts\n\n### Accounts\n\n### Presets')
+    assignUniqueHeadingIds(mdast.children)
+    expect(mdast.children.filter((node): node is Heading => node.type === 'heading').map((node) => {
+      return getAssignedHeadingId(node)
+    })).toMatchInlineSnapshot(`
+      [
+        "accounts",
+        "accounts-1",
+        "presets",
+      ]
+    `)
   })
 })
 

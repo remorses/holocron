@@ -64,7 +64,7 @@ import {
   ImageboardVideo,
 } from '../components/markdown/index.tsx'
 import { slug } from 'github-slugger'
-import { extractText } from './toc-tree.ts'
+import { extractText, getAssignedHeadingId } from './toc-tree.ts'
 import { logMdxError } from './logger.ts'
 import { parseCodeMeta, metaBool, type BleedMode } from './code-meta.ts'
 import type { SafeMdxComponentName } from './mdx-component-names.ts'
@@ -223,7 +223,7 @@ export function renderNode(
   if (node.type === 'heading') {
     const heading = node
     const text = extractText(heading.children)
-    const id = slug(text)
+    const id = getAssignedHeadingId(heading) ?? slug(text)
     const level = Math.max(2, heading.depth)
     return (
       <SectionHeading key={id} id={id} level={level}>

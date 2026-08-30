@@ -19,6 +19,7 @@ import { parsePageFrontmatter, type PageFrontmatter } from './page-frontmatter.t
 import { stringIconToRefs, type IconLibrary, type IconRef } from './collect-icons.ts'
 import { extractImports } from 'safe-mdx/parse'
 import { stripMdExtFromPath, isExternalUrl } from './link-utils.ts'
+import { assignUniqueHeadingIds, getAssignedHeadingId } from './toc-tree.ts'
 
 /** A binding from an MDX import declaration — maps a local JSX name to its
  *  source specifier. For `import Foo from './bar'`, local='Foo' source='./bar'.
@@ -120,6 +121,7 @@ export function processMdx(
   const iconRefs = collectIconRefsFromMdast({ mdast, frontmatter, defaultLibrary })
 
   // GithubSlugger handles dedup: "Usage", "Usage" → "usage", "usage-1"
+  assignUniqueHeadingIds(mdast.children)
   const slugger = new GithubSlugger()
   const headings: NavHeading[] = []
   let isFirstHeading = true
@@ -237,7 +239,7 @@ function extractHeading(node: RootContent, slugger: GithubSlugger): NavHeading |
     return {
       depth: node.depth,
       text,
-      slug: slugger.slug(text),
+      slug: getAssignedHeadingId(node) || slugger.slug(text),
     }
   }
 

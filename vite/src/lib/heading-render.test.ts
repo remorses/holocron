@@ -11,11 +11,13 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { normalizeMdx } from './normalize-mdx.ts'
 import { RenderNodes } from './mdx-components-map.tsx'
+import { assignUniqueHeadingIds } from './toc-tree.ts'
 
 function renderMdx(raw: string) {
   const result = normalizeMdx(raw)
   if (result instanceof Error) throw result
   const { content, mdast } = result
+  assignUniqueHeadingIds(mdast.children)
   const html = renderToStaticMarkup(
     createElement(RenderNodes, { markdown: content, nodes: mdast.children }),
   )
@@ -83,6 +85,11 @@ describe('heading rendering pipeline', () => {
   test('multiple headings with body text', () => {
     const { html } = renderMdx('## H2 Title\n\n### H3 Title\n\nSome body text.')
     expect(html).toMatchInlineSnapshot(`"<h2 id="h2-title" class="editorial-heading editorial-h2" data-toc-heading="true" data-toc-level="2"><span>H2 Title</span><span style="flex:1;height:1px;background:var(--divider)"></span></h2><h3 id="h3-title" class="editorial-heading editorial-h3" data-toc-heading="true" data-toc-level="3"><span>H3 Title</span></h3><div class="editorial-prose">Some body text.</div>"`)
+  })
+
+  test('duplicate heading titles get unique ids', () => {
+    const { html } = renderMdx('### Accounts\n\n### Accounts')
+    expect(html).toMatchInlineSnapshot(`"<h3 id="accounts" class="editorial-heading editorial-h3" data-toc-heading="true" data-toc-level="3"><span>Accounts</span></h3><h3 id="accounts-1" class="editorial-heading editorial-h3" data-toc-heading="true" data-toc-level="3"><span>Accounts</span></h3>"`)
   })
 
   test('details summary markdown renders through mdx components', () => {
