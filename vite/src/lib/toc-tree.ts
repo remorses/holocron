@@ -39,8 +39,13 @@ export function assignUniqueHeadingIds(nodes: RootContent[]): void {
     for (const node of list) {
       if (node.type === 'heading') {
         const text = extractText(node.children)
-        if (text && !getAssignedHeadingId(node)) {
-          node.data = { ...node.data, hProperties: { id: slugger.slug(text) } }
+        const existing = getAssignedHeadingId(node)
+        if (existing) {
+          slugger.slug(existing)
+        } else if (text) {
+          const prev = node.data?.hProperties
+          const hProperties = prev && typeof prev === 'object' ? { ...prev, id: slugger.slug(text) } : { id: slugger.slug(text) }
+          node.data = { ...node.data, hProperties }
         }
       }
       const children = Reflect.get(node, 'children')

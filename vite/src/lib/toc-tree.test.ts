@@ -51,6 +51,29 @@ describe('assignUniqueHeadingIds', () => {
       ]
     `)
   })
+
+  test('keeps an id that is already on the heading', () => {
+    const mdast = mdxParse('### Accounts\n\n### Accounts')
+    const first = mdast.children.find((node): node is Heading => node.type === 'heading')
+    if (!first) throw new Error('expected a heading')
+    first.data = { hProperties: { id: 'keep-me', className: 'hero' } }
+    assignUniqueHeadingIds(mdast.children)
+    const headings = mdast.children.filter((node): node is Heading => node.type === 'heading')
+    expect(headings.map((node) => getAssignedHeadingId(node))).toMatchInlineSnapshot(`
+      [
+        "keep-me",
+        "accounts",
+      ]
+    `)
+    expect(headings[0]?.data).toMatchInlineSnapshot(`
+      {
+        "hProperties": {
+          "className": "hero",
+          "id": "keep-me",
+        },
+      }
+    `)
+  })
 })
 
 /* ── extractText ─────────────────────────────────────────────────────── */
