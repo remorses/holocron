@@ -23,7 +23,7 @@ Every page can set a **mode** in its frontmatter to control how much of the edit
 
 ### Compact mode
 
-Use **`compact`** to keep the left navigation while removing the optional right aside. The content column keeps its normal reading width, so the full page frame becomes narrower and the header aligns with the content on the right.
+Use **`compact`** to keep the left navigation while removing the optional right aside. The content column keeps its normal reading width, so the full page frame becomes narrower and the header aligns with the content on the right. Compact also sets **`--sidebar-font-size`** to **12px** (the default is 13px, 14px at `xl`). Override that token on `:root` if you want a different size.
 
 ```yaml
 ---

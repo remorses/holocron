@@ -187,6 +187,7 @@ export function EditorialPage({
   return (
     <div
       className='slot-page flex flex-col gap-(--layout-gap) grow bg-background text-foreground [font-family:var(--font-sans)] antialiased [text-rendering:optimizeLegibility] overflow-x-clip'
+      data-page-mode={pageMode}
       style={pageStyle}
     >
       {!!bannerContent && (

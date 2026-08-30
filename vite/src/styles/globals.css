@@ -149,7 +149,8 @@
   /* Sidebar nav — spacing is em so it scales with --sidebar-font-size.
      Each calc is the previous px amount over a 14px sidebar font.
      Default is 13px; at xl (1280px+) the left sidebar grows to 14px.
-     Override on :root to change globally. */
+     Compact mode uses 12px at all breakpoints (higher specificity than
+     the xl bump). Override on :root to change globally. */
   --sidebar-font-size: 13px;
   --sidebar-group-margin-top: calc(12em / 14);
   --sidebar-link-radius: calc(6em / 14);
@@ -191,6 +192,9 @@
   --search-input-radius: var(--radius-xl);
   @variant xl {
     --sidebar-font-size: 14px;
+  }
+  &:has(.slot-page[data-page-mode="compact"]) {
+    --sidebar-font-size: 12px;
   }
 
   /* Bleed: mobile-first (0), enabled at lg where grid has room.
