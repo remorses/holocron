@@ -3,44 +3,47 @@
 /**
  * Shared hook for tracking which heading is currently active in the viewport.
  *
- * Uses a scroll listener to find the last heading that scrolled above the
- * top navbar offset. Falls back to the URL hash, then to the first heading.
+ * The reading line is each heading's `scroll-margin-top` (the sticky header).
+ * Hash navigation parks the target on that line, so a smaller magic offset
+ * (e.g. 50px vs ~144px) keeps the previous heading active and the sidebar
+ * jumps backwards.
  *
- * Scroll-based approach is more predictable than IntersectionObserver:
- * no rootMargin magic, no visible-set tracking — just "which heading is
- * closest to the top of the viewport?"
- *
- * Hash priority: after a hashchange event (including synthetic ones dispatched
- * by Spiceflow's router for pushState navigations) OR a direct heading click,
- * the hash is authoritative until the user manually scrolls. This handles:
- * - No-scroll pages: user can't scroll → hash always wins
- * - Bottom-of-page headings: heading can't reach the threshold line → hash
- *   stays active until user scrolls away
- *
- * User-intent detection: instead of a fragile time-based grace period
- * (SCROLL_SETTLE_MS), we detect genuine user scroll via `wheel`, `touchstart`,
- * and scroll-key `keydown` events. These never fire from programmatic
- * scrollIntoView() calls, so hash priority survives the scroll-to-hash
- * animation regardless of its duration.
- *
- * Scrollbar drag: `wheel`/`touchstart` don't fire when dragging the browser
- * scrollbar. To handle this, `scrollend` marks the programmatic scroll-to-hash
- * as complete; any `scroll` event AFTER that must be user-initiated (scrollbar
- * drag, browser extension, etc.) and resets hashIsAuthoritative.
- *
- * Same-hash re-click: when the URL already has the target hash, Spiceflow
- * skips the synthetic hashchange (hash didn't change). The onClick handler
- * dispatches a custom event so useSyncExternalStore gets a re-render signal.
+ * Hash stays authoritative after hashchange/click until real user scroll
+ * (`wheel` / `touchstart` / scroll keys, or scrollbar drag via scrollend).
+ * That covers no-scroll pages and headings that cannot reach the line.
  */
 
 import { useCallback, useMemo, useSyncExternalStore } from 'react'
 
-/**
- * A heading counts as "active" when its top edge reaches the fixed-header
- * offset. This tracks the section currently at the top of the page instead
- * of switching early when a heading gets near the viewport center.
- */
-const ACTIVE_HEADING_OFFSET = 50
+/** Last heading whose top is still at or above the sticky-header reading line. */
+export function pickActiveHeadingId({
+  headings,
+  fallbackId,
+  offset,
+}: {
+  headings: { id: string; top: number }[]
+  fallbackId: string
+  offset: number
+}): string {
+  let activeId = ''
+  let activeTop = -Infinity
+  for (const heading of headings) {
+    if (heading.top > offset) continue
+    if (heading.top >= activeTop) {
+      activeTop = heading.top
+      activeId = heading.id
+    }
+  }
+  return activeId || fallbackId
+}
+
+function readHeadingOffset(nodes: NodeListOf<HTMLElement>): number {
+  for (const node of nodes) {
+    const margin = parseFloat(getComputedStyle(node).scrollMarginTop)
+    if (Number.isFinite(margin) && margin > 0) return margin + 1
+  }
+  return 1
+}
 
 /**
  * When true, the URL hash takes priority over scroll-based detection.
@@ -91,36 +94,29 @@ export type ActiveTocSnapshot = {
  * Find the active heading based on scroll position + hash state.
  *
  * When hashIsAuthoritative (user just clicked a heading link), the hash wins.
- * Otherwise, find the last heading above the fixed-header offset.
+ * Otherwise, pick the last heading at or above scroll-margin-top.
  */
 function computeActiveId(validIds: Set<string>, fallbackId: string): string {
   const hash = window.location.hash.replace(/^#/, '')
 
-  // Hash is authoritative after a hashchange until the user scrolls
   if (hashIsAuthoritative && hash && validIds.has(hash)) {
     return hash
   }
 
-  // On non-scrollable pages, scroll-based detection is meaningless — all
-  // headings sit at their initial positions. The hash (from cross-page
-  // navigation or direct URL) is the only useful signal.
   if (hash && validIds.has(hash) && document.documentElement.scrollHeight <= window.innerHeight + 1) {
     return hash
   }
 
-  const headings = document.querySelectorAll<HTMLElement>('[data-toc-heading="true"][id]')
-  let candidate = ''
-
-  for (const heading of headings) {
-    if (!validIds.has(heading.id)) continue
-    if (heading.getBoundingClientRect().top <= ACTIVE_HEADING_OFFSET) {
-      candidate = heading.id
-    } else {
-      break
-    }
+  const nodes = document.querySelectorAll<HTMLElement>('[data-toc-heading="true"][id]')
+  const offset = readHeadingOffset(nodes)
+  const headings: { id: string; top: number }[] = []
+  for (const node of nodes) {
+    if (!validIds.has(node.id)) continue
+    const rect = node.getBoundingClientRect()
+    if (rect.height === 0) continue
+    headings.push({ id: node.id, top: rect.top })
   }
-
-  return candidate || fallbackId
+  return pickActiveHeadingId({ headings, fallbackId, offset })
 }
 
 /**
