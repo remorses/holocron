@@ -3,8 +3,10 @@
  * Splits at every heading and handles `<Aside full>` row spans.
  *
  * Authored `<Aside full>` collects later asides into one shared sidebar.
- * The synthetic AI/page-nav aside is a regular first-section aside, so later
- * section asides stay on their own rows (`asideNodes`) next to their headings.
+ * Page chrome (AI widget + page nav) uses `<Aside full>` when the page has
+ * no asides, or exactly one authored `<Aside full>` (merged into it). That
+ * keeps the widget aligned to the top of the sidebar. Otherwise chrome is a
+ * regular first-section aside, so later section asides stay on their own rows.
  */
 
 import type { Root, RootContent } from 'mdast'
@@ -73,6 +75,92 @@ function hasFullProp(node: RootContent): boolean {
 
 export function isFullWidthNode(node: RootContent): node is FlowJsxNode {
   return node.type === 'mdxJsxFlowElement' && node.name === 'FullWidth'
+}
+
+function pageChromeNodes(enableAssistant: boolean): FlowJsxNode[] {
+  const nodes: FlowJsxNode[] = []
+  if (enableAssistant) {
+    nodes.push({
+      type: 'mdxJsxFlowElement',
+      name: 'HolocronAIAssistantWidget',
+      attributes: [],
+      children: [],
+    })
+  }
+  nodes.push({
+    type: 'mdxJsxFlowElement',
+    name: 'HolocronPageNavRow',
+    attributes: [],
+    children: [],
+  })
+  return nodes
+}
+
+function createAside(children: FlowJsxNode[], full = false): FlowJsxNode {
+  return {
+    type: 'mdxJsxFlowElement',
+    name: 'Aside',
+    attributes: full ? [{ type: 'mdxJsxAttribute', name: 'full', value: null }] : [],
+    children,
+  }
+}
+
+function firstNonFullWidthIndex(children: RootContent[]): number {
+  let i = 0
+  while (i < children.length && isFullWidthNode(children[i]!)) i++
+  return i
+}
+
+/** Page chrome uses `<Aside full>` when it can stay at the top of the sidebar. */
+function injectPageChrome(children: RootContent[], enableAssistant: boolean) {
+  const injectedNodes = pageChromeNodes(enableAssistant)
+  const authoredAsides = children.filter(isAsideNode)
+  const onlyFullAside = authoredAsides.length === 1 && hasFullProp(authoredAsides[0]!)
+    ? authoredAsides[0]
+    : undefined
+  const insertAt = firstNonFullWidthIndex(children)
+
+  if (authoredAsides.length === 0) {
+    children.splice(insertAt, 0, createAside(injectedNodes, true))
+    return
+  }
+
+  if (onlyFullAside) {
+    onlyFullAside.children.unshift(...injectedNodes)
+    const idx = children.indexOf(onlyFullAside)
+    if (idx !== insertAt) {
+      children.splice(idx, 1)
+      children.splice(insertAt, 0, onlyFullAside)
+    }
+    return
+  }
+
+  const scanStart = children[0] && isHeadingNode(children[0]) ? 1 : 0
+  let firstSectionEnd = children.length
+  for (let i = scanStart; i < children.length; i++) {
+    if (isHeadingNode(children[i]!) || isFullWidthNode(children[i]!)) {
+      firstSectionEnd = i
+      break
+    }
+  }
+
+  let firstFullAsideIdx = -1
+  for (let i = 0; i < firstSectionEnd; i++) {
+    if (isAsideNode(children[i]!) && hasFullProp(children[i]!)) {
+      firstFullAsideIdx = i
+      break
+    }
+  }
+
+  if (firstFullAsideIdx !== -1) {
+    const asideNode = children[firstFullAsideIdx]
+    if (asideNode && isAsideNode(asideNode)) {
+      asideNode.children.unshift(...injectedNodes)
+    }
+    return
+  }
+
+  children.splice(scanStart, 0, createAside(injectedNodes))
 }
 
 export function isAboveNode(node: RootContent): node is FlowJsxNode {
@@ -151,55 +239,7 @@ export function buildSections(
   })
 
   if (includePageChrome) {
-    // Build the list of nodes to inject into the first section's aside.
-    const injectedNodes: FlowJsxNode[] = []
-    if (enableAssistant) {
-      injectedNodes.push({
-        type: 'mdxJsxFlowElement',
-        name: 'HolocronAIAssistantWidget',
-        attributes: [],
-        children: [],
-      })
-    }
-    injectedNodes.push({
-      type: 'mdxJsxFlowElement',
-      name: 'HolocronPageNavRow',
-      attributes: [],
-      children: [],
-    })
-
-    // Skip a leading heading so the first section's body is scanned.
-    const scanStart = children[0] && isHeadingNode(children[0]) ? 1 : 0
-    let firstSectionEnd = children.length
-    for (let i = scanStart; i < children.length; i++) {
-      if (isHeadingNode(children[i]!) || isFullWidthNode(children[i]!)) {
-        firstSectionEnd = i
-        break
-      }
-    }
-
-    let firstFullAsideIdx = -1
-    for (let i = 0; i < firstSectionEnd; i++) {
-      if (isAsideNode(children[i]!) && hasFullProp(children[i]!)) {
-        firstFullAsideIdx = i
-        break
-      }
-    }
-
-    if (firstFullAsideIdx !== -1) {
-      const asideNode = children[firstFullAsideIdx]
-      if (asideNode && isAsideNode(asideNode)) {
-        asideNode.children.unshift(...injectedNodes)
-      }
-    } else {
-      const syntheticAside: FlowJsxNode = {
-        type: 'mdxJsxFlowElement',
-        name: 'Aside',
-        attributes: [],
-        children: [...injectedNodes],
-      }
-      children.splice(scanStart, 0, syntheticAside)
-    }
+    injectPageChrome(children, enableAssistant)
   }
 
   // Find indices of all <Aside full> nodes

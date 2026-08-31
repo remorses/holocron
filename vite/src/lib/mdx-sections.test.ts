@@ -159,17 +159,18 @@ Body
       [CONTENT]
       Intro
 
-      [ASIDE]
-      <Aside>
-        <HolocronPageNavRow />
-      </Aside>
-
       --- SECTION 1 ---
+      asideRowSpan: 2
 
       [CONTENT]
       ## Section
 
-      Body"
+      Body
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronPageNavRow />
+      </Aside>"
     `)
   })
 
@@ -186,19 +187,20 @@ Body
       [CONTENT]
       Intro
 
-      [ASIDE]
-      <Aside>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>
-
       --- SECTION 1 ---
+      asideRowSpan: 2
 
       [CONTENT]
       ## Section
 
-      Body"
+      Body
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>"
     `)
   })
 
@@ -215,21 +217,22 @@ Body
       [CONTENT]
       Intro
 
-      [ASIDE]
-      <Aside>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>
-
       --- SECTION 1 ---
+      asideRowSpan: 2
 
       [CONTENT]
       <Heading level="2">
         Section
       </Heading>
 
-      Body"
+      Body
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>"
     `)
   })
 
@@ -246,50 +249,22 @@ Body
       [CONTENT]
       Intro
 
-      [ASIDE]
-      <Aside>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>
-
       --- SECTION 1 ---
+      asideRowSpan: 2
 
       [CONTENT]
       <h2>
         Section
       </h2>
 
-      Body"
-    `)
-  })
+      Body
 
-  test('injects HolocronAIAssistantWidget as a regular first-section Aside', () => {
-    const mdx = `Intro
-
-## Section
-
-Body
-`
-    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
-      "--- SECTION 0 ---
-
-      [CONTENT]
-      Intro
-
-      [ASIDE]
-      <Aside>
+      [SHARED ASIDE]
+      <Aside full>
         <HolocronAIAssistantWidget />
 
         <HolocronPageNavRow />
-      </Aside>
-
-      --- SECTION 1 ---
-
-      [CONTENT]
-      ## Section
-
-      Body"
+      </Aside>"
     `)
   })
 
@@ -627,8 +602,8 @@ Billing runs on Stripe.
   })
 
   test('heading-first page with NO intro aside keeps per-section asides in their own sections', () => {
-    // First section has no authored aside, later sections do. The AI widget
-    // is a regular first-section aside, so later asides stay on their own rows.
+    // First section has no authored aside, later sections do. Chrome stays a
+    // regular first-section aside, so later asides stay on their own rows.
     const mdx = `# Pricing
 
 Holocron is free to start.
@@ -795,7 +770,7 @@ Generate instructions.
     `)
   })
 
-  test('heading-only first section keeps the AI widget in that section', () => {
+  test('heading-only first section still spans the AI widget across the page', () => {
     const mdx = `# Quickstart
 
 ## Install
@@ -812,13 +787,6 @@ Generate instructions.
       [CONTENT]
       # Quickstart
 
-      [ASIDE]
-      <Aside>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>
-
       --- SECTION 1 ---
 
       [CONTENT]
@@ -827,19 +795,27 @@ Generate instructions.
       Install instructions.
 
       --- SECTION 2 ---
+      asideRowSpan: 3
 
       [CONTENT]
       ## Generate
 
-      Generate instructions."
+      Generate instructions.
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>"
     `)
   })
 
-  test('intro content + sub-headings keeps the AI widget with the intro', () => {
+  test('intro content + sub-headings spans the AI widget across the page', () => {
     // Regression test: pages like debugging-workflows.mdx that have intro
     // content (blockquote + paragraph) followed by ### sub-headings but no
-    // authored <Aside>. The regular synthetic aside must stay with the intro
-    // so the AI widget starts at the top of the sidebar, not section 1.
+    // authored <Aside>. Chrome becomes <Aside full> so the AI widget stays
+    // at the top of the sidebar across every section.
     const mdx = `> Reproduce failures and fix broken automations.
 
 There are two common debugging scenarios.
@@ -860,13 +836,6 @@ Reproduce from error logs locally.
 
       There are two common debugging scenarios.
 
-      [ASIDE]
-      <Aside>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>
-
       --- SECTION 1 ---
 
       [CONTENT]
@@ -875,11 +844,19 @@ Reproduce from error logs locally.
       When a workflow fails remotely, connect directly.
 
       --- SECTION 2 ---
+      asideRowSpan: 3
 
       [CONTENT]
       ### Local debugging
 
-      Reproduce from error logs locally."
+      Reproduce from error logs locally.
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>"
     `)
   })
 
@@ -1160,26 +1137,175 @@ Content
 `
     expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
       "--- SECTION 0 ---
-
-      [ASIDE]
-      <Aside>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>
-
-      --- SECTION 1 ---
       fullWidth: true
 
       [CONTENT]
       This should be full width.
 
-      --- SECTION 2 ---
+      --- SECTION 1 ---
+      asideRowSpan: 1
 
       [CONTENT]
       ## Following Section
 
-      Content"
+      Content
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>"
+    `)
+  })
+
+  test('places the full AI aside after a leading FullWidth block', () => {
+    const mdx = `<FullWidth>
+Hero
+</FullWidth>
+
+Intro
+
+## Section
+
+Body
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+      fullWidth: true
+
+      [CONTENT]
+      Hero
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      Intro
+
+      --- SECTION 2 ---
+      asideRowSpan: 2
+
+      [CONTENT]
+      ## Section
+
+      Body
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>"
+    `)
+  })
+
+  test('creates a full aside for the AI widget when the page has no asides', () => {
+    const mdx = `Intro
+
+## Section
+
+Body
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      --- SECTION 1 ---
+      asideRowSpan: 2
+
+      [CONTENT]
+      ## Section
+
+      Body
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+      </Aside>"
+    `)
+  })
+
+  test('merges the AI widget into the only authored full aside', () => {
+    const mdx = `Intro
+
+## Section
+
+Body
+
+<Aside full>
+<Note>
+Shared note.
+</Note>
+</Aside>
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      --- SECTION 1 ---
+      asideRowSpan: 2
+
+      [CONTENT]
+      ## Section
+
+      Body
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+
+        <Note>
+          Shared note.
+        </Note>
+      </Aside>"
+    `)
+  })
+
+  test('merges the AI widget into a first-section full aside when it is the only aside', () => {
+    const mdx = `Intro
+
+<Aside full>
+<Note>
+Page note.
+</Note>
+</Aside>
+
+## Section
+
+Body
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      Intro
+
+      --- SECTION 1 ---
+      asideRowSpan: 2
+
+      [CONTENT]
+      ## Section
+
+      Body
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+
+        <Note>
+          Page note.
+        </Note>
+      </Aside>"
     `)
   })
 
