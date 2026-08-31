@@ -6,6 +6,7 @@ import {
   getActiveGroups,
   findPage,
   collectAllPages,
+  collectAllPageHrefs,
   buildPageIndex,
   hasVisibleSidebarEntries,
   slugToHref,
@@ -15,7 +16,7 @@ import {
   type Navigation,
 } from './navigation.ts'
 import { parsePageFrontmatter } from './lib/page-frontmatter.ts'
-import { buildTabItems, findActiveVersion, resolveActiveNavigationTabs, resolveActiveVersionHref, type HolocronSiteData } from './site-data.ts'
+import { buildTabItems, buildVisibleSiteData, collectAncestorGroupKeys, collectDefaultExpandedKeys, findActiveVersion, resolveActiveNavigationTabs, resolveActiveVersionHref, type HolocronSiteData } from './site-data.ts'
 
 /* ── Test fixtures ───────────────────────────────────────────────────── */
 
@@ -97,6 +98,97 @@ describe('version-owned navigation', () => {
     expect(findActiveVersion(site, '/v1/api')).toBeUndefined()
     expect(resolveActiveVersionHref(site, '/v1/api')).toBeUndefined()
     expect(resolveActiveNavigationTabs(site, '/v1/api')).toEqual([dropdownTab])
+  })
+})
+
+describe('folder-index group.root', () => {
+  const deRoot = makePage('de/features')
+  const deChild = makePage('de/features/message-center')
+  const deFeatures: NavGroup = {
+    group: 'Features',
+    root: '/de/features',
+    rootPage: deRoot,
+    pages: [deChild],
+  }
+  const deTab: NavTab = { tab: '', groups: [deFeatures] }
+  const enTab: NavTab = {
+    tab: '',
+    groups: [{ group: '', pages: [makePage('index', { href: '/' })] }],
+  }
+  const site = {
+    navigation: [enTab, deTab],
+    switchers: {
+      versions: [
+        { version: 'English', lang: 'en', pageHrefs: collectAllPageHrefs([enTab]), navigation: { tabs: [enTab], anchors: [] } },
+        { version: 'Deutsch', lang: 'de', pageHrefs: collectAllPageHrefs([deTab]), navigation: { tabs: [deTab], anchors: [] } },
+      ],
+      dropdowns: [],
+    },
+    config: { navigation: { anchors: [] } },
+  } as unknown as HolocronSiteData
+
+  test('collects the folder root as a full page', () => {
+    expect(collectAllPageHrefs([deTab])).toEqual(['/de/features', '/de/features/message-center'])
+    expect(collectAllPages([deTab]).map((page) => page.href)).toEqual(['/de/features', '/de/features/message-center'])
+    expect(findPage([deTab], 'de/features')).toBe(deRoot)
+    expect(buildPageIndex([deTab]).get('de/features')).toBe(deRoot)
+  })
+
+  test('finds the version that owns a folder-index href', () => {
+    expect(findActiveVersion(site, '/de/features')?.version).toBe('Deutsch')
+    expect(resolveActiveNavigationTabs(site, '/de/features')).toEqual([deTab])
+  })
+
+  test('matches folder-index hrefs even when baked pageHrefs omit group.root', () => {
+    const stale = {
+      ...site,
+      switchers: {
+        ...site.switchers,
+        versions: [
+          { version: 'English', lang: 'en', pageHrefs: ['/'], navigation: { tabs: [enTab], anchors: [] } },
+          { version: 'Deutsch', lang: 'de', pageHrefs: ['/de/features/message-center'], navigation: { tabs: [deTab], anchors: [] } },
+        ],
+      },
+    } as unknown as HolocronSiteData
+    expect(findActiveVersion(stale, '/de/features')?.version).toBe('Deutsch')
+    expect(resolveActiveNavigationTabs(stale, '/de/features')).toEqual([deTab])
+  })
+
+  test('opens rooted top-level groups by default but respects expanded false', () => {
+    expect(collectDefaultExpandedKeys([deFeatures])).toEqual(['Features'])
+    expect(collectDefaultExpandedKeys([{ ...deFeatures, expanded: false }])).toEqual([])
+    expect(collectDefaultExpandedKeys([{
+      group: 'Parent',
+      pages: [{ ...deFeatures, group: 'Nested' }],
+    }])).toEqual([])
+  })
+
+  test('lets the current folder page control its own expanded state', () => {
+    expect(collectAncestorGroupKeys(site, '/de/features')).toEqual([])
+  })
+
+  test('removes a hidden folder root link but keeps visible children', () => {
+    const hiddenRoot = makePage('de/features', { frontmatter: { hidden: true } })
+    const hiddenRootSite = {
+      ...site,
+      navigation: [{ ...deTab, groups: [{ ...deFeatures, rootPage: hiddenRoot }] }],
+    } as HolocronSiteData
+    const visibleGroup = buildVisibleSiteData(hiddenRootSite).navigation[0]?.groups[0]
+    expect(visibleGroup?.root).toBeUndefined()
+    expect(visibleGroup?.rootPage).toBeUndefined()
+    expect(visibleGroup?.pages).toEqual([deChild])
+
+    const hiddenRootOnlySite = {
+      ...site,
+      navigation: [{ ...deTab, groups: [{ ...deFeatures, rootPage: hiddenRoot, pages: [] }] }],
+    } as HolocronSiteData
+    expect(buildVisibleSiteData(hiddenRootOnlySite).navigation[0]?.groups).toEqual([])
+
+    const legacyRootSite = {
+      ...site,
+      navigation: [{ ...deTab, groups: [{ ...deFeatures, rootPage: undefined }] }],
+    } as HolocronSiteData
+    expect(buildVisibleSiteData(legacyRootSite).navigation[0]?.groups[0]?.root).toBe('/de/features')
   })
 })
 

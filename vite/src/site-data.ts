@@ -12,7 +12,7 @@ import type {
   NavDropdownItem,
   NavIcon,
 } from './navigation.ts'
-import { hasVisibleSidebarEntries, isNavPage, isNavGroup, isVisibleNavPage } from './navigation.ts'
+import { collectAllPageHrefs, hasVisibleSidebarEntries, isNavPage, isNavGroup, isVisibleNavPage } from './navigation.ts'
 
 export type HolocronSiteData = {
   config: HolocronConfig
@@ -83,6 +83,7 @@ export function findFirstPageInTab(tab: NavTab): NavPage | undefined {
 }
 
 function findFirstPageInGroup(group: NavGroup): NavPage | undefined {
+  if (group.rootPage && isVisibleNavPage(group.rootPage)) return group.rootPage
   for (const entry of group.pages) {
     if (isNavPage(entry) && isVisibleNavPage(entry)) return entry
     if (isNavGroup(entry)) {
@@ -122,22 +123,31 @@ export function collectAncestorGroupKeys(site: HolocronSiteData, pageHref: strin
  *  `expanded: true` set in config — these should be pre-opened in the
  *  sidebar on first render. */
 export function collectDefaultExpandedKeys(groups: NavGroup[]): string[] {
-  const out: string[] = []
-  walkExpandedGroups(groups, '', out)
-  return out
+  return collectExpandedGroups({ groups, parentPath: '', depth: 0 })
 }
 
-function walkExpandedGroups(groups: NavGroup[], parentPath: string, out: string[]): void {
-  for (const group of groups) {
+function collectExpandedGroups({
+  groups,
+  parentPath,
+  depth,
+}: {
+  groups: NavGroup[]
+  parentPath: string
+  depth: number
+}): string[] {
+  return groups.flatMap((group) => {
     const key = parentPath ? `${parentPath}\0${group.group}` : group.group
-    if (group.expanded === true) {
-      out.push(key)
-    }
-    const nestedGroups = group.pages.filter(isNavGroup)
-    if (nestedGroups.length > 0) {
-      walkExpandedGroups(nestedGroups, key, out)
-    }
-  }
+    const isExpanded = group.expanded === true
+      || (depth === 0 && Boolean(group.root) && group.expanded !== false)
+    return [
+      ...(isExpanded ? [key] : []),
+      ...collectExpandedGroups({
+        groups: group.pages.filter(isNavGroup),
+        parentPath: key,
+        depth: depth + 1,
+      }),
+    ]
+  })
 }
 
 function walkGroups(
@@ -149,8 +159,9 @@ function walkGroups(
   let matchedAny = false
   for (const group of groups) {
     const key = parentPath ? `${parentPath}\0${group.group}` : group.group
+    const isGroupRoot = group.rootPage?.href === pageHref || group.root === pageHref
     if (groupContainsPage(group, pageHref)) {
-      out.push(key)
+      if (!isGroupRoot) out.push(key)
       matchedAny = true
     }
     const nestedGroups = group.pages.filter(isNavGroup)
@@ -162,6 +173,7 @@ function walkGroups(
 }
 
 function groupContainsPage(group: NavGroup, pageHref: string): boolean {
+  if (group.rootPage?.href === pageHref || group.root === pageHref) return true
   for (const entry of group.pages) {
     if (isNavPage(entry) && entry.href === pageHref) return true
     if (isNavGroup(entry) && groupContainsPage(entry, pageHref)) return true
@@ -173,6 +185,8 @@ function groupContainsPage(group: NavGroup, pageHref: string): boolean {
 function collectTabPageHrefs(tab: NavTab): string[] {
   const hrefs: string[] = []
   function walkGroup(group: NavGroup) {
+    if (group.rootPage) hrefs.push(group.rootPage.href)
+    else if (group.root) hrefs.push(group.root)
     for (const entry of group.pages) {
       if (isNavPage(entry)) hrefs.push(entry.href)
       else if (isNavGroup(entry)) walkGroup(entry)
@@ -182,9 +196,14 @@ function collectTabPageHrefs(tab: NavTab): string[] {
   return hrefs
 }
 
+function versionOwnsHref(version: NavVersionItem, pageHref: string): boolean {
+  return version.pageHrefs.includes(pageHref)
+    || collectAllPageHrefs(version.navigation.tabs).includes(pageHref)
+}
+
 export function findActiveVersion(site: HolocronSiteData, pageHref: string | undefined): NavVersionItem | undefined {
   if (pageHref) {
-    return site.switchers.versions.find((version) => version.pageHrefs.includes(pageHref))
+    return site.switchers.versions.find((version) => versionOwnsHref(version, pageHref))
   }
   return site.switchers.versions.find((version) => version.default) ?? site.switchers.versions[0]
 }
@@ -271,6 +290,35 @@ export function buildSearchEntries(site: HolocronSiteData, pageHref?: string): S
   return entries
 }
 
+function collectPageSearchEntries({
+  page,
+  groupPath,
+  out,
+}: {
+  page: NavPage
+  groupPath: string
+  out: SearchEntry[]
+}): void {
+  if (!isVisibleNavPage(page)) return
+  const frontmatter = page.frontmatter ?? {}
+  out.push({
+    label: frontmatter.sidebarTitle ?? page.title,
+    href: page.href,
+    groupPath,
+    pageHref: null,
+    searchText: [page.title, frontmatter.sidebarTitle, ...(frontmatter.keywords ?? [])]
+      .filter(Boolean)
+      .join(' '),
+  })
+  out.push(...page.headings.map((heading) => ({
+    label: heading.text,
+    href: `${page.href}#${heading.slug}`,
+    groupPath,
+    pageHref: page.href,
+    searchText: heading.text,
+  })))
+}
+
 function collectEntriesFromGroups(
   groups: NavGroup[],
   parentPath: string,
@@ -278,28 +326,12 @@ function collectEntriesFromGroups(
 ): void {
   for (const group of groups) {
     const key = parentPath ? `${parentPath}\0${group.group}` : group.group
+    if (group.rootPage) {
+      collectPageSearchEntries({ page: group.rootPage, groupPath: key, out })
+    }
     for (const entry of group.pages) {
       if (isNavPage(entry)) {
-        if (!isVisibleNavPage(entry)) continue
-        const frontmatter = entry.frontmatter ?? {}
-        out.push({
-          label: frontmatter.sidebarTitle ?? entry.title,
-          href: entry.href,
-          groupPath: key,
-          pageHref: null,
-          searchText: [entry.title, frontmatter.sidebarTitle, ...(frontmatter.keywords ?? [])]
-            .filter(Boolean)
-            .join(' '),
-        })
-        for (const h of entry.headings) {
-          out.push({
-            label: h.text,
-            href: `${entry.href}#${h.slug}`,
-            groupPath: key,
-            pageHref: entry.href,
-            searchText: h.text,
-          })
-        }
+        collectPageSearchEntries({ page: entry, groupPath: key, out })
       } else if (isNavGroup(entry)) {
         collectEntriesFromGroups([entry], key, out)
       }
@@ -317,6 +349,11 @@ function collectPageHrefsFromTabs(tabs: NavTab[], includeHidden: boolean): strin
 
 function collectPagesFromGroupsFlat(groups: NavGroup[], out: string[], includeHidden: boolean): void {
   for (const group of groups) {
+    if (group.rootPage && (includeHidden || isVisibleNavPage(group.rootPage))) {
+      out.push(group.rootPage.href)
+    } else if (!group.rootPage && group.root) {
+      out.push(group.root)
+    }
     for (const entry of group.pages) {
       if (isNavPage(entry)) {
         if (includeHidden || isVisibleNavPage(entry)) out.push(entry.href)
@@ -386,7 +423,7 @@ export function resolveActiveTabHref(site: HolocronSiteData, pageHref: string | 
 export function resolveActiveVersionHref(site: HolocronSiteData, pageHref: string | undefined): string | undefined {
   const versionItems = buildVersionItems(site)
   if (!pageHref || versionItems.length === 0) return undefined
-  const owner = site.switchers.versions.find((version) => version.pageHrefs.includes(pageHref))
+  const owner = site.switchers.versions.find((version) => versionOwnsHref(version, pageHref))
   if (owner) return versionItems.find((item) => item.label === owner.version)?.href
   return undefined
 }
@@ -413,8 +450,13 @@ function filterVisibleGroup(group: NavGroup): NavGroup | null {
     const nextGroup = filterVisibleGroup(entry)
     if (nextGroup) pages.push(nextGroup)
   }
+  const rootPage = group.rootPage && isVisibleNavPage(group.rootPage)
+    ? group.rootPage
+    : undefined
   return {
     ...group,
+    root: group.rootPage ? (rootPage ? group.root : undefined) : group.root,
+    rootPage,
     pages,
   }
 }

@@ -50,7 +50,23 @@
               {
                 "group": "Guides",
                 "icon": "map",
-                "pages": ["navigation", "theming", "search", "selectors", "snapshots", "sessions", "network", "screenshots", "images", "collaboration", "debugging", "ci-integration"]
+                "root": "navigation",
+                "pages": [
+                  {
+                    "group": "Authoring",
+                    "root": "theming",
+                    "pages": ["search", "selectors", "snapshots"]
+                  },
+                  "sessions",
+                  "network",
+                  "screenshots",
+                  "images",
+                  "collaboration",
+                  {
+                    "group": "Automation",
+                    "pages": ["debugging", "ci-integration"]
+                  }
+                ]
               },
               {
                 "group": "Reference",

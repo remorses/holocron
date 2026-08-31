@@ -389,9 +389,12 @@ export function NavGroupNode({
   parentPath: string
 }) {
   const {
+    currentPageHref,
     expandedGroups,
     onToggleGroup,
     searchState,
+    highlightedHref,
+    highlightedRef,
     animate,
   } = useSidebarTreeContext()
   // Prune groups with no visible entries (hidden: true, or all descendants hidden).
@@ -403,17 +406,17 @@ export function NavGroupNode({
   if (searchState !== null && !searchState.expandGroupKeys.has(groupKey)) return null
 
   const isSearchActive = searchState !== null
-  const isDimmed = isSearchActive
+  const isGroupDimmed = isSearchActive
   const groupLabel = group.group.trim()
 
-  const renderChildren = (forceExpanded: boolean) =>
+  const renderChildren = (childDepth: number) =>
     group.pages.map((entry) => {
       if (isNavPage(entry)) {
         return (
           <NavPageLink
             key={entry.href}
             page={entry}
-            depth={forceExpanded ? 0 : depth}
+            depth={childDepth}
           />
         )
       }
@@ -422,7 +425,7 @@ export function NavGroupNode({
           <NavGroupNode
             key={entry.group}
             group={entry}
-            depth={forceExpanded ? depth + 1 : depth + 1}
+            depth={childDepth + 1}
             parentPath={groupKey}
           />
         )
@@ -430,8 +433,8 @@ export function NavGroupNode({
       return null
     })
 
-  // Top-level groups (depth 0) render as a flat section label — always expanded.
-  if (depth === 0) {
+  // Top-level groups without a root page stay as always-expanded section labels.
+  if (depth === 0 && !group.root) {
     return (
       <div className='flex flex-col' style={{ gap: 'var(--sidebar-row-gap)' }}>
         {groupLabel && (
@@ -439,7 +442,7 @@ export function NavGroupNode({
             className='cursor-default mb-[calc(2em/14)] flex items-center gap-(--sidebar-leading-gap)'
             style={{
               marginTop: 'var(--sidebar-group-margin-top)',
-              opacity: isDimmed ? 0.45 : 1,
+              opacity: isGroupDimmed ? 0.45 : 1,
               fontVariationSettings: '"wght" 550',
               fontSize: 'var(--type-nav-group-size)',
               letterSpacing: '0.04em',
@@ -451,45 +454,103 @@ export function NavGroupNode({
             {groupLabel}
           </div>
         )}
-        {renderChildren(true)}
+        {renderChildren(0)}
       </div>
     )
   }
 
-  // Nested groups (depth > 0) are collapsible. Search force-opens them via expandGroupKeys.
-  const isExpanded = expandedGroups.has(groupKey) || (searchState?.expandGroupKeys.has(groupKey) ?? false)
+  // Groups with root pages render as folders at every depth. The label opens
+  // the root page, while only the chevron expands or collapses the children.
+  const folderDepth = Math.max(depth, 1)
+  const rootHref = group.rootPage?.href ?? group.root
+  const hasChildren = group.pages.length > 0
+  const hasSearchVisibleChild = searchState === null || group.pages.some(function isSearchVisible(
+    entry,
+  ): boolean {
+    if (isNavPage(entry)) return searchState.visiblePages.has(entry.href)
+    if (entry.rootPage && searchState.visiblePages.has(entry.rootPage.href)) return true
+    return entry.pages.some(isSearchVisible)
+  })
+  const hasExpandableChildren = hasChildren && hasSearchVisibleChild
+  const isExpanded = hasExpandableChildren
+    && (expandedGroups.has(groupKey) || (searchState?.expandGroupKeys.has(groupKey) ?? false))
+  const isActive = rootHref === currentPageHref
+  const isHighlighted = rootHref === highlightedHref
+  const isRootMatched = Boolean(rootHref && searchState?.matchedHrefs.has(rootHref))
+  const isDimmed = isSearchActive && !isRootMatched
+  const isEmphasized = isActive || (isSearchActive && isRootMatched)
 
-  // A nested group row is visually a page row whose leading icon slot holds the
-  // chevron: same inherited font-size, same `font-medium` weight, same
-  // `--sidebar-leading-gap` between slot and label, same indent math (a group at
-  // `depth` renders its own children pages at `depth`, so `depth - 1` puts the
-  // chevron exactly where a sibling page's icon sits). Never give this row its
-  // own font-size — that is what made nested folders read as a different,
-  // smaller tier than the pages around them.
   return (
     <div className='flex flex-col'>
-      <button
-        type='button'
-        onClick={() => onToggleGroup(groupKey)}
-        aria-expanded={isExpanded}
-        className={`flex items-center gap-(--sidebar-leading-gap) border-none bg-transparent cursor-pointer text-left font-medium ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)]' : ''}`}
+      <div
+        className={cn(
+          'group flex items-center gap-(--sidebar-leading-gap)',
+          !isDimmed && 'hover:[background:var(--sidebar-hover-background)]',
+        )}
         style={{
-          ...rowSpacing(depth > 1 ? `${depth - 1} * var(--sidebar-indent)` : undefined),
+          ...rowSpacing(folderDepth > 1 ? `${folderDepth - 1} * var(--sidebar-indent)` : undefined),
+          marginBlockStart: depth === 0 ? 'var(--sidebar-group-margin-top)' : undefined,
           opacity: isDimmed ? 0.45 : 1,
-          color: 'var(--sidebar-foreground)',
-          transition: animate ? 'opacity 0.15s ease' : 'none',
+          color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
+          background: isHighlighted ? 'var(--accent)' : isActive ? 'var(--sidebar-active-background)' : undefined,
+          transition: animate ? 'color 0.15s, opacity 0.15s ease' : 'none',
         }}
       >
-        <ChevronIcon expanded={isExpanded} className='text-muted-foreground' animate={animate} />
-        {group.group}
-      </button>
+        {rootHref ? (
+          <>
+            {hasExpandableChildren ? (
+              <button
+                type='button'
+                onClick={() => onToggleGroup(groupKey)}
+                aria-expanded={isExpanded}
+                aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${groupLabel}`}
+                className="relative flex shrink-0 items-center justify-center border-none bg-transparent p-0 cursor-pointer text-muted-foreground before:absolute before:-inset-1.5 before:content-['']"
+                style={{ width: 'var(--sidebar-icon-size)', height: 'var(--sidebar-icon-size)' }}
+              >
+                <ChevronIcon expanded={isExpanded} animate={animate} />
+              </button>
+            ) : (
+              <span
+                aria-hidden
+                className='shrink-0'
+                style={{ width: 'var(--sidebar-icon-size)', height: 'var(--sidebar-icon-size)' }}
+              />
+            )}
+            <Link
+              ref={isHighlighted ? highlightedRef : isActive ? revealActiveNavItem : undefined}
+              href={rootHref}
+              aria-current={isActive ? 'page' : undefined}
+              className='min-w-0 grow no-underline font-medium'
+            >
+              {groupLabel}
+            </Link>
+          </>
+        ) : hasExpandableChildren ? (
+          <button
+            type='button'
+            onClick={() => onToggleGroup(groupKey)}
+            aria-expanded={isExpanded}
+            className='flex min-w-0 grow items-center gap-(--sidebar-leading-gap) border-none bg-transparent p-0 cursor-pointer text-left font-medium'
+          >
+            <span
+              className='flex shrink-0 items-center justify-center text-muted-foreground'
+              style={{ width: 'var(--sidebar-icon-size)', height: 'var(--sidebar-icon-size)' }}
+            >
+              <ChevronIcon expanded={isExpanded} animate={animate} />
+            </span>
+            {groupLabel}
+          </button>
+        ) : (
+          <span className='min-w-0 grow font-medium'>{groupLabel}</span>
+        )}
+      </div>
       <ExpandableContainer open={isExpanded} animate={animate}>
         {isExpanded && (
           /* `paddingTop` matches the row-gap rhythm so the first child sits
              exactly one row-gap under its group label. Closed subtrees stay
              out of the DOM, including their remote icon images. */
           <div className='flex flex-col' style={{ gap: 'var(--sidebar-row-gap)', paddingTop: 'var(--sidebar-row-gap)' }}>
-            {renderChildren(false)}
+            {renderChildren(folderDepth)}
           </div>
         )}
       </ExpandableContainer>

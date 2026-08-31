@@ -40,6 +40,7 @@ import { NotFound } from './components/not-found.tsx'
 import {
   findPage,
   collectAllPages,
+  isNavPage,
   slugToHref,
   type NavHeading,
   type NavPage,
@@ -960,26 +961,39 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     g: ConfigNavGroup,
     pageMeta: Record<string, RuntimePageMeta>,
   ): NavGroup {
+    const enrichRuntimePage = (slug: string): NavPage => {
+      const meta = pageMeta[slug]
+      return {
+        slug,
+        href: slugToHref(slug),
+        title: meta?.title ?? titleFromSlug(slug),
+        gitSha: '',
+        headings: [],
+        ...(meta?.icon && { icon: meta.icon }),
+        frontmatter: {
+          ...(meta?.icon && { icon: meta.icon }),
+          ...(meta?.iconColor && { iconColor: meta.iconColor }),
+        },
+      }
+    }
+    const rootPage = g.root ? enrichRuntimePage(g.root) : undefined
+    const pages = g.pages.map((entry): NavPage | NavGroup => {
+      return typeof entry === 'string'
+        ? enrichRuntimePage(entry)
+        : enrichRuntimeGroup(entry, pageMeta)
+    })
     return {
       group: g.group,
-      pages: g.pages.map((entry): NavPage | NavGroup => {
-        if (typeof entry === 'string') {
-          const meta = pageMeta[entry]
-          return {
-            slug: entry,
-            href: slugToHref(entry),
-            title: meta?.title ?? titleFromSlug(entry),
-            gitSha: '',
-            headings: [],
-            ...(meta?.icon && { icon: meta.icon }),
-            frontmatter: {
-              ...(meta?.icon && { icon: meta.icon }),
-              ...(meta?.iconColor && { iconColor: meta.iconColor }),
-            },
-          }
-        }
-        return enrichRuntimeGroup(entry, pageMeta)
-      }),
+      icon: g.icon,
+      iconColor: g.iconColor,
+      hidden: g.hidden,
+      root: rootPage?.href,
+      rootPage,
+      tag: g.tag,
+      expanded: g.expanded,
+      pages: rootPage
+        ? pages.filter((entry) => !isNavPage(entry) || entry.href !== rootPage.href)
+        : pages,
     }
   }
 

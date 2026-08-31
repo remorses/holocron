@@ -35,6 +35,8 @@ export type NavTab = NavTabBase & {
  *  in `NavPageEntry[]` for the `pages` field (page slugs become NavPage
  *  objects). The `root` slug is resolved to an href at enrich time. */
 export type NavGroup = Omit<ConfigNavGroup, 'pages'> & {
+  /** Enriched page referenced by `root`. It renders when the folder label is clicked. */
+  rootPage?: NavPage
   pages: NavPageEntry[]
 }
 
@@ -104,6 +106,8 @@ export function isNavGroup(entry: NavPageEntry): entry is NavGroup {
  *  - Otherwise `true`. */
 export function hasVisibleSidebarEntries(group: NavGroup): boolean {
   if (group.hidden) return false
+  if (group.rootPage && isVisibleNavPage(group.rootPage)) return true
+  if (group.rootPage && group.pages.length === 0) return false
   if (group.pages.length === 0) return true
   for (const entry of group.pages) {
     if (isNavPage(entry) && entry.frontmatter?.hidden !== true) return true
@@ -120,6 +124,7 @@ export function isVisibleNavPage(page: NavPage): boolean {
 
 function groupsContainHref(groups: NavGroup[], href: string): boolean {
   for (const group of groups) {
+    if (group.rootPage?.href === href) return true
     for (const entry of group.pages) {
       if (isNavPage(entry) && entry.href === href) return true
       if (isNavGroup(entry) && groupsContainHref([entry], href)) return true
@@ -160,6 +165,7 @@ export function findPage(nav: Navigation, slug: string): NavPage | undefined {
 
 function findPageInGroups(groups: NavGroup[], slug: string): NavPage | undefined {
   for (const group of groups) {
+    if (group.rootPage?.slug === slug) return group.rootPage
     for (const entry of group.pages) {
       if (isNavPage(entry)) {
         if (entry.slug === slug) {
@@ -189,6 +195,7 @@ export function collectAllPages(nav: Navigation): NavPage[] {
 
 function collectPagesFromGroups(groups: NavGroup[], out: NavPage[]): void {
   for (const group of groups) {
+    if (group.rootPage) out.push(group.rootPage)
     for (const entry of group.pages) {
       if (isNavPage(entry)) {
         out.push(entry)
@@ -197,6 +204,30 @@ function collectPagesFromGroups(groups: NavGroup[], out: NavPage[]): void {
       }
     }
   }
+}
+
+/**
+ * All hrefs in a nav tree, including folder-index pages that only appear as
+ * `group.root`. Version/tab matching MUST use this, not collectAllPages, or
+ * every folder page belongs to no version and the sidebar falls back to the
+ * merged all-versions navigation.
+ */
+export function collectAllPageHrefs(nav: Navigation): string[] {
+  const hrefs: string[] = []
+  const walkGroup = (group: NavGroup) => {
+    if (group.rootPage) hrefs.push(group.rootPage.href)
+    else if (group.root) hrefs.push(group.root)
+    for (const entry of group.pages) {
+      if (isNavPage(entry)) hrefs.push(entry.href)
+      else if (isNavGroup(entry)) walkGroup(entry)
+    }
+  }
+  for (const tab of nav) {
+    for (const group of tab.groups) {
+      walkGroup(group)
+    }
+  }
+  return hrefs
 }
 
 /**

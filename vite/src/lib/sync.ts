@@ -57,30 +57,12 @@ import { extractImports, type EagerModules } from 'safe-mdx/parse'
 import type { Root } from 'mdast'
 import {
   type Navigation,
-  type NavTab,
-  type NavGroup,
   type NavPage,
   type NavVersionItem,
   type NavDropdownItem,
-  isNavPage,
-  isNavGroup,
   buildPageIndex,
+  collectAllPages,
 } from '../navigation.ts'
-
-/** Collect all NavPage objects from a single enriched tab (for validation). */
-function collectAllPagesFromTab(tab: NavTab): NavPage[] {
-  const pages: NavPage[] = []
-  function walk(groups: NavGroup[]) {
-    for (const g of groups) {
-      for (const entry of g.pages) {
-        if (isNavPage(entry)) pages.push(entry)
-        else if (isNavGroup(entry)) walk([entry])
-      }
-    }
-  }
-  walk(tab.groups)
-  return pages
-}
 
 const CACHE_FILENAME = 'holocron-cache.json'
 const MDX_CACHE_FILENAME = 'holocron-mdx.json'
@@ -621,7 +603,7 @@ export async function syncNavigation({
 
     for (const v of versions) {
       for (const tab of v.navigation.tabs) {
-        for (const page of collectAllPagesFromTab(tab)) {
+        for (const page of collectAllPages([tab])) {
           const existing = hrefOwners.get(page.href)
           if (existing) {
             throw new Error(
@@ -636,7 +618,7 @@ export async function syncNavigation({
     for (const d of dropdowns) {
       if (!d.navigation) continue
       for (const tab of d.navigation.tabs) {
-        for (const page of collectAllPagesFromTab(tab)) {
+        for (const page of collectAllPages([tab])) {
           const existing = hrefOwners.get(page.href)
           if (existing) {
             throw new Error(
@@ -1932,13 +1914,13 @@ function writeMdxCache(
 /* ── Helpers ─────────────────────────────────────────────────────────── */
 
 function resolveMdxPath(pagesDir: string, slug: string): string | undefined {
-  for (const ext of ['.mdx', '.md']) {
-    const filePath = path.join(pagesDir, slug + ext)
-    if (fs.existsSync(filePath)) {
-      return filePath
-    }
-  }
-  return undefined
+  return [slug, path.join(slug, 'index')]
+    .flatMap((candidate) => ['.mdx', '.md'].map((extension) => {
+      return path.join(pagesDir, candidate + extension)
+    }))
+    .find((filePath) => {
+      return fs.existsSync(filePath)
+    })
 }
 
 function slugToHref(slug: string): string {

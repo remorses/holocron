@@ -51,6 +51,7 @@ export {
   getActiveGroups,
   findPage,
   collectAllPages,
+  collectAllPageHrefs,
   buildPageIndex,
 } from './navigation.ts'
 export {

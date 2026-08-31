@@ -22,7 +22,8 @@ import {
   type NavVersionItem,
   type NavDropdownItem,
   type NavIcon,
-  collectAllPages,
+  collectAllPageHrefs,
+  isNavPage,
   slugToHref,
 } from '../navigation.ts'
 import { formatHolocronWarning, logger } from './logger.ts'
@@ -60,10 +61,6 @@ function serializeIcon({
   }
 }
 
-function rootToHref(root: string | undefined): string | undefined {
-  return root ? slugToHref(root) : undefined
-}
-
 export async function buildEnrichedNavigation({
   config,
   enrichPage,
@@ -79,6 +76,10 @@ export async function buildEnrichedNavigation({
   }
 
   async function enrichGroup(configGroup: ConfigNavGroup): Promise<NavGroup> {
+    const [rootPage, pages] = await Promise.all([
+      configGroup.root ? enrichPage(configGroup.root) : undefined,
+      Promise.all(configGroup.pages.map(enrichPageEntry)),
+    ])
     return {
       group: configGroup.group,
       icon: serializeIcon({
@@ -88,10 +89,13 @@ export async function buildEnrichedNavigation({
       }),
       iconColor: configGroup.iconColor,
       hidden: configGroup.hidden,
-      root: rootToHref(configGroup.root),
+      root: configGroup.root ? slugToHref(configGroup.root) : undefined,
+      rootPage,
       tag: configGroup.tag,
       expanded: configGroup.expanded,
-      pages: await Promise.all(configGroup.pages.map(enrichPageEntry)),
+      pages: rootPage
+        ? pages.filter((entry) => !isNavPage(entry) || entry.href !== rootPage.href)
+        : pages,
     }
   }
 
@@ -118,7 +122,7 @@ export async function buildEnrichedNavigation({
       ...(version.default !== undefined && { default: version.default }),
       ...(version.tag !== undefined && { tag: version.tag }),
       ...(version.hidden !== undefined && { hidden: version.hidden }),
-      pageHrefs: collectAllPages(innerTabs).map((page) => page.href),
+      pageHrefs: collectAllPageHrefs(innerTabs),
       navigation: { tabs: innerTabs, anchors: version.navigation.anchors },
     }
   }

@@ -77,21 +77,29 @@ export function SideNav() {
     () => collectDefaultExpandedKeys(groups),
     [groups],
   )
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
-    () => new Set(defaultExpandedKeys),
-  )
+  const [expansionOverrides, setExpansionOverrides] = useState<{
+    pageHref: string | undefined
+    values: Map<string, boolean>
+  }>({ pageHref: effectiveCurrentPageHref, values: new Map() })
   const effectiveExpandedGroups = useMemo(() => {
-    return new Set([...expandedGroups, ...effectiveAncestorGroupKeys])
-  }, [effectiveAncestorGroupKeys, expandedGroups])
+    const expanded = new Set([...defaultExpandedKeys, ...effectiveAncestorGroupKeys])
+    if (expansionOverrides.pageHref !== effectiveCurrentPageHref) return expanded
+    expansionOverrides.values.forEach((isExpanded, groupKey) => {
+      if (isExpanded) expanded.add(groupKey)
+      else expanded.delete(groupKey)
+    })
+    return expanded
+  }, [defaultExpandedKeys, effectiveAncestorGroupKeys, effectiveCurrentPageHref, expansionOverrides])
 
   const toggleGroup = useCallback((groupKey: string) => {
-    setExpandedGroups((prev) => {
-      const next = new Set(prev)
-      if (next.has(groupKey)) next.delete(groupKey)
-      else next.add(groupKey)
-      return next
+    setExpansionOverrides((previous) => {
+      const values = previous.pageHref === effectiveCurrentPageHref
+        ? new Map(previous.values)
+        : new Map<string, boolean>()
+      values.set(groupKey, !effectiveExpandedGroups.has(groupKey))
+      return { pageHref: effectiveCurrentPageHref, values }
     })
-  }, [])
+  }, [effectiveCurrentPageHref, effectiveExpandedGroups])
 
   // --- Search ---
   const db = useMemo(

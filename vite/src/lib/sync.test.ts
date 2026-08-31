@@ -6,7 +6,7 @@ import { createServer, type Server } from 'node:http'
 import { syncNavigation } from './sync.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
 import { readConfig } from '../config.ts'
-import { collectAllPages, findPage, buildPageIndex } from '../navigation.ts'
+import { collectAllPages, findPage, buildPageIndex, isNavPage } from '../navigation.ts'
 import { logger } from './logger.ts'
 
 /* ── Helpers ─────────────────────────────────────────────────────────── */
@@ -1092,6 +1092,66 @@ title: API Reference
     expect(apiPage.headings.length).toBe(3)
   })
 
+  test('resolves a folder root slug to its index page', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: {
+          groups: [{ group: 'Guide', root: 'guide', pages: ['guide/setup'] }],
+        },
+      },
+      {
+        'guide/index': `---\ntitle: Guide\n---\n\n## Intro`,
+        'guide/setup': `---\ntitle: Setup\n---\n\n## Install`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(result.navigation[0]?.groups[0]?.rootPage).toMatchObject({
+      slug: 'guide',
+      href: '/guide',
+      title: 'Guide',
+    })
+  })
+
+  test('rejects duplicate folder roots across versions', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: {
+          versions: [
+            {
+              version: 'v1',
+              groups: [{ group: 'Guide', root: 'guide/index', pages: [] }],
+            },
+            {
+              version: 'v2',
+              groups: [{ group: 'Guide', root: 'guide/index', pages: [] }],
+            },
+          ],
+        },
+      },
+      {
+        'guide/index': `---\ntitle: Guide\n---\n\n## Intro`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+
+    await expect(syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })).rejects.toThrow('duplicate page href "/guide"')
+  })
+
   test('preserves group fields (icon, hidden, root, tag, expanded) through sync', async () => {
     const project = tracked(createProject(
       {
@@ -1130,6 +1190,12 @@ title: API Reference
     `)
     expect(group.hidden).toBe(false)
     expect(group.root).toBe('/guide') // 'guide/index' collapses to '/guide'
+    expect(group.rootPage).toMatchObject({
+      slug: 'guide/index',
+      href: '/guide',
+      title: 'Guide',
+    })
+    expect(group.pages.map((page) => isNavPage(page) ? page.href : page.group)).toEqual(['/guide/setup'])
     expect(group.tag).toBe('New')
     expect(group.expanded).toBe(true)
   })
