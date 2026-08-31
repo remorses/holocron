@@ -246,18 +246,31 @@ export function PoweredBy() {
   // exchange for open-sourcing Holocron (see LICENSE). It helps others
   // discover the project and keeps development sustainable. Removing it
   // entirely is disrespectful; lowering opacity is the acceptable
-  // compromise.
+  // compromise. Customize names and URLs with docs.json `poweredBy`.
+  const { site } = useHolocronData()
+  const links = site.config.poweredBy?.length
+    ? site.config.poweredBy
+    : [{ name: 'Holocron', url: holocronUrl('/?utm_source=powered-by') }]
   return (
     <div className='flex items-center w-full py-6'>
-      <Link
-        href={holocronUrl('/?utm_source=powered-by')}
-        target='_blank'
-        rel='noopener noreferrer'
-        className='no-underline flex items-baseline gap-1 text-xs opacity-40 hover:opacity-70 transition-opacity duration-150 shrink-0'
-      >
+      <div className='flex items-baseline gap-1 text-xs opacity-40 hover:opacity-70 transition-opacity duration-150 shrink-0'>
         <span>Powered by</span>
-        <span className='font-bold'>Holocron</span>
-      </Link>
+        {links.map((link, index) => {
+          return (
+            <span key={`${link.name}:${link.url}`} className='flex items-baseline gap-1'>
+              {index > 0 ? <span>{'&'}</span> : null}
+              <Link
+                href={link.url}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='no-underline font-bold'
+              >
+                {link.name}
+              </Link>
+            </span>
+          )
+        })}
+      </div>
       <div className='grow' />
       <PagePrevNext />
     </div>

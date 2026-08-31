@@ -128,6 +128,7 @@ export type ConfigNavbarPrimary = {
 
 export type FooterLinkItem = { label: string; href: string }
 export type FooterLinkColumn = { header?: string; items: FooterLinkItem[] }
+export type PoweredByLink = { name: string; url: string }
 
 export type ConfigVersionItem = {
   version: string
@@ -197,6 +198,8 @@ export type HolocronConfig = {
   /** Raw CSS injected as a <style> tag. For multi-tenant sites that cannot
    *  bundle user CSS at build time. */
   customCss?: string
+  /** Custom footer powered-by links. Default is a single Holocron link. */
+  poweredBy?: PoweredByLink[]
 }
 
 /* ── Type guard (for page entries) ───────────────────────────────────── */

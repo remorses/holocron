@@ -21,6 +21,7 @@ import type {
   ConfigVersionItem,
   ConfigDropdownItem,
   FooterLinkColumn,
+  PoweredByLink,
 } from '../config.ts'
 
 /** Libraries we can actually resolve at build time. Object icons with
@@ -119,6 +120,7 @@ const TYPE_LABELS: Record<string, string> = {
 export function normalize(raw: Record<string, unknown>): HolocronConfig {
   const icons = normalizeIcons(raw.icons)
   const layout = normalizeLayout(raw.layout)
+  const poweredBy = normalizePoweredBy(raw.poweredBy)
   return {
     name: (raw.name as string) || 'Documentation',
     description: typeof raw.description === 'string' ? raw.description : undefined,
@@ -144,6 +146,7 @@ export function normalize(raw: Record<string, unknown>): HolocronConfig {
     ...(typeof raw.customCss === 'string' && raw.customCss
       ? { customCss: raw.customCss }
       : {}),
+    ...(poweredBy ? { poweredBy } : {}),
   }
 }
 
@@ -675,6 +678,27 @@ function normalizeRedirects(raw: unknown): HolocronConfig['redirects'] {
 function normalizeKnownPaths(raw: unknown): HolocronConfig['knownPaths'] {
   if (!Array.isArray(raw)) return []
   return raw.filter((p): p is string => typeof p === 'string' && p.length > 0)
+}
+
+function normalizePoweredBy(raw: unknown): PoweredByLink[] | undefined {
+  const items = Array.isArray(raw) ? raw : raw ? [raw] : []
+  const links: PoweredByLink[] = items.flatMap((item) => {
+    if (!item || typeof item !== 'object') {
+      return []
+    }
+    const obj = item as Record<string, unknown>
+    if (typeof obj.name !== 'string' || !obj.name.trim()) {
+      return []
+    }
+    if (typeof obj.url !== 'string' || !obj.url.trim()) {
+      return []
+    }
+    return [{ name: obj.name.trim(), url: obj.url.trim() }]
+  })
+  if (links.length === 0) {
+    return undefined
+  }
+  return links
 }
 
 function normalizeFooter(raw: unknown): HolocronConfig['footer'] {

@@ -228,7 +228,7 @@
     "name"
   ],
   "additionalProperties": {},
-  "description": "Holocron site configuration. Compatible with Mintlify docs.json —\nany additional Mintlify fields outside this schema are accepted and\nignored at runtime",
+  "description": "Holocron site configuration. Compatible with Mintlify docs.json — any additional Mintlify fields outside this schema are accepted and ignored at runtime",
   "definitions": {
     "logoSchema": {
       "anyOf": [

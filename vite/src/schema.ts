@@ -894,6 +894,27 @@ export const footerSchema = z
   .describe('Footer configurations')
   .meta({ id: 'footerSchema' })
 
+const poweredByLinkSchema = z
+  .object({
+    name: z.string().min(1).describe('Display name for the powered-by link'),
+    url: z.string().min(1).describe('URL the powered-by name links to'),
+  })
+  .describe('A single powered-by attribution link')
+  .meta({ id: 'poweredByLinkSchema' })
+
+export const poweredBySchema = z
+  .union([poweredByLinkSchema, z.array(poweredByLinkSchema).min(1)])
+  .describe(
+    dedent`
+      Custom powered-by attribution in the footer. A single
+      \`{ name, url }\` object, or a list of them for multiple
+      linked names (e.g. Notaku & Holocron). When omitted, the
+      footer shows Powered by Holocron. Hidden from the public
+      docs.json schema.
+    `,
+  )
+  .meta({ hidden: true, id: 'poweredBySchema' })
+
 /* ── Appearance ───────────────────────────────────────────────────────── */
 
 export const appearanceSchema = z
@@ -1401,6 +1422,7 @@ export const holocronConfigSchema = z
       .describe(
         'Raw CSS string injected as a <style> tag at runtime. Useful for multi-tenant sites where users cannot provide CSS files at build time.',
       ),
+    poweredBy: poweredBySchema.optional(),
   })
   .passthrough()
   .describe(

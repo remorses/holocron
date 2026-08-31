@@ -36,7 +36,15 @@ function stripMetaId(ctx: { jsonSchema: Record<string, unknown> }) {
 
 // ── Config schema ───────────────────────────────────────────────────────
 
-const configSchema = z.toJSONSchema(holocronConfigSchema, {
+// Omit poweredBy from the public docs.json schema so autocomplete and
+// schema docs do not advertise it. Runtime still accepts the field via
+// passthrough + normalize(). Re-apply the root description because
+// omit() drops it.
+const publicConfigSchema = holocronConfigSchema.omit({ poweredBy: true }).describe(
+  'Holocron site configuration. Compatible with Mintlify docs.json — any additional Mintlify fields outside this schema are accepted and ignored at runtime',
+)
+
+const configSchema = z.toJSONSchema(publicConfigSchema, {
   target: 'draft-7',
   metadata: z.globalRegistry,
   reused: 'inline',

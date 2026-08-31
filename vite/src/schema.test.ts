@@ -85,6 +85,35 @@ describe('holocronConfigSchema validation', () => {
     expect(result.success).toBe(false)
   })
 
+  test('accepts poweredBy as a single object', () => {
+    const result = holocronConfigSchema.safeParse({
+      name: 'X',
+      poweredBy: { name: 'Notaku', url: 'https://notaku.so' },
+    })
+    expect(result.success).toBe(true)
+  })
+
+  test('accepts poweredBy as a list of links', () => {
+    const result = holocronConfigSchema.safeParse({
+      name: 'X',
+      poweredBy: [
+        { name: 'Notaku', url: 'https://notaku.so' },
+        { name: 'Holocron', url: 'https://holocron.so' },
+      ],
+    })
+    expect(result.success).toBe(true)
+  })
+
+  test('public JSON schema does not advertise poweredBy', () => {
+    const publicSchema = z.toJSONSchema(holocronConfigSchema.omit({ poweredBy: true }), {
+      target: 'draft-7',
+      metadata: z.globalRegistry,
+      reused: 'inline',
+      unrepresentable: 'any',
+    })
+    expect(JSON.stringify(publicSchema)).not.toContain('poweredBy')
+  })
+
   test('accepts navigation as object with tabs', () => {
     const result = holocronConfigSchema.safeParse({
       name: 'X',
@@ -232,8 +261,12 @@ describe('schema.json regen-check', () => {
     const schemaPath = path.join(import.meta.dirname, 'schema.json')
     const onDisk = fs.readFileSync(schemaPath, 'utf-8')
 
-    // Same options as scripts/generate-schema.ts — override strips redundant `id`
-    const generated = z.toJSONSchema(holocronConfigSchema, {
+    // Same options as scripts/generate-schema.ts — omit poweredBy, strip id
+    const generated = z.toJSONSchema(
+      holocronConfigSchema.omit({ poweredBy: true }).describe(
+        'Holocron site configuration. Compatible with Mintlify docs.json — any additional Mintlify fields outside this schema are accepted and ignored at runtime',
+      ),
+      {
       target: 'draft-7',
       metadata: z.globalRegistry,
       reused: 'inline',

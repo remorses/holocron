@@ -84,3 +84,46 @@ describe('normalize() — version language', () => {
     expect(config.navigation.versions[0]?.lang).toBe('nl-BE')
   })
 })
+
+describe('normalize() — poweredBy', () => {
+  test('omits poweredBy when the field is missing', () => {
+    expect(normalize({ name: 'Docs' }).poweredBy).toBeUndefined()
+  })
+
+  test('accepts a single { name, url } object', () => {
+    expect(
+      normalize({
+        name: 'Docs',
+        poweredBy: { name: 'Notaku', url: 'https://notaku.so' },
+      }).poweredBy,
+    ).toEqual([{ name: 'Notaku', url: 'https://notaku.so' }])
+  })
+
+  test('accepts a list of linked names', () => {
+    expect(
+      normalize({
+        name: 'Docs',
+        poweredBy: [
+          { name: 'Notaku', url: 'https://notaku.so' },
+          { name: 'Holocron', url: 'https://holocron.so' },
+        ],
+      }).poweredBy,
+    ).toEqual([
+      { name: 'Notaku', url: 'https://notaku.so' },
+      { name: 'Holocron', url: 'https://holocron.so' },
+    ])
+  })
+
+  test('drops items that are missing name or url', () => {
+    expect(
+      normalize({
+        name: 'Docs',
+        poweredBy: [
+          { name: 'Notaku', url: 'https://notaku.so' },
+          { name: '', url: 'https://example.com' },
+          { name: 'Nope' },
+        ],
+      }).poweredBy,
+    ).toEqual([{ name: 'Notaku', url: 'https://notaku.so' }])
+  })
+})
