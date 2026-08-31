@@ -118,6 +118,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 export function normalize(raw: Record<string, unknown>): HolocronConfig {
   const icons = normalizeIcons(raw.icons)
+  const layout = normalizeLayout(raw.layout)
   return {
     name: (raw.name as string) || 'Documentation',
     description: typeof raw.description === 'string' ? raw.description : undefined,
@@ -135,10 +136,10 @@ export function normalize(raw: Record<string, unknown>): HolocronConfig {
     footer: normalizeFooter(raw.footer),
     search: normalizeSearch(raw.search),
     seo: normalizeSeo(raw.seo),
-    assistant: normalizeAssistant(raw.assistant),
+    assistant: normalizeAssistant(raw.assistant, layout.mode),
     decorativeLines: normalizeDecorativeLines(raw.decorativeLines),
     sidebar: normalizeSidebar(raw.sidebar),
-    layout: normalizeLayout(raw.layout),
+    layout,
     integrations: normalizeIntegrations(raw.integrations),
     ...(typeof raw.customCss === 'string' && raw.customCss
       ? { customCss: raw.customCss }
@@ -762,15 +763,21 @@ function normalizeSeo(raw: unknown): HolocronConfig['seo'] {
   return { indexing, metatags }
 }
 
-function normalizeAssistant(raw: unknown): HolocronConfig['assistant'] {
-  if (!raw || typeof raw !== 'object') return { enabled: true, display: 'sidebar' }
+function normalizeAssistant(
+  raw: unknown,
+  layoutMode: HolocronConfig['layout']['mode'],
+): HolocronConfig['assistant'] {
+  const defaultDisplay = layoutMode === 'compact' ? 'floating' : 'sidebar'
+  if (!raw || typeof raw !== 'object') return { enabled: true, display: defaultDisplay }
   const obj = raw as Record<string, unknown>
   const suggestions = Array.isArray(obj.suggestions)
     ? obj.suggestions.filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
     : undefined
+  const display =
+    obj.display === 'floating' || obj.display === 'sidebar' ? obj.display : defaultDisplay
   return {
     enabled: obj.enabled !== false,
-    display: obj.display === 'floating' ? 'floating' : 'sidebar',
+    display,
     ...(suggestions && suggestions.length > 0 ? { suggestions } : {}),
   }
 }

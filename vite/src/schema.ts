@@ -964,10 +964,11 @@ export const assistantSchema = z
       .optional()
       .describe(
         dedent`
-          Where the AI chat trigger appears. \`sidebar\` (default) shows the
-          Ask AI widget in the right aside. \`floating\` uses the same bottom
-          pill as the embeddable ChatWidget instead, and hides the sidebar
-          widget
+          Where the AI chat trigger appears. \`sidebar\` shows the Ask AI
+          widget in the right aside. \`floating\` uses the same bottom pill
+          as the embeddable ChatWidget instead, and hides the sidebar
+          widget. Defaults to \`sidebar\`, or to \`floating\` when
+          \`layout.mode\` is \`compact\`
         `,
       ),
   })
@@ -1149,9 +1150,10 @@ export const layoutSchema = z
           Default page layout mode. Individual pages can override this with
           the \`mode\` frontmatter field. \`compact\` keeps the left navigation
           and removes the right aside, which also hides the default sidebar
-          assistant. Set \`assistant.display\` to \`floating\` to keep Ask AI
-          available. Compact never opens a right rail. Authored asides and
-          API examples render in the main column. Defaults to \`default\`
+          assistant. Compact defaults \`assistant.display\` to \`floating\`
+          unless you set it. Compact never opens a right rail. Authored
+          asides and API examples render in the main column. Defaults to
+          \`default\`
         `,
       ),
     maxWidth: z

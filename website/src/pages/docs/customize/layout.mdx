@@ -32,15 +32,12 @@ mode: "compact"
 ---
 ```
 
-Set the same mode in **`docs.json`** to make it the default for the full site. Compact mode removes the right aside, so the default **sidebar** assistant is hidden. Also set `assistant.display` to `floating` so Ask AI stays available as a bottom pill:
+Set the same mode in **`docs.json`** to make it the default for the full site. Compact mode removes the right aside, so Holocron defaults **`assistant.display`** to **`floating`**. Ask AI stays available as a bottom pill. Set `display` to `sidebar` if you do not want the pill.
 
 ```json
 {
   "layout": {
     "mode": "compact"
-  },
-  "assistant": {
-    "display": "floating"
   }
 }
 ```

@@ -41,8 +41,8 @@
   --pill-ring: color-mix(in srgb, var(--foreground) 34%, transparent);
 }
 
-:host(.dark) .holocron-chat-pill,
-:where(.dark) .holocron-chat-pill {
+:host(.dark) .holocron-chat-pill:not([inert]),
+:where(.dark) .holocron-chat-pill:not([inert]) {
   --pill-ring: color-mix(in srgb, var(--foreground) 22%, transparent);
   box-shadow:
     0 0 0 1px var(--pill-ring),
@@ -58,6 +58,15 @@
 
 .holocron-chat-pill[data-expanded] {
   width: min(calc(var(--pill-width, 300px) + var(--pill-expand, 100px)), calc(100vw - 32px));
+}
+
+/* Source shell stays mounted for the close morph. Drop chrome so it
+ * does not leave a filled pill behind the open panel. */
+.holocron-chat-pill[inert] {
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* Hairline via box-shadow; a real border smears during the morph. */

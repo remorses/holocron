@@ -50,6 +50,26 @@ describe('normalize() — assistant display', () => {
       display: 'floating',
     })
   })
+
+  test('compact layout defaults assistant to floating', () => {
+    expect(normalize({ name: 'Docs', layout: { mode: 'compact' } }).assistant).toEqual({
+      enabled: true,
+      display: 'floating',
+    })
+  })
+
+  test('compact layout keeps an explicit sidebar display', () => {
+    expect(
+      normalize({
+        name: 'Docs',
+        layout: { mode: 'compact' },
+        assistant: { display: 'sidebar' },
+      }).assistant,
+    ).toEqual({
+      enabled: true,
+      display: 'sidebar',
+    })
+  })
 })
 
 describe('normalize() — version language', () => {

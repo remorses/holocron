@@ -1667,7 +1667,7 @@
           }
         },
         "display": {
-          "description": "Where the AI chat trigger appears. `sidebar` (default) shows the\nAsk AI widget in the right aside. `floating` uses the same bottom\npill as the embeddable ChatWidget instead, and hides the sidebar\nwidget",
+          "description": "Where the AI chat trigger appears. `sidebar` shows the Ask AI\nwidget in the right aside. `floating` uses the same bottom pill\nas the embeddable ChatWidget instead, and hides the sidebar\nwidget. Defaults to `sidebar`, or to `floating` when\n`layout.mode` is `compact`",
           "type": "string",
           "enum": [
             "sidebar",
@@ -1703,7 +1703,7 @@
       "type": "object",
       "properties": {
         "mode": {
-          "description": "Default page layout mode. Individual pages can override this with\nthe `mode` frontmatter field. `compact` keeps the left navigation\nand removes the right aside, which also hides the default sidebar\nassistant. Set `assistant.display` to `floating` to keep Ask AI\navailable. Compact never opens a right rail. Authored asides and\nAPI examples render in the main column. Defaults to `default`",
+          "description": "Default page layout mode. Individual pages can override this with\nthe `mode` frontmatter field. `compact` keeps the left navigation\nand removes the right aside, which also hides the default sidebar\nassistant. Compact defaults `assistant.display` to `floating`\nunless you set it. Compact never opens a right rail. Authored\nasides and API examples render in the main column. Defaults to\n`default`",
           "type": "string",
           "enum": [
             "default",
