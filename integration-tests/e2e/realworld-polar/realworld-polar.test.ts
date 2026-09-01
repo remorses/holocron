@@ -197,25 +197,12 @@ test.describe("realworld-polar fixture", () => {
 
   test("Polar card icons render for Font Awesome-style names used in MDX", async ({ page }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
-    await warmAndOpen({
-      page,
-      href: "/",
-      ready: page.getByRole("link", { name: "Docs", exact: true }),
-    });
-
-    const communityCard = page
-      .getByText("Join Our Community", { exact: true })
-      .locator("xpath=ancestor::a[1]");
-    await expect(communityCard).toBeVisible();
-    await expect(communityCard.locator("svg")).toHaveCount(1);
-    await page.waitForLoadState("networkidle");
-
     await page.goto("/api-reference/introduction", { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
 
-    // The community card covers the FA-style brand-icon path. Keep the second
-    // card assertion focused on content so the test does not depend on the
-    // exact internal DOM shape of Card's title row.
+    const authCardLink = page.getByRole("link", { name: "Auth (Organization)", exact: true });
+    await expect(authCardLink).toBeVisible();
+    await expect(authCardLink.locator("..").locator("svg")).toHaveCount(1);
     await expect(page.getByText("Sandbox Base URL", { exact: true })).toBeVisible();
   });
 
