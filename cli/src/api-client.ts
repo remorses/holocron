@@ -6,12 +6,10 @@
 // The safeFetch client accepts `body` as a plain object (auto-serialized to JSON)
 // and is fully type-safe on path params, query, body, and response.
 //
-// The `App` type is imported from website SOURCE (not dist) so no build order
-// dependency exists. Ambient stubs in cli/src/website-ambient.d.ts satisfy
-// unresolvable modules in the website's transitive import graph.
+// The API app type is imported from website source so no build order dependency exists.
 
 import { createSpiceflowFetch } from 'spiceflow/client'
-import type { App } from 'website/src/server.tsx'
+import type { ApiApp } from 'website/src/api.ts'
 import { getBaseUrl, getSessionToken, loginHint } from './config.ts'
 
 /**
@@ -30,7 +28,7 @@ function getHolocronApiKey(): string {
 
 /** Create a client authenticated with a session token (from `holocron login`). */
 export function createSessionClient(baseUrl: string, sessionToken: string) {
-  const safeFetch = createSpiceflowFetch<App>(baseUrl, {
+  const safeFetch = createSpiceflowFetch<ApiApp>(baseUrl, {
     headers: { Authorization: `Bearer ${sessionToken}` },
   })
   return { safeFetch }
@@ -38,7 +36,7 @@ export function createSessionClient(baseUrl: string, sessionToken: string) {
 
 /** Create a client authenticated with an API key (HOLOCRON_KEY). */
 export function createApiKeyClient(baseUrl: string, apiKey: string) {
-  const safeFetch = createSpiceflowFetch<App>(baseUrl, {
+  const safeFetch = createSpiceflowFetch<ApiApp>(baseUrl, {
     headers: { Authorization: `Bearer ${apiKey}` },
   })
   return { safeFetch }
@@ -48,7 +46,7 @@ export const GITHUB_OIDC_HEADER = 'X-Holocron-GitHub-OIDC-Token'
 
 /** Create a client authenticated with a GitHub Actions OIDC token. */
 export function createGithubOidcClient(baseUrl: string, oidcToken: string) {
-  const safeFetch = createSpiceflowFetch<App>(baseUrl, {
+  const safeFetch = createSpiceflowFetch<ApiApp>(baseUrl, {
     headers: { [GITHUB_OIDC_HEADER]: oidcToken },
   })
   return { safeFetch }

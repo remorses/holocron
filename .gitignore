@@ -7,6 +7,7 @@ esm
 .ultra.cache.json
 coverage
 *.png
+!example/public/favicon-32.png
 *.pdf
 opencode.json
 tmp
