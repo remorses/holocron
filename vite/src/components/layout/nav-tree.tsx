@@ -111,9 +111,11 @@ const MAX_VISIBLE_HEADINGS = 20
 function TocInline({
   headings,
   pageHref,
+  labelIndent,
 }: {
   headings: NavHeading[]
   pageHref: string
+  labelIndent: string
 }) {
   const { activeHeadingId, searchState, highlightedHref, highlightedRef, animate } = useSidebarTreeContext()
   const listRef = useRef<HTMLUListElement>(null)
@@ -195,7 +197,12 @@ function TocInline({
   if (allVisibleHeadings.length === 0) return null
 
   return (
-    <div className='relative mt-[calc(2em/14)] pl-[calc(2em/14)] pb-[calc(8em/14)]'>
+    <div
+      className='relative mt-[calc(2em/14)] pl-[calc(2em/14)] pb-[calc(8em/14)]'
+      style={{
+        marginInlineStart: `max(0px, calc(${labelIndent} - var(--sidebar-icon-size) - calc(2em / 14)))`,
+      }}
+    >
       {/* Guide line */}
       <div
         aria-hidden
@@ -371,6 +378,7 @@ function NavPageLink({
           <TocInline
             headings={page.headings}
             pageHref={page.href}
+            labelIndent={`${depth + (page.icon ? 1 : 0)} * var(--sidebar-indent)`}
           />
         )}
       </ExpandableContainer>
