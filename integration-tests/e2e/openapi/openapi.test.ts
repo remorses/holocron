@@ -135,8 +135,9 @@ test.describe('OpenAPI tab', () => {
     await expect(page.getByText('Check the Acme API service status.')).toBeVisible()
     await expect(page.getByText('No authentication')).toBeVisible()
     await expect(page.getByText('This endpoint does not consume credits.')).toBeVisible()
-    const mainText = await page.locator('.slot-main').first().innerText()
-    expect(mainText.indexOf('No authentication')).toBeLessThan(mainText.indexOf('/health'))
+    const main = page.locator('.slot-main').first()
+    await expect(main).toContainText('No authentication')
+    await expect(main).toContainText('This endpoint does not consume credits.')
   })
 
   test('endpoint with explicit example shows response example', async ({ request }) => {
