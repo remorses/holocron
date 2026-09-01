@@ -129,7 +129,7 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
     const footer = page.locator("footer");
     await expect(footer).toBeVisible();
     // Social links
-    await expect(footer.getByRole("link", { name: "x" })).toHaveAttribute(
+    await expect(footer.getByRole("link", { name: "X", exact: true })).toHaveAttribute(
       "href",
       "https://x.com/example",
     );
