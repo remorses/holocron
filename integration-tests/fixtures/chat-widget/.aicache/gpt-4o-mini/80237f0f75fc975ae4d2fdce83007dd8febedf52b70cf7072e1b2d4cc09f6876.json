@@ -1,0 +1,161 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_08730ff80501dd99006a969b1a2dd087d2b03d532285566000",
+      "timestamp": "2026-09-01T09:30:02.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": "Hey"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": "!"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": " If"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": " you"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": "’re"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": " looking"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": " to"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": " test"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": " cookies"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": ","
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": " could"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": " you"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": " clarify"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": " what"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": " you"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": " need"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": " help"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": " with"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "delta": "?"
+    },
+    {
+      "type": "text-end",
+      "id": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_08730ff80501dd99006a969b1a83e087d2891a009f199d225c"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 716,
+          "noCache": 716,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 21,
+          "text": 21,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 716,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 21,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_08730ff80501dd99006a969b1a2dd087d2b03d532285566000",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

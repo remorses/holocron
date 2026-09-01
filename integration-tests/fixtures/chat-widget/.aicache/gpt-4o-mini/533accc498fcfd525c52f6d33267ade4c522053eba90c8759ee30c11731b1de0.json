@@ -1,0 +1,156 @@
+{
+  "chunks": [
+    {
+      "type": "stream-start",
+      "warnings": []
+    },
+    {
+      "type": "response-metadata",
+      "id": "resp_0d62bbd845af4b02006a969b1ca73087d297afe317055dfd3f",
+      "timestamp": "2026-09-01T09:30:04.000Z",
+      "modelId": "gpt-4o-mini-2024-07-18"
+    },
+    {
+      "type": "text-start",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac"
+        }
+      }
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": "The"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": " documentation"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": " is"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": " maintained"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": " by"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": " team"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": " responsible"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": " for"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": " the"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": " Hol"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": "oc"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": "ron"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": " AI"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": " chat"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": " widget"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": " integration"
+    },
+    {
+      "type": "text-delta",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "delta": "."
+    },
+    {
+      "type": "text-end",
+      "id": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac",
+      "providerMetadata": {
+        "openai": {
+          "itemId": "msg_0d62bbd845af4b02006a969b1d043887d2b28c78094715e2ac"
+        }
+      }
+    },
+    {
+      "type": "finish",
+      "finishReason": {
+        "unified": "stop"
+      },
+      "usage": {
+        "inputTokens": {
+          "total": 786,
+          "noCache": 786,
+          "cacheRead": 0
+        },
+        "outputTokens": {
+          "total": 20,
+          "text": 20,
+          "reasoning": 0
+        },
+        "raw": {
+          "input_tokens": 786,
+          "input_tokens_details": {
+            "cached_tokens": 0
+          },
+          "output_tokens": 20,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          }
+        }
+      },
+      "providerMetadata": {
+        "openai": {
+          "responseId": "resp_0d62bbd845af4b02006a969b1ca73087d297afe317055dfd3f",
+          "serviceTier": "default"
+        }
+      }
+    }
+  ]
+}

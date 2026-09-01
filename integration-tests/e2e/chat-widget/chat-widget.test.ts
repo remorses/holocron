@@ -157,7 +157,7 @@ test("chat shell morphs on open and stays still on client navigation", async ({ 
     action: async () => {
       await page.locator('.slot-sidebar-left a[href="/getting-started"]').click();
       await expect(page).toHaveURL(/getting-started/, { timeout: 5000 });
-      await expect(page.getByRole("heading", { name: "Getting Started", level: 1 })).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Follow these steps to get up and running with Chat Test Docs.")).toBeVisible({ timeout: 10000 });
     },
   });
   expect(navSamples.length).toBeGreaterThan(0);
@@ -472,7 +472,7 @@ test("chat state persists after client-side navigation", async ({ page }) => {
   // itself stays a normal textarea.
   await page.waitForLoadState("networkidle");
   await expect(page.getByText("Open existing chat")).toBeVisible({ timeout: 10000 });
-  const reopenInput = page.locator("textarea").first();
+  const reopenInput = page.locator("[data-chat-shell='sidebar'] textarea");
   await reopenInput.fill("hi");
   await reopenInput.press("Enter");
   await expect(newChatButton).toBeVisible({ timeout: 10000 });
