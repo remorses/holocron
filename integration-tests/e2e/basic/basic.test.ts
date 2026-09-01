@@ -571,11 +571,13 @@ test.describe("@build deterministic RSC chunk names", () => {
     const files = fs.readdirSync(assetsDir);
     // Each page chunk is named holocron-page-{slug}-{hash8}.js
     const pageChunks = files.filter((f) => f.startsWith("holocron-page-")).sort();
-    expect(pageChunks).toHaveLength(3);
+    expect(pageChunks).toHaveLength(5);
     expect(pageChunks).toEqual(expect.arrayContaining([
+      expect.stringMatching(/^holocron-page-café-&-guide-[0-9a-f]{8}\.js$/),
       expect.stringMatching(/^holocron-page-getting-started-[0-9a-f]{8}\.js$/),
       expect.stringMatching(/^holocron-page-index-[0-9a-f]{8}\.js$/),
       expect.stringMatching(/^holocron-page-markdown-page-[0-9a-f]{8}\.js$/),
+      expect.stringMatching(/^holocron-page-questions-\(what's-new\)-[0-9a-f]{8}\.js$/),
     ]));
   });
 

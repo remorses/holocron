@@ -31,6 +31,6 @@ jobs:
           cache: pnpm
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm --filter @holocron.so/cli build
-      - run: pnpm --filter @holocron.so/cli exec holocron maintain
+      - run: pnpm --filter @holocron.so/cli exec node dist/bin.js maintain
         env:
           GITHUB_TOKEN: ${{ github.token }}
