@@ -48,7 +48,7 @@ test.describe("deep nested sidebar", () => {
     });
     const html = await response.text();
     expect(ariaExpandedOf(html, "Internals")).toBe("false");
-    expect(ariaExpandedOf(html, "Even Deeper")).toBe("false");
+    expect(ariaExpandedOf(html, "Even Deeper")).toBeNull();
   });
 
   test("does not scroll the sidebar when the first page is already in view", async ({
