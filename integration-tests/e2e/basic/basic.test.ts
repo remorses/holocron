@@ -462,7 +462,7 @@ test.describe("hydration", () => {
     });
     const html = await response.text();
     // Check that <p> tags don't contain block elements
-    const pInsideP = /<p[^>]*>\s*<p[^>]*>/i.test(html);
+    const pInsideP = /<p\b[^>]*>\s*<p\b[^>]*>/i.test(html);
     expect(pInsideP, "Found <p> nested inside <p>").toBe(false);
   });
 });

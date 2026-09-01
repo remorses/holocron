@@ -59,7 +59,7 @@ test.describe("images under base path", () => {
     request,
   }) => {
     await page.goto("/docs/intro", { waitUntil: "domcontentloaded" });
-    const img = page.locator('img[alt="Copied image"]');
+    const img = page.locator('img[alt="Copied image"]:not([data-rmiz-modal-img])');
     await expect(img).toBeVisible();
     const src = await img.getAttribute("src");
     expect(src).toMatch(/^\/docs\/_holocron\/images\/[0-9a-f]{8}-photo\.png$/);
