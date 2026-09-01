@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseGitHubRepo, formatStarCount } from './github-stars.ts'
+import { findGitHubUrl, formatStarCount, parseGitHubRepo } from './github-stars.ts'
 
 describe('parseGitHubRepo', () => {
   it('parses standard repo URL', () => {
@@ -43,6 +43,42 @@ describe('parseGitHubRepo', () => {
 
   it('returns null for invalid URL', () => {
     expect(parseGitHubRepo('not-a-url')).toBeNull()
+  })
+})
+
+describe('findGitHubUrl', () => {
+  it('finds a GitHub URL in navigation links', () => {
+    expect(findGitHubUrl({
+      logo: { light: '/logo.svg' },
+      navigation: {
+        anchors: [{ anchor: 'Source', href: 'https://github.com/remorses/holocron/tree/main' }],
+        versions: [],
+        dropdowns: [],
+      },
+      navbar: { links: [] },
+      footer: { socials: {}, links: [] },
+    })).toMatchInlineSnapshot(`"https://github.com/remorses/holocron/tree/main"`)
+  })
+
+  it('finds an untyped GitHub link in the footer', () => {
+    expect(findGitHubUrl({
+      logo: { light: '/logo.svg' },
+      navigation: { anchors: [], versions: [], dropdowns: [] },
+      navbar: { links: [] },
+      footer: {
+        socials: {},
+        links: [{ header: 'Project', items: [{ label: 'Code', href: 'https://github.com/example/project' }] }],
+      },
+    })).toMatchInlineSnapshot(`"https://github.com/example/project"`)
+  })
+
+  it('returns null when no GitHub link is configured', () => {
+    expect(findGitHubUrl({
+      logo: { light: '/logo.svg' },
+      navigation: { anchors: [], versions: [], dropdowns: [] },
+      navbar: { links: [{ label: 'Home', href: 'https://example.com' }] },
+      footer: { socials: {}, links: [] },
+    })).toBeNull()
   })
 })
 

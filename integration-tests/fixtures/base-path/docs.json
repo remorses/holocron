@@ -5,8 +5,17 @@
     {
       "source": "/questions-%28faq%29",
       "destination": "/guide"
+    },
+    {
+      "source": "/github",
+      "destination": "/guide"
     }
   ],
+  "navbar": {
+    "links": [
+      { "label": "Source", "href": "https://github.com/example/base-path" }
+    ]
+  },
   "navigation": {
     "groups": [
       {

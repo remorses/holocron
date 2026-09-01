@@ -42,6 +42,7 @@
             "group": "Outer",
             "pages": [
               "index",
+              "github",
               "meta-page",
               "noindex-page",
               "hidden-page",

@@ -27,6 +27,13 @@ test.describe("pages under base path", () => {
     expect(response.status()).toBe(302);
     expect(response.headers().location).toBe("/docs/guide");
   });
+
+  test("explicit redirect wins over the base-prefixed GitHub route", async ({ request }) => {
+    const response = await request.get("/docs/github", { maxRedirects: 0 });
+
+    expect(response.status()).toBe(302);
+    expect(response.headers().location).toBe("/docs/guide");
+  });
 });
 
 test.describe("images under base path", () => {

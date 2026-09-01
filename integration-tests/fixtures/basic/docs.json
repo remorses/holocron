@@ -10,6 +10,11 @@
       "destination": "/markdown-page"
     }
   ],
+  "footer": {
+    "socials": {
+      "github": "https://github.com/example/basic"
+    }
+  },
   "navigation": {
     "groups": [
       {

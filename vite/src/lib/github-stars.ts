@@ -20,7 +20,7 @@ export function parseGitHubRepo(url: string): { owner: string; repo: string } | 
       return null
     }
     // pathname like /owner/repo or /owner/repo/tree/main/...
-    const parts = parsed.pathname.split('/').filter(Boolean) as string[]
+    const parts = parsed.pathname.split('/').filter(Boolean)
     if (parts.length < 2) return null
     return { owner: parts[0]!, repo: parts[1]! }
   } catch {
@@ -119,6 +119,57 @@ async function fetchFromGitHub(owner: string, repo: string): Promise<number | nu
 }
 
 // ── Config extraction ────────────────────────────────────────────────────
+
+type GitHubLinkConfig = {
+  logo: { href?: string }
+  navigation: {
+    anchors: Array<{ href: string }>
+    versions: Array<{ navigation: { anchors: Array<{ href: string }> } }>
+    dropdowns: Array<{
+      href?: string
+      navigation?: { anchors: Array<{ href: string }> }
+    }>
+  }
+  navbar: {
+    links: Array<{ href: string }>
+    primary?: { href?: string }
+  }
+  footer: {
+    socials: Record<string, string | undefined>
+    links: Array<{ items: Array<{ href: string }> }>
+  }
+  poweredBy?: Array<{ url: string }>
+}
+
+export function findGitHubUrl(config: GitHubLinkConfig): string | null {
+  const hrefs = [
+    ...config.navbar.links.map((link) => link.href),
+    config.navbar.primary?.href,
+    ...config.navigation.anchors.map((anchor) => anchor.href),
+    ...config.navigation.versions.flatMap((version) =>
+      version.navigation.anchors.map((anchor) => anchor.href)),
+    ...config.navigation.dropdowns.flatMap((dropdown) => [
+      dropdown.href,
+      ...dropdown.navigation?.anchors.map((anchor) => anchor.href) ?? [],
+    ]),
+    config.footer.socials.github,
+    ...Object.values(config.footer.socials),
+    ...config.footer.links.flatMap((column) => column.items.map((item) => item.href)),
+    config.logo.href,
+    ...config.poweredBy?.map((link) => link.url) ?? [],
+  ]
+
+  for (const href of hrefs) {
+    if (!href) continue
+    try {
+      const url = new URL(href)
+      if (url.hostname === 'github.com' || url.hostname === 'www.github.com') return href
+    } catch {
+      continue
+    }
+  }
+  return null
+}
 
 /**
  * Collect unique GitHub repo URLs from navbar links, navbar primary CTA,

@@ -102,6 +102,15 @@ test.describe("dark favicon", () => {
 });
 
 test.describe("redirects", () => {
+  test("authored GitHub page overrides the built-in route", async ({ request }) => {
+    const response = await request.get("/github", {
+      headers: { "sec-fetch-dest": "document" },
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(200);
+    expect(await response.text()).toContain("Authored GitHub Page");
+  });
+
   test("exact-match permanent redirect emits 301 + Location header", async ({
     request,
   }) => {

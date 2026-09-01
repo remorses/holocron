@@ -119,6 +119,12 @@ test.describe("syntax highlight", () => {
 });
 
 test.describe("index path redirects", () => {
+  test("GET /github redirects when no authored page exists", async ({ request }) => {
+    const response = await request.get("/github", { maxRedirects: 0 });
+    expect(response.status()).toBe(302);
+    expect(response.headers().location).toBe("https://github.com/example/basic");
+  });
+
   test("GET /index redirects to /", async ({ request }) => {
     const response = await request.get("/index", { maxRedirects: 0 });
     expect(response.status()).toBe(308);

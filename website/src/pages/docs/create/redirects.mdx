@@ -20,6 +20,16 @@ When you restructure your docs, redirects keep old links working. Define them in
 }
 ```
 
+## GitHub shortcut
+
+Holocron adds a **`/github` shortcut** when a navbar, navigation, logo, or footer link points to GitHub. The temporary redirect preserves the exact configured URL.
+
+```text
+/github → https://github.com/owner/repository
+```
+
+An authored `github.mdx` page or an explicit redirect whose source matches `/github` **takes priority** over the automatic shortcut.
+
 ## Redirect types
 
 ### Exact path

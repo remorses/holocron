@@ -66,7 +66,7 @@ import dedent from 'string-dedent'
 import { buildOgImageUrl } from './lib/og-utils.ts'
 import { getPageRendering, getPageRobots, getPageSeoMeta, isIndexablePage, parsePageFrontmatter, serializeKeywords, type PageFrontmatter, type PageRendering } from './lib/page-frontmatter.ts'
 import { canonicalizePathname, holocronUrl, getHolocronApiKey, withBasePath } from './lib/holocron-url.ts'
-import { createGitHubStarsPromise } from './lib/github-stars.ts'
+import { createGitHubStarsPromise, findGitHubUrl } from './lib/github-stars.ts'
 import {
   buildVisibleSiteData,
   type HolocronSiteData,
@@ -1332,6 +1332,20 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         let dest = interpolateDestination(rule.destination, allParams)
         if (!dest.includes('?') && url.search) dest += url.search
         throw redirect(dest, { status: rule.permanent ? 301 : 302 })
+      })
+    }
+  }
+
+  const githubUrl = findGitHubUrl(site.config)
+  if (githubUrl && !slugs.includes('github')) {
+    for (const source of new Set(['/github', withBaseRoute(site.base, '/github')])) {
+      const isConfiguredRedirect = site.config.redirects.some((rule) =>
+        [...new Set([rule.source, withBaseRoute(site.base, rule.source)])]
+          .some((configuredSource) => redirectSourceMatches(configuredSource, source)))
+      if (isConfiguredRedirect) continue
+
+      app = app.get(source, () => {
+        throw redirect(githubUrl, { status: 302 })
       })
     }
   }
