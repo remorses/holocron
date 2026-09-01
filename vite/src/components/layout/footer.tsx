@@ -209,13 +209,13 @@ function PagePrevNext() {
             className={cn(pageNavClass, 'text-muted-foreground hover:text-foreground hover:bg-accent')}
           >
             <ChevronLeftIcon />
-            <span>Prev page</span>
+            <span>Prev Page</span>
           </Link>
         </NavTooltip>
       ) : (
         <span className={cn(pageNavClass, 'text-muted-foreground/30')}>
           <ChevronLeftIcon />
-          <span>Prev page</span>
+          <span>Prev Page</span>
         </span>
       )}
       {nextPage ? (
@@ -225,13 +225,13 @@ function PagePrevNext() {
             aria-label={`Next: ${nextPage.title}`}
             className={cn(pageNavClass, 'text-muted-foreground hover:text-foreground hover:bg-accent')}
           >
-            <span>Next page</span>
+            <span>Next Page</span>
             <ChevronRightIcon />
           </Link>
         </NavTooltip>
       ) : (
         <span className={cn(pageNavClass, 'text-muted-foreground/30')}>
-          <span>Next page</span>
+          <span>Next Page</span>
           <ChevronRightIcon />
         </span>
       )}

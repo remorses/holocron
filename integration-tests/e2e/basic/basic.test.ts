@@ -76,8 +76,8 @@ test.describe("page navigation", () => {
     const next = footer.getByRole("link", { name: /Next: Markdown Page/ });
     await expect(previous).toBeVisible();
     await expect(next).toBeVisible();
-    await expect(previous).toContainText("Prev page");
-    await expect(next).toContainText("Next page");
+    await expect(previous).toContainText("Prev Page");
+    await expect(next).toContainText("Next Page");
     await previous.hover();
     await expect(page.getByRole("tooltip", { name: "Welcome to Test Docs" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Copy page as Markdown/ })).toBeVisible();
