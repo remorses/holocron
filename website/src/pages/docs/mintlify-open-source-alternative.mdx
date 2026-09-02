@@ -1,0 +1,337 @@
+---
+$schema: https://holocron.so/frontmatter.json
+prompt: |
+  Write an SEO landing page that must rank for "mintlify open source alternative".
+  H1 must be exactly that query. Cover Holocron as a drop-in Mintlify replacement:
+  same docs.json, same MDX components, same frontmatter. Explain Holocron features
+  from @/README.md, @/website/src/pages/docs/what-is-holocron.mdx, and the public
+  docs sitemap. Be honest about Mintlify-only products Holocron does not copy
+  (interactive API playground, web editor, hosted analytics dashboard).
+title: Mintlify open source alternative
+sidebarTitle: Mintlify alternative
+description: Holocron is the open source Mintlify alternative. Keep your docs.json and MDX files, then build locally and deploy anywhere.
+icon: scale
+---
+
+# Mintlify open source alternative
+
+**Holocron** is the **open source Mintlify alternative**. It is a **drop-in replacement**: keep your `docs.json`, MDX pages, OpenAPI spec, and Mintlify components, then run them as a **Vite plugin**. Builds happen locally. You can self-host, or publish with the Holocron CLI.
+
+Mintlify is a hosted docs platform. Beautiful defaults, Git sync, an AI assistant, and an API playground. It is also closed source, cloud-only, and **Pro starts at $450 per month**. Teams searching for a **Mintlify open source alternative** usually want the same authoring model without the lock-in.
+
+<Aside>
+<Tip>
+Already on Mintlify? Keep the repo as-is. Add a Vite config and run it. See [Migration from Mintlify](./migration.mdx).
+</Tip>
+</Aside>
+
+```bash
+npx -y "@holocron.so/cli" create
+```
+
+## Why this query exists
+
+People type **mintlify open source alternative** when they want three things at once:
+
+1. **Mintlify-compatible authoring.** `docs.json`, MDX, Cards, Callouts, Steps, OpenAPI tabs.
+2. **Open source.** Readable code, no vendor roadmap risk, MIT license.
+3. **Self-hosting.** Local `vite build`, standard CI, deploy on Node.js or Cloudflare Workers.
+
+Most lists that rank for this query point at **Docusaurus**, **Fumadocs**, **Scalar**, or GitBook. Those are good tools. None of them render a Mintlify repo without a rewrite. Holocron does.
+
+```diagram
+  your Mintlify repo                                      Holocron site
+  ┌────────────────────────────────┐                      ┌────────────────────────────────┐
+  │ docs.json                      │                      │ same docs.json                 │
+  │ *.mdx  (Cards, Callouts, Steps)│── add plugin ───────>│ vite.config.ts                 │
+  │ openapi.yaml                   │                      │ vite build / holocron deploy   │
+  └────────────────────────────────┘                      └────────────────────────────────┘
+         no content rewrite                                      local preview in seconds
+```
+
+<CardGroup cols={2}>
+  <Card title='What is Holocron' icon='info' href='/docs/what-is-holocron'>
+    Vite plugin, local builds, Mintlify-compatible config and components.
+  </Card>
+  <Card title='Migrate from Mintlify' icon='arrow-right-left' href='/docs/migration'>
+    Four steps. Keep docs.json and MDX. Run npx vite.
+  </Card>
+  <Card title='Quickstart' icon='zap' href='/docs/quickstart'>
+    Scaffold a site, write one MDX page, start the dev server.
+  </Card>
+  <Card title='Pricing' icon='credit-card' href='/docs/pricing'>
+    Generator is MIT and free. Optional Pro is $99 per site per month.
+  </Card>
+</CardGroup>
+
+## Drop-in Mintlify replacement
+
+Holocron follows the **Mintlify `docs.json` shape**. Unknown Mintlify fields pass through validation, so you can paste a full Mintlify config without errors. Fields Holocron does not consume are ignored.
+
+**What transfers as-is:**
+
+- **Navigation.** Tabs, groups, nested groups, anchors, versions, dropdowns, products.
+- **MDX components.** Accordions, Cards, Callouts, Steps, Tabs, Code Groups, Expandables, Frames, Fields, and more. See [Components](./components/index.mdx).
+- **Frontmatter.** `title`, `description`, `icon`, `sidebarTitle`, `tag`, `hidden`, `deprecated`.
+- **Site chrome.** Colors, logo, favicon, navbar, footer, redirects, appearance, fonts, banner, integrations.
+- **OpenAPI tabs.** `{ "tab": "API Reference", "openapi": "openapi.json" }` generates one page per endpoint.
+
+```ts
+import { defineConfig } from 'vite'
+import { holocron } from '@holocron.so/vite'
+
+export default defineConfig({
+  plugins: [holocron()],
+})
+```
+
+Point that plugin at an existing Mintlify project. The same files that used to publish only through Mintlify cloud now preview on `localhost` with Vite HMR.
+
+<Aside>
+<Note>
+Holocron accepts `docs.json`, `docs.jsonc`, and `holocron.jsonc`. First found wins. Put `"$schema": "https://holocron.so/docs.json"` in the file for editor autocomplete.
+</Note>
+</Aside>
+
+## Holocron vs Mintlify
+
+| Area                 | Mintlify                                       | Holocron                                                                                |
+| -------------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------- |
+| **License**          | Closed source SaaS                             | **MIT**, [github.com/remorses/holocron](https://github.com/remorses/holocron)           |
+| **Hosting**          | Mintlify cloud only                            | Self-host, or [holocron.so hosting](./deploy/holocron.mdx)                              |
+| **Build**            | Cloud build on git push                        | Local **`vite build`**, standard CI                                                     |
+| **Config**           | `docs.json`                                    | Same `docs.json`                                                                        |
+| **Components**       | Proprietary MDX set                            | Same names, open source implementations                                                 |
+| **Search**           | Hosted search                                  | **Orama**, local, zero config                                                           |
+| **API reference**    | Interactive playground                         | Generated OpenAPI pages, request and response examples                                  |
+| **AI assistant**     | Hosted assistant (Pro)                         | Built-in chat on the docs site, plus an [embeddable widget](./ai/chat-widget.mdx)       |
+| **Docs maintenance** | Writing agent and automations (Pro)            | [Holocron Maintain](../maintain/index.mdx) from page generation prompts                 |
+| **AI exports**       | `.md` routes, `llms.txt`, MCP, `skill.md`      | `.md` routes, `/llms.txt`, **`/docs.zip`**, [skill discovery](./ai/skill-discovery.mdx) |
+| **Custom app**       | Not a framework                                | Mount docs inside a [Spiceflow](./spiceflow.mdx) app                                    |
+| **Pricing**          | Free hobby, **Pro $450/mo**, Enterprise custom | Generator **free**. Optional Pro **$99/mo** per site                                    |
+
+Holocron is not a pixel clone of every Mintlify dashboard product. It is the **open source docs engine** that understands Mintlify content.
+
+## Feature set
+
+This is what the codebase ships today, mapped against the Mintlify feature surface people actually use.
+
+### Docs as code
+
+Write **MDX** pages. Organize them with [docs.json](./organize/docs-json.mdx). Preview with Vite. Commit with Git. That is the same workflow Mintlify popularized, minus the hosted compiler.
+
+- [Pages and frontmatter](./create/pages.mdx)
+- [MDX syntax](./create/mdx.mdx)
+- [Code blocks](./create/code.mdx)
+- [Images](./create/images.mdx)
+- [Local TSX and Markdown imports](./create/local-imports.mdx)
+- [ASCII diagrams](./create/diagrams.mdx)
+- [Redirects](./create/redirects.mdx)
+- [Broken link detection](./create/broken-links.mdx)
+
+<Aside>
+<Info>
+Mintlify's **web editor** is a hosted CMS on top of Git. Holocron stays **docs-as-code**. Edit in the repo, in PRs, or with your own editor.
+</Info>
+</Aside>
+
+### Navigation that matches Mintlify
+
+[Navigation](./organize/navigation.mdx) is the same tree: tabs, groups, pages. Holocron also implements:
+
+- **[Versions](./organize/versions.mdx)** for API or product lines
+- **[Dropdowns](./organize/dropdowns.mdx)** and products, flattened into routes
+- **[Hidden pages](./organize/hidden-pages.mdx)** that stay out of the sidebar
+- **[Imageboard](./organize/imageboard.mdx)** for screenshot-heavy catalogs
+- **[pagesDir](./organize/pages-dir.mdx)** when MDX does not live at the repo root
+
+### Theming and layout
+
+Override **shadcn-style CSS variables** and Holocron adapts. No proprietary theme JSON required.
+
+- [Theme and colors](./customize/theme.mdx)
+- [Fonts](./customize/fonts.mdx)
+- [Icons](./customize/icons.mdx) (Lucide, Font Awesome, Tabler)
+- [Logo and favicon](./customize/logo-and-favicon.mdx)
+- [Navbar, footer, banner](./customize/navbar-footer-banner.mdx)
+- [Custom CSS](./customize/custom-css.mdx)
+- [Page modes and layout](./customize/layout.mdx)
+- [Bleed](./customize/bleed.mdx) for wide media
+
+### Mintlify-compatible MDX components
+
+In MDX, components are **global**. No imports. The names match Mintlify so existing pages keep compiling.
+
+<CardGroup cols={3}>
+  <Card title='Callouts' icon='badge-alert' href='/docs/components/callouts'>
+    Note, Warning, Info, Tip, Check, Danger.
+  </Card>
+  <Card title='Cards' icon='layout-grid' href='/docs/components/cards'>
+    Card and CardGroup grids.
+  </Card>
+  <Card title='Steps' icon='list-ordered' href='/docs/components/steps'>
+    Numbered procedures.
+  </Card>
+  <Card title='Tabs' icon='columns-3' href='/docs/components/tabs'>
+    Switchable content panes.
+  </Card>
+  <Card title='Accordions' icon='chevrons-up-down' href='/docs/components/accordions'>
+    Collapsible sections.
+  </Card>
+  <Card title='API fields' icon='braces' href='/docs/components/fields'>
+    Param, ResponseField, Expandable.
+  </Card>
+</CardGroup>
+
+Also: [Code groups](./components/code-groups.mdx), [Frames](./components/frames.mdx), [Mermaid](./components/mermaid-diagrams.mdx), [Tree](./components/tree.mdx), [Update](./components/update.mdx), [Prompt](./components/prompt.mdx), [Visibility](./components/visibility.mdx), [Panel](./components/panel.mdx), [Tiles](./components/tiles.mdx). Full index: [Components](./components/index.mdx).
+
+### OpenAPI reference
+
+Point a tab at an OpenAPI file. Holocron generates **one MDX page per endpoint**, with parameters, examples, and SDK snippets.
+
+Mintlify's **interactive API playground** (live "Try it" against a server) is a hosted product. Holocron renders a **read-only reference** from the spec. For most public API docs that is the page users read.
+
+- [OpenAPI setup](./api-docs/openapi.mdx)
+- [Generated pages](./api-docs/generated-pages.mdx)
+- [Request and response examples](./api-docs/request-response-examples.mdx)
+- [SDK examples](./api-docs/sdk-examples.mdx)
+
+### Changelog and MCP docs
+
+Mintlify can turn GitHub releases and MCP servers into docs surfaces. So can Holocron:
+
+- **[Changelog tab](./changelog-tab.mdx)** from a GitHub repo URL, one `<Update>` per release
+- **[MCP docs](./mcp-tools.mdx)** from a local JSON file or a remote MCP server
+- **[MCP export](./mcp-export.mdx)** so agents can install your docs as tools
+
+### AI-readable docs
+
+Mintlify markets agent-native docs: Markdown for crawlers, `llms.txt`, MCP, `skill.md`. Holocron ships the same idea, then adds bulk download.
+
+| Endpoint                         | What agents get                                                                       |
+| -------------------------------- | ------------------------------------------------------------------------------------- |
+| **`page.md`**                    | Raw Markdown for any page. See [Markdown routes](./ai/markdown-routes.mdx).           |
+| **`/llms.txt`**                  | Index of titles and `.md` URLs. See [llms.txt](./ai/llms-txt.mdx).                    |
+| **`/docs.zip`**                  | Every page as `.md` in one archive. See [docs.zip](./ai/docs-zip.mdx).                |
+| **`/.well-known/agent-skills/`** | Installable skill for coding agents. See [Skill discovery](./ai/skill-discovery.mdx). |
+
+<Aside>
+<Tip>
+`/docs.zip` is the fastest way for an agent to grep a whole site. Mintlify does not ship this archive.
+</Tip>
+</Aside>
+
+### AI assistant and chat widget
+
+Enable [AI Assistant](./ai/assistant.mdx) in `docs.json`. Readers ask questions against your docs. Display it in the **sidebar** or as a **floating** pill.
+
+The same chat can be [embedded on any website](./ai/chat-widget.mdx), not only the docs origin.
+
+Free hosted sites get a trial model. **Holocron Pro** ($99 per site per month) unlocks the full model and 50,000 credits. Compare that with Mintlify Pro at **$450 per month** plus credit overages.
+
+### Holocron Maintain
+
+Mintlify Pro includes a **writing agent** and scheduled automations. Holocron's counterpart is **[Maintain](../maintain/index.mdx)**.
+
+Every page can store a **generation `prompt`** in frontmatter. When referenced source files change, Maintain reruns that prompt and updates the MDX. Run it from a parent agent, or from [GitHub Actions](../maintain/github-actions.mdx) so a pull request opens on push.
+
+### Deploy anywhere
+
+Mintlify publishes only to Mintlify cloud. A **Mintlify open source alternative** has to leave with you.
+
+```diagram
+                              vite build
+                                  │
+                                  v
+                 ┌────────────────┼────────────────┐
+                 v                v                v
+            Node server      Cloudflare       holocron deploy
+            dist/rsc         Workers          managed hosting
+```
+
+- [Node.js](./deploy/node.mdx): `npx vite build && node dist/rsc/index.js`
+- [Cloudflare Workers](./deploy/cloudflare.mdx): `npx wrangler deploy`
+- [Holocron hosting](./deploy/holocron.mdx): `npx -y "@holocron.so/cli" deploy`
+- [Subpath hosting](./deploy/base-path.mdx): docs at `yoursite.com/docs`
+- [Multi-tenant](./deploy/multi-tenant.mdx): one worker, many sites
+
+<Aside>
+<Note>
+Custom domains and unlimited preview deployments are **Holocron Pro**. The open source generator itself has no seat limit and no cloud requirement.
+</Note>
+</Aside>
+
+### Custom routes, not a walled garden
+
+Mintlify is a docs host. Holocron is a **Vite plugin** on [Spiceflow](./spiceflow.mdx). [Custom entry](./custom-entry.mdx) mounts docs next to your own API routes, auth, and pages. That is how holocron.so itself is built.
+
+## What Holocron does not copy
+
+Honesty ranks better than a fake parity table.
+
+- **Interactive API playground.** Holocron generates reference pages. It does not proxy live authenticated requests from the browser.
+- **Hosted web editor.** Edit Markdown in Git. There is no Mintlify-style browser CMS.
+- **Mintlify analytics dashboard.** Use the `integrations` field (GA4, PostHog, Plausible, and similar). A native Holocron analytics view is not shipping yet.
+- **SSO, SCIM, RBAC, PDF export.** Those are Mintlify Enterprise products. Self-host Holocron behind your own auth if you need a private site.
+- **Mintlify Index** (cross-publisher search API) and **static export** as a paid REST job. Holocron sites already emit Markdown and a zip; you own the build output.
+
+If those hosted extras are the product you want, stay on Mintlify. If you want **your Mintlify files, locally, as open source**, Holocron is the drop-in.
+
+## Holocron vs other Mintlify alternatives
+
+Search results for this query mix SaaS clones and generic static generators. The split is simple.
+
+| Tool                      | Open source? | Renders a Mintlify repo as-is?                                    |
+| ------------------------- | ------------ | ----------------------------------------------------------------- |
+| **Holocron**              | Yes, MIT     | **Yes.** Same `docs.json` and MDX components.                     |
+| Docusaurus                | Yes          | No. Different config, different components, rewrite required.     |
+| Fumadocs                  | Yes          | No. Next.js framework with its own MDX map.                       |
+| Scalar                    | Yes          | No. API-reference first, not a Mintlify docs.json runtime.        |
+| GitBook                   | No           | No. Different editor and Git sync model.                          |
+| Unmint and similar themes | Partial      | Visual mimic, not a drop-in compiler for existing Mintlify pages. |
+
+The ranking intent behind **mintlify open source alternative** is not "any docs tool that is free." It is "Mintlify, without the closed cloud." Holocron is built for that intent.
+
+## Migrate in four steps
+
+From [Migration from Mintlify](./migration.mdx):
+
+1. `pnpm add @holocron.so/vite react react-dom vite`
+2. Add the `holocron()` plugin in `vite.config.ts`
+3. Keep `docs.json` and every `.mdx` file
+4. `npx vite`
+
+Open `http://localhost:5173`. If pages live in a subfolder, set `holocron({ pagesDir: './pages' })`.
+
+## FAQ
+
+### Is there an open source Mintlify alternative?
+
+**Yes. Holocron.** It is MIT licensed, runs as a Vite plugin, and reads Mintlify `docs.json` plus MDX. Source: [github.com/remorses/holocron](https://github.com/remorses/holocron).
+
+### Can I self-host Mintlify?
+
+**Not the Mintlify platform.** Mintlify is cloud-only on paid plans; even Enterprise self-hosting is a sales conversation. Holocron self-hosts on **Node.js** or **Cloudflare Workers** with a normal `vite build`.
+
+### Does Holocron support Mintlify components?
+
+**Yes**, for the components it documents: Accordions, Cards, Callouts, Steps, Tabs, Code Groups, Expandables, Fields, Frames, and the rest of the [component catalog](./components/index.mdx). Prop interfaces stay Mintlify-compatible. Holocron-only extras are additive.
+
+### How much does a Mintlify open source alternative cost?
+
+The Holocron **generator is free**. Optional **Holocron Pro** is **$99 per site per month** ($990 per year) for the full AI model, Maintain, custom domains, and unlimited preview deployments. Mintlify **Pro is $450 per month**.
+
+### Is Docusaurus a Mintlify alternative?
+
+Docusaurus is an open source docs generator. It is **not drop-in**. You rewrite navigation, components, and often the page layout. Use Docusaurus if you already live in that ecosystem. Use Holocron if you already have Mintlify files.
+
+## Get started
+
+<CardGroup cols={2}>
+  <Card title='Install Holocron' icon='rocket' href='/docs/quickstart'>
+    Create vite.config.ts, add docs.json, write index.mdx.
+  </Card>
+  <Card title='Switch from Mintlify' icon='arrow-right-left' href='/docs/migration'>
+    Keep the repo. Add the plugin. Preview locally.
+  </Card>
+</CardGroup>

@@ -55,7 +55,8 @@
                             "index",
                             "docs/what-is-holocron",
                             "docs/quickstart",
-                            "docs/migration"
+                            "docs/migration",
+                            "docs/mintlify-open-source-alternative"
                         ]
                     },
                     {
