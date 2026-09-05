@@ -1673,6 +1673,12 @@
             "sidebar",
             "floating"
           ]
+        },
+        "supportEmail": {
+          "description": "Support email the assistant should share when a user wants to\ntalk to a human. When set, the chat system prompt tells the\nmodel to point people to this address for human support",
+          "type": "string",
+          "format": "email",
+          "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
         }
       },
       "additionalProperties": false,

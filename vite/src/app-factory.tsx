@@ -1798,8 +1798,10 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         }
         ${body.toolSchemas?.length
           ? `\n## Client tools\nYou have access to these additional tools that run in the user's browser:\n${body.toolSchemas.map((t: any) => `- **${t.name}**: ${t.description}`).join('\n')}\n\nAlways prefer client tools over the bash tool when both could accomplish the task. Client tools interact directly with the page the user is on. Only fall back to bash for tasks client tools cannot handle, like searching or reading documentation files.`
-          : ''
-        }
+          : ''}
+        ${site.config.assistant.supportEmail
+          ? `\n## Support\nAnswer from the docs first. Only if the docs do not cover the question, or the user explicitly asks to talk to a human, tell them to email [${site.config.assistant.supportEmail}](mailto:${site.config.assistant.supportEmail}). Do not invent other support channels.`
+          : ''}
       `
 
       const messages = [

@@ -70,6 +70,28 @@ describe('normalize() — assistant display', () => {
       display: 'sidebar',
     })
   })
+
+  test('preserves assistant.supportEmail', () => {
+    expect(
+      normalize({
+        name: 'Docs',
+        assistant: { supportEmail: 'tommy@holocron.so' },
+      }).assistant,
+    ).toEqual({
+      enabled: true,
+      display: 'sidebar',
+      supportEmail: 'tommy@holocron.so',
+    })
+  })
+
+  test('drops invalid assistant.supportEmail', () => {
+    expect(
+      normalize({
+        name: 'Docs',
+        assistant: { supportEmail: 'not-an-email' },
+      }).assistant,
+    ).toEqual({ enabled: true, display: 'sidebar' })
+  })
 })
 
 describe('normalize() — version language', () => {

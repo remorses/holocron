@@ -1,7 +1,7 @@
 ---
 $schema: https://holocron.so/frontmatter.json
 prompt: |
-  Write the AI assistant guide from @/vite/src/schema.ts, @/vite/src/components/sidebar-assistant.tsx, and @/vite/src/components/holocron-chat-bridge.tsx.
+  Write the AI assistant guide from @/vite/src/schema.ts, @/vite/src/components/sidebar-assistant.tsx, @/vite/src/components/holocron-chat-bridge.tsx, and @/vite/src/app-factory.tsx.
 title: AI Assistant
 description: Built-in chat assistant for your docs site.
 icon: message-circle
@@ -71,6 +71,28 @@ When `suggestions` is omitted, three defaults based on the site name are shown:
 - `What is {site name}?`
 - `Guide me through the pages I should read first`
 - `Search the docs for ...`
+
+## Support email
+
+Set **`assistant.supportEmail`** so the assistant can send people to a human when the docs are not enough:
+
+```json
+{
+  "assistant": {
+    "supportEmail": "support@example.com"
+  }
+}
+```
+
+When this is set, the chat system prompt tells the model to share that address if the user wants to **talk to a human**, or if the question cannot be answered from the docs. The assistant answers from the docs first and does not invent other support channels.
+
+This address is also present in the page HTML, so use an inbox with spam filtering.
+
+<Aside>
+<Tip>
+Use a real inbox that your team reads. The assistant will quote this address in chat replies.
+</Tip>
+</Aside>
 
 ## How it works
 

@@ -85,6 +85,25 @@ describe('holocronConfigSchema validation', () => {
     expect(result.success).toBe(false)
   })
 
+  test('accepts assistant.supportEmail', () => {
+    const result = holocronConfigSchema.safeParse({
+      name: 'X',
+      assistant: { supportEmail: 'tommy@holocron.so' },
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.assistant?.supportEmail).toBe('tommy@holocron.so')
+    }
+  })
+
+  test('rejects invalid assistant.supportEmail', () => {
+    const result = holocronConfigSchema.safeParse({
+      name: 'X',
+      assistant: { supportEmail: 'not-an-email' },
+    })
+    expect(result.success).toBe(false)
+  })
+
   test('accepts poweredBy as a single object', () => {
     const result = holocronConfigSchema.safeParse({
       name: 'X',

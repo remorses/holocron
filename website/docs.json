@@ -10,7 +10,7 @@
         "default": "dark"
     },
     "icons": { "library": "lucide" },
-    "assistant": { "enabled": true },
+    "assistant": { "enabled": true, "supportEmail": "tommy@holocron.so" },
     "knownPaths": ["/dashboard", "/login", "/signup"],
     "redirects": [
         { "source": "/markdown-editor", "destination": "/", "permanent": true }

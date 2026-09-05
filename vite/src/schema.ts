@@ -992,6 +992,16 @@ export const assistantSchema = z
           \`layout.mode\` is \`compact\`
         `,
       ),
+    supportEmail: z
+      .email()
+      .optional()
+      .describe(
+        dedent`
+          Support email the assistant should share when a user wants to
+          talk to a human. When set, the chat system prompt tells the
+          model to point people to this address for human support
+        `,
+      ),
   })
   .describe('AI chat assistant settings')
   .meta({ id: 'assistantSchema' })

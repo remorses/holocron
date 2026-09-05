@@ -5,7 +5,7 @@
  */
 
 import path from 'node:path'
-import { pageModeSchema } from '../schema.ts'
+import { assistantSchema, pageModeSchema } from '../schema.ts'
 import { getDefaultTypeIcon } from './collect-icons.ts'
 import { formatHolocronWarning, logger } from './logger.ts'
 
@@ -799,11 +799,17 @@ function normalizeAssistant(
     : undefined
   const display =
     obj.display === 'floating' || obj.display === 'sidebar' ? obj.display : defaultDisplay
-  return {
+  const rawEmail = typeof obj.supportEmail === 'string' ? obj.supportEmail.trim() : ''
+  const supportEmail = assistantSchema.shape.supportEmail.safeParse(rawEmail).success
+    ? rawEmail
+    : undefined
+  const assistant: HolocronConfig['assistant'] = {
     enabled: obj.enabled !== false,
     display,
-    ...(suggestions && suggestions.length > 0 ? { suggestions } : {}),
   }
+  if (suggestions && suggestions.length > 0) assistant.suggestions = suggestions
+  if (supportEmail) assistant.supportEmail = supportEmail
+  return assistant
 }
 
 function normalizeIntegrations(raw: unknown): HolocronConfig['integrations'] {
