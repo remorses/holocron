@@ -1,3 +1,12 @@
+## 0.22.1
+
+1. **Fix `holocron maintain --model` examples and error text.** The BYOK example is now a real OpenCode id, `anthropic/claude-sonnet-4-5`. Failed OpenCode calls print the provider error instead of always saying the API key is missing. Unknown hosted ids hint at the `provider/model` form. Docs name the hosted models (`deepseek-v4-flash` default, `glm-5.3-flash`) and point at `opencode auth login` for keys:
+
+   ```bash
+   npx -y "@holocron.so/cli" maintain --model glm-5.3-flash
+   npx -y "@holocron.so/cli" maintain --model anthropic/claude-sonnet-4-5
+   ```
+
 ## 0.22.0
 
 1. **New `holocron maintain` command** — keep documentation in sync with the source files, folders, and URLs that generated each page.

@@ -1,5 +1,70 @@
 # @holocron.so/vite
 
+## 0.34.0
+
+1. **Built-in `/github` shortcut** — if the site config links to GitHub from the navbar, navigation, logo, or footer, Holocron adds a temporary redirect from `/github` to that URL:
+
+   ```text
+   /github → https://github.com/owner/repository
+   ```
+
+   An authored `github.mdx` page or an explicit redirect whose source matches `/github` takes priority.
+
+2. **`assistant.supportEmail` in `docs.json`** — the AI chat can send people to a human when the docs are not enough:
+
+   ```json
+   {
+     "assistant": {
+       "supportEmail": "support@example.com"
+     }
+   }
+   ```
+
+   When this is set, the assistant answers from the docs first. It only shares that address if the user wants to talk to a human, or if the docs cannot answer the question. It does not invent other support channels.
+
+3. **Clickable folder pages** — a navigation group with `root` is now a real page, not only a label:
+
+   ```json
+   {
+     "group": "Guides",
+     "root": "guides/index",
+     "pages": ["guides/setup", "guides/deploy"]
+   }
+   ```
+
+   The folder label opens the root page. A separate chevron expands and collapses its children. Root pages participate in search, previous/next navigation, sitemap and LLM output, internal-link validation, version ownership, and hidden-page filtering. Version matching also includes `group.root` hrefs, so nested docs in `navigation.versions` stay on the right language.
+
+4. **Compact layout defaults Ask AI to the floating pill** — `layout.mode: "compact"` in `docs.json` no longer needs `assistant.display`. Compact removes the right aside, so Holocron shows the bottom-center pill unless you set `"display": "sidebar"` to opt out. The pill no longer leaves its background behind after the chat panel opens.
+
+5. **Compact sidebar is 12px** — compact mode sets `--sidebar-font-size` to 12px at every breakpoint. Default pages stay at 13px (14px at `xl`). Override the token on `:root` to change the size globally.
+
+6. **Ask AI stays at the top of the right sidebar** on pages with no asides, and on pages with a single `<Aside full>`. The widget uses a page-spanning `<Aside full>` in those cases, so it stays aligned with the top of the page instead of unsticking with the first heading. Pages with other per-section asides are unchanged.
+
+7. **Untitled code fences have no header** — Holocron no longer uses the fence language as a title. Pass an explicit title when you want a label:
+
+   ````md
+   ```ts filename.ts
+   export const n = 1
+   ```
+   ````
+
+8. **Richer bash highlighting** — bash blocks color the command at the start of each statement, plus npm-style packages like `@scope/cli`. Docs commands such as `npx`, `wrangler`, and `pi` now highlight as commands. Arguments that share a Unix name, such as `file`, stay arguments:
+
+   ```bash
+   npx @subrouter/cli login anthropic
+   cat file | wrangler deploy
+   ```
+
+9. **Expandable panels use the page background** instead of the elevated card surface. OpenAPI schema and response expandables match the surrounding page.
+
+10. **Chat tool calls show only the summary label.** Completed tools no longer expand with a Show more button or dump raw tool output. The description line stays. Errors still render.
+
+11. **`Prev Page` and `Next Page`** footer labels are capitalized consistently.
+
+12. **Duplicate heading titles get unique HTML ids.** Two headings named Accounts used to both render as `id="accounts"`. Heading ids now use GithubSlugger suffixes, same as the TOC, so the sidebar highlights the section you are in.
+
+13. **Left sidebar active heading tracks the sticky header line** (`scroll-margin-top`) instead of a fixed 50px offset. Hash links park a heading on that line, so the previous heading no longer stays active while you scroll.
+
 ## 0.33.1
 
 1. **Compact layout never opens a right aside** — `layout.mode: "compact"` used to promote the page back to the full three-column layout when it saw an `<Aside>`. That re-injected the sidebar Ask AI widget.
