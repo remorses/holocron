@@ -9,8 +9,8 @@
  *
  * Follows fumabase's chat-tool-previews.tsx patterns:
  * - PieLoader (◔◑◕●) for pending tool calls
- * - ◆ for completed tool calls
- * - ⎿ gutter + whitespace-pre-wrap for tool output
+ * - ◆ for completed tool calls (summary label only, no raw output)
+ * - ⎿ gutter for tool errors
  * - font-mono ToolPreviewContainer wrapper
  *
  * Tool call labels prefer the model-provided `description` input field
@@ -25,7 +25,6 @@ import type { ChatMessage, ChatPart } from './chat-store.ts'
 import { respondToApproval } from './chat-store.ts'
 import { ArrowRightIcon, CopyIcon, CheckIcon, RefreshIcon } from './chat-icons.tsx'
 import { NavTooltip } from './chat-input.tsx'
-import { ShowMore } from './show-more.tsx'
 import { Link } from '../components/link.tsx'
 
 // ── User message ─────────────────────────────────────────────────────
@@ -446,7 +445,7 @@ function ToolCallStarted({
   )
 }
 
-// ── Tool call completed — output or error in ⎿ gutter ───────────────
+// ── Tool call completed — errors only; success stays as the summary label ──
 
 function ToolCallCompleted({
   part,
@@ -457,35 +456,7 @@ function ToolCallCompleted({
     return <ErrorPreview error={part.error} />
   }
 
-  if (!part.output || !part.output.trim()) return null
-
-  const truncated =
-    part.output.length > 500 ? part.output.slice(0, 500) + '…' : part.output
-
-  return (
-    <div className='-mt-3'>
-      <ShowMore>
-        <ToolPreviewContainer>
-          <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
-            <div style={{ flexShrink: 0, color: 'var(--muted-foreground)' }}>
-              ⎿
-            </div>
-            <div>
-              <span
-                style={{
-                  whiteSpace: 'pre-wrap',
-                  color: 'var(--muted-foreground)',
-                  fontSize: '12px',
-                }}
-              >
-                {truncated}
-              </span>
-            </div>
-          </div>
-        </ToolPreviewContainer>
-      </ShowMore>
-    </div>
-  )
+  return null
 }
 
 // ── Shared primitives (mirrors fumabase chat-tool-previews.tsx) ──────
