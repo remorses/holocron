@@ -153,6 +153,7 @@
                         "pages": [
                             "docs/components/index",
                             "docs/components/accordions",
+                            "docs/components/aside",
                             "docs/components/badge",
                             "docs/components/banner",
                             "docs/components/callouts",

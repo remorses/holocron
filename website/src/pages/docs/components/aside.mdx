@@ -1,0 +1,128 @@
+---
+$schema: https://holocron.so/frontmatter.json
+prompt: |
+  Write the Aside docs from @/vite/src/components/markdown/markers.tsx and @/vite/src/lib/sidebar-widths.ts.
+  Cover full, wide, and width.
+title: Place supporting content in the right sidebar
+sidebarTitle: Aside
+description: Place supporting content in the right sidebar, including a super-wide rail for large examples.
+icon: panel-right
+---
+
+# Aside
+
+`Aside` is a **positioning marker**. On desktop its children render in the right sidebar. On mobile they stack after the section. The marker itself has **no visual frame**, so wrap visible content in `Note`, `Tip`, `Panel`, or another framed component.
+
+```mdx
+<Aside>
+<Note>
+This note appears in the right sidebar on desktop.
+</Note>
+</Aside>
+```
+
+<Aside>
+<Note>
+This note appears in the right sidebar on desktop.
+</Note>
+</Aside>
+
+## Full height
+
+Use **`full`** so the aside spans every heading after it, until the next `<Aside full>` or the end of the page. Sticky content like a table of contents or API examples should use this.
+
+```mdx
+<Aside full>
+  <TableOfContentsPanel />
+</Aside>
+```
+
+## Super-wide rail
+
+Use **`wide`** when the aside needs a lot of horizontal space, similar to API reference pages. The **content column stays capped at 720px**. Extra viewport width goes to the right rail.
+
+This page uses a **wide** aside so you can see the rail grow on a large screen. Combine **`wide`** with **`full`** to keep that rail sticky while you scroll.
+
+<Aside wide full>
+
+<Panel>
+  <RequestExample>
+
+```bash
+curl https://api.example.com/v1/orders \
+  -H "authorization: Bearer $TOKEN" \
+  -H "content-type: application/json" \
+  -d '{"item":"wide-aside","qty":12}'
+```
+
+  </RequestExample>
+
+  <ResponseExample>
+
+```json
+{
+  "ok": true,
+  "layout": "wide",
+  "sidebar": "fills leftover space after the 720px content column"
+}
+```
+
+  </ResponseExample>
+</Panel>
+
+</Aside>
+
+````mdx
+<Aside wide>
+<Panel>
+  <RequestExample>
+
+```bash
+curl https://api.example.com/v1/orders
+```
+
+  </RequestExample>
+</Panel>
+</Aside>
+````
+
+## Fixed width
+
+Use **`width`** for an explicit pixel size. Alone it sets a **fixed** sidebar width. Combined with `wide`, it is the **minimum** width while leftover space still fills the rail.
+
+```mdx
+<Aside width={480}>
+<Note>
+This rail is 480px wide.
+</Note>
+</Aside>
+```
+
+```mdx
+<Aside wide width={480}>
+<Note>
+This rail is at least 480px, then grows into leftover space.
+</Note>
+</Aside>
+```
+
+`RequestExample` and `ResponseExample` already bump the rail to **460px**. `wide` still works with them: 460px is the minimum, then the rail grows.
+
+## Props
+
+<ResponseField name="full" type="boolean">
+  Span every heading after this aside until the next `<Aside full>` or the end of the page.
+</ResponseField>
+
+<ResponseField name="wide" type="boolean">
+  Fill leftover viewport space on the right after the content column hits its 720px cap.
+</ResponseField>
+
+<ResponseField name="width" type="number">
+  Sidebar width in pixels. Fixed when used alone. Minimum width when combined with `wide`.
+</ResponseField>
+
+## Holocron differences
+
+- Mintlify's request and response examples use a fixed sidebar you cannot configure.
+- Holocron lets you opt into a **super-wide** rail with `<Aside wide>` without stretching the middle content column.

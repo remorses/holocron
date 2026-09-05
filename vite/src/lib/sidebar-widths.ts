@@ -18,6 +18,11 @@
  * time we walk every aside node, look up the name of each JSX element
  * encountered, and take the max. Components not listed fall through to
  * the default sidebar width.
+ *
+ * `<Aside wide>` lifts `--grid-max-width` to the viewport. The sidebar
+ * track stays a pixel minimum; `editorial-page.tsx` uses
+ * `minmax(var(--grid-sidebar-width), 1fr)` so leftover space fills the
+ * rail instead of becoming gap.
  */
 
 import type { HolocronConfig } from '../config.ts'
@@ -48,20 +53,75 @@ export const COMPONENT_SIDEBAR_WIDTHS: Record<string, number> = {
   ResponseExample: 460,
 }
 
+export type SidebarLayout = {
+  sidebarWidth: number
+  fillRemaining: boolean
+}
+
+type JsxElement = Extract<import('mdast').RootContent, { type: 'mdxJsxFlowElement' | 'mdxJsxTextElement' }>
+type JsxAttribute = Extract<JsxElement['attributes'][number], { type: 'mdxJsxAttribute' }>
+
+function jsxAttr(node: JsxElement, name: string): JsxAttribute | undefined {
+  return node.attributes.find((attr): attr is JsxAttribute => {
+    return attr.type === 'mdxJsxAttribute' && attr.name === name
+  })
+}
+
+function estreeLiteral(attr: JsxAttribute): string | number | boolean | undefined {
+  if (!attr.value || typeof attr.value !== 'object') return undefined
+  const statement = attr.value.data?.estree?.body[0]
+  if (!statement || statement.type !== 'ExpressionStatement') return undefined
+  const expression = statement.expression
+  if (expression.type !== 'Literal') return undefined
+  const value = expression.value
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value
+  return undefined
+}
+
+function hasBooleanJsxAttr(node: JsxElement, name: string): boolean {
+  const attr = jsxAttr(node, name)
+  if (!attr) return false
+  if (attr.value == null) return true
+  if (typeof attr.value === 'string') return attr.value !== 'false'
+  const literal = estreeLiteral(attr)
+  if (typeof literal === 'boolean') return literal
+  if (typeof literal === 'string') return literal !== 'false'
+  return true
+}
+
+function parseCssPx(value: string): number | undefined {
+  const match = value.trim().match(/^(\d+(?:\.\d+)?)(?:px)?$/)
+  if (!match) return undefined
+  const parsed = Number(match[1])
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
+}
+
+function getNumericJsxAttr(node: JsxElement, name: string): number | undefined {
+  const attr = jsxAttr(node, name)
+  if (!attr) return undefined
+  if (typeof attr.value === 'string') return parseCssPx(attr.value)
+  const literal = estreeLiteral(attr)
+  if (typeof literal === 'number' && literal > 0) return literal
+  if (typeof literal === 'string') return parseCssPx(literal)
+  return undefined
+}
+
 /**
- * Walk an array of aside mdast nodes (and all descendants) and return the
- * max sidebar width needed. Used by `app-factory.tsx` after `buildSections`
- * to derive a page-level sidebar width.
+ * Walk aside mdast nodes and return the page-level right-rail layout.
+ * `wide` fills leftover viewport space. `width` sets a pixel minimum
+ * (with `wide`) or a fixed sidebar width. Known components like
+ * RequestExample still raise the minimum.
  *
  * Takes `visit` as a parameter so `unist-util-visit` is NOT a module-level
  * import — this prevents it leaking into the client graph when
  * `editorial-page.tsx` imports `buildGridTokenStyle` from this file.
  */
-export function computeSidebarWidthFromAsideNodes(
+export function computeSidebarLayoutFromAsideNodes(
   nodes: import('mdast').RootContent[],
   visit: typeof import('unist-util-visit').visit,
-): number {
+): SidebarLayout {
   let maxWidth = DEFAULT_SIDEBAR_WIDTH
+  let fillRemaining = false
   const fakeRoot: import('mdast').Root = { type: 'root', children: nodes }
   visit(fakeRoot, (node) => {
     if (
@@ -72,12 +132,26 @@ export function computeSidebarWidthFromAsideNodes(
     }
     const name = node.name
     if (!name) return
+    if (name === 'Aside') {
+      if (hasBooleanJsxAttr(node, 'wide')) fillRemaining = true
+      const authoredWidth = getNumericJsxAttr(node, 'width')
+      if (typeof authoredWidth === 'number' && authoredWidth > maxWidth) {
+        maxWidth = authoredWidth
+      }
+    }
     const width = COMPONENT_SIDEBAR_WIDTHS[name]
     if (typeof width === 'number' && width > maxWidth) {
       maxWidth = width
     }
   })
-  return maxWidth
+  return { sidebarWidth: maxWidth, fillRemaining }
+}
+
+export function computeSidebarWidthFromAsideNodes(
+  nodes: import('mdast').RootContent[],
+  visit: typeof import('unist-util-visit').visit,
+): number {
+  return computeSidebarLayoutFromAsideNodes(nodes, visit).sidebarWidth
 }
 
 /**
@@ -100,17 +174,20 @@ export function buildGridTokenStyle({
   gridGap,
   configLayout,
   compact = false,
+  fillRemaining = false,
 }: {
   sidebarWidth: number
   gridGap?: number
   configLayout?: HolocronConfig['layout']
   compact?: boolean
+  fillRemaining?: boolean
 }): HolocronCSSProperties {
   const nav = configLayout?.sidebarWidth ?? GRID_TOKENS['--grid-nav-width']
   const maxW = configLayout?.maxWidth ?? GRID_TOKENS['--grid-max-width']
   const gap = gridGap ?? configLayout?.columnGap ?? GRID_TOKENS['--grid-gap']
   const radius = configLayout?.radius
   const shellMaxWidth = compact ? maxW - DEFAULT_SIDEBAR_WIDTH - gap : maxW
+  const wide = fillRemaining && !compact
   const contentWidth = compact
     ? 'minmax(0, min(720px, calc(var(--grid-max-width) - var(--grid-nav-width) - var(--grid-gap))))'
     : 'minmax(0, min(720px, calc(var(--grid-max-width) - var(--grid-nav-width) - var(--grid-sidebar-width) - 2 * var(--grid-gap))))'
@@ -119,7 +196,7 @@ export function buildGridTokenStyle({
     '--grid-nav-width': `${nav}px`,
     '--grid-gap': `${gap}px`,
     '--grid-sidebar-width': `${sidebarWidth}px`,
-    '--grid-max-width': `min(calc(100vw - 60px), ${shellMaxWidth}px)`,
+    '--grid-max-width': wide ? 'calc(100vw - 60px)' : `min(calc(100vw - 60px), ${shellMaxWidth}px)`,
     '--grid-content-width': contentWidth,
     ...(radius !== undefined && { '--radius': `${radius / 16}rem` }),
   }

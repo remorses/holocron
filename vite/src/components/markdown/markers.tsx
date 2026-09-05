@@ -16,9 +16,25 @@ import React from 'react'
  *  sub-section after it (until the next `<Aside full>`, or end of page)
  *  and collect later asides in that range. The synthetic Ask AI aside is
  *  also `<Aside full>` but does not collect: later asides stay on their
- *  own section rows. */
-export function Aside({ children, full }: { children: React.ReactNode; full?: boolean }) {
-  void full // marker prop — used at parse time, not at render time
+ *  own section rows.
+ *
+ *  Use `<Aside wide>` to fill leftover space on the right after the
+ *  content column hits its 720px cap. `width` sets a pixel minimum
+ *  (with `wide`) or a fixed sidebar width (without `wide`). */
+export function Aside({
+  children,
+  full,
+  wide,
+  width,
+}: {
+  children: React.ReactNode
+  full?: boolean
+  wide?: boolean
+  width?: number
+}) {
+  void full
+  void wide
+  void width
   return <>{children}</>
 }
 

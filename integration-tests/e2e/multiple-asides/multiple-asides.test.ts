@@ -162,4 +162,36 @@ test.describe("multiple asides fixture", () => {
     expect(box).not.toBeNull();
     expect(box!.width).toBeGreaterThan(300);
   });
+
+  test("Aside wide fills leftover right-column space without stretching content", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1800, height: 1200 });
+    await page.goto("/wide", { waitUntil: "domcontentloaded" });
+
+    const slotPage = page.locator(".slot-page");
+    await expect(slotPage).toBeVisible();
+
+    const aside = page
+      .getByText("Wide aside block", { exact: true })
+      .locator("xpath=ancestor::*[contains(@class,'slot-aside')][1]");
+    const content = page.locator(".slot-main").first();
+
+    const measure = async () => {
+      const asideBox = await aside.boundingBox();
+      const contentBox = await content.boundingBox();
+      expect(asideBox).not.toBeNull();
+      expect(contentBox).not.toBeNull();
+      return { asideWidth: asideBox!.width, contentWidth: contentBox!.width };
+    };
+
+    const wide = await measure();
+    expect(wide.contentWidth).toBeLessThanOrEqual(760);
+    expect(wide.asideWidth).toBeGreaterThan(400);
+
+    await page.setViewportSize({ width: 1400, height: 1200 });
+    const narrow = await measure();
+    expect(Math.abs(narrow.contentWidth - wide.contentWidth)).toBeLessThan(20);
+    expect(wide.asideWidth).toBeGreaterThan(narrow.asideWidth + 150);
+  });
 });
