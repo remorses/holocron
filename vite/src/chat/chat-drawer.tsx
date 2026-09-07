@@ -11,7 +11,8 @@
  *
  * Shell morph uses Motion layoutId (shared with ChatPill / SidebarAssistant).
  * Portal target comes from chatWidgetStore (document.body for holocron,
- * the shadow mount for the standalone widget).
+ * the shadow mount for the standalone widget). The page stays scrollable
+ * and clickable while the drawer is open. Close only via the × button.
  */
 
 import React, { useEffect, useRef, useCallback, useSyncExternalStore } from 'react'
@@ -194,36 +195,6 @@ function ChatDrawerInner() {
     return () => clearTimeout(timer)
   }, [drawerState, handleSubmit])
 
-  // ── Disable body scroll when open ──────────────────────────────
-
-  useEffect(() => {
-    if (drawerState === 'open') {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [drawerState])
-
-  // Auto-close drawer when any link is clicked (internal navigation,
-  // hash links, external links). Uses a document-level click listener
-  // so every <a> in the page is covered without per-component wiring.
-  // Programmatic clicks (e.isTrusted === false) are excluded so the
-  // drawer stays open during tool execution.
-  useEffect(() => {
-    if (drawerState !== 'open') return
-    function onClickLink(e: MouseEvent) {
-      if (!e.isTrusted) return
-      const anchor = (e.target as HTMLElement)?.closest?.('a')
-      if (!anchor) return
-      chatStore.setState({ drawerState: 'closed' })
-    }
-    document.addEventListener('click', onClickLink)
-    return () => document.removeEventListener('click', onClickLink)
-  }, [drawerState])
-
   const isOpen = drawerState === 'open'
   if (isOpen) layoutKeyRef.current = pageKey
 
@@ -235,23 +206,7 @@ function ChatDrawerInner() {
     // Single wrapper — z-index 200 beats navbar's z-index 100.
     // Always mounted so the AnimatePresence exit clone keeps its stacking
     // context while the drawer morphs back into the pill/sidebar shell.
-    <div style={{ position: 'relative', zIndex: 200 }}>
-      {/* Click-catcher — fin.ai style: no dim, page stays visible behind
-       * the frosted glass panel. Clicking outside still closes. Rendered
-       * OUTSIDE AnimatePresence so it unmounts instantly on close and the
-       * page is clickable again while the exit morph plays. */}
-      {isOpen && (
-        <div
-          onClick={handleClose}
-          aria-hidden='true'
-          style={{
-            position: 'fixed',
-            inset: 0,
-            pointerEvents: 'auto',
-          }}
-        />
-      )}
-
+    <div style={{ position: 'relative', zIndex: 200, pointerEvents: 'none' }}>
       {/* AnimatePresence keeps the panel mounted so close can morph back. */}
       <AnimatePresence>
       {isOpen && (

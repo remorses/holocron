@@ -110,6 +110,31 @@ test("open-ended suggestion fills the input instead of submitting", async ({ pag
   await expect(page.getByText("Ask AI about Chat Test Docs")).toBeVisible();
 });
 
+test("open chat does not lock page scroll or steal page clicks", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  const chatInput = page.locator("textarea").first();
+  await chatInput.fill("hello");
+  await chatInput.press("Enter");
+
+  const newChatButton = page.locator("button[aria-label='New chat']");
+  await expect(newChatButton).toBeVisible({ timeout: 10000 });
+
+  const overflow = await page.evaluate(() => getComputedStyle(document.body).overflow);
+  expect(overflow).not.toBe("hidden");
+
+  // Click page content (not the drawer). Chat must stay open.
+  await page.locator("h1").first().click();
+  await expect(newChatButton).toBeVisible();
+
+  // Use the site while chat stays open.
+  await page.locator('.slot-sidebar-left a[href="/getting-started"]').click();
+  await expect(page).toHaveURL(/getting-started/, { timeout: 5000 });
+  await expect(newChatButton).toBeVisible();
+});
+
 test("typing in sidebar input and pressing Enter opens the chat drawer", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
@@ -408,20 +433,11 @@ test("chat messages survive client-side navigation while drawer is open", async 
     expect(messages.length).toBeGreaterThanOrEqual(2);
   }).toPass({ timeout: 60000 });
 
-  // Navigate via the sidebar link (client-side nav, no full reload).
-  // The sidebar is behind the drawer overlay, so close the drawer first.
-  await page.locator("button[aria-label='Close']").click();
-  await expect(newChatButton).not.toBeVisible({ timeout: 5000 });
-
+  // Navigate via the sidebar while the drawer stays open.
   const navLink = page.locator('.slot-sidebar-left a[href="/getting-started"]');
   await navLink.click();
   await expect(page).toHaveURL(/getting-started/, { timeout: 5000 });
-
-  // Re-open the drawer via the heading — messages from the previous page
-  // should persist because the zustand store survives client-side navigation.
-  await page.waitForLoadState("networkidle");
-  await page.getByText("Open existing chat").click();
-  await expect(newChatButton).toBeVisible({ timeout: 10000 });
+  await expect(newChatButton).toBeVisible();
 
   await expect(async () => {
     const messages = await page.locator("[data-message-id]").all();
@@ -455,31 +471,14 @@ test("chat state persists after client-side navigation", async ({ page }) => {
   // Count messages before navigation
   const messageCountBefore = await page.locator("[data-message-id]").count();
 
-  // Close the drawer first — the backdrop overlay blocks clicks on page elements
-  const closeButton = page.locator("button[aria-label='Close']");
-  await closeButton.click();
-  // Wait for drawer to fully close
-  await expect(newChatButton).not.toBeVisible({ timeout: 5000 });
-
-  // Navigate to another page using the sidebar nav (client-side nav).
-  // Use the sidebar nav link (not the TOC heading anchor /#getting-started).
+  // Navigate while the drawer stays open. Page clicks must reach the sidebar.
   const navLink = page.locator('.slot-sidebar-left a[href="/getting-started"]');
   await navLink.click();
   await expect(page).toHaveURL(/getting-started/, { timeout: 5000 });
-
-  // Re-open the drawer by submitting a new question from the sidebar
-  // textarea. The heading now says "Open existing chat"; the input
-  // itself stays a normal textarea.
-  await page.waitForLoadState("networkidle");
-  await expect(page.getByText("Open existing chat")).toBeVisible({ timeout: 10000 });
-  const reopenInput = page.locator("[data-chat-shell='sidebar'] textarea");
-  await reopenInput.fill("hi");
-  await reopenInput.press("Enter");
-  await expect(newChatButton).toBeVisible({ timeout: 10000 });
+  await expect(newChatButton).toBeVisible();
 
   // Previous messages should still be visible (zustand store survives
-  // client-side navigation). The store keeps all prior messages plus
-  // the new "hi" user message = messageCountBefore + 1 at minimum.
+  // client-side navigation).
   await expect(async () => {
     const messages = await page.locator("[data-message-id]").all();
     expect(messages.length).toBeGreaterThanOrEqual(messageCountBefore);
