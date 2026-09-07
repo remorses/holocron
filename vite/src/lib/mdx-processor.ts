@@ -52,7 +52,7 @@ export type ProcessedMdx = {
   title: string
   description?: string
   /** Icon from frontmatter — Mintlify convention: `icon: rocket` in YAML.
-   *  A string value is either a lucide icon name, an emoji, or a URL. */
+   *  A string value is a library name, emoji, remote URL, or root-absolute SVG path. */
   icon?: string
   frontmatter: PageFrontmatter
   /** Canonical icon refs found in frontmatter + JSX icon props. */

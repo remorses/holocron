@@ -36,7 +36,7 @@ const ICON_PACKS_REVISION = [
 ].join('+')
 
 import { buildEnrichedNavigation } from './enrich-navigation.ts'
-import { collectIconRefs, collectLocalIconPaths, dedupeIconRefs, type IconRef } from './collect-icons.ts'
+import { collectIconRefs, collectLocalIconPaths, dedupeIconRefs, isLocalSvgIcon, type IconRef } from './collect-icons.ts'
 import type { IconAtlas } from './resolve-icons.ts'
 import {
   type HolocronConfig,
@@ -651,7 +651,7 @@ export async function syncNavigation({
     !resolveLocalAssetPath({ src, mdxDir: projectRoot, publicDir, projectRoot }),
   )
   for (const src of brokenIconPaths) {
-    logger.warn(formatHolocronWarning(`broken icon asset → ${colors.yellow(src)} (file not found)`))
+    logger.error(formatHolocronError(`broken icon asset → ${colors.yellow(src)} (file not found)`))
   }
 
   // 4f. Resolve used icon SVG bodies. Reuse holocron-mdx.json hits so a
@@ -664,6 +664,7 @@ export async function syncNavigation({
     refs: allIconRefs,
     cachedIcons: oldMdxCache.icons,
     cachedUnresolved: oldMdxCache.unresolvedIconRefs,
+    dirs: [publicDir, projectRoot],
   })
   const mergedIcons: IconAtlas = {
     icons: { ...oldMdxCache.icons.icons, ...iconResolveResult.atlas.icons },
@@ -712,15 +713,15 @@ export async function syncNavigation({
     ))
   }
   if (brokenIconPaths.length > 0) {
-    logger.warn('')
-    logger.warn(formatHolocronWarning(
+    logger.error('')
+    logger.error(formatHolocronError(
       `found ${colors.yellow(String(brokenIconPaths.length))} broken local icon path${brokenIconPaths.length === 1 ? '' : 's'}. ` +
       `Add the files to the public directory or use library icons.`,
     ))
   }
   if (iconResolveResult.unresolvedRefs.length > 0) {
-    logger.warn('')
-    logger.warn(formatHolocronWarning(
+    logger.error('')
+    logger.error(formatHolocronError(
       `found ${colors.yellow(String(iconResolveResult.unresolvedRefs.length))} unresolved icon${iconResolveResult.unresolvedRefs.length === 1 ? '' : 's'}: ${iconResolveResult.unresolvedRefs.map((r) => colors.cyan(r)).join(', ')}. ` +
       `Check icon names in docs.json and page frontmatter.`,
     ))
@@ -742,7 +743,7 @@ export async function syncNavigation({
     brokenLinkCount: brokenLinkStats.brokenLinkCount,
     brokenRedirectCount: brokenLinkStats.brokenRedirectCount,
     brokenAssetCount: brokenAssetStats.brokenAssetCount,
-    brokenIconCount: iconResolveResult.unresolvedRefs.length,
+    brokenIconCount: new Set([...iconResolveResult.unresolvedRefs, ...brokenIconPaths]).size,
   }
 }
 
@@ -1010,6 +1011,7 @@ export async function processDeferredProviders({
     refs: allIconRefs,
     cachedIcons: { icons: { ...diskCache.icons.icons, ...syncResult.icons.icons } },
     cachedUnresolved: diskCache.unresolvedIconRefs,
+    dirs: [publicDir, projectRoot],
   })
   syncResult.icons = iconResolveResult.atlas
   syncResult.brokenIconCount = iconResolveResult.unresolvedRefs.length
@@ -1428,9 +1430,11 @@ function resolveLocalAssetPath({
     return fs.existsSync(filePath)
   }
 
-  // Absolute path — try publicDir first, then projectRoot
-  if (fs.existsSync(path.join(publicDir, pathPart))) return true
-  if (fs.existsSync(path.join(projectRoot, pathPart))) return true
+  // Absolute path — try publicDir first, then projectRoot.
+  // Strip the leading slash so `/icons/x.svg` stays inside the dir.
+  const relative = pathPart.slice(1)
+  if (fs.existsSync(path.resolve(publicDir, relative))) return true
+  if (fs.existsSync(path.resolve(projectRoot, relative))) return true
   return false
 }
 
@@ -1779,10 +1783,12 @@ async function resolveCachedIconAtlas({
   refs,
   cachedIcons,
   cachedUnresolved,
+  dirs,
 }: {
   refs: IconRef[]
   cachedIcons: IconAtlas
   cachedUnresolved: string[]
+  dirs: string[]
 }): Promise<{ atlas: IconAtlas; unresolvedRefs: string[] }> {
   const atlas: IconAtlas = { icons: {} }
   const unresolvedRefs: string[] = []
@@ -1790,6 +1796,10 @@ async function resolveCachedIconAtlas({
   const knownUnresolved = new Set(cachedUnresolved)
 
   for (const ref of refs) {
+    if (isLocalSvgIcon(ref)) {
+      missing.push(ref)
+      continue
+    }
     const hit = cachedIcons.icons[ref]
     if (hit) {
       atlas.icons[ref] = hit
@@ -1807,7 +1817,7 @@ async function resolveCachedIconAtlas({
   }
 
   const { resolveIconSvgs } = await import('./resolve-icons.ts')
-  const fresh = resolveIconSvgs(missing)
+  const fresh = resolveIconSvgs(missing, dirs)
   Object.assign(atlas.icons, fresh.atlas.icons)
   unresolvedRefs.push(...fresh.unresolvedRefs)
   return { atlas, unresolvedRefs }

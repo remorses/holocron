@@ -1019,7 +1019,9 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         }
       }
 
-      if (!isMdx && !isConfig && !isImportableAddOrRemove && !isTrackedImageDep && !isProviderWatchPath && !isGlobalsCss) {
+      const isLocalSvgChange = ctx.file.endsWith('.svg')
+        && (isInsideDir(publicDirPath, ctx.file) || isInsideDir(root, ctx.file))
+      if (!isMdx && !isConfig && !isImportableAddOrRemove && !isTrackedImageDep && !isProviderWatchPath && !isGlobalsCss && !isLocalSvgChange) {
         return
       }
 

@@ -5,12 +5,13 @@
  *
  * Plain strings use the project's configured icon library, while explicit
  * prefixed strings like `lucide:rocket` or `fontawesome:brands:discord`
- * bypass the project default. Emoji and URL/path icons render inline.
+ * bypass the project default. Emoji and remote URL icons render inline.
+ * Root-absolute `.svg` paths are inlined into the atlas like library icons.
  */
 
 import React, { type ReactElement } from 'react'
 import type { ConfigIcon } from '../config.ts'
-import { iconToRefs, isEmoji, isUrl } from '../lib/collect-icons.ts'
+import { iconToRefs, isEmoji, isLocalSvgIcon, isRemoteUrl } from '../lib/collect-icons.ts'
 import type { IconAtlas } from '../lib/resolve-icons.ts'
 import { useHolocronDataSafe } from '../router.ts'
 import { withBasePath } from '../lib/holocron-url.ts'
@@ -49,7 +50,7 @@ function renderLibraryIcon(
   return (
     <svg
       aria-hidden='true'
-      viewBox={`0 0 ${entry.width} ${entry.height}`}
+      viewBox={`${entry.left ?? 0} ${entry.top ?? 0} ${entry.width} ${entry.height}`}
       width={length}
       height={length}
       className={className}
@@ -107,7 +108,14 @@ export function Icon({ icon, size = 16, className, iconType, color, fallback }: 
         </span>
       )
     }
-    if (isUrl(icon)) {
+    if (isLocalSvgIcon(icon)) {
+      const defaultLibrary = data?.site?.config?.icons?.library ?? 'lucide'
+      const ref = iconToRefs(icon, { defaultLibrary, iconType })[0]
+      return ref && iconAtlas
+        ? renderLibraryIcon(iconAtlas, ref, size, className, colorStyle) ?? fallback ?? null
+        : fallback ?? null
+    }
+    if (isRemoteUrl(icon) || icon.startsWith('/')) {
       const length = cssSize(size)
       return (
         <img

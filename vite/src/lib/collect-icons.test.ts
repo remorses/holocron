@@ -22,10 +22,16 @@ describe('stringIconToRefs', () => {
     expect(stringIconToRefs('fontawesome:brands:discord', { defaultLibrary: 'lucide' })).toEqual(['fontawesome:brands:discord'])
   })
 
-  test('skips URL and root-absolute path icons', () => {
+  test('skips remote URL icons', () => {
     expect(stringIconToRefs('https://cdn.example.com/rocket.svg', { defaultLibrary: 'lucide' })).toEqual([])
     expect(stringIconToRefs('http://cdn.example.com/rocket.svg', { defaultLibrary: 'lucide' })).toEqual([])
-    expect(stringIconToRefs('/icons/rocket.svg', { defaultLibrary: 'fontawesome' })).toEqual([])
+  })
+
+  test('keeps root-absolute and relative SVG paths as atlas refs', () => {
+    expect(stringIconToRefs('/icons/rocket.svg', { defaultLibrary: 'fontawesome' })).toEqual(['/icons/rocket.svg'])
+    expect(stringIconToRefs('/icons/vercel.svg?v=1', { defaultLibrary: 'lucide' })).toEqual(['/icons/vercel.svg?v=1'])
+    expect(stringIconToRefs('./icons/slack.svg', { defaultLibrary: 'lucide' })).toEqual(['./icons/slack.svg'])
+    expect(stringIconToRefs('../icons/linear.svg', { defaultLibrary: 'lucide' })).toEqual(['../icons/linear.svg'])
   })
 
   test('keeps ZWJ emoji with skin-tone modifiers out of the icon atlas', () => {

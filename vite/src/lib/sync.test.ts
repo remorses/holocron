@@ -1838,6 +1838,144 @@ icon: rocket
     expect(result.icons.icons['lucide:github']).toBeDefined()
   })
 
+  test('inlines a public SVG icon into the atlas', async () => {
+    const project = tracked(createProject(
+      {
+        icons: { library: 'lucide' },
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Page
+icon: /icons/mark.svg
+---
+
+Hello.
+`,
+      },
+    ))
+    fs.mkdirSync(path.join(project.publicDir, 'icons'), { recursive: true })
+    fs.writeFileSync(path.join(project.publicDir, 'icons', 'mark.svg'), '<svg viewBox="0 0 24 24"><path fill="#111" d="M12 3L22 21H2z"/></svg>')
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(result.pageIconRefs.page).toEqual(['/icons/mark.svg'])
+    expect(result.icons.icons['/icons/mark.svg']?.body).toContain('currentColor')
+  })
+
+  test('inlines a relative SVG icon from the project root', async () => {
+    const project = tracked(createProject(
+      {
+        icons: { library: 'lucide' },
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Page
+icon: ./icons/mark.svg
+---
+
+Hello.
+`,
+      },
+    ))
+    fs.mkdirSync(path.join(project.root, 'icons'), { recursive: true })
+    fs.writeFileSync(path.join(project.root, 'icons', 'mark.svg'), '<svg viewBox="0 0 24 24"><path fill="#111" d="M12 3L22 21H2z"/></svg>')
+    const config = readConfig({ root: project.root })
+    const result = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(result.pageIconRefs.page).toEqual(['./icons/mark.svg'])
+    expect(result.icons.icons['./icons/mark.svg']?.body).toContain('currentColor')
+  })
+
+  test('rereads a local SVG after the file changes', async () => {
+    const project = tracked(createProject(
+      {
+        icons: { library: 'lucide' },
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Page
+icon: /icons/mark.svg
+---
+
+Hello.
+`,
+      },
+    ))
+    const svgPath = path.join(project.publicDir, 'icons', 'mark.svg')
+    fs.mkdirSync(path.dirname(svgPath), { recursive: true })
+    fs.writeFileSync(svgPath, '<svg viewBox="0 0 24 24"><path fill="#111" d="M12 3L22 21H2z"/></svg>')
+    const config = readConfig({ root: project.root })
+    const first = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(first.icons.icons['/icons/mark.svg']?.body).toContain('M12 3L22 21H2z')
+    fs.writeFileSync(svgPath, '<svg viewBox="0 0 24 24"><path fill="#111" d="M2 2h20v20H2z"/></svg>')
+    const second = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(second.icons.icons['/icons/mark.svg']?.body).toContain('M2 2h20v20H2z')
+  })
+
+  test('recovers after a missing local SVG is added', async () => {
+    const project = tracked(createProject(
+      {
+        icons: { library: 'lucide' },
+        navigation: [{ group: 'Docs', pages: ['page'] }],
+      },
+      {
+        page: `---
+title: Page
+icon: /icons/mark.svg
+---
+
+Hello.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const first = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(first.brokenIconCount).toBeGreaterThan(0)
+    const svgPath = path.join(project.publicDir, 'icons', 'mark.svg')
+    fs.mkdirSync(path.dirname(svgPath), { recursive: true })
+    fs.writeFileSync(svgPath, '<svg viewBox="0 0 24 24"><path fill="#111" d="M12 3L22 21H2z"/></svg>')
+    const second = await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+    expect(second.brokenIconCount).toBe(0)
+    expect(second.icons.icons['/icons/mark.svg']?.body).toContain('currentColor')
+  })
+
   test('writes resolved icon bodies into holocron-mdx.json', async () => {
     const project = tracked(createProject(
       {
@@ -2622,7 +2760,7 @@ API docs here.
 })
 
 describe('broken asset warnings', () => {
-  test('warns about missing root-relative navigation icons', async () => {
+  test('errors on missing root-relative navigation icons', async () => {
     const project = tracked(createProject(
       {
         navigation: [
@@ -2632,9 +2770,9 @@ describe('broken asset warnings', () => {
       { index: '---\ntitle: Home\n---\n' },
     ))
     const config = readConfig({ root: project.root })
-    const warnSpy = vi.spyOn(logger, 'warn')
+    const errorSpy = vi.spyOn(logger, 'error')
 
-    await syncNavigation({
+    const result = await syncNavigation({
       config,
       pagesDir: project.pagesDir,
       publicDir: project.publicDir,
@@ -2642,11 +2780,12 @@ describe('broken asset warnings', () => {
       distDir: project.distDir,
     })
 
-    const warnings = warnSpy.mock.calls.flatMap((call) =>
+    const errors = errorSpy.mock.calls.flatMap((call) =>
       typeof call[0] === 'string' && call[0].includes('broken icon asset') ? [call[0]] : [],
     )
-    expect(warnings).toHaveLength(1)
-    expect(warnings[0]).toContain('/icons/missing.svg')
+    expect(errors).toHaveLength(1)
+    expect(errors[0]).toContain('/icons/missing.svg')
+    expect(result.brokenIconCount).toBeGreaterThan(0)
   })
 
   test('warns about missing local images', async () => {

@@ -697,6 +697,18 @@ Hello.
     expect(result.icon).toBe('https://cdn.example.com/rocket.svg')
     expect(result.iconRefs).toEqual([])
   })
+
+  test('collects a root-absolute SVG path as an atlas ref', () => {
+    const result = processMdx(`---
+title: Page
+icon: /icons/vercel.svg
+---
+
+Hello.
+`, 'lucide')
+    expect(result.icon).toBe('/icons/vercel.svg')
+    expect(result.iconRefs).toEqual(['/icons/vercel.svg'])
+  })
 })
 
 describe('internal link collection', () => {

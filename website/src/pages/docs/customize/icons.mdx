@@ -2,7 +2,7 @@
 $schema: https://holocron.so/frontmatter.json
 prompt: |
   Write the icons guide from @/vite/src/lib/resolve-icons.ts and @/vite/src/lib/collect-icons.ts.
-  Cover lucide, fontawesome, and prefixed icon names.
+  Cover lucide, fontawesome, prefixed icon names, and local SVG file icons.
 title: Icons
 description: Configure the icon library for your docs site.
 icon: shapes
@@ -58,6 +58,43 @@ icon: lucide:lock
 ```
 
 The icon name is resolved against the configured library if no prefix is given.
+
+## Local SVG files
+
+Put an **SVG** in `public/` and set `icon` on the **page** to a root-absolute path (`/icons/vercel.svg`). Holocron looks in `public/`, then the project root. Relative paths like `./icons/vercel.svg` resolve from those same directories, not from the MDX file. A `../` path is rejected and fails the production build. Holocron inlines the SVG into the same atlas as Lucide, so it inherits **`currentColor`** and sidebar size. A missing file also fails the production build.
+
+```
+public/
+  icons/
+    vercel.svg
+```
+
+```mdx
+---
+$schema: https://holocron.so/frontmatter.json
+title: Vercel deployments
+sidebarTitle: Vercel
+icon: /icons/vercel.svg
+---
+
+Connect Vercel and check the latest production deploy.
+```
+
+<Card title='Vercel' icon='/icons/vercel.svg'>
+`icon: /icons/vercel.svg`
+</Card>
+
+The SVG should use **`currentColor`** for `fill` and `stroke`. Remote `https://` icons still render as images.
+
+You can also set a local SVG on a **group** in `docs.json`:
+
+```json
+{
+  "group": "Integrations",
+  "icon": "/icons/slack.svg",
+  "pages": ["integrations/slack"]
+}
+```
 
 ## Using icons in navigation
 

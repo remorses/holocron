@@ -4,6 +4,7 @@
  * Holocron follows Mintlify's project-level icon library setting:
  * plain icon strings use `config.icons.library`, while explicit prefixed
  * strings like `lucide:rocket` or `fontawesome:brands:discord` bypass it.
+ * Root-absolute `.svg` paths (`/icons/vercel.svg`) are inlined into the atlas.
  */
 
 import type { ConfigIcon, ConfigNavGroup, ConfigNavTab, HolocronConfig } from '../config.ts'
@@ -130,7 +131,8 @@ export function stringIconToRefs(
   icon: string,
   options: { defaultLibrary: IconLibrary; iconType?: string },
 ): IconRef[] {
-  if (icon === '' || isEmoji(icon) || isUrl(icon)) return []
+  if (icon === '' || isEmoji(icon) || isRemoteUrl(icon)) return []
+  if (isLocalSvgIcon(icon)) return [icon]
   const explicit = parseExplicitIconRef(icon)
   if (explicit) return [explicit]
   if (options.defaultLibrary === 'fontawesome') {
@@ -146,7 +148,9 @@ export function stringIconToRefs(
 /** Dispatch rules for a raw icon value from config or MDX.
  *   - undefined / empty string → no ref
  *   - emoji → no ref (rendered inline via <span>)
- *   - URL/path → no ref (rendered as <img>)
+ *   - remote URL → no ref (rendered as <img>)
+ *   - root-absolute `.svg` path → atlas ref (inlined SVG)
+ *   - other root-absolute path → no ref (rendered as <img>)
  *   - plain string → project default library
  *   - prefixed string → explicit library/style override
  *   - object → explicit object library, otherwise project default library */
@@ -185,16 +189,30 @@ export function isEmoji(str: string): boolean {
   }
 }
 
+export function isRemoteUrl(str: string): boolean {
+  return str.startsWith('http://') || str.startsWith('https://') || str.startsWith('//')
+}
+
+function localSvgPathPart(str: string): string {
+  return str.split(/[?#]/, 1)[0] ?? ''
+}
+
+/** Root-absolute (`/icons/vercel.svg`) or relative (`./mark.svg`) SVG icon. */
+export function isLocalSvgIcon(str: string): boolean {
+  const pathPart = localSvgPathPart(str)
+  if (!pathPart.toLowerCase().endsWith('.svg')) return false
+  if (pathPart.startsWith('//')) return false
+  return pathPart.startsWith('/') || pathPart.startsWith('./') || pathPart.startsWith('../')
+}
+
 export function isUrl(str: string): boolean {
-  return (
-    str.startsWith('http://') ||
-    str.startsWith('https://') ||
-    str.startsWith('/')
-  )
+  return isRemoteUrl(str) || str.startsWith('/')
 }
 
 function addLocalIconPath(icon: ConfigIcon | undefined, paths: Set<string>): void {
-  if (typeof icon === 'string' && icon.startsWith('/') && !icon.startsWith('//')) paths.add(icon)
+  if (typeof icon !== 'string' || icon === '') return
+  if (isRemoteUrl(icon)) return
+  if (icon.startsWith('/') || isLocalSvgIcon(icon)) paths.add(icon)
 }
 
 function collectConfigGroupIconPaths(groups: ConfigNavGroup[], paths: Set<string>): void {
