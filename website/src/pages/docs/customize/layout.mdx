@@ -158,19 +158,7 @@ content = min(720px, max-width - nav - sidebar - 2 × gap)
 
 This means increasing `--grid-max-width` does not make the content column infinitely wide. It grows until it hits the 720px cap, then the extra space becomes gap.
 
-## Super-wide aside
-
-Use **`<Aside wide>`** when the right rail should take leftover space, like API reference pages. The content column stays at its **720px** cap. Extra viewport width goes to the aside. This also lifts the page off the normal `layout.maxWidth` cap so the rail can grow with the viewport.
-
-```mdx
-<Aside wide>
-<Note>
-This rail grows into leftover space on the right.
-</Note>
-</Aside>
-```
-
-See [Aside](../components/aside.mdx) for `wide` and `width`.
+API pages bump `--grid-sidebar-width` to **460px** when the aside contains `RequestExample` or `ResponseExample`. Use `<Aside width={N}>` for any other fixed size. See [Aside](../components/aside.mdx).
 
 ## Aside height and section spacing
 

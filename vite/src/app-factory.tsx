@@ -55,7 +55,7 @@ import { isAgentRequest, stripVisibilityForAgents } from './lib/raw-markdown.ts'
 import { zipSync, strToU8 } from 'fflate'
 import { buildSections, demoteBodyH1s, isAboveNode, resolveCompactLayout, shouldInjectPageTitle } from './lib/mdx-sections.ts'
 import { assignUniqueHeadingIds } from './lib/toc-tree.ts'
-import { computeSidebarLayoutFromAsideNodes } from './lib/sidebar-widths.ts'
+import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
 import { visit } from 'unist-util-visit'
 import { RenderNodes, mdxComponents, renderNode } from './lib/mdx-components-map.tsx'
 import { SiteHead, THEME_SCRIPT, GtmNoscript, buildPageTitle } from './lib/site-head.tsx'
@@ -417,13 +417,13 @@ function renderMdxPage({
 
   // Compute required right-sidebar width from aside contents. When an
   // Aside holds components like RequestExample / ResponseExample it needs
-  // more horizontal room than the 230px default. `<Aside wide>` fills
-  // leftover viewport space after the content column hits 720px.
+  // more horizontal room than the 230px default. `<Aside width={N}>`
+  // sets an explicit pixel size.
   const allAsideNodes = mdastSections.flatMap((s) => [
     ...s.asideNodes,
     ...(s.sharedAsideNodes ?? []),
   ])
-  const { sidebarWidth, fillRemaining } = computeSidebarLayoutFromAsideNodes(allAsideNodes, visit)
+  const sidebarWidth = computeSidebarWidthFromAsideNodes(allAsideNodes, visit)
 
   const sections: EditorialSection[] = mdastSections.map((section, i) => {
     // Prepend import nodes so SafeMdxRenderer can resolve imported
@@ -543,7 +543,7 @@ function renderMdxPage({
               : <Head.Meta key={name} name={name} content={content} />
           ))}
       </Head>
-      <EditorialPage mode={pageMode} hideSidebarAssistant={compactLayout.hideSidebarAssistant} sections={sections} above={above} bannerContent={bannerJsx} sidebarWidth={sidebarWidth} fillRemaining={fillRemaining} gridGap={gridGap} />
+      <EditorialPage mode={pageMode} hideSidebarAssistant={compactLayout.hideSidebarAssistant} sections={sections} above={above} bannerContent={bannerJsx} sidebarWidth={sidebarWidth} gridGap={gridGap} />
     </>
   )
 }

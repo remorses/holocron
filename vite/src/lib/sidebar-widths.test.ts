@@ -4,7 +4,6 @@ import {
   COMPONENT_SIDEBAR_WIDTHS,
   DEFAULT_SIDEBAR_WIDTH,
   buildGridTokenStyle,
-  computeSidebarLayoutFromAsideNodes,
   computeSidebarWidthFromAsideNodes,
 } from './sidebar-widths.ts'
 import { visit } from 'unist-util-visit'
@@ -29,10 +28,6 @@ function asideNodesFromMdx(mdx: string) {
 
 function computeFromMdx(mdx: string): number {
   return computeSidebarWidthFromAsideNodes(asideNodesFromMdx(mdx), visit)
-}
-
-function computeLayoutFromMdx(mdx: string) {
-  return computeSidebarLayoutFromAsideNodes(asideNodesFromMdx(mdx), visit)
 }
 
 describe('computeSidebarWidthFromAsideNodes', () => {
@@ -124,69 +119,26 @@ curl
   })
 })
 
-describe('computeSidebarLayoutFromAsideNodes', () => {
-  test('plain Aside stays at the default width and does not fill leftover space', () => {
-    const mdx = `# Title
-
-<Aside>Some helper text</Aside>
-`
-    expect(computeLayoutFromMdx(mdx)).toMatchInlineSnapshot(`
-      {
-        "fillRemaining": false,
-        "sidebarWidth": 230,
-      }
-    `)
-  })
-
-  test('Aside wide fills leftover right-column space', () => {
-    const mdx = `# Title
-
-<Aside wide>
-Some helper text
-</Aside>
-`
-    expect(computeLayoutFromMdx(mdx)).toMatchInlineSnapshot(`
-      {
-        "fillRemaining": true,
-        "sidebarWidth": 230,
-      }
-    `)
-  })
-
+describe('Aside width', () => {
   test('Aside width="480px" is accepted and percent values are ignored', () => {
-    expect(computeLayoutFromMdx(`# Title
+    expect(computeFromMdx(`# Title
 
 <Aside width="480px">
 Some helper text
 </Aside>
-`)).toMatchInlineSnapshot(`
-      {
-        "fillRemaining": false,
-        "sidebarWidth": 480,
-      }
-    `)
-    expect(computeLayoutFromMdx(`# Title
+`)).toMatchInlineSnapshot(`480`)
+    expect(computeFromMdx(`# Title
 
 <Aside width="50%">
 Some helper text
 </Aside>
-`)).toMatchInlineSnapshot(`
-      {
-        "fillRemaining": false,
-        "sidebarWidth": 230,
-      }
-    `)
-    expect(computeLayoutFromMdx(`# Title
+`)).toMatchInlineSnapshot(`230`)
+    expect(computeFromMdx(`# Title
 
 <Aside width="480oops">
 Some helper text
 </Aside>
-`)).toMatchInlineSnapshot(`
-      {
-        "fillRemaining": false,
-        "sidebarWidth": 230,
-      }
-    `)
+`)).toMatchInlineSnapshot(`230`)
   })
 
   test('Aside width={600} sets an explicit sidebar width', () => {
@@ -196,33 +148,13 @@ Some helper text
 Some helper text
 </Aside>
 `
-    expect(computeLayoutFromMdx(mdx)).toMatchInlineSnapshot(`
-      {
-        "fillRemaining": false,
-        "sidebarWidth": 600,
-      }
-    `)
+    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`600`)
   })
 
-  test('Aside wide width={480} fills leftover space with a 480px minimum', () => {
-    const mdx = `# Title
-
-<Aside wide width={480}>
-Some helper text
-</Aside>
-`
-    expect(computeLayoutFromMdx(mdx)).toMatchInlineSnapshot(`
-      {
-        "fillRemaining": true,
-        "sidebarWidth": 480,
-      }
-    `)
-  })
-
-  test('Aside wide with RequestExample keeps the 460px minimum', () => {
+  test('Aside width={480} with RequestExample keeps the larger 480px width', () => {
     const mdx = `# Endpoint
 
-<Aside wide>
+<Aside width={480}>
 <RequestExample>
 \`\`\`bash
 curl https://api.example.com
@@ -230,12 +162,7 @@ curl https://api.example.com
 </RequestExample>
 </Aside>
 `
-    expect(computeLayoutFromMdx(mdx)).toMatchInlineSnapshot(`
-      {
-        "fillRemaining": true,
-        "sidebarWidth": 460,
-      }
-    `)
+    expect(computeFromMdx(mdx)).toMatchInlineSnapshot(`480`)
   })
 })
 
@@ -252,25 +179,9 @@ describe('buildGridTokenStyle', () => {
     `)
   })
 
-  test('wide aside fills leftover space after the 720px content cap', () => {
+  test('compact mode still emits the sidebar width token', () => {
     expect(buildGridTokenStyle({
       sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-      fillRemaining: true,
-    })).toMatchInlineSnapshot(`
-      {
-        "--grid-content-width": "minmax(0, min(720px, calc(var(--grid-max-width) - var(--grid-nav-width) - var(--grid-sidebar-width) - 2 * var(--grid-gap))))",
-        "--grid-gap": "60px",
-        "--grid-max-width": "calc(100vw - 60px)",
-        "--grid-nav-width": "230px",
-        "--grid-sidebar-width": "230px",
-      }
-    `)
-  })
-
-  test('compact mode ignores fillRemaining', () => {
-    expect(buildGridTokenStyle({
-      sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
-      fillRemaining: true,
       compact: true,
     })['--grid-sidebar-width']).toMatchInlineSnapshot(`"230px"`)
   })

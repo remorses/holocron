@@ -88,7 +88,6 @@ export function EditorialPage({
   above,
   bannerContent,
   sidebarWidth,
-  fillRemaining = false,
   gridGap,
   mode,
   maxWidth,
@@ -104,8 +103,6 @@ export function EditorialPage({
   bannerContent?: React.ReactNode
   /** Right-sidebar width in px. Defaults to the TOC column width. */
   sidebarWidth?: number
-  /** Fill leftover viewport space after the 720px content cap. */
-  fillRemaining?: boolean
   /** Optional page-level grid gap from frontmatter. */
   gridGap?: number
   /** Override the maximum content width. Accepts a number (pixels) or a
@@ -151,14 +148,11 @@ export function EditorialPage({
   const aboveClass = showLeftNav
     ? 'relative mx-auto w-full max-w-full px-(--mobile-padding) lg:max-w-(--grid-max-width) lg:px-0'
     : `relative mx-auto w-full max-w-full px-(--mobile-padding) ${centerMaxWidthClass} lg:px-0`
-  const wideAside = fillRemaining && showRightAside
   const pageGridClass = cn(
     'grid grow grid-cols-1 w-full max-w-full mx-auto px-(--mobile-padding) lg:items-start lg:gap-x-(--grid-gap) lg:justify-between lg:px-0',
-    showLeftNav && showRightAside && !wideAside && 'lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)]',
-    showLeftNav && showRightAside && wideAside && 'lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_minmax(var(--grid-sidebar-width),1fr)]',
+    showLeftNav && showRightAside && 'lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)_var(--grid-sidebar-width)]',
     showLeftNav && !showRightAside && 'lg:grid-cols-[var(--grid-nav-width)_var(--grid-content-width)]',
-    !showLeftNav && !wideAside && 'lg:grid-cols-[var(--grid-content-width)_var(--grid-sidebar-width)]',
-    !showLeftNav && wideAside && 'lg:grid-cols-[var(--grid-content-width)_minmax(var(--grid-sidebar-width),1fr)]',
+    !showLeftNav && 'lg:grid-cols-[var(--grid-content-width)_var(--grid-sidebar-width)]',
     !showLeftNav && centerMaxWidthClass,
   )
   const contentGridClass = showLeftNav
@@ -187,7 +181,6 @@ export function EditorialPage({
       gridGap,
       configLayout: siteConfig.layout,
       compact: pageMode === 'compact',
-      fillRemaining,
     }),
   }
 

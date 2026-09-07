@@ -2,10 +2,10 @@
 $schema: https://holocron.so/frontmatter.json
 prompt: |
   Write the Aside docs from @/vite/src/components/markdown/markers.tsx and @/vite/src/lib/sidebar-widths.ts.
-  Cover full, wide, and width.
+  Cover full and width. Show how to match API reference pages with a fixed 460px rail.
 title: Place supporting content in the right sidebar
 sidebarTitle: Aside
-description: Place supporting content in the right sidebar, including a super-wide rail for large examples.
+description: Place supporting content in the right sidebar. Set width to match API reference pages.
 icon: panel-right
 ---
 
@@ -37,22 +37,18 @@ Use **`full`** so the aside spans every heading after it, until the next `<Aside
 </Aside>
 ```
 
-## Super-wide rail
+## API reference layout
 
-Use **`wide`** when the aside needs a lot of horizontal space, similar to API reference pages. The **content column stays capped at 720px**. Extra viewport width goes to the right rail.
+API pages use a **fixed 460px** right rail. Holocron does that automatically when the aside contains **`RequestExample`** or **`ResponseExample`**. Put them in **`<Aside full>`** so the examples stay sticky while you scroll:
 
-This page uses a **wide** aside so you can see the rail grow on a large screen. Combine **`wide`** with **`full`** to keep that rail sticky while you scroll.
-
-<Aside wide full>
-
+````mdx
+<Aside full>
 <Panel>
   <RequestExample>
 
 ```bash
 curl https://api.example.com/v1/orders \
-  -H "authorization: Bearer $TOKEN" \
-  -H "content-type: application/json" \
-  -d '{"item":"wide-aside","qty":12}'
+  -H "authorization: Bearer $TOKEN"
 ```
 
   </RequestExample>
@@ -60,11 +56,30 @@ curl https://api.example.com/v1/orders \
   <ResponseExample>
 
 ```json
-{
-  "ok": true,
-  "layout": "wide",
-  "sidebar": "fills leftover space after the 720px content column"
-}
+{ "ok": true }
+```
+
+  </ResponseExample>
+</Panel>
+</Aside>
+````
+
+<Aside full>
+
+<Panel>
+  <RequestExample>
+
+```bash
+curl https://api.example.com/v1/orders \
+  -H "authorization: Bearer $TOKEN"
+```
+
+  </RequestExample>
+
+  <ResponseExample>
+
+```json
+{ "ok": true }
 ```
 
   </ResponseExample>
@@ -72,8 +87,24 @@ curl https://api.example.com/v1/orders \
 
 </Aside>
 
+You do **not** need `width` for that. `RequestExample` and `ResponseExample` already bump `--grid-sidebar-width` to **460px**. The page cap stays **1200px**. Extra viewport width becomes **gap**, not a growing rail.
+
+## Change the right sidebar width
+
+Use **`width`** for an explicit pixel size. The scan takes the **max** across all asides on the page, so one `width={480}` sets the whole right rail:
+
+```mdx
+<Aside width={480}>
+<Note>
+This rail is 480px wide.
+</Note>
+</Aside>
+```
+
+To make an API-style page **wider than 460px**, set `width` on the same aside:
+
 ````mdx
-<Aside wide>
+<Aside full width={560}>
 <Panel>
   <RequestExample>
 
@@ -86,27 +117,7 @@ curl https://api.example.com/v1/orders
 </Aside>
 ````
 
-## Fixed width
-
-Use **`width`** for an explicit pixel size. Alone it sets a **fixed** sidebar width. Combined with `wide`, it is the **minimum** width while leftover space still fills the rail.
-
-```mdx
-<Aside width={480}>
-<Note>
-This rail is 480px wide.
-</Note>
-</Aside>
-```
-
-```mdx
-<Aside wide width={480}>
-<Note>
-This rail is at least 480px, then grows into leftover space.
-</Note>
-</Aside>
-```
-
-`RequestExample` and `ResponseExample` already bump the rail to **460px**. `wide` still works with them: 460px is the minimum, then the rail grows.
+`width="480px"` also works. Percent values like `width="50%"` are ignored.
 
 ## Props
 
@@ -114,15 +125,11 @@ This rail is at least 480px, then grows into leftover space.
   Span every heading after this aside until the next `<Aside full>` or the end of the page.
 </ResponseField>
 
-<ResponseField name="wide" type="boolean">
-  Fill leftover viewport space on the right after the content column hits its 720px cap.
-</ResponseField>
-
 <ResponseField name="width" type="number">
-  Sidebar width in pixels. Fixed when used alone. Minimum width when combined with `wide`.
+  Sidebar width in pixels. The page uses the largest value from `width` and from known components like `RequestExample` (460px).
 </ResponseField>
 
 ## Holocron differences
 
 - Mintlify's request and response examples use a fixed sidebar you cannot configure.
-- Holocron lets you opt into a **super-wide** rail with `<Aside wide>` without stretching the middle content column.
+- Holocron lets you set a **fixed** rail with `<Aside width={N}>`. `RequestExample` and `ResponseExample` already use **460px**.

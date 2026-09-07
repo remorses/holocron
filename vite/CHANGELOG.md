@@ -1,5 +1,31 @@
 # @holocron.so/vite
 
+## 0.35.1
+
+1. **Remove `<Aside wide>`** — the right rail stays a **fixed** width. Extra viewport space is gap, not a growing aside.
+
+   API pages already match Mintlify. Wrap `RequestExample` and `ResponseExample` in `<Aside full>`. That bumps the rail to **460px**:
+
+   ```mdx
+   <Aside full>
+   <RequestExample>
+   curl example
+   </RequestExample>
+   </Aside>
+   ```
+
+   Use `width` for any other size:
+
+   ```mdx
+   <Aside full width={560}>
+   <Note>
+   This rail is 560px.
+   </Note>
+   </Aside>
+   ```
+
+   `RequestExample` and `ResponseExample` already use 460px. You only need `width` when you want a different size.
+
 ## 0.35.0
 
 1. **`<Aside wide>`** — the right rail can take leftover viewport space, like API reference pages. The middle content column stays capped at **720px**. Extra width goes to the aside instead of becoming gap:

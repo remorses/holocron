@@ -44,4 +44,4 @@ The main page content stays readable while the examples remain visually grouped 
 
 - Mintlify documents additional dropdown-oriented example flows. Holocron currently focuses on the core request/response pair.
 - Sidebar placement in Holocron is tied to its editorial layout primitives, so `Aside` placement matters more than in Mintlify's hosted renderer.
-- Use [`<Aside wide>`](./aside.mdx) when examples should fill leftover space on the right, like a super-wide API rail.
+- Use [`<Aside width={N}>`](./aside.mdx) when examples need a wider fixed rail than the default 230px. `RequestExample` already uses 460px.

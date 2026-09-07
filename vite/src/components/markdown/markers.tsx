@@ -18,22 +18,18 @@ import React from 'react'
  *  also `<Aside full>` but does not collect: later asides stay on their
  *  own section rows.
  *
- *  Use `<Aside wide>` to fill leftover space on the right after the
- *  content column hits its 720px cap. `width` sets a pixel minimum
- *  (with `wide`) or a fixed sidebar width (without `wide`). */
+ *  Use `width={N}` to set a fixed right-rail width in pixels. Known
+ *  components like RequestExample already bump the rail to 460px. */
 export function Aside({
   children,
   full,
-  wide,
   width,
 }: {
   children: React.ReactNode
   full?: boolean
-  wide?: boolean
   width?: number
 }) {
   void full
-  void wide
   void width
   return <>{children}</>
 }
