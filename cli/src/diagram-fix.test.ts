@@ -1262,6 +1262,47 @@ describe('fixDiagramsInText', () => {
       \`\`\`"
     `)
   })
+
+  test('nested 4-backtick mdx fence does not swallow following prose', () => {
+    const input = dedent`
+      ${'````'}mdx
+      ${'```'}diagram
+      ┌───────────────┐          ┌───────────────┐
+      │   Browser     │────────> │   Server      │
+      └───────────────┘          └───────────────┘
+      ${'```'}
+      ${'````'}
+
+      ## Box-drawing characters
+
+      Use Unicode box-drawing characters instead of ASCII pipe and dash. This prose line is longer than ninety four columns on purpose so a swallowed fence would fail width checks: \`┌─┐│\`.
+
+      ${'```'}bash
+      npx -y "@holocron.so/cli" diagrams fix docs/architecture.mdx
+      ${'```'}
+    `
+
+    expect(fixDiagramsInText(input)).toMatchInlineSnapshot('\n' + `
+      "${'````'}mdx
+      ${'```'}diagram
+      ┌───────────────┐          ┌───────────────┐
+      │   Browser     │────────> │   Server      │
+      └───────────────┘          └───────────────┘
+      ${'```'}
+      ${'````'}
+
+      ## Box-drawing characters
+
+      Use Unicode box-drawing characters instead of ASCII pipe and dash. This prose line is longer than ninety four columns on purpose so a swallowed fence would fail width checks: \`┌─┐│\`.
+
+      ${'```'}bash
+      npx -y "@holocron.so/cli" diagrams fix docs/architecture.mdx
+      ${'```'}"
+    `)
+    expect(validateDiagramsInText(input)).toMatchInlineSnapshot('\n' + `
+      []
+    `)
+  })
 })
 
 // ─────────────────────────────────────────────────────────────

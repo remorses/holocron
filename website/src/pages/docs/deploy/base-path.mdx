@@ -53,15 +53,13 @@ See [Holocron Deploy](/docs/deploy/holocron) for all authentication options (API
 
 After deploying, configure your framework or web server to forward requests under `/docs/*` to the deployed holocron.so URL. The user's browser sees `yoursite.com/docs/quickstart`, but the content is served from holocron.so.
 
-```
-┌──────────────────────┐       ┌──────────────────────────────────────────────┐
-│  yoursite.com        │       │  holocron.so hosting                         │
-│                      │       │                                              │
-│  /           → home  │       │                                              │
-│  /pricing    → page  │       │                                              │
-│  /docs/*     → proxy ├──────>│          docs-base-my-docs-remorses-site.holocron.so│
-│                      │       │  serves /docs/* routes                       │
-└──────────────────────┘       └──────────────────────────────────────────────┘
+```diagram
+  yoursite.com                              holocron.so hosting
+  ┌─────────────────────────┐               ┌────────────────────────────────┐
+  │  /           > home     │               │  {base}-base-{project}-site    │
+  │  /pricing    > page     │               │  .holocron.so                  │
+  │  /docs/*     > proxy    │──────────────>│  serves /docs/* routes         │
+  └─────────────────────────┘               └────────────────────────────────┘
 ```
 
 Choose your framework below for the specific rewrite or proxy configuration.

@@ -13,7 +13,7 @@ This means deployments go from minutes to milliseconds. The framework chunk is u
 
 ## Build output anatomy
 
-```
+```diagram
 dist/rsc/assets/
 ├── holocron-stable-{hash}.js           # framework + components (shared)
 ├── holocron-data.js                    # config, navigation, MDX loaders (per tenant)
@@ -33,7 +33,7 @@ The **stable chunk** contains all React, spiceflow, MDX components (accordion, t
 
 ## Pipeline overview
 
-```
+```diagram
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  1. Build once                                                          │
 │     npx vite build                                                      │

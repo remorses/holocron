@@ -880,10 +880,14 @@ interface CodeBlock {
   contentLines: string[]
 }
 
-function findCodeBlocks(markdownLines: string[]): CodeBlock[] {
+function findTopLevelCodeBlocks(markdownLines: string[]): CodeBlock[] {
+  // CommonMark: a closing fence must use the same char and be at least as
+  // long as the opening fence. Shorter inner fences (``` inside ````mdx)
+  // stay content, not closers.
   const blocks: CodeBlock[] = []
   let inBlock = false
   let fenceChar = ''
+  let fenceLen = 0
   let fenceIndent = 0
   let startLine = 0
   let contentLines: string[] = []
@@ -898,13 +902,19 @@ function findCodeBlocks(markdownLines: string[]): CodeBlock[] {
       if (match) {
         inBlock = true
         fenceChar = match[1]![0]!
+        fenceLen = match[1]!.length
         fenceIndent = indent
         startLine = i
         contentLines = []
       }
     } else {
       const closingMatch = trimmed.match(/^(`{3,}|~{3,})\s*$/)
-      if (closingMatch && closingMatch[1]![0] === fenceChar && indent <= fenceIndent) {
+      if (
+        closingMatch &&
+        closingMatch[1]![0] === fenceChar &&
+        closingMatch[1]!.length >= fenceLen &&
+        indent <= fenceIndent
+      ) {
         blocks.push({ startLine, endLine: i, contentLines })
         inBlock = false
       } else {
@@ -914,6 +924,23 @@ function findCodeBlocks(markdownLines: string[]): CodeBlock[] {
   }
 
   return blocks
+}
+
+function findCodeBlocks(markdownLines: string[], lineOffset = 0): CodeBlock[] {
+  const result: CodeBlock[] = []
+  for (const block of findTopLevelCodeBlocks(markdownLines)) {
+    const nested = findCodeBlocks(block.contentLines, lineOffset + block.startLine + 1)
+    if (nested.length > 0) {
+      result.push(...nested)
+      continue
+    }
+    result.push({
+      ...block,
+      startLine: block.startLine + lineOffset,
+      endLine: block.endLine + lineOffset,
+    })
+  }
+  return result
 }
 
 /**
