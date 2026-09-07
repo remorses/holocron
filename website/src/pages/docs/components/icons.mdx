@@ -2,8 +2,9 @@
 $schema: https://holocron.so/frontmatter.json
 prompt: |
   Write the Icon component docs from @/vite/src/components/markdown/icons.tsx and @/vite/src/components/icon.tsx.
+  Cover lucide, Font Awesome, emoji, remote URLs, and local SVG file icons.
 title: Icons
-description: Render lucide, Font Awesome, emoji, and URL-based icons in MDX.
+description: Render lucide, Font Awesome, emoji, URL, and local SVG icons in MDX.
 icon: image
 ---
 
@@ -24,11 +25,29 @@ Holocron routes icon rendering through a build-time atlas and supports several i
   <Card title='Font Awesome brands' icon='fontawesome:brands:github'>
     `fontawesome:brands:github`
   </Card>
+  <Card title='Local SVG file' icon='/icons/vercel.svg'>
+    `/icons/vercel.svg`
+  </Card>
 </Columns>
 
 Inline icons also work in headings and prose: <Icon icon='sparkles' /> Holocron prefers icons that stay readable in both light and dark themes.
 
 ## Holocron differences
 
-- Holocron supports emoji, URL/path icons, default-library names, and explicit prefixed icon references.
+- Holocron supports emoji, remote URL icons, **local SVG paths** (`/icons/vercel.svg`), default-library names, and explicit prefixed icon references.
 - This page is a better compatibility reference than Mintlify's own docs because it renders through Holocron's actual atlas pipeline.
+
+## Local SVG on a page
+
+Put the file in **`public/`** and set `icon` in the page frontmatter:
+
+```mdx
+---
+$schema: https://holocron.so/frontmatter.json
+title: Vercel deployments
+sidebarTitle: Vercel
+icon: /icons/vercel.svg
+---
+```
+
+Holocron inlines the SVG so it matches Lucide size and **`currentColor`**. See [Customize icons](../customize/icons.mdx) for `docs.json` group icons.

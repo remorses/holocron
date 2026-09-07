@@ -2,7 +2,7 @@
 $schema: https://holocron.so/frontmatter.json
 prompt: |
   Write the pages and frontmatter guide from @/vite/src/lib/page-frontmatter.ts and @/vite/src/frontmatter-schema.json.
-  Cover slugs, title, sidebarTitle, prompt, description, icon, mode, and OG fields.
+  Cover slugs, title, sidebarTitle, prompt, description, icon, local SVG page icons, mode, and OG fields.
 title: Pages
 description: Frontmatter fields, page slugs, sidebar titles, icons, tags, and metadata options for MDX documentation pages.
 icon: file-text
@@ -62,7 +62,7 @@ prompt: |
 | `title`               | string    | Page title, used in sidebar and `<title>` tag                                                                                                                                                                                   |
 | `prompt`              | string    | Original generation recipe for [Holocron Maintain](/maintain). Use `@/path` and `@https://` references                                                                                                                          |
 | `description`         | string    | SEO description and subtitle                                                                                                                                                                                                    |
-| `icon`                | string    | Icon name displayed in the sidebar                                                                                                                                                                                              |
+| `icon`                | string    | Sidebar icon. Library name, prefixed name (`lucide:lock`), emoji, remote URL, or root-absolute SVG path (`/icons/vercel.svg`)                                                                                                   |
 | `iconColor`           | string    | Color for the sidebar icon. Named colors (`green`, `blue`, `red`, `purple`, `orange`, `yellow`, `pink`) or any CSS color string                                                                                                 |
 | `sidebarTitle`        | string    | Short label for the sidebar, letting `title` be longer for SEO                                                                                                                                                                  |
 | `sidebarToc`          | boolean   | Show or hide the page's section headings under its sidebar entry. Defaults to shown, unless the page renders a [`TableOfContentsPanel`](/docs/components/table-of-contents)                                                     |
@@ -118,6 +118,21 @@ sidebarTitle: Authentication
 ```
 
 In this example, Google sees "Authentication — Setting Up OAuth and API Keys" but the sidebar just shows "Authentication".
+
+## Local SVG page icon
+
+Library names, prefixed names, and emoji all work in `icon`. For a **brand mark**, put an SVG in `public/` and point `icon` at the **root-absolute** path:
+
+```mdx
+---
+$schema: https://holocron.so/frontmatter.json
+title: Vercel deployments
+sidebarTitle: Vercel
+icon: /icons/vercel.svg
+---
+```
+
+Place the file at `public/icons/vercel.svg`. Use **`currentColor`** for `fill` and `stroke` so the mark matches Lucide icons in the sidebar. See [Icons](../customize/icons.mdx) for the full reference.
 
 ## The index page
 
