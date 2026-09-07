@@ -29,10 +29,13 @@ import path from 'node:path'
 export type AiCacheOptions = {
   /** Directory to store cached responses. Defaults to `.aicache` relative to cwd. */
   cacheDir?: string
+  /** `error` fails instead of calling the model. Use in CI so a miss cannot hang. */
+  onMiss?: 'fetch' | 'error'
 }
 
 export function createAiCacheMiddleware({
   cacheDir = '.aicache',
+  onMiss = 'fetch',
 }: AiCacheOptions = {}): LanguageModelV3Middleware {
   function getCacheDir(modelId: string): string {
     const base = path.isAbsolute(cacheDir)
@@ -82,6 +85,10 @@ export function createAiCacheMiddleware({
         }
       }
 
+      if (onMiss === 'error') {
+        throw new Error(`AI cache miss for ${model.modelId}:${key}. Re-record with OPENAI_API_KEY.`)
+      }
+
       const result = await doGenerate()
       writeCache(dir, key, { result })
       return result
@@ -110,6 +117,10 @@ export function createAiCacheMiddleware({
             chunks: formattedChunks,
           }),
         }
+      }
+
+      if (onMiss === 'error') {
+        throw new Error(`AI cache miss for ${model.modelId}:${key}. Re-record with OPENAI_API_KEY.`)
       }
 
       const { stream, ...rest } = await doStream()

@@ -11,25 +11,12 @@
  * + x-holocron-chat-session header instead of cookies. The header-based
  * restore must work independently of the cookie.
  *
- * Uses HOLOCRON_CHAT_PROVIDER caching like chat-widget.test.ts — tests that
- * need an actual AI reply reuse prompts already recorded in .aicache/ so
- * runs without OPENAI_API_KEY replay deterministically.
+ * Uses canned `SCRIPT:` / mapped-prompt streams from mock-chat-server.ts.
+ * Persistence only needs a user + assistant bubble and a session snapshot,
+ * not a live OpenAI call.
  */
 
 import { test, expect } from "../helpers/test.ts";
-import fs from "node:fs";
-import path from "node:path";
-
-const cacheDir = path.join(
-  import.meta.dirname,
-  "../../fixtures/chat-widget/.aicache",
-);
-
-function hasCacheOrApiKey(): boolean {
-  if (process.env.OPENAI_API_KEY) return true;
-  if (fs.existsSync(cacheDir) && fs.readdirSync(cacheDir).length > 0) return true;
-  return false;
-}
 
 /** Send a message via the sidebar input (opens the drawer + submits). */
 async function sendMessage(page: import("@playwright/test").Page, text: string) {
@@ -75,8 +62,6 @@ test("first chat message sets a JS-readable session cookie", async ({ page }) =>
 });
 
 test("conversation persists across page reload", async ({ page }) => {
-  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
-
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
@@ -114,8 +99,6 @@ test("conversation persists across page reload", async ({ page }) => {
 }, 120000);
 
 test("submit after reload includes the restored history in the request", async ({ page }) => {
-  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
-
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
@@ -157,8 +140,6 @@ test("submit after reload includes the restored history in the request", async (
 }, 120000);
 
 test("new chat rotates the session without opening the old one on reload", async ({ page }) => {
-  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
-
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
@@ -193,8 +174,6 @@ test("new chat rotates the session without opening the old one on reload", async
 }, 120000);
 
 test("session select shows the AI title and switches back to a past session", async ({ page }) => {
-  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
-
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
@@ -239,8 +218,6 @@ test("session select shows the AI title and switches back to a past session", as
 // ── Widget-mode persistence (header-based, no cookies) ──────────────
 
 test("widget mode: restore works via x-holocron-chat-session header without cookies", async ({ page }) => {
-  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
-
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
@@ -278,8 +255,6 @@ test("widget mode: restore works via x-holocron-chat-session header without cook
 }, 120000);
 
 test("widget mode: clear works via x-holocron-chat-session header without cookies", async ({ page }) => {
-  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
-
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");

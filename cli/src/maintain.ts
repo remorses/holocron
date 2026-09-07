@@ -115,6 +115,7 @@ maintainCli
     }
     output.log(logger.step(`Matched ${c.bold(String(selectedPages.length))} page${selectedPages.length === 1 ? '' : 's'}`))
     for (const page of selectedPages) output.log(`  ${page.path}`)
+    if (range) output.log(logger.step(`Git range ${c.bold(gitDiffRangeSpec(range))} (${changedFiles.length} changed file${changedFiles.length === 1 ? '' : 's'})`))
     if (options.dryRun || selectedPages.length === 0) return
 
     const beforeChangedFiles = new Set(getWorkingTreeChanges(repoRoot))
@@ -213,7 +214,7 @@ maintainCli
       }
     }
     if (runError) {
-      output.error(logger.error(runError.message))
+      output.error(logger.error(formatOpenCodeError(runError)))
       return proc.exit(1)
     }
 
@@ -357,7 +358,7 @@ async function runOpenCode({
         ? {
           [providerId]: {
             npm: '@ai-sdk/openai-compatible',
-            options: { apiKey: model.apiKey, baseURL: model.baseUrl },
+            options: { apiKey: model.apiKey, baseURL: model.baseUrl, timeout: RUN_TIMEOUT_MS },
             models: Object.fromEntries(
               (model.models.length > 0 ? model.models : [modelId]).map((id) => [id, { name: id }]),
             ),
@@ -381,7 +382,7 @@ async function runOpenCode({
       return openCodeFailed({
         kind: model.kind,
         prefix: 'OpenCode could not create a session.',
-        detail: sessionResult.error ? ` ${JSON.stringify(sessionResult.error)}` : '',
+        detail: sessionResult.error ? ` ${formatOpenCodeError(sessionResult.error)}` : '',
       })
     }
 
@@ -407,11 +408,18 @@ async function runOpenCode({
       return openCodeFailed({
         kind: model.kind,
         prefix: 'OpenCode failed to maintain the selected pages.',
-        detail: result.error ? ` ${JSON.stringify(result.error)}` : '',
+        detail: result.error ? ` ${formatOpenCodeError(result.error)}` : '',
       })
     }
   } catch (error) {
-    return new Error('OpenCode maintain run failed.', { cause: error })
+    const detail = error instanceof Error
+      ? formatOpenCodeError(error)
+      : typeof error === 'string'
+        ? formatOpenCodeError(error)
+        : error && typeof error === 'object'
+          ? formatOpenCodeError(error)
+          : String(error)
+    return new Error(`OpenCode maintain run failed. ${detail}`, { cause: error })
   } finally {
     clearTimeout(timeout)
     server.close()
@@ -431,6 +439,34 @@ function openCodeFailed({
     ? ' Check the model id (`opencode models`) and the provider key: https://opencode.ai/docs/providers/'
     : ''
   return new Error(`${prefix}${detail}${hint}`)
+}
+
+export function formatOpenCodeError(error: Error | string | object | null | undefined): string {
+  if (error instanceof Error) {
+    const extra = error.cause instanceof Error ? ` ${error.cause.message}` : ''
+    return `${error.message}${extra}`.trim()
+  }
+  if (typeof error === 'string' && error.trim()) return error
+  if (!error || typeof error !== 'object') {
+    return 'empty OpenCode error. The provider likely timed out or dropped the connection.'
+  }
+  if ('message' in error && typeof error.message === 'string' && error.message.trim()) return error.message
+  if (
+    'data' in error
+    && error.data
+    && typeof error.data === 'object'
+    && 'message' in error.data
+    && typeof error.data.message === 'string'
+    && error.data.message.trim()
+  ) {
+    return error.data.message
+  }
+  if ('name' in error && typeof error.name === 'string' && error.name.trim()) return error.name
+  try {
+    const json = JSON.stringify(error)
+    if (json && json !== '{}') return json
+  } catch {}
+  return 'empty OpenCode error. The provider likely timed out or dropped the connection.'
 }
 
 function githubActionsPublishPrompt({

@@ -169,4 +169,16 @@ describe('ai-cache middleware', () => {
     expect(content).toHaveProperty('result')
     expect(content.result.content[0]).toEqual({ type: 'text', text: 'Check JSON' })
   })
+
+  test('onMiss error fails instead of calling the model', async () => {
+    const fakeModel = createFakeModel('Should not run')
+    const middleware = createAiCacheMiddleware({ cacheDir, onMiss: 'error' })
+    const model = wrapLanguageModel({
+      model: fakeModel,
+      middleware: [middleware],
+    })
+
+    await expect(generateText({ model, prompt: 'uncached' })).rejects.toThrow(/AI cache miss/)
+    expect(fakeModel.callCount).toBe(0)
+  })
 })

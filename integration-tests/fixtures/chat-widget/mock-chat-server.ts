@@ -11,14 +11,10 @@
  * snapshot when a sessionId is present, GET /api/chat/session restores it,
  * DELETE /api/chat/session clears it.
  *
- * First run with OPENAI_API_KEY hits the real API and caches responses.
- * Subsequent runs replay from the .aicache/ directory instantly.
- *
- * Scripted failure modes: a user message starting with `SCRIPT:<name>`
- * bypasses the model and emits canned chunks instead. These reproduce the
- * ways an answer used to disappear silently (stream cut before text-end,
- * provider error chunk, answer wrapped in <think> tags) without needing an
- * API key, so the regressions stay covered on every run.
+ * Known test prompts and `SCRIPT:<name>` messages emit canned chunks.
+ * Persistence, tools, and approvals do not need OpenAI. Unmapped prompts
+ * still go through the cached model; without OPENAI_API_KEY a cache miss
+ * throws instead of hanging.
  */
 
 import { createServer } from "node:http";
@@ -36,7 +32,7 @@ function sessionKey(req: IncomingMessage): string | null {
 }
 
 /** Canned chunk streams keyed by the `SCRIPT:<name>` message prefix. */
-const SCRIPTED_STREAMS: Record<string, unknown[]> = {
+const SCRIPTED_STREAMS = {
   // Provider closes the connection mid-text: no text-end ever arrives.
   // The buffered answer must still be flushed by the proxy.
   truncated: [
@@ -111,20 +107,145 @@ const SCRIPTED_STREAMS: Record<string, unknown[]> = {
     },
     { type: "error", errorText: "upstream provider exploded" },
   ],
-};
+  // Persistence / navigation tests: a full answer plus model-messages so
+  // restore has something to render. No OpenAI call.
+  ok: [
+    { type: "text-start", id: "s1" },
+    { type: "text-delta", id: "s1", delta: "This documentation covers Chat Test Docs." },
+    { type: "text-end", id: "s1" },
+  ],
+  features: [
+    { type: "text-start", id: "s1" },
+    { type: "text-delta", id: "s1", delta: "This site has AI search, client tools, and a chat drawer." },
+    { type: "text-end", id: "s1" },
+  ],
+  getTime: [
+    {
+      type: "tool-input-available",
+      toolCallId: "get-time-1",
+      toolName: "get_time",
+      input: {},
+    },
+  ],
+  getTimeFollowup: [
+    { type: "text-start", id: "s1" },
+    { type: "text-delta", id: "s1", delta: "The current time is 2026-01-01T12:00:00.000Z." },
+    { type: "text-end", id: "s1" },
+  ],
+  typeEmail: [
+    {
+      type: "tool-input-available",
+      toolCallId: "type-email-1",
+      toolName: "browser_type",
+      input: {
+        selector: '[data-action="email-input"]',
+        text: "new@example.com",
+        description: "Type the new account email",
+      },
+    },
+  ],
+  typeEmailFollowup: [
+    { type: "text-start", id: "s1" },
+    { type: "text-delta", id: "s1", delta: "The account email is now new@example.com." },
+    { type: "text-end", id: "s1" },
+  ],
+  typeEmailDenied: [
+    { type: "text-start", id: "s1" },
+    { type: "text-delta", id: "s1", delta: "✗ Denied. The email was not changed." },
+    { type: "text-end", id: "s1" },
+  ],
+  typeName: [
+    {
+      type: "tool-input-available",
+      toolCallId: "type-name-1",
+      toolName: "browser_type",
+      input: {
+        selector: '[data-action="name-input"]',
+        text: "New Name",
+        description: "Type the new display name",
+      },
+    },
+  ],
+  typeNameFollowup: [
+    { type: "text-start", id: "s1" },
+    { type: "text-delta", id: "s1", delta: "The display name is now New Name." },
+    { type: "text-end", id: "s1" },
+  ],
+  highlight: [
+    {
+      type: "tool-input-available",
+      toolCallId: "highlight-1",
+      toolName: "browser_highlight",
+      input: {
+        selector: '[data-action="rename-account"]',
+        message: "Click here to rename your account",
+        description: "Highlight the rename account button",
+      },
+    },
+  ],
+  highlightFollowup: [
+    { type: "text-start", id: "s1" },
+    { type: "text-delta", id: "s1", delta: "I highlighted the Rename account button." },
+    { type: "text-end", id: "s1" },
+  ],
+} as const
 
-function getScriptName(messages: any[]): string | null {
+type ScriptName = keyof typeof SCRIPTED_STREAMS
+
+function isScriptName(name: string): name is ScriptName {
+  return Object.hasOwn(SCRIPTED_STREAMS, name)
+}
+
+function messageText(message: any): string {
+  const content = message?.content;
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+  return content.filter((p: any) => p?.type === "text").map((p: any) => p.text).join(" ");
+}
+
+function promptScript(text: string) {
+  switch (text) {
+    case "hello cookie test":
+    case "What is this documentation about?":
+    case "and who maintains it?":
+      return "ok"
+    case "What features does this site have?":
+      return "features"
+    case "Use the get_time tool to tell me what time it is right now.":
+      return "getTime"
+    case 'Use the browser_type tool to type "new@example.com" into the email input with selector [data-action="email-input"]. Do it now without asking any questions.':
+      return "typeEmail"
+    case 'Use the browser_type tool to type "New Name" into the display name input with selector [data-action="name-input"]. Do it now without asking any questions.':
+      return "typeName"
+    case 'Use the browser_highlight tool to highlight the Rename account button with selector [data-action="rename-account"] and message "Click here to rename your account". Do it now without asking any questions.':
+      return "highlight"
+    default:
+      return undefined
+  }
+}
+
+function getScriptName(messages: any[]): ScriptName | null {
   const lastUser = [...messages].reverse().find((m) => m?.role === "user");
-  const content = lastUser?.content;
-  const text =
-    typeof content === "string"
-      ? content
-      : Array.isArray(content)
-        ? content.filter((p: any) => p?.type === "text").map((p: any) => p.text).join(" ")
-        : "";
-  const match = /^SCRIPT:(\w+)/.exec(text.trim());
-  const name = match?.[1];
-  return name && Object.hasOwn(SCRIPTED_STREAMS, name) ? name : null;
+  const text = messageText(lastUser).trim();
+  const match = /^SCRIPT:(\w+)/.exec(text);
+  const name = match?.[1] ?? promptScript(text);
+  if (!name || !isScriptName(name)) return null;
+  const hasToolResult = messages.some((m) => m?.role === "tool");
+  if (hasToolResult) {
+    const denied = messages.some((m) => m?.role === "tool" && JSON.stringify(m).includes("User denied"));
+    const deniedName = `${name}Denied`;
+    if (denied && isScriptName(deniedName)) return deniedName;
+    const followup = `${name}Followup`;
+    return isScriptName(followup) ? followup : name;
+  }
+  return name;
+}
+
+function scriptAssistantText(chunks: Array<{ type?: string; delta?: string }>): string {
+  return chunks
+    .filter((chunk) => chunk.type === "text-delta")
+    .map((chunk) => chunk.delta ?? "")
+    .join("");
 }
 
 export type MockChatServer = {
@@ -134,7 +255,10 @@ export type MockChatServer = {
 
 export async function startMockChatServer(): Promise<MockChatServer> {
   const cacheDir = path.join(import.meta.dirname, ".aicache");
-  const middleware = createAiCacheMiddleware({ cacheDir });
+  const middleware = createAiCacheMiddleware({
+    cacheDir,
+    onMiss: process.env.OPENAI_API_KEY ? "fetch" : "error",
+  });
   const model = wrapLanguageModel({
     model: openai("gpt-4o-mini"),
     middleware: [middleware],
@@ -205,16 +329,44 @@ export async function startMockChatServer(): Promise<MockChatServer> {
           ]),
         );
 
-        // Scripted failure mode — canned chunks, no model call.
+        // Scripted streams — canned chunks, no model call.
         const scriptName = getScriptName(messages);
         if (scriptName) {
+          const scriptChunks = SCRIPTED_STREAMS[scriptName]!;
           res.writeHead(200, {
             "content-type": "text/event-stream",
             "cache-control": "no-cache",
             "access-control-allow-origin": "*",
           });
-          for (const chunk of SCRIPTED_STREAMS[scriptName]!) {
+          for (const chunk of scriptChunks) {
             res.write(`event: message\ndata: ${JSON.stringify(chunk)}\n\n`);
+          }
+          const assistantText = scriptAssistantText(scriptChunks);
+          const responseMessages = assistantText
+            ? [{ role: "assistant", content: assistantText }]
+            : [];
+          res.write(
+            `event: message\ndata: ${JSON.stringify({ type: "model-messages", messages: responseMessages })}\n\n`,
+          );
+          const userMessages = messages.filter((m: any) => m?.role === "user");
+          if (
+            typeof body.sessionId === "string" &&
+            body.sessionId &&
+            userMessages.length === 1
+          ) {
+            const text = messageText(userMessages[0]);
+            const title = `Title: ${text.split(/\s+/).slice(0, 4).join(" ")}`;
+            res.write(
+              `event: message\ndata: ${JSON.stringify({ type: "title", title })}\n\n`,
+            );
+          }
+          if (typeof body.sessionId === "string" && body.sessionId) {
+            const site = req.headers["x-holocron-site"];
+            const key = `${typeof site === "string" ? site : ""}:${body.sessionId}`;
+            sessions.set(key, [
+              ...messages.filter((m: any) => m?.role !== "system"),
+              ...responseMessages,
+            ]);
           }
           res.end();
           return;

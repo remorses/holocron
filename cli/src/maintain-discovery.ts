@@ -491,6 +491,11 @@ export function didGenerationPromptChange(repoRoot: string, page: MaintainPage, 
     const previousPrompt = parseFrontmatterObject(previous).prompt
     return currentPrompt !== (typeof previousPrompt === 'string' ? previousPrompt : '')
   } catch {
-    return !!currentPrompt
+    try {
+      runGit(repoRoot, ['cat-file', '-e', `${baseSha}^{commit}`])
+      return !!currentPrompt
+    } catch {
+      return false
+    }
   }
 }

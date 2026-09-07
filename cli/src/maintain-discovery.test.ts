@@ -15,6 +15,7 @@ import {
   hasMissingLocalReferences,
   matchChangedReferences,
   parseFrontmatterObject,
+  didGenerationPromptChange,
 } from './maintain-discovery.ts'
 
 const tempDirs: string[] = []
@@ -444,6 +445,23 @@ describe('maintain git path lists', () => {
         "src/config.ts",
       ]
     `)
+  })
+
+  test('does not treat every prompted page as new when the base SHA is missing', () => {
+    const repoRoot = createRepo()
+    fs.writeFileSync(path.join(repoRoot, 'docs.json'), JSON.stringify({
+      $schema: 'https://holocron.so/docs.json',
+      name: 'Acme',
+    }))
+    fs.writeFileSync(path.join(repoRoot, 'index.mdx'), '---\ntitle: Home\nprompt: Write from @/src/config.ts.\n---\n')
+    git(repoRoot, ['init'])
+    commitAll(repoRoot, 'initial')
+    const pages = discoverMaintainPages(repoRoot)
+    const page = pages.find((entry) => entry.path === 'index.mdx')
+    if (!page) throw new Error('expected index.mdx')
+
+    expect(didGenerationPromptChange(repoRoot, page, '0000000000000000000000000000000000000000')).toBe(false)
+    expect(didGenerationPromptChange(repoRoot, page, git(repoRoot, ['rev-parse', 'HEAD']).trim())).toBe(false)
   })
 
   test('keeps rename and untracked paths intact', () => {

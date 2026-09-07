@@ -2,8 +2,8 @@
  * Chat widget integration tests.
  *
  * Verifies the AI chat sidebar assistant and drawer render, open/close,
- * and stream responses. Uses HOLOCRON_CHAT_PROVIDER=openai:gpt-4o-mini
- * with disk-based caching so responses are deterministic after the first run.
+ * and stream responses. Reply, tool, and approval tests use canned mock
+ * streams so CI does not need OPENAI_API_KEY.
  *
  * The sidebar assistant shows "Ask AI about this page" in the right aside
  * on desktop viewports. Typing and submitting opens the chat drawer. When
@@ -12,8 +12,6 @@
  */
 
 import { test, expect, type Page } from "../helpers/test.ts";
-import fs from "node:fs";
-import path from "node:path";
 
 declare global {
   interface Window {
@@ -47,17 +45,6 @@ async function sampleTransforms({
     window.clearInterval(window.__tfPoll);
     return window.__tfSamples;
   });
-}
-
-const cacheDir = path.join(
-  import.meta.dirname,
-  "../../fixtures/chat-widget/.aicache",
-);
-
-function hasCacheOrApiKey(): boolean {
-  if (process.env.OPENAI_API_KEY) return true;
-  if (fs.existsSync(cacheDir) && fs.readdirSync(cacheDir).length > 0) return true;
-  return false;
 }
 
 test("sidebar assistant widget is visible on desktop", async ({ page }) => {
@@ -216,8 +203,6 @@ test("existing chat keeps the textarea normal and opens from the heading", async
 });
 
 test("can send a message and receive an AI response", async ({ page }) => {
-  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
-
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
@@ -247,8 +232,6 @@ test("can send a message and receive an AI response", async ({ page }) => {
 }, 90000);
 
 test("client tool execution — model calls get_time and receives result", async ({ page }) => {
-  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
-
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
@@ -310,8 +293,6 @@ const changeEmailPrompt =
   'Use the browser_type tool to type "new@example.com" into the email input with selector [data-action="email-input"]. Do it now without asking any questions.';
 
 test("tool approval — Approve runs the protected type", async ({ page }) => {
-  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
-
   await askOnApprovalPage(page, changeEmailPrompt);
 
   // Approval card appears; the tool has NOT run yet
@@ -339,8 +320,6 @@ test("tool approval — Approve runs the protected type", async ({ page }) => {
 }, 120000);
 
 test("tool approval — Deny blocks the protected type", async ({ page }) => {
-  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
-
   await askOnApprovalPage(page, changeEmailPrompt);
 
   const approvalCard = page.locator("[data-approval-request]");
@@ -367,8 +346,6 @@ test("tool approval — Deny blocks the protected type", async ({ page }) => {
 }, 120000);
 
 test("tool approval — unprotected type runs without approval", async ({ page }) => {
-  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
-
   await askOnApprovalPage(
     page,
     'Use the browser_type tool to type "New Name" into the display name input with selector [data-action="name-input"]. Do it now without asking any questions.',
@@ -380,8 +357,6 @@ test("tool approval — unprotected type runs without approval", async ({ page }
 }, 120000);
 
 test("browser_highlight — persistent overlay, returns immediately, dismissed via × button", async ({ page }) => {
-  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
-
   await askOnApprovalPage(
     page,
     'Use the browser_highlight tool to highlight the Rename account button with selector [data-action="rename-account"] and message "Click here to rename your account". Do it now without asking any questions.',
@@ -414,8 +389,6 @@ test("browser_highlight — persistent overlay, returns immediately, dismissed v
 }, 120000);
 
 test("chat messages survive client-side navigation while drawer is open", async ({ page }) => {
-  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
-
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
@@ -449,8 +422,6 @@ test("chat messages survive client-side navigation while drawer is open", async 
 }, 120000);
 
 test("chat state persists after client-side navigation", async ({ page }) => {
-  test.skip(!hasCacheOrApiKey(), "No OPENAI_API_KEY and no cached responses");
-
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");

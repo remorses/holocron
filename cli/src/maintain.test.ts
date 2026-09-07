@@ -1,7 +1,7 @@
 // Tests Maintain --model parsing for Holocron-hosted vs OpenCode BYOK ids.
 
 import { describe, expect, test } from 'vitest'
-import { parseMaintainModel } from './maintain.ts'
+import { formatOpenCodeError, parseMaintainModel } from './maintain.ts'
 
 describe('parseMaintainModel', () => {
   test('defaults to a Holocron-hosted model', () => {
@@ -80,6 +80,32 @@ describe('parseMaintainModel', () => {
     if (!(parsed instanceof Error)) throw new Error('expected Error')
     expect(parsed.message).toMatchInlineSnapshot(
       `"Use provider/model, for example anthropic/claude-sonnet-4-5."`,
+    )
+  })
+})
+
+describe('formatOpenCodeError', () => {
+  test('prints Error.message instead of {}', () => {
+    expect(formatOpenCodeError(new Error('provider timed out'))).toMatchInlineSnapshot(
+      `"provider timed out"`,
+    )
+  })
+
+  test('includes the cause chain', () => {
+    expect(formatOpenCodeError(new Error('OpenCode maintain run failed.', { cause: new Error('aborted') }))).toMatchInlineSnapshot(
+      `"OpenCode maintain run failed. aborted"`,
+    )
+  })
+
+  test('does not stringify an empty object as the whole message', () => {
+    expect(formatOpenCodeError({})).toMatchInlineSnapshot(
+      `"empty OpenCode error. The provider likely timed out or dropped the connection."`,
+    )
+  })
+
+  test('reads NamedError-shaped bodies', () => {
+    expect(formatOpenCodeError({ name: 'ProviderTimeoutError', data: { message: 'timed out after 300000ms' } })).toMatchInlineSnapshot(
+      `"timed out after 300000ms"`,
     )
   })
 })
