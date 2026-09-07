@@ -27,9 +27,20 @@ export type SearchEntry = {
  *   visiblePages   — pages to render: matched pages ∪ parent pages of matched headings
  */
 export type SearchState = {
+  query: string
   matchedHrefs: Set<string>
   expandGroupKeys: Set<string>
   visiblePages: Set<string>
+}
+
+export type HighlightRange = {
+  start: number
+  end: number
+}
+
+export type HighlightSegment = {
+  text: string
+  matched: boolean
 }
 
 /* ── Orama DB ────────────────────────────────────────────────────────── */
@@ -106,7 +117,7 @@ export function searchSidebar({ db, query, entries }: {
     }
   }
 
-  return { matchedHrefs, expandGroupKeys, visiblePages }
+  return { query: trimmed, matchedHrefs, expandGroupKeys, visiblePages }
 }
 
 /* ── Derived helpers (used by SideNav) ──────────────────────────────── */
@@ -119,4 +130,70 @@ export function buildFocusableHrefs(state: SearchState, entries: SearchEntry[]):
   return entries
     .filter((e) => state.matchedHrefs.has(e.href))
     .map((e) => e.href)
+}
+
+/** Headings shown under a page in the sidebar. Search keeps only hits, not siblings. */
+export function filterVisibleHeadings<T extends { slug: string; text: string }>({
+  headings,
+  pageHref,
+  searchState,
+}: {
+  headings: T[]
+  pageHref: string
+  searchState: SearchState | null
+}): T[] {
+  const withText = headings.filter((heading) => heading.text)
+  if (searchState === null) return withText
+  return withText.filter((heading) => searchState.matchedHrefs.has(`${pageHref}#${heading.slug}`))
+}
+
+const MIN_HIGHLIGHT_TOKEN = 4
+
+/** Match ranges for sidebar labels. Split the query into words and skip tokens shorter than 4 chars. */
+export function findHighlightRanges({ text, query }: { text: string; query: string }): HighlightRange[] {
+  const tokens = query
+    .trim()
+    .split(/\s+/)
+    .filter((token) => token.length >= MIN_HIGHLIGHT_TOKEN)
+  if (!text || tokens.length === 0) return []
+
+  const haystack = text.toLowerCase()
+  const ranges: HighlightRange[] = []
+  for (const token of tokens) {
+    const needle = token.toLowerCase()
+    let from = 0
+    while (from <= haystack.length - needle.length) {
+      const start = haystack.indexOf(needle, from)
+      if (start === -1) break
+      ranges.push({ start, end: start + needle.length })
+      from = start + 1
+    }
+  }
+  if (ranges.length === 0) return []
+
+  ranges.sort((a, b) => a.start - b.start || a.end - b.end)
+  const merged: HighlightRange[] = [{ ...ranges[0]! }]
+  for (const range of ranges.slice(1)) {
+    const last = merged[merged.length - 1]!
+    if (range.start <= last.end) last.end = Math.max(last.end, range.end)
+    else merged.push({ ...range })
+  }
+  return merged
+}
+
+/** Split a label into unmatched / matched segments for sidebar highlight marks. */
+export function splitHighlightedText({ text, query }: { text: string; query: string }): HighlightSegment[] {
+  const ranges = findHighlightRanges({ text, query })
+  if (ranges.length === 0) return [{ text, matched: false }]
+  const segments: HighlightSegment[] = []
+  let cursor = 0
+  for (const range of ranges) {
+    if (range.start > cursor) {
+      segments.push({ text: text.slice(cursor, range.start), matched: false })
+    }
+    segments.push({ text: text.slice(range.start, range.end), matched: true })
+    cursor = range.end
+  }
+  if (cursor < text.length) segments.push({ text: text.slice(cursor), matched: false })
+  return segments
 }

@@ -9,7 +9,7 @@ import React, { createContext, useContext, useEffect, useMemo, useRef, useState 
 import { Link } from '../link.tsx'
 import { type NavGroup, type NavPage, type NavHeading, isNavPage, isNavGroup, hasVisibleSidebarEntries } from '../../navigation.ts'
 import { notifyHeadingClick } from '../../hooks/use-active-toc.ts'
-import type { SearchState } from '../../lib/search.ts'
+import { filterVisibleHeadings, splitHighlightedText, type SearchState } from '../../lib/search.ts'
 import { ChevronIcon } from '../markdown/icons.tsx'
 import { ExpandableContainer } from '../markdown/expandable-container.tsx'
 import { Icon, resolveIconColor } from '../icon.tsx'
@@ -60,6 +60,21 @@ function rowSpacing(indent?: string): React.CSSProperties {
  *  "Search with AI chat" row in `side-nav.tsx`. */
 export const sidebarRowSpacing = rowSpacing()
 
+function HighlightedText({ text, query }: { text: string; query?: string }) {
+  if (!query) return text
+  const segments = splitHighlightedText({ text, query })
+  if (segments.length === 1 && !segments[0]!.matched) return text
+  return segments.map((segment, index) =>
+    segment.matched ? (
+      <mark key={index} className='search-match'>
+        {segment.text}
+      </mark>
+    ) : (
+      segment.text
+    ),
+  )
+}
+
 function useSidebarTreeContext(): SidebarTreeContextValue {
   const value = useContext(sidebarTreeContext)
   if (!value) {
@@ -100,8 +115,7 @@ export function SidebarTreeProvider({
 const MAX_VISIBLE_HEADINGS = 20
 
 /** Flat list of headings shown under the active page in the sidebar.
- *  When search matches one or more headings on this page, keep sibling headings
- *  visible too so the local section context is preserved.
+ *  Search shows matched headings only, never sibling sections.
  *  Includes a guide line and animated active indicator bar.
  *
  *  Collapsible behavior: when a page has more than MAX_VISIBLE_HEADINGS,
@@ -121,17 +135,7 @@ function TocInline({
   const listRef = useRef<HTMLUListElement>(null)
   const indicatorRef = useRef<HTMLDivElement>(null)
   const isSearchActive = searchState !== null
-
-  // Skip headings with empty text (can happen with unresolved inline-code-only headings)
-  const filteredHeadings = headings.filter((h) => h.text)
-
-  const hasMatchedHeading = isSearchActive && filteredHeadings.some((heading) => {
-    return searchState.matchedHrefs.has(`${pageHref}#${heading.slug}`)
-  })
-
-  // If this page has matched headings, keep sibling headings visible as context.
-  // If the page only matched by title, keep the TOC hidden.
-  const allVisibleHeadings = hasMatchedHeading ? filteredHeadings : isSearchActive ? [] : filteredHeadings
+  const allVisibleHeadings = headings
 
   // --- Collapsible TOC state machine ---
   // manuallyExpanded: user clicked the "N more sections..." button
@@ -241,27 +245,26 @@ function TocInline({
             const isActive = heading.slug === activeHeadingId
             const headingHref = `${pageHref}#${heading.slug}`
             const isMatched = !isSearchActive || searchState.matchedHrefs.has(headingHref)
-            const isDimmed = hasMatchedHeading && !isMatched
             const isHighlighted = highlightedHref === headingHref
             const isEmphasized = isSearchActive && isMatched
             return (
-              <li key={heading.slug} style={{ opacity: isDimmed ? 0.3 : 1, transition: animate ? 'opacity 0.15s ease' : 'none' }}>
+              <li key={heading.slug}>
                 <Link
                   ref={isHighlighted ? highlightedRef : undefined}
                   href={headingHref}
                   data-active={isActive}
                   data-heading-id={heading.slug}
                   onClick={(e) => notifyHeadingClick(e)}
-                  className={`block leading-[1.43] no-underline ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)]' : ''}`}
-                  tabIndex={isDimmed ? -1 : 0}
+                  className='block leading-[1.43] no-underline hover:[background:var(--sidebar-hover-background)]'
                   style={{
                     ...rowSpacing(),
+                    paddingBlock: 0,
                     color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
                     fontWeight: 400,
                     background: isHighlighted ? 'var(--accent)' : isActive ? 'var(--sidebar-active-background)' : undefined,
                   }}
                 >
-                  {heading.text}
+                  <HighlightedText text={heading.text} query={searchState?.query} />
                 </Link>
               </li>
             )
@@ -322,9 +325,16 @@ function NavPageLink({
   const tocSuppressed = frontmatter.sidebarToc === false
     || (frontmatter.sidebarToc !== true && page.hasTocPanel === true)
 
-  // Show TOC when: search is active (so matched headings are visible), or page is the current page.
-  // A single heading is not useful as a TOC — treat it like a page without sections.
-  const showToc = page.headings.length > 1 && (isSearchActive || (isActive && !tocSuppressed))
+  const visibleHeadings = filterVisibleHeadings({
+    headings: page.headings,
+    pageHref: page.href,
+    searchState,
+  })
+  // Search shows matched headings even when there is only one. Without search,
+  // a single heading is not useful as a TOC.
+  const showToc = isSearchActive
+    ? visibleHeadings.length > 0
+    : visibleHeadings.length > 1 && isActive && !tocSuppressed
 
   // When a badge is present, truncate the title so the badge + title never overflow
   // the sidebar width. Without a badge, text wraps normally.
@@ -345,7 +355,7 @@ function NavPageLink({
         className={`group flex items-center gap-(--sidebar-leading-gap) no-underline ${!isDimmed ? 'hover:[background:var(--sidebar-hover-background)]' : ''}`}
         style={{
           ...rowSpacing(depth > 0 ? `${depth} * var(--sidebar-indent)` : undefined),
-          opacity: isDimmed ? 0.45 : 1,
+          opacity: isDimmed ? 0.7 : 1,
           color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
           transition: animate ? 'color 0.15s, opacity 0.15s ease' : 'none',
           background: isHighlighted ? 'var(--accent)' : showActivePill ? 'var(--sidebar-active-background)' : undefined,
@@ -363,7 +373,9 @@ function NavPageLink({
             <Icon icon={page.icon} size='var(--sidebar-icon-size)' color={iconColor} />
           </span>
         )}
-        <span className={cn('font-medium', hasBadge && 'truncate min-w-0')}>{frontmatter.sidebarTitle ?? page.title}</span>
+        <span className={cn('font-medium', hasBadge && 'truncate min-w-0')}>
+          <HighlightedText text={frontmatter.sidebarTitle ?? page.title} query={searchState?.query} />
+        </span>
         <span className='ml-auto inline-flex items-center gap-1'>
           {typeof frontmatter.api === 'string' && <MethodBadge method={frontmatter.api.split(' ')[0]!} />}
           {frontmatter.deprecated && <NavBadge label='Deprecated' variant='deprecated' />}
@@ -373,9 +385,9 @@ function NavPageLink({
       <ExpandableContainer open={showToc} animate={animate}>
         {/* Skip mounting heading links entirely on suppressed pages (unless
             search needs them) — keeps the DOM slim for TOC-panel pages. */}
-        {page.headings.length > 1 && (isSearchActive || !tocSuppressed) && (
+        {visibleHeadings.length > 0 && (isSearchActive || !tocSuppressed) && (
           <TocInline
-            headings={page.headings}
+            headings={visibleHeadings}
             pageHref={page.href}
             labelIndent={`${depth + (page.icon ? 1 : 0)} * var(--sidebar-indent)`}
           />
@@ -449,7 +461,7 @@ export function NavGroupNode({
             className='cursor-default mb-[calc(2em/14)] flex items-center gap-(--sidebar-leading-gap)'
             style={{
               marginTop: 'var(--sidebar-group-margin-top)',
-              opacity: isGroupDimmed ? 0.45 : 1,
+              opacity: isGroupDimmed ? 0.7 : 1,
               fontVariationSettings: '"wght" 550',
               fontSize: 'var(--type-nav-group-size)',
               letterSpacing: '0.04em',
@@ -458,7 +470,7 @@ export function NavGroupNode({
               transition: animate ? 'opacity 0.15s ease' : 'none',
             }}
           >
-            {groupLabel}
+            <HighlightedText text={groupLabel} query={searchState?.query} />
           </div>
         )}
         {renderChildren(0)}
@@ -497,7 +509,7 @@ export function NavGroupNode({
         style={{
           ...rowSpacing(folderDepth > 1 ? `${folderDepth - 1} * var(--sidebar-indent)` : undefined),
           marginBlockStart: depth === 0 ? 'var(--sidebar-group-margin-top)' : undefined,
-          opacity: isDimmed ? 0.45 : 1,
+          opacity: isDimmed ? 0.7 : 1,
           color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
           background: isHighlighted ? 'var(--accent)' : isActive ? 'var(--sidebar-active-background)' : undefined,
           transition: animate ? 'color 0.15s, opacity 0.15s ease' : 'none',
@@ -529,7 +541,7 @@ export function NavGroupNode({
               aria-current={isActive ? 'page' : undefined}
               className='min-w-0 grow no-underline font-medium'
             >
-              {groupLabel}
+              <HighlightedText text={groupLabel} query={searchState?.query} />
             </Link>
           </>
         ) : hasExpandableChildren ? (
@@ -545,10 +557,12 @@ export function NavGroupNode({
             >
               <ChevronIcon expanded={isExpanded} animate={animate} />
             </span>
-            {groupLabel}
+            <HighlightedText text={groupLabel} query={searchState?.query} />
           </button>
         ) : (
-          <span className='min-w-0 grow font-medium'>{groupLabel}</span>
+          <span className='min-w-0 grow font-medium'>
+            <HighlightedText text={groupLabel} query={searchState?.query} />
+          </span>
         )}
       </div>
       <ExpandableContainer open={isExpanded} animate={animate}>

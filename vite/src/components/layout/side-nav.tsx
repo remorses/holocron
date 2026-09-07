@@ -241,7 +241,7 @@ export function SideNav() {
           className={`w-full outline-none box-border search-input${query ? ' search-input-active' : ''}`}
           style={{
             paddingBlock: 'var(--sidebar-row-padding-y)',
-            paddingInlineStart: '2em',
+            paddingInlineStart: 'calc(2em + var(--sidebar-leading-gap))',
             paddingInlineEnd: 'calc(34em / 14)',
             fontFamily: 'var(--font-sans)',
             fontWeight: 'var(--weight-prose)',
@@ -301,6 +301,22 @@ export function SideNav() {
         className='slot-sidebar-nav overflow-y-auto scrollbar-stable min-h-0 -mr-(--sidebar-row-padding-x) pb-[calc(24em/14)] flex flex-col gap-[calc(8em/14)]'
         style={{ paddingInline: 'var(--sidebar-row-padding-x)' }}
       >
+        {showSearchWithAi && (
+          <button
+            type='button'
+            onClick={handleSearchWithAi}
+            className='group flex items-center gap-(--sidebar-leading-gap) no-underline w-full text-left cursor-pointer border-none bg-transparent hover:[background:var(--sidebar-hover-background)]'
+            style={{
+              ...sidebarRowSpacing,
+              font: 'inherit',
+              color: 'var(--sidebar-foreground)',
+              transition: sidebarAnimate ? 'color 0.15s, opacity 0.15s ease' : 'none',
+            }}
+          >
+            <span className='font-medium'>Search with AI chat</span>
+            <span className='ml-auto opacity-50' aria-hidden='true'>→</span>
+          </button>
+        )}
         {/* Sidebar anchors — external links like GitHub, Discord, etc.
             Rendered above the nav groups, matching Mintlify's sidebar anchor placement. */}
         {sidebarAnchors.length > 0 && (
@@ -325,22 +341,6 @@ export function SideNav() {
             ))
           )}
         </SidebarTreeProvider>
-        {showSearchWithAi && (
-          <button
-            type='button'
-            onClick={handleSearchWithAi}
-            className='group flex items-center gap-(--sidebar-leading-gap) no-underline w-full text-left cursor-pointer border-none bg-transparent hover:[background:var(--sidebar-hover-background)]'
-            style={{
-              ...sidebarRowSpacing,
-              font: 'inherit',
-              color: 'var(--sidebar-foreground)',
-              transition: sidebarAnimate ? 'color 0.15s, opacity 0.15s ease' : 'none',
-            }}
-          >
-            <span className='font-medium'>Search with AI chat</span>
-            <span className='ml-auto opacity-50' aria-hidden='true'>→</span>
-          </button>
-        )}
       </nav>
     </aside>
   )

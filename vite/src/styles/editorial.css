@@ -30,8 +30,14 @@
     'calt' 1;
 }
 
-::selection {
+::selection,
+mark.search-match {
   background: color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+mark.search-match {
+  color: inherit;
+  border-radius: 2px;
 }
 
 /* ========================================================================

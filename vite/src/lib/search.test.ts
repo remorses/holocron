@@ -3,7 +3,7 @@
  * Pure function tests — no fixtures, no DOM, no Orama side-effects on assertions.
  */
 import { describe, test, expect } from 'vitest'
-import { createSearchDb, searchSidebar, buildFocusableHrefs, type SearchEntry } from './search.ts'
+import { createSearchDb, searchSidebar, buildFocusableHrefs, filterVisibleHeadings, splitHighlightedText, type SearchEntry, type SearchState } from './search.ts'
 
 /** Build a minimal SearchEntry for a page. */
 function page({ href, title, groupPath }: { href: string; title: string; groupPath: string }): SearchEntry {
@@ -158,7 +158,59 @@ describe('buildFocusableHrefs', () => {
       ]
     `)
   })
+})
 
+describe('filterVisibleHeadings', () => {
+  const headings = [
+    { slug: 'install', text: 'Installation' },
+    { slug: 'config', text: 'Configuration' },
+    { slug: 'empty', text: '' },
+  ]
+
+  test('without search, returns headings that have text', () => {
+    expect(filterVisibleHeadings({ headings, pageHref: '/guide', searchState: null })).toMatchInlineSnapshot(`
+      [
+        {
+          "slug": "install",
+          "text": "Installation",
+        },
+        {
+          "slug": "config",
+          "text": "Configuration",
+        },
+      ]
+    `)
+  })
+
+  test('with search, returns only matched headings and not siblings', () => {
+    const state: SearchState = {
+      query: 'install',
+      matchedHrefs: new Set(['/guide#install']),
+      expandGroupKeys: new Set(['Docs']),
+      visiblePages: new Set(['/guide']),
+    }
+    expect(filterVisibleHeadings({ headings, pageHref: '/guide', searchState: state })).toMatchInlineSnapshot(`
+      [
+        {
+          "slug": "install",
+          "text": "Installation",
+        },
+      ]
+    `)
+  })
+
+  test('with search and no heading hits, returns no headings', () => {
+    const state: SearchState = {
+      query: 'guide',
+      matchedHrefs: new Set(['/guide']),
+      expandGroupKeys: new Set(['Docs']),
+      visiblePages: new Set(['/guide']),
+    }
+    expect(filterVisibleHeadings({ headings, pageHref: '/guide', searchState: state })).toEqual([])
+  })
+})
+
+describe('buildFocusableHrefs', () => {
   test('heading hrefs are included in document order', () => {
     const entries = [
       page({ href: '/guide', title: 'Guide', groupPath: 'Docs' }),
@@ -173,6 +225,112 @@ describe('buildFocusableHrefs', () => {
     expect(focusable).toMatchInlineSnapshot(`
       [
         "/guide#install",
+      ]
+    `)
+  })
+})
+
+describe('splitHighlightedText', () => {
+  test('returns the full text unmatched for empty query or short tokens', () => {
+    expect(splitHighlightedText({ text: 'Installation', query: '' })).toMatchInlineSnapshot(`
+      [
+        {
+          "matched": false,
+          "text": "Installation",
+        },
+      ]
+    `)
+    expect(splitHighlightedText({ text: 'API auth', query: 'API' })).toMatchInlineSnapshot(`
+      [
+        {
+          "matched": false,
+          "text": "API auth",
+        },
+      ]
+    `)
+  })
+
+  test('highlights tokens longer than 3 characters, case insensitive', () => {
+    expect(splitHighlightedText({ text: 'Getting Started', query: 'start' })).toMatchInlineSnapshot(`
+      [
+        {
+          "matched": false,
+          "text": "Getting ",
+        },
+        {
+          "matched": true,
+          "text": "Start",
+        },
+        {
+          "matched": false,
+          "text": "ed",
+        },
+      ]
+    `)
+    expect(splitHighlightedText({ text: 'Installation', query: 'INSTAL' })).toMatchInlineSnapshot(`
+      [
+        {
+          "matched": true,
+          "text": "Instal",
+        },
+        {
+          "matched": false,
+          "text": "lation",
+        },
+      ]
+    `)
+  })
+
+  test('splits the query into words and skips short ones', () => {
+    expect(splitHighlightedText({ text: 'API Authentication', query: 'api auth' })).toMatchInlineSnapshot(`
+      [
+        {
+          "matched": false,
+          "text": "API ",
+        },
+        {
+          "matched": true,
+          "text": "Auth",
+        },
+        {
+          "matched": false,
+          "text": "entication",
+        },
+      ]
+    `)
+  })
+
+  test('highlights every occurrence and merges overlapping tokens', () => {
+    expect(splitHighlightedText({ text: 'Config configuration', query: 'config' })).toMatchInlineSnapshot(`
+      [
+        {
+          "matched": true,
+          "text": "Config",
+        },
+        {
+          "matched": false,
+          "text": " ",
+        },
+        {
+          "matched": true,
+          "text": "config",
+        },
+        {
+          "matched": false,
+          "text": "uration",
+        },
+      ]
+    `)
+    expect(splitHighlightedText({ text: 'Getting Started', query: 'start started' })).toMatchInlineSnapshot(`
+      [
+        {
+          "matched": false,
+          "text": "Getting ",
+        },
+        {
+          "matched": true,
+          "text": "Started",
+        },
       ]
     `)
   })
