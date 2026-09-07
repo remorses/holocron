@@ -3,6 +3,7 @@
  */
 
 import { parseDocument } from 'yaml'
+import { formatHolocronWarning, logger } from './logger.ts'
 
 function extractYamlFrontmatter(content: string): string | undefined {
   const normalized = (content.charCodeAt(0) === 0xfeff ? content.slice(1) : content).replace(/\r\n?/g, '\n')
@@ -85,27 +86,59 @@ function normalizeQuotedMultilineScalars(source: string): string {
   return normalized.join('\n')
 }
 
+function walkFrontmatterKeys(value: unknown, onKey: (key: string) => void) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return
+  for (const [key, nested] of Object.entries(value)) {
+    onKey(key)
+    walkFrontmatterKeys(nested, onKey)
+  }
+}
+
+function warnUnquotedColonValues(source: string) {
+  for (const line of source.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('?') || trimmed.startsWith('"') || trimmed.startsWith("'")) continue
+    const match = trimmed.match(/^([A-Za-z0-9_-]+):\s*(.*)$/)
+    if (!match) continue
+    const value = match[2]!
+    if (!value || value.startsWith('"') || value.startsWith("'") || value.startsWith('{') || value.startsWith('[') || value.startsWith('|') || value.startsWith('>')) continue
+    if (!value.includes(':')) continue
+    logger.warn(formatHolocronWarning(
+      `unquoted frontmatter value contains ":". YAML treats this as a nested key. Quote the string: ${trimmed}`,
+    ))
+  }
+}
+
 export function parseFrontmatterObject(content: string): Record<string, unknown> {
   const source = extractYamlFrontmatter(content)
   if (source === undefined) {
     return {}
   }
 
+  warnUnquotedColonValues(source)
+
   const document = parseDocument(normalizeQuotedMultilineScalars(source), {
     merge: true,
     strict: false,
   })
 
+  const value = document.toJS()
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    walkFrontmatterKeys(value, (key) => {
+      if (!key.includes(' ') || !key.includes(':')) return
+      logger.warn(formatHolocronWarning(
+        `frontmatter key ${JSON.stringify(key)} contains a space and ":". Quote the string so YAML keeps it as text.`,
+      ))
+    })
+  }
+
   if (document.errors.length > 0) {
     return {}
   }
 
-  const value = document.toJS()
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return {}
   }
 
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? value
-    : {}
+  return value
 }
