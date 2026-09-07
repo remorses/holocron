@@ -53,7 +53,7 @@ import {
 import { deduplicateRedirects, interpolateDestination, redirectSourceMatches } from './lib/redirects.ts'
 import { isAgentRequest, stripVisibilityForAgents } from './lib/raw-markdown.ts'
 import { zipSync, strToU8 } from 'fflate'
-import { buildSections, isAboveNode, resolveCompactLayout } from './lib/mdx-sections.ts'
+import { buildSections, demoteBodyH1s, isAboveNode, resolveCompactLayout, shouldInjectPageTitle } from './lib/mdx-sections.ts'
 import { assignUniqueHeadingIds } from './lib/toc-tree.ts'
 import { computeSidebarLayoutFromAsideNodes } from './lib/sidebar-widths.ts'
 import { visit } from 'unist-util-visit'
@@ -261,11 +261,6 @@ function isPageHeadingNode(node: Root['children'][number]): boolean {
       && (node.name === 'Heading' || /^h[1-6]$/.test(node.name ?? '')))
 }
 
-function isInvisibleLeadNode(node: Root['children'][number]): boolean {
-  if (node.type === 'yaml' || node.type === 'definition' || node.type === 'mdxjsEsm') return true
-  return node.type === 'html' && /^\s*<!--/.test(node.value)
-}
-
 function isDuplicateTitleHeading(node: Root['children'][number], title: string): boolean {
   if (!isPageHeadingNode(node)) return false
   const normalize = (value: string) => value.trim().replace(/\s+/g, ' ').toLocaleLowerCase()
@@ -344,6 +339,7 @@ function renderMdxPage({
   const pageTwitterCard = pageSeoMeta['twitter:card'] ?? 'summary_large_image'
 
   const mdast = preParsedMdast
+  demoteBodyH1s(mdast.children)
   assignUniqueHeadingIds(mdast.children)
 
   const configuredPageMode = loaderData.currentPageFrontmatter?.mode ?? site.config.layout.mode
@@ -387,13 +383,13 @@ function renderMdxPage({
 
   const aboveNodes = mdast.children.filter(isAboveNode)
   const contentChildren: Root['children'] = mdast.children.filter((node) => !isAboveNode(node))
-  const firstContentNode = contentChildren.find((node) => !isInvisibleLeadNode(node))
-  const startsWithHeading = !!firstContentNode && isPageHeadingNode(firstContentNode)
-  // Frontmatter title is the generated H1. Skip it when the body already
-  // starts with any heading. Authors can also opt out with `hideTitle: true`.
-  const shouldInjectH1 = loaderData.currentPageFrontmatter?.hideTitle !== true
-    && !!loaderData.currentPageTitle
-    && !startsWithHeading
+  // Frontmatter title is the generated H1. Skip it when the page has <Above>,
+  // the body already starts with a heading, or hideTitle is set.
+  const shouldInjectH1 = shouldInjectPageTitle({
+    nodes: mdast.children,
+    hideTitle: loaderData.currentPageFrontmatter?.hideTitle,
+    pageTitle: loaderData.currentPageTitle,
+  })
   if (shouldInjectH1) {
     const firstHeadingIndex = contentChildren.findIndex(isPageHeadingNode)
     if (firstHeadingIndex !== -1 && isDuplicateTitleHeading(contentChildren[firstHeadingIndex]!, loaderData.currentPageTitle!)) {

@@ -11,12 +11,14 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { normalizeMdx } from './normalize-mdx.ts'
 import { RenderNodes } from './mdx-components-map.tsx'
+import { demoteBodyH1s } from './mdx-sections.ts'
 import { assignUniqueHeadingIds } from './toc-tree.ts'
 
 function renderMdx(raw: string) {
   const result = normalizeMdx(raw)
   if (result instanceof Error) throw result
   const { content, mdast } = result
+  demoteBodyH1s(mdast.children)
   assignUniqueHeadingIds(mdast.children)
   const html = renderToStaticMarkup(
     createElement(RenderNodes, { markdown: content, nodes: mdast.children }),
@@ -66,6 +68,30 @@ describe('heading rendering pipeline', () => {
   test('body h1 is clamped to h2 so the page title remains the only h1', () => {
     const { html } = renderMdx('# Body title')
     expect(html).toMatchInlineSnapshot(`"<h2 id="body-title" class="editorial-heading editorial-h2" data-toc-heading="true" data-toc-level="2"><span>Body title</span><span style="flex:1;height:1px;background:var(--divider)"></span></h2>"`)
+  })
+
+  test('keeps the first native h1 and demotes later ones to h2', () => {
+    const { html } = renderMdx('<h1>Brand</h1>\n\n<h1>Quick Start</h1>')
+    expect(html).toContain('<h1')
+    expect(html).toContain('>Brand</h1>')
+    expect(html).toContain('<h2')
+    expect(html).toContain('Quick Start')
+    expect(html.match(/<h1\b/g)?.length).toBe(1)
+  })
+
+  test('native h1 inside Above stays h1', () => {
+    const { html } = renderMdx(`<Above>
+
+<h1 className="hero">Playwriter</h1>
+
+</Above>
+
+## Quick Start
+`)
+    expect(html.match(/<h1\b/g)?.length).toBe(1)
+    expect(html).toContain('>Playwriter</h1>')
+    expect(html).toContain('<h2')
+    expect(html).toContain('Quick Start')
   })
 
   test('heading with {#custom-id} renders without P wrapper', () => {

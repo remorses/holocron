@@ -8,8 +8,10 @@ import remarkMdx from 'remark-mdx'
 import { remark } from 'remark'
 import {
   buildSections,
+  demoteBodyH1s,
   isAsideNode,
   resolveCompactLayout,
+  shouldInjectPageTitle,
   unwrapAsides,
 } from './mdx-sections.ts'
 import { remarkInlineImports, type InlineImportEntry } from './remark-inline-imports.ts'
@@ -1350,5 +1352,69 @@ Tip
         </Tip>
       </Aside>"
     `)
+  })
+})
+
+describe('shouldInjectPageTitle', () => {
+  test('skips the injected title when the page has Above', () => {
+    const root = mdxParse(`<Above>
+
+Hero
+
+</Above>
+
+## Quick Start
+`)
+    expect(shouldInjectPageTitle({
+      nodes: root.children,
+      hideTitle: false,
+      pageTitle: 'Kimaki: AI coding agents from Discord',
+    })).toBe(false)
+  })
+
+  test('skips the injected title when hideTitle is true', () => {
+    const root = mdxParse('## Quick Start')
+    expect(shouldInjectPageTitle({
+      nodes: root.children,
+      hideTitle: true,
+      pageTitle: 'Kimaki',
+    })).toBe(false)
+  })
+
+  test('injects the title when there is no Above and the body does not start with a heading', () => {
+    const root = mdxParse('Intro paragraph.\n\n## Usage')
+    expect(shouldInjectPageTitle({
+      nodes: root.children,
+      hideTitle: false,
+      pageTitle: 'Kimaki',
+    })).toBe(true)
+  })
+})
+
+describe('demoteBodyH1s', () => {
+  test('keeps the first H1 and demotes later markdown H1s to H2', () => {
+    const root = mdxParse(`# Brand
+
+# Quick Start
+`)
+    demoteBodyH1s(root.children)
+    const depths = root.children
+      .filter((node) => node.type === 'heading')
+      .map((node) => node.type === 'heading' ? node.depth : null)
+    expect(depths).toEqual([1, 2])
+  })
+
+  test('does not count H1s inside Above as extra body H1s', () => {
+    const root = mdxParse(`<Above>
+
+<h1>Brand</h1>
+
+</Above>
+
+# Quick Start
+`)
+    demoteBodyH1s(root.children)
+    const bodyHeading = root.children.find((node) => node.type === 'heading')
+    expect(bodyHeading && bodyHeading.type === 'heading' ? bodyHeading.depth : null).toBe(2)
   })
 })

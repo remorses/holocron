@@ -3,10 +3,11 @@
  * Splits at every heading and handles `<Aside full>` row spans.
  *
  * Authored `<Aside full>` collects later asides into one shared sidebar.
- * Page chrome (AI widget + page nav) uses `<Aside full>` when the page has
- * no asides, or exactly one authored `<Aside full>` (merged into it). That
- * keeps the widget aligned to the top of the sidebar. Otherwise chrome is a
- * regular first-section aside, so later section asides stay on their own rows.
+ * Page chrome (AI widget + page nav) uses `<Aside full>` when later sections
+ * have no asides: no asides at all, asides only in the intro, or exactly one
+ * authored `<Aside full>` (merged into it). That keeps the widget sticky from
+ * the top of the page. If later headings have their own asides, chrome is a
+ * regular first-section aside so those later asides stay on their own rows.
  */
 
 import type { Root, RootContent } from 'mdast'
@@ -111,7 +112,28 @@ function firstNonFullWidthIndex(children: RootContent[]): number {
   return i
 }
 
-/** Page chrome uses `<Aside full>` when it can stay at the top of the sidebar. */
+function firstSectionContentStart(children: RootContent[]): number {
+  const start = firstNonFullWidthIndex(children)
+  return children[start] && isHeadingNode(children[start]!) ? start + 1 : start
+}
+
+function firstSectionEndIndex(children: RootContent[]): number {
+  const scanStart = firstSectionContentStart(children)
+  for (let i = scanStart; i < children.length; i++) {
+    if (isHeadingNode(children[i]!) || isFullWidthNode(children[i]!)) return i
+  }
+  return children.length
+}
+
+function laterSectionsHaveAsides(children: RootContent[]): boolean {
+  const firstEnd = firstSectionEndIndex(children)
+  for (let i = firstEnd; i < children.length; i++) {
+    if (isAsideNode(children[i]!)) return true
+  }
+  return false
+}
+
+/** Page chrome uses `<Aside full>` when later sections have no asides. */
 function injectPageChrome(children: RootContent[], enableAssistant: boolean) {
   const injectedNodes = pageChromeNodes(enableAssistant)
   const authoredAsides = children.filter(isAsideNode)
@@ -119,6 +141,8 @@ function injectPageChrome(children: RootContent[], enableAssistant: boolean) {
     ? authoredAsides[0]
     : undefined
   const insertAt = firstNonFullWidthIndex(children)
+  const scanStart = firstSectionContentStart(children)
+  const firstSectionEnd = firstSectionEndIndex(children)
 
   if (authoredAsides.length === 0) {
     children.splice(insertAt, 0, createAside(injectedNodes, true))
@@ -133,15 +157,6 @@ function injectPageChrome(children: RootContent[], enableAssistant: boolean) {
       children.splice(insertAt, 0, onlyFullAside)
     }
     return
-  }
-
-  const scanStart = children[0] && isHeadingNode(children[0]) ? 1 : 0
-  let firstSectionEnd = children.length
-  for (let i = scanStart; i < children.length; i++) {
-    if (isHeadingNode(children[i]!) || isFullWidthNode(children[i]!)) {
-      firstSectionEnd = i
-      break
-    }
   }
 
   let firstFullAsideIdx = -1
@@ -160,6 +175,19 @@ function injectPageChrome(children: RootContent[], enableAssistant: boolean) {
     return
   }
 
+  if (!laterSectionsHaveAsides(children)) {
+    const introAsides: FlowJsxNode[] = []
+    for (let i = children.length - 1; i >= 0; i--) {
+      const node = children[i]!
+      if (i < firstSectionEnd && isAsideNode(node)) {
+        introAsides.unshift(node)
+        children.splice(i, 1)
+      }
+    }
+    children.splice(firstNonFullWidthIndex(children), 0, createAside([...injectedNodes, ...introAsides], true))
+    return
+  }
+
   children.splice(scanStart, 0, createAside(injectedNodes))
 }
 
@@ -167,9 +195,77 @@ export function isAboveNode(node: RootContent): node is FlowJsxNode {
   return node.type === 'mdxJsxFlowElement' && (node.name === 'Above' || node.name === 'Hero')
 }
 
+function isInvisibleLeadNode(node: RootContent): boolean {
+  if (node.type === 'yaml' || node.type === 'definition' || node.type === 'mdxjsEsm') return true
+  return node.type === 'html' && /^\s*<!--/.test(node.value)
+}
+
 function isHeadingNode(node: RootContent): boolean {
   return node.type === 'heading'
     || (node.type === 'mdxJsxFlowElement' && (node.name === 'Heading' || /^h[1-6]$/.test(node.name ?? '')))
+}
+
+function isH1Node(node: RootContent): boolean {
+  if (node.type === 'heading') return node.depth === 1
+  if (node.type !== 'mdxJsxFlowElement' && node.type !== 'mdxJsxTextElement') return false
+  if (node.name === 'h1') return true
+  if (node.name !== 'Heading') return false
+  const level = node.attributes.find((attr) => attr.type === 'mdxJsxAttribute' && attr.name === 'level')
+  if (!level || level.value == null) return true
+  return String(typeof level.value === 'object' ? level.value.value : level.value) === '1'
+}
+
+function demoteH1Node(node: RootContent) {
+  if (node.type === 'heading') {
+    node.depth = 2
+    return
+  }
+  if (node.type !== 'mdxJsxFlowElement' && node.type !== 'mdxJsxTextElement') return
+  if (node.name === 'h1') {
+    node.name = 'h2'
+    return
+  }
+  if (node.name !== 'Heading') return
+  const level = node.attributes.find((attr) => attr.type === 'mdxJsxAttribute' && attr.name === 'level')
+  if (level && level.type === 'mdxJsxAttribute') {
+    level.value = '2'
+    return
+  }
+  node.attributes.push({ type: 'mdxJsxAttribute', name: 'level', value: '2' })
+}
+
+export function shouldInjectPageTitle({
+  nodes,
+  hideTitle,
+  pageTitle,
+}: {
+  nodes: RootContent[]
+  hideTitle?: boolean
+  pageTitle?: string
+}): boolean {
+  if (hideTitle === true || !pageTitle) return false
+  if (nodes.some(isAboveNode)) return false
+  const firstContentNode = nodes.find((node) => !isInvisibleLeadNode(node))
+  if (firstContentNode && isHeadingNode(firstContentNode)) return false
+  return true
+}
+
+export function demoteBodyH1s(nodes: RootContent[]) {
+  const hasAbove = nodes.some(isAboveNode)
+  let seenH1 = false
+  const walk = (children: RootContent[], insideAbove: boolean) => {
+    for (const node of children) {
+      const nextInside = insideAbove || isAboveNode(node)
+      if (isH1Node(node)) {
+        const isExtra = seenH1 || (hasAbove && !nextInside)
+        if (isExtra) demoteH1Node(node)
+        else seenH1 = true
+      }
+      const nested = Reflect.get(node, 'children')
+      if (Array.isArray(nested)) walk(nested, nextInside)
+    }
+  }
+  walk(nodes, false)
 }
 
 function groupBySections(root: Root): MdastSection[] {
