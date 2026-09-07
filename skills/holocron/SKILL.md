@@ -4,7 +4,8 @@ repo: https://github.com/remorses/holocron
 description: >
   Holocron is a Mintlify-compatible docs site generator and Vite plugin.
   Use this skill when creating, migrating, customizing, or deploying a
-  Holocron documentation site.
+  Holocron documentation site. Also load when writing index.mdx, page
+  titles, hideTitle, Above heroes, or homepage SEO for Google brand ranking.
 ---
 
 # Holocron
@@ -375,24 +376,91 @@ frontmatter fields control what appears where:
 the short sidebar label. Without `sidebarTitle`, the full title shows in the
 sidebar and often wraps or looks verbose.
 
+**Always quote frontmatter strings.** YAML treats `:` as a map. `title: Kimaki: AI agents` is not a string. It is nested YAML. Holocron then drops all frontmatter, and the browser title becomes the first body heading. Quote every string value, especially `title` and `description`. Holocron warns when an unquoted value contains `:`, and when a parsed key contains a space and `:`.
+
+```yaml
+title: "Kimaki: AI coding agents from Discord"
+description: "Kimaki is Iron Man's Jarvis for coding agents inside Discord."
+```
+
 ```mdx
 ---
 $schema: https://holocron.so/frontmatter.json
-title: Open-source browser automation for AI agents
+title: "Playwriter: open-source browser automation"
 sidebarTitle: Home
-description: Automate any browser with a simple TypeScript API.
+description: "Playwriter automates any browser with a simple TypeScript API."
 ---
 ```
 
-Browser tab: `Open-source browser automation for AI agents — Playwriter`
+Browser tab: `Playwriter: open-source browser automation`
 Sidebar: `Home`
+
+If **`title` already starts with the site name**, Holocron leaves it as-is. Otherwise it appends ` — {site name}`.
 
 **Rules:**
 
-- **Never set `title` identical to the site name.** `Playwriter — Playwriter` is redundant.
+- **Never set `title` identical to the site name.** A title of `Playwriter` becomes a useless tab.
 - **Every `title` MUST be descriptive, not a generic label.** `Introduction`, `Getting Started`, `Overview` say nothing in a browser tab. Write what the page covers.
 - **Every `title` MUST be unique across the site.**
-- **`index.mdx` MUST use `sidebarTitle: Home`** (or `Overview`) and a descriptive `title`.
+- **`index.mdx` MUST use `sidebarTitle: Home`** (or `Overview`). The **`title` MUST start with the product name.** See Homepage SEO below.
+
+## Homepage SEO
+
+Google ranks the page whose **title and H1 match the brand query**. A Holocron homepage loses to a random docs page when the homepage H1 never says the product name.
+
+**`index.mdx` title must start with the product name**, then a short description:
+
+```mdx
+---
+$schema: https://holocron.so/frontmatter.json
+title: "Playwriter: open-source browser automation"
+sidebarTitle: Home
+description: "Playwriter automates any browser with a simple TypeScript API."
+---
+```
+
+**One H1 on the homepage, and it must contain the product name.** Holocron injects an H1 from `title` unless the page has `<Above>` or `hideTitle: true`. A custom hero that also renders `<h1>` next to an injected title creates two H1s. Google then has no single brand heading.
+
+**If the page has `<Above>`, that hero owns the H1.** Holocron skips the injected title automatically. Never write `#` or `<h1>` in the MDX body below it. The first body section must be `##`, not `#`. Extra H1s in the output are demoted to H2; keep the first.
+
+If the hero owns the H1, put the product name in the hero heading:
+
+```mdx
+---
+title: "Playwriter: open-source browser automation"
+sidebarTitle: Home
+description: "Playwriter automates any browser with a simple TypeScript API."
+---
+
+<Above>
+  <HeroSection />
+</Above>
+```
+
+```tsx
+<h1>
+  <span>Playwriter</span>
+  <span>open-source browser automation</span>
+</h1>
+```
+
+If there is no custom hero, do **not** set `hideTitle`. Let Holocron inject the brand-first `title` as the only H1. Do not add another `<h1>` in the MDX body.
+
+**Never use `#` or `<h1>` in MDX when the page already has an H1.** That includes an `<Above>` hero or Holocron's injected title. Extra H1s steal the browser `<title>` (Google title-link docs: if several headings share the same weight, Google may pick the first H1). Extra H1 count is not a ranking penalty, but a clear main title is what Google uses for title links.
+
+**`description` must include the product name in the first sentence.** It becomes the meta description and the Google snippet.
+
+**Do not make `/` a clone of GitHub.** Importing `README.md` into `index.mdx` is fine under the hero, but the homepage still needs its own title, H1, and description. If `/` is the same text as `github.com/owner/repo`, Google prefers GitHub plus a unique inner docs page (for example `/docs/getting-started/subscriptions`).
+
+A **logo link to `/`** and extra internal links to the homepage are weak. Fix title and H1 first.
+
+After deploy, fetch the live HTML and check:
+
+```bash
+curl -sL -A 'Mozilla/5.0 (compatible; Googlebot/2.1)' 'https://example.com/' -o /tmp/home.html
+```
+
+Confirm **exactly one `<h1>`**, that H1 text includes the **product name**, and `<title>` starts with the **product name**. The title must match frontmatter `title`, not the first README `##` heading. Rank will not move until Google recrawls.
 
 ## Page modes — hiding sidebars
 
