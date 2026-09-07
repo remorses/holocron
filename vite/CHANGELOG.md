@@ -1,5 +1,58 @@
 # @holocron.so/vite
 
+## 0.35.0
+
+1. **`<Aside wide>`** — the right rail can take leftover viewport space, like API reference pages. The middle content column stays capped at **720px**. Extra width goes to the aside instead of becoming gap:
+
+   ```mdx
+   <Aside wide>
+   <Note>
+   This rail grows into leftover space on the right.
+   </Note>
+   </Aside>
+   ```
+
+   Use `width` for a fixed pixel size, or combine it with `wide` as the minimum:
+
+   ```mdx
+   <Aside wide width={480}>
+   <Panel>
+     Large examples, diagrams, or embeds.
+   </Panel>
+   </Aside>
+   ```
+
+   `RequestExample` and `ResponseExample` already bump the rail to **460px**. `wide` still works with them: 460px is the minimum, then the rail grows. Combine `wide` with `full` to keep that rail sticky while you scroll.
+
+2. **Local SVG file icons** — root-absolute paths like `/icons/vercel.svg` and relative paths like `./icons/vercel.svg` now render as the same sized `currentColor` SVG as Lucide icons, instead of a plain `<img>`. Holocron looks in `public/`, then the project root. A missing file fails the production build. Remote `https://` icons still render as images:
+
+   ```mdx
+   ---
+   title: Vercel deployments
+   icon: /icons/vercel.svg
+   ---
+   ```
+
+   ```json
+   {
+     "group": "Integrations",
+     "icon": "/icons/slack.svg",
+     "pages": ["integrations/slack"]
+   }
+   ```
+
+   The SVG should use **`currentColor`** for `fill` and `stroke`. A `../` path is rejected and fails the production build.
+
+3. **Keep the docs page usable while AI chat is open.** The chat drawer no longer locks page scroll, no longer covers the site with a click-catcher, and no longer closes when you click a page link. Close it with the × button. You can keep reading, scrolling, and navigating while the conversation stays on screen.
+
+4. **Keep one H1 on landing pages.** Pages with `<Above>` no longer get an extra injected title heading. Extra H1s after the first are demoted to H2, so a hero heading stays the main title and body sections stay H2.
+
+   Holocron also warns when frontmatter YAML looks nested because of an unquoted `:`, or when a parsed key contains a space and `:`. Quote those strings.
+
+5. **Keep Ask AI sticky on pages whose only asides sit in the intro.** If later headings have no asides of their own, Holocron now injects a page-spanning `<Aside full>` and collects those intro callouts into it. Ask AI no longer unsticks after the first section.
+
+   Also restore vertical padding on left-sidebar TOC heading rows. A later commit zeroed `paddingBlock` on those links, which made section items look cramped.
+
 ## 0.34.0
 
 1. **Built-in `/github` shortcut** — if the site config links to GitHub from the navbar, navigation, logo, or footer, Holocron adds a temporary redirect from `/github` to that URL:
