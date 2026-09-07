@@ -9,7 +9,7 @@ import React, { createContext, useContext, useEffect, useMemo, useRef, useState 
 import { Link } from '../link.tsx'
 import { type NavGroup, type NavPage, type NavHeading, isNavPage, isNavGroup, hasVisibleSidebarEntries } from '../../navigation.ts'
 import { notifyHeadingClick } from '../../hooks/use-active-toc.ts'
-import { filterVisibleHeadings, splitHighlightedText, type SearchState } from '../../lib/search.ts'
+import { visibleSidebarHeadings, splitHighlightedText, type SearchState } from '../../lib/search.ts'
 import { ChevronIcon } from '../markdown/icons.tsx'
 import { ExpandableContainer } from '../markdown/expandable-container.tsx'
 import { Icon, resolveIconColor } from '../icon.tsx'
@@ -258,7 +258,7 @@ function TocInline({
                   className='block leading-[1.43] no-underline hover:[background:var(--sidebar-hover-background)]'
                   style={{
                     ...rowSpacing(),
-                    paddingBlock: 0,
+                    paddingBlock: 0, // keep TOC denser than page rows; do not inherit --sidebar-row-padding-y
                     color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
                     fontWeight: 400,
                     background: isHighlighted ? 'var(--accent)' : isActive ? 'var(--sidebar-active-background)' : undefined,
@@ -325,16 +325,13 @@ function NavPageLink({
   const tocSuppressed = frontmatter.sidebarToc === false
     || (frontmatter.sidebarToc !== true && page.hasTocPanel === true)
 
-  const visibleHeadings = filterVisibleHeadings({
+  const { headings: visibleHeadings, show: showToc } = visibleSidebarHeadings({
     headings: page.headings,
     pageHref: page.href,
     searchState,
+    isActive,
+    tocSuppressed,
   })
-  // Search shows matched headings even when there is only one. Without search,
-  // a single heading is not useful as a TOC.
-  const showToc = isSearchActive
-    ? visibleHeadings.length > 0
-    : visibleHeadings.length > 1 && isActive && !tocSuppressed
 
   // When a badge is present, truncate the title so the badge + title never overflow
   // the sidebar width. Without a badge, text wraps normally.
@@ -498,6 +495,15 @@ export function NavGroupNode({
   const isRootMatched = Boolean(rootHref && searchState?.matchedHrefs.has(rootHref))
   const isDimmed = isSearchActive && !isRootMatched
   const isEmphasized = isActive || (isSearchActive && isRootMatched)
+  // Group rows already list child pages. Only surface root-page headings
+  // during search so a heading hit on the root remains reachable.
+  const { headings: visibleHeadings, show: showToc } = visibleSidebarHeadings({
+    headings: group.rootPage?.headings ?? [],
+    pageHref: rootHref ?? '',
+    searchState,
+    isActive,
+    tocSuppressed: true,
+  })
 
   return (
     <div className='flex flex-col'>
@@ -565,6 +571,13 @@ export function NavGroupNode({
           </span>
         )}
       </div>
+      {showToc && (
+        <TocInline
+          headings={visibleHeadings}
+          pageHref={rootHref ?? ''}
+          labelIndent={`${folderDepth} * var(--sidebar-indent)`}
+        />
+      )}
       <ExpandableContainer open={isExpanded} animate={animate}>
         {isExpanded && (
           /* `paddingTop` matches the row-gap rhythm so the first child sits

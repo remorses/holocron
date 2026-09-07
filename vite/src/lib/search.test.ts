@@ -1,9 +1,9 @@
 /**
- * Unit tests for searchSidebar and buildFocusableHrefs.
+ * Unit tests for searchSidebar, heading visibility, and highlight segments.
  * Pure function tests — no fixtures, no DOM, no Orama side-effects on assertions.
  */
 import { describe, test, expect } from 'vitest'
-import { createSearchDb, searchSidebar, buildFocusableHrefs, filterVisibleHeadings, splitHighlightedText, type SearchEntry, type SearchState } from './search.ts'
+import { createSearchDb, searchSidebar, buildFocusableHrefs, visibleSidebarHeadings, splitHighlightedText, type SearchEntry, type SearchState } from './search.ts'
 
 /** Build a minimal SearchEntry for a page. */
 function page({ href, title, groupPath }: { href: string; title: string; groupPath: string }): SearchEntry {
@@ -158,9 +158,26 @@ describe('buildFocusableHrefs', () => {
       ]
     `)
   })
+
+  test('heading hrefs are included in document order', () => {
+    const entries = [
+      page({ href: '/guide', title: 'Guide', groupPath: 'Docs' }),
+      heading({ pageHref: '/guide', slug: 'install', text: 'Installation', groupPath: 'Docs' }),
+      heading({ pageHref: '/guide', slug: 'config', text: 'Configuration', groupPath: 'Docs' }),
+      page({ href: '/other', title: 'Other', groupPath: 'Docs' }),
+    ]
+    const db = createSearchDb({ entries })
+    const state = searchSidebar({ db, query: 'Installation', entries })!
+    const focusable = buildFocusableHrefs(state, entries)
+    expect(focusable).toMatchInlineSnapshot(`
+      [
+        "/guide#install",
+      ]
+    `)
+  })
 })
 
-describe('filterVisibleHeadings', () => {
+describe('visibleSidebarHeadings', () => {
   const headings = [
     { slug: 'install', text: 'Installation' },
     { slug: 'config', text: 'Configuration' },
@@ -168,17 +185,26 @@ describe('filterVisibleHeadings', () => {
   ]
 
   test('without search, returns headings that have text', () => {
-    expect(filterVisibleHeadings({ headings, pageHref: '/guide', searchState: null })).toMatchInlineSnapshot(`
-      [
-        {
-          "slug": "install",
-          "text": "Installation",
-        },
-        {
-          "slug": "config",
-          "text": "Configuration",
-        },
-      ]
+    expect(visibleSidebarHeadings({
+      headings,
+      pageHref: '/guide',
+      searchState: null,
+      isActive: true,
+      tocSuppressed: false,
+    })).toMatchInlineSnapshot(`
+      {
+        "headings": [
+          {
+            "slug": "install",
+            "text": "Installation",
+          },
+          {
+            "slug": "config",
+            "text": "Configuration",
+          },
+        ],
+        "show": true,
+      }
     `)
   })
 
@@ -189,13 +215,22 @@ describe('filterVisibleHeadings', () => {
       expandGroupKeys: new Set(['Docs']),
       visiblePages: new Set(['/guide']),
     }
-    expect(filterVisibleHeadings({ headings, pageHref: '/guide', searchState: state })).toMatchInlineSnapshot(`
-      [
-        {
-          "slug": "install",
-          "text": "Installation",
-        },
-      ]
+    expect(visibleSidebarHeadings({
+      headings,
+      pageHref: '/guide',
+      searchState: state,
+      isActive: false,
+      tocSuppressed: false,
+    })).toMatchInlineSnapshot(`
+      {
+        "headings": [
+          {
+            "slug": "install",
+            "text": "Installation",
+          },
+        ],
+        "show": true,
+      }
     `)
   })
 
@@ -206,26 +241,43 @@ describe('filterVisibleHeadings', () => {
       expandGroupKeys: new Set(['Docs']),
       visiblePages: new Set(['/guide']),
     }
-    expect(filterVisibleHeadings({ headings, pageHref: '/guide', searchState: state })).toEqual([])
+    expect(visibleSidebarHeadings({
+      headings,
+      pageHref: '/guide',
+      searchState: state,
+      isActive: true,
+      tocSuppressed: false,
+    })).toMatchInlineSnapshot(`
+      {
+        "headings": [],
+        "show": false,
+      }
+    `)
   })
-})
 
-describe('buildFocusableHrefs', () => {
-  test('heading hrefs are included in document order', () => {
-    const entries = [
-      page({ href: '/guide', title: 'Guide', groupPath: 'Docs' }),
-      heading({ pageHref: '/guide', slug: 'install', text: 'Installation', groupPath: 'Docs' }),
-      heading({ pageHref: '/guide', slug: 'config', text: 'Configuration', groupPath: 'Docs' }),
-      page({ href: '/other', title: 'Other', groupPath: 'Docs' }),
-    ]
-    const db = createSearchDb({ entries })
-    // Search for something that matches the page title
-    const state = searchSidebar({ db, query: 'Installation', entries })!
-    const focusable = buildFocusableHrefs(state, entries)
-    expect(focusable).toMatchInlineSnapshot(`
-      [
-        "/guide#install",
-      ]
+  test('search heading hits on a group root page still surface those headings', () => {
+    const state: SearchState = {
+      query: 'Installation',
+      matchedHrefs: new Set(['/guide#install']),
+      expandGroupKeys: new Set(['Guide']),
+      visiblePages: new Set(['/guide']),
+    }
+    expect(visibleSidebarHeadings({
+      headings,
+      pageHref: '/guide',
+      searchState: state,
+      isActive: false,
+      tocSuppressed: true,
+    })).toMatchInlineSnapshot(`
+      {
+        "headings": [
+          {
+            "slug": "install",
+            "text": "Installation",
+          },
+        ],
+        "show": true,
+      }
     `)
   })
 })
@@ -330,6 +382,51 @@ describe('splitHighlightedText', () => {
         {
           "matched": true,
           "text": "Started",
+        },
+      ]
+    `)
+  })
+
+  test('strips punctuation from query tokens', () => {
+    expect(splitHighlightedText({ text: 'Authentication', query: 'authentication,' })).toMatchInlineSnapshot(`
+      [
+        {
+          "matched": true,
+          "text": "Authentication",
+        },
+      ]
+    `)
+  })
+
+  test('matches folded diacritics', () => {
+    expect(splitHighlightedText({ text: 'Café Guide', query: 'cafe' })).toMatchInlineSnapshot(`
+      [
+        {
+          "matched": true,
+          "text": "Café",
+        },
+        {
+          "matched": false,
+          "text": " Guide",
+        },
+      ]
+    `)
+  })
+
+  test('maps folded indexes back onto the original string', () => {
+    expect(splitHighlightedText({ text: 'İ ABCD tail', query: 'abcd' })).toMatchInlineSnapshot(`
+      [
+        {
+          "matched": false,
+          "text": "İ ",
+        },
+        {
+          "matched": true,
+          "text": "ABCD",
+        },
+        {
+          "matched": false,
+          "text": " tail",
         },
       ]
     `)

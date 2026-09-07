@@ -33,7 +33,7 @@ export type SearchState = {
   visiblePages: Set<string>
 }
 
-export type HighlightRange = {
+type HighlightRange = {
   start: number
   end: number
 }
@@ -132,40 +132,67 @@ export function buildFocusableHrefs(state: SearchState, entries: SearchEntry[]):
     .map((e) => e.href)
 }
 
-/** Headings shown under a page in the sidebar. Search keeps only hits, not siblings. */
-export function filterVisibleHeadings<T extends { slug: string; text: string }>({
+/** Headings shown under a page or group-root row. Search keeps only hits, not siblings. */
+export function visibleSidebarHeadings<T extends { slug: string; text: string }>({
   headings,
   pageHref,
   searchState,
+  isActive,
+  tocSuppressed,
 }: {
   headings: T[]
   pageHref: string
   searchState: SearchState | null
-}): T[] {
+  isActive: boolean
+  tocSuppressed: boolean
+}): { headings: T[]; show: boolean } {
   const withText = headings.filter((heading) => heading.text)
-  if (searchState === null) return withText
-  return withText.filter((heading) => searchState.matchedHrefs.has(`${pageHref}#${heading.slug}`))
+  if (searchState === null) {
+    return {
+      headings: withText,
+      show: withText.length > 1 && isActive && !tocSuppressed,
+    }
+  }
+  const matched = withText.filter((heading) => searchState.matchedHrefs.has(`${pageHref}#${heading.slug}`))
+  return { headings: matched, show: matched.length > 0 }
 }
 
 const MIN_HIGHLIGHT_TOKEN = 4
 
-/** Match ranges for sidebar labels. Split the query into words and skip tokens shorter than 4 chars. */
-export function findHighlightRanges({ text, query }: { text: string; query: string }): HighlightRange[] {
-  const tokens = query
-    .trim()
-    .split(/\s+/)
+/** Fold for matching, and map each folded index back to the original string. */
+function foldForSearch(text: string): { folded: string; toOriginal: number[] } {
+  let folded = ''
+  const toOriginal: number[] = []
+  for (let i = 0; i < text.length; ) {
+    const char = String.fromCodePoint(text.codePointAt(i)!)
+    const foldedChar = char.normalize('NFD').replace(/\p{M}+/gu, '').toLowerCase()
+    for (let j = 0; j < foldedChar.length; j++) toOriginal.push(i)
+    folded += foldedChar
+    i += char.length
+  }
+  toOriginal.push(text.length)
+  return { folded, toOriginal }
+}
+
+/** Match ranges for sidebar labels. Split into words, skip tokens shorter than 4 chars. */
+function findHighlightRanges({ text, query }: { text: string; query: string }): HighlightRange[] {
+  const tokens = (query.match(/[\p{L}\p{N}_'-]+/gu) ?? [])
     .filter((token) => token.length >= MIN_HIGHLIGHT_TOKEN)
   if (!text || tokens.length === 0) return []
 
-  const haystack = text.toLowerCase()
+  const { folded: haystack, toOriginal } = foldForSearch(text)
   const ranges: HighlightRange[] = []
   for (const token of tokens) {
-    const needle = token.toLowerCase()
+    const needle = foldForSearch(token).folded
+    if (!needle) continue
     let from = 0
     while (from <= haystack.length - needle.length) {
       const start = haystack.indexOf(needle, from)
       if (start === -1) break
-      ranges.push({ start, end: start + needle.length })
+      ranges.push({
+        start: toOriginal[start]!,
+        end: toOriginal[start + needle.length]!,
+      })
       from = start + 1
     }
   }
