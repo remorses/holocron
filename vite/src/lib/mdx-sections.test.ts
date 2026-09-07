@@ -287,23 +287,24 @@ Body
       [CONTENT]
       Intro
 
-      [ASIDE]
-      <Aside>
-        <HolocronAIAssistantWidget />
-
-        <HolocronPageNavRow />
-      </Aside>
-
-      <Aside>
-        My aside
-      </Aside>
-
       --- SECTION 1 ---
+      asideRowSpan: 2
 
       [CONTENT]
       ## Section
 
-      Body"
+      Body
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+
+        <Aside>
+          My aside
+        </Aside>
+      </Aside>"
     `)
   })
 
@@ -1197,6 +1198,114 @@ Body
         <HolocronAIAssistantWidget />
 
         <HolocronPageNavRow />
+      </Aside>"
+    `)
+  })
+
+  test('leading FullWidth still spans intro-only asides', () => {
+    const mdx = `<FullWidth>
+Hero
+</FullWidth>
+
+Intro
+
+<Aside>
+<Tip>
+Only intro
+</Tip>
+</Aside>
+
+## Later
+
+Body
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+      fullWidth: true
+
+      [CONTENT]
+      Hero
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      Intro
+
+      --- SECTION 2 ---
+      asideRowSpan: 2
+
+      [CONTENT]
+      ## Later
+
+      Body
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+
+        <Aside>
+          <Tip>
+            Only intro
+          </Tip>
+        </Aside>
+      </Aside>"
+    `)
+  })
+
+  test('intro-only asides still span the AI widget across the page', () => {
+    // Collabute-style pages: one <Aside> in the intro, later headings with
+    // no asides. Chrome must still be <Aside full> so Ask AI and the intro
+    // callout stay sticky for the whole page, not only the first section.
+    const mdx = `These docs are for users who need to install Collabute.
+
+<Aside>
+<Tip>
+Start with Installation, then Getting Started.
+</Tip>
+</Aside>
+
+## Documentation map
+
+Cards.
+
+## Access model
+
+Roles.
+`
+    expect(formatSectionsToMdx(parseAndBuild(mdx))).toMatchInlineSnapshot(`
+      "--- SECTION 0 ---
+
+      [CONTENT]
+      These docs are for users who need to install Collabute.
+
+      --- SECTION 1 ---
+
+      [CONTENT]
+      ## Documentation map
+
+      Cards.
+
+      --- SECTION 2 ---
+      asideRowSpan: 3
+
+      [CONTENT]
+      ## Access model
+
+      Roles.
+
+      [SHARED ASIDE]
+      <Aside full>
+        <HolocronAIAssistantWidget />
+
+        <HolocronPageNavRow />
+
+        <Aside>
+          <Tip>
+            Start with Installation, then Getting Started.
+          </Tip>
+        </Aside>
       </Aside>"
     `)
   })

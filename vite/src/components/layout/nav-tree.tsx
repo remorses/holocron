@@ -256,7 +256,6 @@ function TocInline({
                   tabIndex={isDimmed ? -1 : 0}
                   style={{
                     ...rowSpacing(),
-                    paddingBlock: 0,
                     color: isEmphasized ? 'var(--sidebar-primary)' : 'var(--sidebar-foreground)',
                     fontWeight: 400,
                     background: isHighlighted ? 'var(--accent)' : isActive ? 'var(--sidebar-active-background)' : undefined,
