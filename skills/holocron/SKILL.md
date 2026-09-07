@@ -364,72 +364,94 @@ sidebarTitle: Auth Providers
 below the title and in search engine snippets. Write a single sentence that
 summarizes the page content. Longer descriptions get truncated with an ellipsis.
 
-## Page titles (MUST follow)
+## Page titles and SEO (MUST follow)
 
-Holocron renders the browser `<title>` as `{page title} — {site name}`. Two
-frontmatter fields control what appears where:
+Google title links and snippets come from on-page title, H1, and description.
+See [title links](https://developers.google.com/search/docs/appearance/title-link)
+and [snippets](https://developers.google.com/search/docs/appearance/snippet).
 
-- **`title`** — browser tab, Google results, OG image, page heading. Write for SEO.
-- **`sidebarTitle`** — sidebar navigation only. Write for scannability (short label).
+Holocron already appends the site name. `buildPageTitle` renders
+`{page title} — {site name}` unless `title` already starts with the site name.
+**Do not put the site name in `title` or in the H1.** That doubles the brand
+(`Kimaki: … — Kimaki`). Write the ranking keywords only. Let Holocron add
+` — {site name}`.
 
-**Always set both.** `title` is the full descriptive phrase; `sidebarTitle` is
-the short sidebar label. Without `sidebarTitle`, the full title shows in the
-sidebar and often wraps or looks verbose.
+Two frontmatter fields:
 
-**Always quote frontmatter strings.** YAML treats `:` as a map. `title: Kimaki: AI agents` is not a string. It is nested YAML. Holocron then drops all frontmatter, and the browser title becomes the first body heading. Quote every string value, especially `title` and `description`. Holocron warns when an unquoted value contains `:`, and when a parsed key contains a space and `:`.
+- **`title`** — browser tab, Google title link, OG image, and the injected H1. Write for SEO. Put the keywords this page should rank for.
+- **`sidebarTitle`** — sidebar only. Short label, under 30 characters.
 
-```yaml
-title: "Kimaki: AI coding agents from Discord"
-description: "Kimaki is Iron Man's Jarvis for coding agents inside Discord."
-```
+**Always set both.** Without `sidebarTitle`, the long SEO title wraps in the 230px sidebar.
+
+**Always quote frontmatter strings.** YAML treats `:` as a map. `title: Kimaki: AI agents` is nested YAML. Holocron then drops all frontmatter, and the browser title becomes the first body heading. Quote `title` and `description`. Holocron warns when an unquoted value contains `:`, and when a parsed key contains a space and `:`.
 
 ```mdx
 ---
 $schema: https://holocron.so/frontmatter.json
-title: "Playwriter: open-source browser automation"
+title: "Open-source browser automation"
 sidebarTitle: Home
-description: "Playwriter automates any browser with a simple TypeScript API."
+description: "Automate any browser with a TypeScript API. Control Chrome from a CLI or agent."
 ---
 ```
 
-Browser tab: `Playwriter: open-source browser automation`
+Browser tab: `Open-source browser automation — Playwriter`
+Injected H1: `Open-source browser automation`
 Sidebar: `Home`
 
-If **`title` already starts with the site name**, Holocron leaves it as-is. Otherwise it appends ` — {site name}`.
+On most pages Holocron injects `title` as the only H1, so **title and H1 are the same**. Keep it that way. Do not add another `#` or `<h1>` in the body.
 
-**Rules:**
+**Title rules:**
 
-- **Never set `title` identical to the site name.** A title of `Playwriter` becomes a useless tab.
-- **Every `title` MUST be descriptive, not a generic label.** `Introduction`, `Getting Started`, `Overview` say nothing in a browser tab. Write what the page covers.
-- **Every `title` MUST be unique across the site.**
-- **`index.mdx` MUST use `sidebarTitle: Home`** (or `Overview`). The **`title` MUST start with the product name.** See Homepage SEO below.
+- **Put ranking keywords in `title`.** The homepage title is the most important. Docs pages use the topic keywords (`Subscriptions`, `Worktrees`), not `Introduction` or `Overview`.
+- **Never start `title` with the site name.** Holocron already appends ` — {site name}`.
+- **Never set `title` identical to the site name.** A title of `Playwriter` becomes `Playwriter — Playwriter`.
+- **Every `title` MUST be unique, descriptive, and concise.** Google truncates long titles. Avoid keyword stuffing and boilerplate that only changes one word.
+- **`index.mdx` MUST use `sidebarTitle: Home`** (or `Overview`). See Homepage SEO below.
+
+**H1 rules:**
+
+- **One H1 per page.** It must contain the same ranking keywords as `title`. Prefer the exact `title` text. Holocron does this automatically when it injects the title.
+- Google uses the first prominent H1 as a title-link source. Extra H1s with the same weight can steal the tab title (`Quick Start — Site`). Heading count is not a ranking penalty. A clear main title is.
+
+**Description rules:**
+
+`description` becomes `<meta name="description">`. Google may use it as the snippet when it describes the page better than on-page text.
+
+- **Unique per page.** Site-wide copy on every page is useless in search results.
+- **Summarize this page**, in one or two sentences. Not a keyword list.
+- **Include ranking keywords naturally.** Do not stuff. Do not repeat the site name just because the title suffix already has it. The homepage may name the product once if that is the summary.
+- **Be specific.** Length has no hard cap. Google truncates to the device width. Aim for a short pitch, about 120 to 160 characters.
+- Quote the YAML string.
+
+```yaml
+description: "Run AI coding agents from Discord. Each channel is a project, each thread is a session."
+```
 
 ## Homepage SEO
 
-Google ranks the page whose **title and H1 match the brand query**. A Holocron homepage loses to a random docs page when the homepage H1 never says the product name.
-
-**`index.mdx` title must start with the product name**, then a short description:
+The homepage title is the strongest brand query signal. Put the keywords people search in `title` and H1. Let Holocron append the site name.
 
 ```mdx
 ---
 $schema: https://holocron.so/frontmatter.json
-title: "Playwriter: open-source browser automation"
+title: "AI coding agents from Discord"
 sidebarTitle: Home
-description: "Playwriter automates any browser with a simple TypeScript API."
+description: "Run AI coding agents from Discord. Each channel is a project, each thread is a session."
 ---
 ```
 
-**One H1 on the homepage, and it must contain the product name.** Holocron injects an H1 from `title` unless the page has `<Above>` or `hideTitle: true`. A custom hero that also renders `<h1>` next to an injected title creates two H1s. Google then has no single brand heading.
+Browser tab: `AI coding agents from Discord — Kimaki`
+H1: `AI coding agents from Discord`
 
-**If the page has `<Above>`, that hero owns the H1.** Holocron skips the injected title automatically. Never write `#` or `<h1>` in the MDX body below it. The first body section must be `##`, not `#`. Extra H1s in the output are demoted to H2; keep the first.
+**One H1, same keywords as `title`.** Holocron injects that H1 unless the page has `<Above>` or `hideTitle: true`. A custom hero that also renders `<h1>` next to an injected title creates two H1s.
 
-If the hero owns the H1, put the product name in the hero heading:
+**If the page has `<Above>`, that hero owns the H1.** Holocron skips the injected title. Set the hero H1 to the same text as `title`. Do not put the site name in the hero H1. Never write `#` or `<h1>` in the MDX body below it. The first body section must be `##`. Extra H1s are demoted to H2.
 
 ```mdx
 ---
-title: "Playwriter: open-source browser automation"
+title: "AI coding agents from Discord"
 sidebarTitle: Home
-description: "Playwriter automates any browser with a simple TypeScript API."
+description: "Run AI coding agents from Discord. Each channel is a project, each thread is a session."
 ---
 
 <Above>
@@ -439,20 +461,16 @@ description: "Playwriter automates any browser with a simple TypeScript API."
 
 ```tsx
 <h1>
-  <span>Playwriter</span>
-  <span>open-source browser automation</span>
+  <span>AI coding agents</span>
+  <span>from Discord.</span>
 </h1>
 ```
 
-If there is no custom hero, do **not** set `hideTitle`. Let Holocron inject the brand-first `title` as the only H1. Do not add another `<h1>` in the MDX body.
+If there is no custom hero, do **not** set `hideTitle`. Let Holocron inject `title` as the only H1.
 
-**Never use `#` or `<h1>` in MDX when the page already has an H1.** That includes an `<Above>` hero or Holocron's injected title. Extra H1s steal the browser `<title>` (Google title-link docs: if several headings share the same weight, Google may pick the first H1). Extra H1 count is not a ranking penalty, but a clear main title is what Google uses for title links.
+**Do not make `/` a clone of GitHub.** Importing `README.md` under the hero is fine. The homepage still needs its own title, H1, and description. If `/` is the same text as GitHub, Google prefers GitHub plus a unique inner docs page.
 
-**`description` must include the product name in the first sentence.** It becomes the meta description and the Google snippet.
-
-**Do not make `/` a clone of GitHub.** Importing `README.md` into `index.mdx` is fine under the hero, but the homepage still needs its own title, H1, and description. If `/` is the same text as `github.com/owner/repo`, Google prefers GitHub plus a unique inner docs page (for example `/docs/getting-started/subscriptions`).
-
-A **logo link to `/`** and extra internal links to the homepage are weak. Fix title and H1 first.
+A **logo link to `/`** is weak. Fix title, H1, and description first.
 
 After deploy, fetch the live HTML and check:
 
@@ -460,7 +478,7 @@ After deploy, fetch the live HTML and check:
 curl -sL -A 'Mozilla/5.0 (compatible; Googlebot/2.1)' 'https://example.com/' -o /tmp/home.html
 ```
 
-Confirm **exactly one `<h1>`**, that H1 text includes the **product name**, and `<title>` starts with the **product name**. The title must match frontmatter `title`, not the first README `##` heading. Rank will not move until Google recrawls.
+Confirm **exactly one `<h1>`**, that H1 text matches `title`, and `<title>` is `{title} — {site name}` with the site name only at the end. Rank will not move until Google recrawls.
 
 ## Page modes — hiding sidebars
 
