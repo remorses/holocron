@@ -773,3 +773,41 @@
         animation: none;
     }
 }
+
+/*
+ * Viewport fade under the floating Ask AI pill.
+ *
+ * The page scrolls on the window, not on `.slot-main`, so a sidebar-style
+ * `mask-image` on the content column would fade each section's own bottom
+ * edge. A fixed overlay on `html` dissolves whatever sits under the pill
+ * into `--background` instead. Lives on `html` because `.slot-page` has
+ * `overflow-x: clip`, which would trap `position: fixed` descendants.
+ *
+ * Hidden while the pill is `[inert]` (drawer open). Extra padding lets the
+ * last lines scroll above the fade instead of staying trapped under it.
+ */
+html:has(.slot-page[data-assistant-display='floating']) {
+    --assistant-fade-size: 8rem;
+    scroll-padding-bottom: var(--assistant-fade-size);
+}
+
+.slot-page[data-assistant-display='floating'] {
+    padding-bottom: var(--assistant-fade-size);
+}
+
+html:has(.slot-page[data-assistant-display='floating'] .holocron-chat-pill:not([inert]))::after {
+    content: '';
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    height: var(--assistant-fade-size);
+    pointer-events: none;
+    z-index: 150;
+    background: linear-gradient(
+        to top,
+        var(--background) 0,
+        var(--background) 4.5rem,
+        color-mix(in srgb, var(--background) 55%, transparent) 6rem,
+        transparent 100%
+    );
+}
