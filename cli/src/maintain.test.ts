@@ -1,7 +1,9 @@
 // Tests Maintain --model parsing for Holocron-hosted vs OpenCode BYOK ids.
 
 import { describe, expect, test } from 'vitest'
-import { formatOpenCodeError, parseMaintainModel } from './maintain.ts'
+import { parseMaintainModel, pinOpencodeOnPath } from './maintain.ts'
+import fs from 'node:fs'
+import path from 'node:path'
 
 describe('parseMaintainModel', () => {
   test('defaults to a Holocron-hosted model', () => {
@@ -84,28 +86,16 @@ describe('parseMaintainModel', () => {
   })
 })
 
-describe('formatOpenCodeError', () => {
-  test('prints Error.message instead of {}', () => {
-    expect(formatOpenCodeError(new Error('provider timed out'))).toMatchInlineSnapshot(
-      `"provider timed out"`,
-    )
-  })
-
-  test('includes the cause chain', () => {
-    expect(formatOpenCodeError(new Error('OpenCode maintain run failed.', { cause: new Error('aborted') }))).toMatchInlineSnapshot(
-      `"OpenCode maintain run failed. aborted"`,
-    )
-  })
-
-  test('does not stringify an empty object as the whole message', () => {
-    expect(formatOpenCodeError({})).toMatchInlineSnapshot(
-      `"empty OpenCode error. The provider likely timed out or dropped the connection."`,
-    )
-  })
-
-  test('reads NamedError-shaped bodies', () => {
-    expect(formatOpenCodeError({ name: 'ProviderTimeoutError', data: { message: 'timed out after 300000ms' } })).toMatchInlineSnapshot(
-      `"timed out after 300000ms"`,
-    )
+describe('pinOpencodeOnPath', () => {
+  test('puts the pinned opencode-ai binary first on PATH', () => {
+    const restore = pinOpencodeOnPath()
+    try {
+      const first = process.env.PATH?.split(path.delimiter)[0]
+      if (!first) throw new Error('expected PATH')
+      expect(fs.existsSync(path.join(first, 'opencode.exe'))).toBe(true)
+      expect(first.replaceAll('\\', '/')).toMatch(/opencode-ai\/bin$/)
+    } finally {
+      restore()
+    }
   })
 })

@@ -5,6 +5,7 @@
 import { createOpencodeClient } from '@opencode-ai/sdk/v2/client'
 import { createOpencodeServer } from '@opencode-ai/sdk/v2/server'
 import { getDeployClient } from '../src/api-client.ts'
+import { pinOpencodeOnPath } from '../src/maintain.ts'
 
 const enabled = process.env.HOLOCRON_TEST_MAINTAIN_OPENCODE === '1'
 const projectId = process.env.HOLOCRON_PROJECT ?? ''
@@ -35,6 +36,7 @@ if (!created.apiKey.startsWith('mnt_')) {
 }
 
 console.log('Starting OpenCode against the Holocron OpenAI-compatible endpoint')
+const restorePath = pinOpencodeOnPath()
 const server = await createOpencodeServer({
   hostname: '127.0.0.1',
   port: 0,
@@ -49,6 +51,7 @@ const server = await createOpencodeServer({
     },
   },
 })
+restorePath()
 try {
   const oc = createOpencodeClient({ baseUrl: server.url })
   console.log(`OpenCode listening on ${server.url}`)

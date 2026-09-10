@@ -5,6 +5,7 @@ import path from 'node:path'
 import * as clack from '@clack/prompts'
 import { createOpencodeClient } from '@opencode-ai/sdk/v2/client'
 import { createOpencodeServer } from '@opencode-ai/sdk/v2/server'
+import { createRequire } from 'node:module'
 import { goke, isAgent } from 'goke'
 import dedent from 'string-dedent'
 import { remark } from 'remark'
@@ -30,6 +31,7 @@ import { loadGithubEvent, type GithubMaintainRelease } from './maintain-github.t
 
 const RUN_TIMEOUT_MS = 25 * 60 * 1000
 const HOSTED_PROVIDER = 'holocron'
+const require = createRequire(import.meta.url)
 const BYOK_MODEL_EXAMPLE = 'anthropic/claude-sonnet-4-5'
 const EMPTY_MODEL_MESSAGE = `Pass a model id, for example glm-5.3-flash or ${BYOK_MODEL_EXAMPLE}.`
 const PROVIDER_MODEL_MESSAGE = `Use provider/model, for example ${BYOK_MODEL_EXAMPLE}.`
@@ -214,7 +216,7 @@ maintainCli
       }
     }
     if (runError) {
-      output.error(logger.error(formatOpenCodeError(runError)))
+      output.error(logger.error(runError.message))
       return proc.exit(1)
     }
 
@@ -347,6 +349,7 @@ async function runOpenCode({
 
   const providerId = model.providerId
   const modelId = model.modelId
+  const restorePath = pinOpencodeOnPath()
   const server = await createOpencodeServer({
     hostname: '127.0.0.1',
     port: 0,
@@ -367,24 +370,18 @@ async function runOpenCode({
         : undefined,
     },
   }).catch((error) => new Error('OpenCode server failed to start.', { cause: error }))
+  restorePath()
   if (server instanceof Error) {
     clearTimeout(timeout)
     return server
   }
   try {
     const client = createOpencodeClient({ baseUrl: server.url, directory: repoRoot })
-    const sessionResult = await client.session.create({
+    const session = await client.session.create({
       title: 'Maintain Holocron documentation',
       model: { id: modelId, providerID: providerId },
       permission,
-    })
-    if (sessionResult.error || !sessionResult.data) {
-      return openCodeFailed({
-        kind: model.kind,
-        prefix: 'OpenCode could not create a session.',
-        detail: sessionResult.error ? ` ${formatOpenCodeError(sessionResult.error)}` : '',
-      })
-    }
+    }, { throwOnError: true })
 
     const system = buildMaintainSystemPrompt({ gitDiffRange })
     const prompt = buildMaintainUserPrompt({
@@ -396,33 +393,34 @@ async function runOpenCode({
       release,
       githubActions,
     })
-    const result = await client.session.prompt({
-      sessionID: sessionResult.data.id,
+    await client.session.prompt({
+      sessionID: session.data.id,
       model: { providerID: providerId, modelID: modelId },
       agent: 'build',
       system,
       tools: { bash: true, websearch: false, task: true, read: true, glob: true, grep: true, edit: true, webfetch: true },
       parts: [{ type: 'text', text: prompt }],
-    })
-    if (result.error || !result.data) {
-      return openCodeFailed({
-        kind: model.kind,
-        prefix: 'OpenCode failed to maintain the selected pages.',
-        detail: result.error ? ` ${formatOpenCodeError(result.error)}` : '',
-      })
-    }
+    }, { throwOnError: true })
   } catch (error) {
-    const detail = error instanceof Error
-      ? formatOpenCodeError(error)
-      : typeof error === 'string'
-        ? formatOpenCodeError(error)
-        : error && typeof error === 'object'
-          ? formatOpenCodeError(error)
-          : String(error)
-    return new Error(`OpenCode maintain run failed. ${detail}`, { cause: error })
+    const message = error instanceof Error ? error.message : String(error)
+    return openCodeFailed({
+      kind: model.kind,
+      prefix: 'OpenCode failed to maintain the selected pages.',
+      detail: message ? ` ${message}` : '',
+    })
   } finally {
     clearTimeout(timeout)
     server.close()
+  }
+}
+
+export function pinOpencodeOnPath() {
+  const binDir = path.dirname(require.resolve('opencode-ai/bin/opencode.exe'))
+  const previous = process.env.PATH
+  process.env.PATH = `${binDir}${path.delimiter}${previous ?? ''}`
+  return () => {
+    if (previous === undefined) delete process.env.PATH
+    else process.env.PATH = previous
   }
 }
 
@@ -439,34 +437,6 @@ function openCodeFailed({
     ? ' Check the model id (`opencode models`) and the provider key: https://opencode.ai/docs/providers/'
     : ''
   return new Error(`${prefix}${detail}${hint}`)
-}
-
-export function formatOpenCodeError(error: Error | string | object | null | undefined): string {
-  if (error instanceof Error) {
-    const extra = error.cause instanceof Error ? ` ${error.cause.message}` : ''
-    return `${error.message}${extra}`.trim()
-  }
-  if (typeof error === 'string' && error.trim()) return error
-  if (!error || typeof error !== 'object') {
-    return 'empty OpenCode error. The provider likely timed out or dropped the connection.'
-  }
-  if ('message' in error && typeof error.message === 'string' && error.message.trim()) return error.message
-  if (
-    'data' in error
-    && error.data
-    && typeof error.data === 'object'
-    && 'message' in error.data
-    && typeof error.data.message === 'string'
-    && error.data.message.trim()
-  ) {
-    return error.data.message
-  }
-  if ('name' in error && typeof error.name === 'string' && error.name.trim()) return error.name
-  try {
-    const json = JSON.stringify(error)
-    if (json && json !== '{}') return json
-  } catch {}
-  return 'empty OpenCode error. The provider likely timed out or dropped the connection.'
 }
 
 function githubActionsPublishPrompt({
