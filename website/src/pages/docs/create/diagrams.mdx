@@ -68,6 +68,7 @@ The fixer processes only diagram content inside fenced code blocks. Prose text i
 - **Cross junctions**: `┼`, `╬`, `╋` preserved when rebuilding dividers
 - **Side-by-side boxes**: fixes one box without shifting adjacent boxes on the same row
 - **Nested boxes**: inner boxes fixed independently from outer boxes
+- **Nested fences**: follows **CommonMark** fence rules, so a `diagram` fence nested inside a wrapping `mdx` block is fixed in place without swallowing the rest of the file
 
 ### What it reports (but cannot auto-fix)
 
