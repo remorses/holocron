@@ -342,6 +342,20 @@ Holocron Maintain extracts these references and reruns the generation prompt
 when a source changes. A folder reference matches changes to any tracked file
 inside that folder.
 
+### Migrating an existing docs site
+
+When moving a docs site to Holocron, write each `prompt` as if the page was
+authored from scratch. Keep it a short summary of what the page documents.
+
+Do not mention migration, recreation, or the old docs URL. Do not add
+`@https://old-site/...` references. The source site is going away after the
+move unless the user says otherwise.
+
+```yaml
+prompt: |
+  Document connecting the first integration, role access, and chat validation.
+```
+
 **Title** should be **50-60 characters** max. It appears in the OG image at large
 font size, in the browser tab, and in search results. Keep it concise and
 descriptive.
