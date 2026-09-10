@@ -1,5 +1,15 @@
 # @holocron.so/vite
 
+## 0.35.2
+
+1. **Keep sidebar search compact.** Parent pages of heading hits stay visible. Sibling pages and sibling headings hide. **Search with AI chat** sits at the top of the filtered tree.
+
+   Heading hits on a group root page now appear under that group row. Matched words longer than 3 characters are highlighted with the same primary wash used for text selection. Highlighting splits on punctuation, folds diacritics, and maps indexes back onto the original label.
+
+2. **Fade page content under the floating Ask AI pill.** When `assistant.display` is `floating`, the bottom of the viewport now dissolves into the page background so body text does not sit under the pill. The fade hides while the chat drawer is open.
+
+3. **Keep left-sidebar TOC headings tight.** Page and group rows still use `--sidebar-row-padding-y` for the hover pill. Heading links under the active page override that to `padding-block: 0`, so TOC sections match the denser spacing from before the padding restore.
+
 ## 0.35.1
 
 1. **Remove `<Aside wide>`** — the right rail stays a **fixed** width. Extra viewport space is gap, not a growing aside.

@@ -1,3 +1,17 @@
+## 0.22.2
+
+1. **Print the real OpenCode error when Maintain fails**, instead of `{}`.
+
+   Hosted Maintain runs now use a **25-minute** provider timeout, matching the CLI run timeout. The previous OpenCode default of 5 minutes aborted long documentation updates with an empty error object.
+
+   Maintain also puts the bundled `opencode-ai` binary first on `PATH` before starting the OpenCode server, so a global `opencode` install does not win.
+
+2. **Fix `holocron diagrams fix` nested fences.** A wrapping ````mdx` fence no longer swallows later prose.
+
+   CommonMark closing fences must match the opening fence length. A nested ` ```diagram ` inside ````mdx` was treated as the closer, so the rest of the file was scanned as one diagram and long prose lines failed the 94-column check.
+
+   ASCII diagrams in the public docs now use the `diagram` language hint, including the [subpath hosting](https://holocron.so/docs/deploy/base-path) page.
+
 ## 0.22.1
 
 1. **Fix `holocron maintain --model` examples and error text.** The BYOK example is now a real OpenCode id, `anthropic/claude-sonnet-4-5`. Failed OpenCode calls print the provider error instead of always saying the API key is missing. Unknown hosted ids hint at the `provider/model` form. Docs name the hosted models (`deepseek-v4-flash` default, `glm-5.3-flash`) and point at `opencode auth login` for keys:
