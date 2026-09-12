@@ -36,6 +36,20 @@ test.describe("page frontmatter mode", () => {
     expect(compactHeader!.width).toBeLessThan(defaultHeader!.width);
   });
 
+  test("floating assistant leaves space below the footer", async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 1000 });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const pill = page.locator(".holocron-chat-pill");
+    await expect(pill).toBeVisible();
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    const footerBox = await page.locator("footer").boundingBox();
+    const pillBox = await pill.boundingBox();
+    expect(footerBox).not.toBeNull();
+    expect(pillBox).not.toBeNull();
+    expect(footerBox!.y + footerBox!.height).toBeLessThanOrEqual(pillBox!.y + 1);
+  });
+
   test("frontmatter-only compact pages render their generated h1", async ({ page }) => {
     await page.goto("/empty-compact", { waitUntil: "domcontentloaded" });
 

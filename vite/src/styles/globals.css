@@ -784,18 +784,23 @@
  * `overflow-x: clip`, which would trap `position: fixed` descendants.
  *
  * Hidden while the pill is `[inert]` (drawer open). Extra padding lets the
- * last lines scroll above the fade instead of staying trapped under it.
+ * footer and last lines scroll above the pill instead of staying under it.
+ * `:has(.holocron-chat-pill)` covers older pages that render the pill
+ * without `data-assistant-display="floating"`.
  */
-html:has(.slot-page[data-assistant-display='floating']) {
-    --assistant-fade-size: 8rem;
+html:has(.slot-page[data-assistant-display='floating']),
+html:has(.holocron-chat-pill) {
+    --assistant-fade-size: 12rem;
     scroll-padding-bottom: var(--assistant-fade-size);
 }
 
-.slot-page[data-assistant-display='floating'] {
+.slot-page[data-assistant-display='floating'],
+.slot-page:has(.holocron-chat-pill) {
     padding-bottom: var(--assistant-fade-size);
 }
 
-html:has(.slot-page[data-assistant-display='floating'] .holocron-chat-pill:not([inert]))::after {
+html:has(.slot-page[data-assistant-display='floating'] .holocron-chat-pill:not([inert]))::after,
+html:has(.holocron-chat-pill:not([inert]))::after {
     content: '';
     position: fixed;
     inset-inline: 0;
@@ -806,8 +811,8 @@ html:has(.slot-page[data-assistant-display='floating'] .holocron-chat-pill:not([
     background: linear-gradient(
         to top,
         var(--background) 0,
-        var(--background) 4.5rem,
-        color-mix(in srgb, var(--background) 55%, transparent) 6rem,
+        var(--background) 5.5rem,
+        color-mix(in srgb, var(--background) 55%, transparent) 8rem,
         transparent 100%
     );
 }
