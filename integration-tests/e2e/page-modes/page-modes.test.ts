@@ -42,12 +42,14 @@ test.describe("page frontmatter mode", () => {
 
     const pill = page.locator(".holocron-chat-pill");
     await expect(pill).toBeVisible();
+    const footer = page.locator("footer");
+    await expect(footer).toHaveCSS("padding-bottom", "60px");
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    const footerBox = await page.locator("footer").boundingBox();
+    const footerBox = await footer.boundingBox();
     const pillBox = await pill.boundingBox();
     expect(footerBox).not.toBeNull();
     expect(pillBox).not.toBeNull();
-    expect(footerBox!.y + footerBox!.height).toBeLessThanOrEqual(pillBox!.y + 1);
+    expect(footerBox!.y + footerBox!.height).toBeGreaterThan(pillBox!.y);
   });
 
   test("frontmatter-only compact pages render their generated h1", async ({ page }) => {
