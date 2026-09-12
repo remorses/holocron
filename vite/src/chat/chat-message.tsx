@@ -7,10 +7,10 @@
  * Text parts carry server-rendered JSX (no client markdown rendering).
  * Tool parts carry plain data — rendered here with animated indicators.
  *
- * Follows fumabase's chat-tool-previews.tsx patterns:
+ * Follows fumabase / Claude Code tool-call chrome:
  * - PieLoader (◔◑◕●) for pending tool calls
- * - ◆ for completed tool calls (summary label only, no raw output)
- * - ⎿ gutter for tool errors
+ * - └ for completed tool calls (summary label only, no raw output)
+ * - └ gutter for tool errors
  * - font-mono ToolPreviewContainer wrapper
  *
  * Tool call labels prefer the model-provided `description` input field
@@ -159,14 +159,44 @@ function AssistantMessage({
       {promotions.map(({ part, index }) => (
         <ChatPromotion key={index} part={part} />
       ))}
-      {content.map(({ part, index }) => (
-        <ChatPartRenderer key={index} part={part} allParts={parts} />
-      ))}
+      {groupContentParts(content).map((group, groupIndex) =>
+        group.kind === 'tools' ? (
+          <div key={`tools-${groupIndex}`} className='flex flex-col gap-0.5'>
+            {group.items.map(({ part, index }) => (
+              <ChatPartRenderer key={index} part={part} allParts={parts} />
+            ))}
+          </div>
+        ) : (
+          <ChatPartRenderer key={`part-${group.item.index}`} part={group.item.part} allParts={parts} />
+        ),
+      )}
       {!isStreaming && content.length > 0 && (
         <ChatAssistantFooter parts={parts} onRegenerate={onRegenerate} />
       )}
     </div>
   )
+}
+
+function groupContentParts(
+  content: { part: ChatPart; index: number }[],
+): Array<
+  | { kind: 'single'; item: { part: ChatPart; index: number } }
+  | { kind: 'tools'; items: { part: ChatPart; index: number }[] }
+> {
+  const groups: Array<
+    | { kind: 'single'; item: { part: ChatPart; index: number } }
+    | { kind: 'tools'; items: { part: ChatPart; index: number }[] }
+  > = []
+  for (const item of content) {
+    if (item.part.type === 'tool-call' || item.part.type === 'tool-result') {
+      const last = groups[groups.length - 1]
+      if (last?.kind === 'tools') last.items.push(item)
+      else groups.push({ kind: 'tools', items: [item] })
+    } else {
+      groups.push({ kind: 'single', item })
+    }
+  }
+  return groups
 }
 
 function splitAssistantParts(
@@ -375,7 +405,7 @@ function ChatNotice({ part }: { part: Extract<ChatPart, { type: 'notice' }> }) {
   )
 }
 
-// ── Tool call started — animated PieLoader or static ◆ ──────────────
+// ── Tool call started — animated PieLoader or static └ ──────────────
 
 /** Pick the primary argument to display for a tool call: the command for
  *  bash, path/selector for browser tools, first string value otherwise. */
@@ -436,10 +466,10 @@ function ToolCallStarted({
       data-tool-state={hasResult ? 'completed' : 'running'}
     >
       <ToolPreviewContainer>
-        <span style={{ whiteSpace: 'pre' }}>
-          {hasResult ? <span>◆ </span> : <PieLoader />}
+        <span className='shrink-0 whitespace-pre'>
+          {hasResult ? '└ ' : <PieLoader />}
         </span>
-        <span className='truncate text-foreground'>{label}</span>
+        <span className='truncate'>{label}</span>
       </ToolPreviewContainer>
     </div>
   )
@@ -467,14 +497,7 @@ function ToolPreviewContainer({
   children: React.ReactNode
 }) {
   return (
-    <div
-      className='flex items-center min-w-0 text-xs font-mono'
-      style={{
-        padding: '4px 0',
-        lineHeight: '1.5',
-        width: '100%',
-      }}
-    >
+    <div className='flex min-w-0 w-full items-center font-mono text-[11px] leading-snug text-muted-foreground'>
       {children}
     </div>
   )
@@ -490,16 +513,11 @@ function ErrorPreview({ error }: { error: string }) {
   const truncated = error.length > 600 ? error.slice(0, 600) + '…' : error
   return (
     <ToolPreviewContainer>
-      <div style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
-        <div style={{ flexShrink: 0, color: 'var(--muted-foreground)' }}>
-          ⎿
-        </div>
+      <div className='flex min-w-0 flex-row gap-2'>
+        <div className='shrink-0'>└</div>
         <span>
           Error:{' '}
-          <span
-            className='text-orange-500 dark:text-orange-300'
-            style={{ whiteSpace: 'pre-line' }}
-          >
+          <span className='text-orange-500/80 dark:text-orange-300/80 whitespace-pre-line'>
             {truncated}
           </span>
         </span>
@@ -521,11 +539,7 @@ function PieLoader() {
     return () => clearInterval(interval)
   }, [])
 
-  return (
-    <span className='inline-block text-orange-500 dark:text-orange-300'>
-      {pies[index]}{' '}
-    </span>
-  )
+  return <span className='inline-block'>{pies[index]} </span>
 }
 
 // ── Loading dots (shown before first part arrives) ───────────────────
