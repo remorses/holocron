@@ -1114,11 +1114,14 @@ export function VideoBackgroundShader({
       {/* WebGL canvas container */}
       <div
         ref={containerRef}
-        className={cn('absolute inset-0 w-full h-full z-0 overflow-hidden', canvasClassName)}
+        className={cn(
+          'absolute inset-0 w-full h-full z-0 overflow-hidden',
+          canvasClassName,
+          !canvasReady && 'opacity-0!',
+        )}
         style={{
           maxWidth,
           margin: '0 auto',
-          opacity: canvasReady ? 1 : 0,
           transition: fadeTransition,
         }}
       />
