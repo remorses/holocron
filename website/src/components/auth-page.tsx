@@ -3,21 +3,13 @@
 
 import type { ReactNode } from 'react'
 import { Head } from 'spiceflow/react'
+import { HolocronLogo as HolocronLogoSvg } from '@holocron.so/vite/src/chat/chat-icons.tsx'
 import { cn } from '../lib/utils.ts'
 
 export function HolocronLogo({ className, imageClassName = 'h-[30px]' }: { className?: string; imageClassName?: string }) {
   return (
     <span className={cn('inline-flex items-center', className)}>
-      <img
-        src="/api/ai-logo/holocron.jpeg"
-        alt="Holocron"
-        className={cn('w-auto mix-blend-multiply dark:hidden', imageClassName)}
-      />
-      <img
-        src="/api/ai-logo/holocron.jpeg"
-        alt="Holocron"
-        className={cn('hidden w-auto invert mix-blend-screen dark:block', imageClassName)}
-      />
+      <HolocronLogoSvg className={cn('w-auto', imageClassName)} />
     </span>
   )
 }

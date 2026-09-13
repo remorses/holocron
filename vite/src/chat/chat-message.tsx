@@ -23,7 +23,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { cn } from '../lib/css-vars.ts'
 import type { ChatMessage, ChatPart } from './chat-store.ts'
 import { respondToApproval } from './chat-store.ts'
-import { ArrowRightIcon, CopyIcon, CheckIcon, RefreshIcon } from './chat-icons.tsx'
+import { ArrowRightIcon, CopyIcon, CheckIcon, RefreshIcon, HolocronLogo } from './chat-icons.tsx'
 import { NavTooltip } from './chat-input.tsx'
 import { Link } from '../components/link.tsx'
 
@@ -300,27 +300,6 @@ function ToolApprovalRequest({
   )
 }
 
-function HolocronWordmark() {
-  // Absolute URL: local /holocron-api/ai-logo proxy 404s in embeds and mocks.
-  const src = 'https://holocron.so/api/ai-logo/holocron.jpeg'
-  return (
-    <span className='inline-flex items-center'>
-      <img
-        src={src}
-        alt='Holocron'
-        className='h-[18px] w-auto shrink-0 dark:hidden'
-        style={{ mixBlendMode: 'multiply' }}
-      />
-      <img
-        src={src}
-        alt='Holocron'
-        className='hidden h-[18px] w-auto shrink-0 dark:block'
-        style={{ mixBlendMode: 'screen', filter: 'invert(1)' }}
-      />
-    </span>
-  )
-}
-
 function ChatPromotion({
   part,
 }: {
@@ -333,7 +312,7 @@ function ChatPromotion({
       className='no-bleed flex flex-col gap-3 rounded-lg bg-primary/5 px-3.5 py-3 text-foreground'
     >
       <div className='flex min-w-0 flex-col gap-4'>
-        <HolocronWordmark />
+        <HolocronLogo className='h-[18px] w-auto shrink-0' />
         <div className='min-w-0 text-[13px] font-medium leading-snug text-pretty'>
           {part.title}
         </div>
