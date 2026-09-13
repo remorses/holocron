@@ -535,6 +535,7 @@ export interface VideoShaderConfig {
   minDotSize?: number
   dotMargin?: number
   dotColor?: string
+  /** Painted-dot alpha scale, 0-1. Default 1. Use this to wash the shader out, not `canvasClassName` opacity. */
   dotAlphaMultiplier?: number
   gridLayout?: 'straight' | 'radial' | 'alternating-grid'
   enableMask?: boolean
@@ -1041,8 +1042,8 @@ export interface VideoBackgroundShaderProps extends Omit<VideoShaderConfig, 'src
   /** Content rendered over the video background. */
   children?: ReactNode
   className?: string
-  /** Extra classes applied only to the canvas container (not gradients or children).
-   *  Useful for light/dark opacity: `canvasClassName="dark:opacity-60 opacity-40"` */
+  /** Extra classes on the canvas container only (not gradients or children).
+   *  CSS opacity here fades the whole layer. To wash the dots out, use `dotAlphaMultiplier`. */
   canvasClassName?: string
   /** Show top gradient overlay fading into page background. Default true. */
   fadeTop?: boolean

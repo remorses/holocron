@@ -3,6 +3,8 @@ $schema: https://holocron.so/frontmatter.json
 prompt: |
   Write the components index from @/vite/src/lib/mdx-components-map.tsx.
   Use @https://github.com/mintlify/components for Mintlify-compatible names.
+  Document VideoBackgroundShader `dotAlphaMultiplier` from
+  @/vite/src/components/markdown/video-background-shader.tsx.
 title: Components
 description: Holocron's Mintlify-style component surface, organized like Mintlify's component docs.
 icon: layout-grid
@@ -69,3 +71,21 @@ You only need this import when writing `.tsx` component files. In MDX pages, all
 <Info>
 Some Mintlify docs describe behaviors that are broader than Holocron's current implementation. Those differences are called out explicitly instead of being hidden.
 </Info>
+
+## Video background shader
+
+`VideoBackgroundShader` is a **Holocron-only** WebGL video background. Video luminance drives a dot grid. Mouse movement adds fluid splats.
+
+To wash the **dots** out, set **`dotAlphaMultiplier`** (0-1, default 1). That multiplies painted-dot alpha in the shader.
+
+```mdx
+<VideoBackgroundShader
+  src="/hero-bg.mp4"
+  dotColor="#8da4ff"
+  dotAlphaMultiplier={0.4}
+/>
+```
+
+Do not use **`canvasClassName`** opacity for that. Classes like `opacity-40` or `dark:opacity-60` fade the **whole canvas layer**, including the fade-in wrapper. They do not change how strong the dots are.
+
+`canvasClassName` is still valid for extra classes on the canvas container only. Gradients and children do not receive it.
