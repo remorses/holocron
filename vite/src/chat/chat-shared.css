@@ -12,14 +12,17 @@
  * which also covers `.holocron-chat.dark`).
  */
 
-/* Pill trigger. No CSS transform — that fights Motion projection. */
+/* Pill trigger. No CSS transform — that fights Motion projection.
+ * width:auto + left/right inset + max-width. Never use 100vw: it includes
+ * the scrollbar and the focused pill overflows. */
 .holocron-chat-pill {
   position: fixed;
-  bottom: 24px;
-  left: 16px;
-  right: 16px;
+  bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  left: max(16px, env(safe-area-inset-left, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
   z-index: 199;
-  width: min(var(--pill-width, 300px), calc(100vw - 32px));
+  width: auto;
+  max-width: var(--pill-width, 300px);
   margin-inline: auto;
   border-radius: 24px;
   overflow: hidden;
@@ -33,7 +36,7 @@
     0 4px 12px rgb(0 0 0 / 0.06),
     0 12px 28px rgb(0 0 0 / 0.05);
   transition:
-    width 0.2s cubic-bezier(0.22, 0.61, 0.36, 1),
+    max-width 0.2s cubic-bezier(0.22, 0.61, 0.36, 1),
     box-shadow 0.2s ease;
 }
 
@@ -57,7 +60,7 @@
 }
 
 .holocron-chat-pill[data-expanded] {
-  width: min(calc(var(--pill-width, 300px) + var(--pill-expand, 100px)), calc(100vw - 32px));
+  max-width: calc(var(--pill-width, 300px) + var(--pill-expand, 100px));
 }
 
 /* Source shell stays mounted for the close morph. Drop chrome so it
@@ -69,22 +72,61 @@
   -webkit-backdrop-filter: none;
 }
 
-/* Hairline via box-shadow; a real border smears during the morph. */
+/* Fullscreen on small screens. Desktop keeps the floating side panel.
+ * Hairline via box-shadow; a real border smears during the morph. */
 .holocron-chat-drawer-panel {
-  box-shadow:
-    0 0 0 1px var(--border),
-    0 2px 8px rgb(0 0 0 / 0.04),
-    0 12px 32px rgb(0 0 0 / 0.08),
-    0 24px 48px rgb(0 0 0 / 0.04);
+  position: fixed;
+  inset: 0;
+  width: auto;
+  border-radius: 0;
+  overscroll-behavior: contain;
 }
 
-:host(.dark) .holocron-chat-drawer-panel,
-:where(.dark) .holocron-chat-drawer-panel {
-  box-shadow:
-    0 0 0 1px var(--border),
-    0 2px 8px rgb(0 0 0 / 0.25),
-    0 16px 40px rgb(0 0 0 / 0.3),
-    0 32px 64px rgb(0 0 0 / 0.2);
+.holocron-chat-drawer-body {
+  min-height: 0;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.holocron-chat-drawer-messages {
+  min-height: 0;
+}
+
+.holocron-chat-drawer-spacer {
+  min-height: 120px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+  .holocron-chat-drawer-panel {
+    inset: 16px 16px 16px auto;
+    width: 440px;
+    max-width: calc(100% - 32px);
+    border-radius: 24px;
+    box-shadow:
+      0 0 0 1px var(--border),
+      0 2px 8px rgb(0 0 0 / 0.04),
+      0 12px 32px rgb(0 0 0 / 0.08),
+      0 24px 48px rgb(0 0 0 / 0.04);
+  }
+
+  .holocron-chat-drawer-body {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .holocron-chat-drawer-spacer {
+    min-height: 300px;
+  }
+
+  :host(.dark) .holocron-chat-drawer-panel,
+  :where(.dark) .holocron-chat-drawer-panel {
+    box-shadow:
+      0 0 0 1px var(--border),
+      0 2px 8px rgb(0 0 0 / 0.25),
+      0 16px 40px rgb(0 0 0 / 0.3),
+      0 32px 64px rgb(0 0 0 / 0.2);
+  }
 }
 
 /* ── Chat input frame (drawer footer) ─────────────────────────────────

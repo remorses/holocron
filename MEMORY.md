@@ -1802,3 +1802,7 @@ Root cause: SSR optimizer discovered `motion/react` mid-request on first render 
 ## Chat morph: do not use `layoutDependency` or `isMorphing` (2026)
 
 Both kill the shared `layoutId` morph (`transform` stays `none` for the whole open). Key the id per page with `chatShellLayoutId` so client nav cannot pair two widgets. Shell owns paint/clip; one child has `layout` to counter-scale. Trigger stays mounted with `inert`, not `visibility:hidden`.
+
+## Chat mobile: never size the pill/drawer with `100vw` (2026)
+
+`100vw` includes the scrollbar, so `min(300px, calc(100vw - 32px))` overflows the layout viewport when focused. Use `max-width: calc(100% - 32px)` on `position: fixed` instead. Mobile drawer geometry lives in CSS (`inset: 0`); keep `borderRadius` inline so Motion can morph it.

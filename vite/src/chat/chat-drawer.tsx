@@ -11,8 +11,9 @@
  *
  * Shell morph uses Motion layoutId (shared with ChatPill / SidebarAssistant).
  * Portal target comes from chatWidgetStore (document.body for holocron,
- * the shadow mount for the standalone widget). The page stays scrollable
- * and clickable while the drawer is open. Close only via the × button.
+ * the shadow mount for the standalone widget). Desktop keeps the page
+ * scrollable while the drawer is open. Mobile fills the viewport and
+ * locks body scroll. Close only via the × button.
  */
 
 import React, { useEffect, useRef, useCallback, useSyncExternalStore } from 'react'
@@ -47,6 +48,20 @@ const getTrue = () => true as const
 const getFalse = () => false as const
 const getNull = () => null
 
+const CHAT_MOBILE_MQ = '(max-width: 1023px)'
+
+function subscribeChatMobile(cb: () => void) {
+  const mq = window.matchMedia(CHAT_MOBILE_MQ)
+  mq.addEventListener('change', cb)
+  return () => mq.removeEventListener('change', cb)
+}
+
+function getChatMobile() {
+  return window.matchMedia(CHAT_MOBILE_MQ).matches
+}
+
+const getServerChatMobile = () => false
+
 function getPortalTarget(): HTMLElement | null {
   return chatWidgetStore.getState().portalTarget || document.body
 }
@@ -68,9 +83,11 @@ function ChatDrawerInner() {
   const pendingSubmit = useChatStore((s) => s.pendingSubmit)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const drawerPanelRef = useRef<HTMLDivElement>(null)
+  const drawerBodyRef = useRef<HTMLDivElement>(null)
   const pageKey = useSyncExternalStore(chatWidgetStore.subscribe, getChatPageKey, getChatPageKey)
   const layoutKeyRef = useRef(pageKey)
   const reduceMotion = useReducedMotion()
+  const isMobile = useSyncExternalStore(subscribeChatMobile, getChatMobile, getServerChatMobile)
 
   /** Scroll the last user message to the top of the scroll area so the
    *  response streams in below it, matching fumabase's chat UX. */
@@ -198,8 +215,42 @@ function ChatDrawerInner() {
   const isOpen = drawerState === 'open'
   if (isOpen) layoutKeyRef.current = pageKey
 
+  useEffect(() => {
+    if (!isOpen || !isMobile) return
+    const html = document.documentElement
+    const body = document.body
+    const prevHtmlOverflow = html.style.overflow
+    const prevBodyOverflow = body.style.overflow
+    html.style.overflow = 'hidden'
+    body.style.overflow = 'hidden'
+    return () => {
+      html.style.overflow = prevHtmlOverflow
+      body.style.overflow = prevBodyOverflow
+    }
+  }, [isOpen, isMobile])
+
   // Portal target from widget store (reactive), fallback to document.body
   const portalTarget = useSyncExternalStore(chatWidgetStore.subscribe, getPortalTarget, getNull)
+
+  useEffect(() => {
+    if (!isOpen || !isMobile || !portalTarget) return
+    const body = drawerBodyRef.current
+    const vv = window.visualViewport
+    if (!body || !vv) return
+    const sync = () => {
+      const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop)
+      body.style.paddingBottom = `max(env(safe-area-inset-bottom, 0px), ${inset}px)`
+    }
+    sync()
+    vv.addEventListener('resize', sync)
+    vv.addEventListener('scroll', sync)
+    return () => {
+      vv.removeEventListener('resize', sync)
+      vv.removeEventListener('scroll', sync)
+      body.style.paddingBottom = ''
+    }
+  }, [isOpen, isMobile, portalTarget])
+
   if (!portalTarget) return null
 
   return createPortal(
@@ -218,22 +269,18 @@ function ChatDrawerInner() {
         layoutId={chatShellLayoutId(layoutKeyRef.current)}
         initial={false}
         transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_TRANSITION }}
-
         style={{
-          position: 'fixed',
-          right: 16,
-          top: 16,
-          bottom: 16,
-          width: 'min(440px, calc(100vw - 32px))',
           pointerEvents: 'auto',
           background: 'var(--background)',
-          borderRadius: 24,
           overflow: 'hidden',
+          borderRadius: isMobile ? 0 : 24,
         }}
       >
       {/* `layout` counter-scales so text stays at final size while the shell grows. */}
       <motion.div
         layout
+        ref={drawerBodyRef}
+        className='holocron-chat-drawer-body'
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -306,6 +353,7 @@ function ChatDrawerInner() {
 
         {/* Messages area */}
         <div
+          className='holocron-chat-drawer-messages'
           onClick={() => {
             const selection = window.getSelection()
             if (selection && selection.toString().length > 0) return
@@ -340,7 +388,7 @@ function ChatDrawerInner() {
           {/* Spacer — pushes content to the top while keeping the scroll
               area tall enough so the user can scroll the last message to
               the top of the viewport. */}
-          <div style={{ minHeight: '300px', flexShrink: 0 }} />
+          <div className='holocron-chat-drawer-spacer' />
           <div ref={messagesEndRef} />
         </div>
 
