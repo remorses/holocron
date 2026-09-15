@@ -29,6 +29,8 @@ export type NavIcon = ConfigIcon
  *  and swaps in enriched groups. */
 export type NavTab = NavTabBase & {
   groups: NavGroup[]
+  openapi?: string | string[]
+  mcp?: string
 }
 
 /** An enriched group — reuses the schema-derived group shape and swaps

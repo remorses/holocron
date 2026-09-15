@@ -411,6 +411,15 @@ export function buildDropdownItems(site: HolocronSiteData): DropdownSelectItem[]
     })
 }
 
+export function findActiveTab(site: HolocronSiteData, pageHref: string | undefined) {
+  if (!pageHref) return undefined
+  return resolveActiveNavigationTabs(site, pageHref).find((tab) => collectTabPageHrefs(tab).includes(pageHref))
+}
+
+export function tabDisablesCompact(tab: { openapi?: unknown; mcp?: unknown } | undefined): boolean {
+  return Boolean(tab?.openapi || tab?.mcp)
+}
+
 export function resolveActiveTabHref(site: HolocronSiteData, pageHref: string | undefined): string | undefined {
   const tabs = buildTabItems(site, pageHref)
   if (!pageHref) return tabs[0]?.href

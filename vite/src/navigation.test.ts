@@ -16,7 +16,7 @@ import {
   type Navigation,
 } from './navigation.ts'
 import { parsePageFrontmatter } from './lib/page-frontmatter.ts'
-import { buildTabItems, buildVisibleSiteData, collectAncestorGroupKeys, collectDefaultExpandedKeys, findActiveVersion, resolveActiveNavigationTabs, resolveActiveVersionHref, type HolocronSiteData } from './site-data.ts'
+import { buildTabItems, buildVisibleSiteData, collectAncestorGroupKeys, collectDefaultExpandedKeys, findActiveTab, findActiveVersion, resolveActiveNavigationTabs, resolveActiveVersionHref, tabDisablesCompact, type HolocronSiteData } from './site-data.ts'
 
 /* ── Test fixtures ───────────────────────────────────────────────────── */
 
@@ -189,6 +189,29 @@ describe('folder-index group.root', () => {
       navigation: [{ ...deTab, groups: [{ ...deFeatures, rootPage: undefined }] }],
     } as HolocronSiteData
     expect(buildVisibleSiteData(legacyRootSite).navigation[0]?.groups[0]?.root).toBe('/de/features')
+  })
+})
+
+describe('API and MCP tabs disable compact', () => {
+  test('finds the tab that owns a page and disables compact for openapi and mcp tabs', () => {
+    const apiTab: NavTab = {
+      tab: 'API',
+      openapi: 'api.yaml',
+      groups: [makeGroup('Guides', [makePage('guide/overview')])],
+    }
+    const mcpTab: NavTab = {
+      tab: 'MCP',
+      mcp: 'mcp-tools.json',
+      groups: [makeGroup('Start', [makePage('docs/mcp/index')])],
+    }
+    const site = {
+      navigation: [docsTab, apiTab, mcpTab],
+      switchers: { versions: [], dropdowns: [] },
+    } as HolocronSiteData
+
+    expect(tabDisablesCompact(findActiveTab(site, '/guide/overview'))).toBe(true)
+    expect(tabDisablesCompact(findActiveTab(site, '/docs/mcp/index'))).toBe(true)
+    expect(tabDisablesCompact(findActiveTab(site, '/introduction'))).toBe(false)
   })
 })
 

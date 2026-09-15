@@ -99,6 +99,31 @@ describe('openapi provider — selective mode', () => {
     `)
   })
 
+  test('generated endpoint pages force default layout so compact sites keep the right aside', async () => {
+    const config = {
+      navigation: {
+        tabs: [
+          {
+            tab: 'API',
+            openapi: 'api.yaml',
+            groups: [{ group: 'Users', pages: ['GET /users'] }],
+          } as ConfigNavTab,
+        ],
+      },
+    }
+    const mdxContent: Record<string, string> = {}
+    await processVirtualTabs({
+      config,
+      projectRoot: dir,
+      pagesDir: dir,
+      publicDir: path.join(dir, 'public'),
+      mdxContent,
+      providers: [openapiProvider],
+    })
+
+    expect(mdxContent['api/get-users']).toContain('mode: "default"')
+  })
+
   test('uses x-mint page metadata and content', async () => {
     const specPath = path.join(dir, 'mint.yaml')
     fs.writeFileSync(specPath, `

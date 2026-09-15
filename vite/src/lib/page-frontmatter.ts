@@ -79,6 +79,20 @@ export type PageFrontmatter = z.output<typeof pageFrontmatterSchema>
 export type PageMode = z.output<typeof pageModeSchema>
 export type PageSeoMeta = Partial<Record<PageSeoMetaKey, string>>
 
+export function resolvePageMode({
+  frontmatterMode,
+  siteMode,
+  disableCompact,
+}: {
+  frontmatterMode: PageMode | undefined
+  siteMode: PageMode | undefined
+  disableCompact?: boolean
+}): PageMode | undefined {
+  const mode = frontmatterMode ?? siteMode
+  if (disableCompact && mode === 'compact') return 'default'
+  return mode
+}
+
 export function parsePageFrontmatter(content: string): PageFrontmatter {
   const parsed = parseFrontmatterObject(content)
   const result = pageFrontmatterSchema.safeParse(parsed)

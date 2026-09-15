@@ -111,6 +111,8 @@ export async function buildEnrichedNavigation({
       hidden: configTab.hidden,
       align: configTab.align,
       groups: await Promise.all(configTab.groups.map(enrichGroup)),
+      ...(configTab.openapi !== undefined && { openapi: configTab.openapi }),
+      ...(configTab.mcp !== undefined && { mcp: configTab.mcp }),
     }
   }
 

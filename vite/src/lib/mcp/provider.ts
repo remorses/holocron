@@ -172,6 +172,7 @@ function buildToolMdx(tool: Tool): string {
       tag: 'TOOL',
       tagColor: 'purple',
       gridGap: 30,
+      mode: 'default',
     },
     aside,
     body: `<MCPTool ${propsToJsx(propsJson)} />`,
@@ -192,6 +193,7 @@ function buildResourceMdx(resource: Resource): string {
       description: resource.description ? plainText(resource.description).slice(0, 200) : undefined,
       tag: 'SOURCE',
       tagColor: 'blue',
+      mode: 'default',
     },
     body: `<MCPResource ${propsToJsx(propsJson)} />`,
   })

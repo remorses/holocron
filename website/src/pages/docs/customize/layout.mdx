@@ -1,8 +1,12 @@
 ---
 $schema: https://holocron.so/frontmatter.json
 prompt: |
-  Write the layout and page modes guide from @/vite/src/lib/page-frontmatter.ts and @/vite/src/lib/sidebar-widths.ts.
+  Write the layout and page modes guide from @/vite/src/lib/page-frontmatter.ts,
+  @/vite/src/lib/sidebar-widths.ts, @/vite/src/lib/mcp/provider.ts, and
+  @/vite/src/lib/openapi/provider.ts.
   Cover default, compact, center, custom, and maxWidth.
+  Note that generated MCP and OpenAPI pages force mode default so compact
+  sites still show the request example rail.
 title: Layout
 description: Control the page layout, grid width, and page modes.
 icon: arrow-left-right
@@ -44,7 +48,7 @@ Set the same mode in **`docs.json`** to make it the default for the full site. C
 
 See [AI Assistant](../ai/assistant.mdx) for the floating pill. Page frontmatter overrides the site default. Use `mode: "default"` on a specific page to restore the full three-column layout.
 
-Compact **never** opens a right rail. Authored asides, API examples, and table-of-contents panels render in the **main column**. The sidebar Ask AI widget stays hidden.
+Compact **never** opens a right rail on authored docs pages. Every page in an **MCP** or **OpenAPI** tab uses `mode: "default"`, including authored overview pages that have no example rail. That keeps the tab frame consistent. Generated request examples stay in the right aside. Authored asides and table-of-contents panels on compact docs pages still render in the **main column**. The sidebar Ask AI widget stays hidden.
 
 With the default geometry, compact mode derives a **910px frame** from the existing layout values:
 

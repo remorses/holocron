@@ -1,7 +1,8 @@
 ---
 $schema: https://holocron.so/frontmatter.json
 prompt: |
-  Write the docs.json guide from @/vite/src/schema.ts and @/website/docs.json.
+  Write the docs.json guide from @/vite/src/schema.ts, @/website/docs.json,
+  @/vite/src/lib/mcp/provider.ts, and @/vite/src/lib/openapi/provider.ts.
 title: docs.json
 description: The central config file for navigation, theming, logo, footer, redirects, and site metadata. Compatible with Mintlify's schema.
 icon: file-json
@@ -120,7 +121,7 @@ Set **`layout.mode`** to choose the default layout for every page:
 }
 ```
 
-`compact` keeps the left navigation and removes the right aside. Holocron then defaults **`assistant.display`** to **`floating`** so Ask AI stays available as a bottom pill. Set `display` to `sidebar` to opt out. A page can override the layout with its frontmatter `mode` field. Compact never opens a right rail. Authored asides and API examples render in the main column.
+`compact` keeps the left navigation and removes the right aside. Holocron then defaults **`assistant.display`** to **`floating`** so Ask AI stays available as a bottom pill. Set `display` to `sidebar` to opt out. A page can override the layout with its frontmatter `mode` field. Compact never opens a right rail on authored docs pages. Every page in an MCP or OpenAPI tab uses `mode: "default"`, including authored pages in that tab.
 
 ## Passthrough behavior
 

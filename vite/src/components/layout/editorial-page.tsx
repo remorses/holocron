@@ -340,9 +340,12 @@ export function EditorialPage({
            outside by --grid-line-offset. Wraps both "above" and the 3-column
            grid so the vertical lines span the full content height.
            Negative top margin closes the flex gap so the vertical lines
-           connect seamlessly to the tab-bar border; inner pt restores the
-           visual spacing for content. */
-      <div className={`relative grow flex flex-col w-full max-w-full mx-auto lg:max-w-(--grid-max-width) lg:-mt-(--layout-gap) ${above ? '' : 'lg:pt-(--layout-gap)'} overflow-y-clip`}>
+            connect seamlessly to the tab-bar border; inner pt restores the
+            visual spacing for content.
+            Do not put overflow-y-clip on this wrapper. Clip plus overflow-x
+            visible computes to a scroll container, which traps left-nav sticky
+            on short MCP and API pages. */
+      <div className={`relative grow flex flex-col w-full max-w-full mx-auto lg:max-w-(--grid-max-width) lg:-mt-(--layout-gap) ${above ? '' : 'lg:pt-(--layout-gap)'}`}>
         <GridLinesFrame mode={decorativeLines} />
 
         {/* Above: rendered above the 3-column grid, spanning the full grid

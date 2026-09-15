@@ -64,7 +64,7 @@ import { modelMessagesToChatMessages } from './lib/chat-restore.tsx'
 import { convertChunksToParts } from './lib/chat-stream.ts'
 import dedent from 'string-dedent'
 import { buildOgImageUrl } from './lib/og-utils.ts'
-import { getPageRendering, getPageRobots, getPageSeoMeta, isIndexablePage, parsePageFrontmatter, serializeKeywords, type PageFrontmatter, type PageRendering } from './lib/page-frontmatter.ts'
+import { getPageRendering, getPageRobots, getPageSeoMeta, isIndexablePage, parsePageFrontmatter, resolvePageMode, serializeKeywords, type PageFrontmatter, type PageRendering } from './lib/page-frontmatter.ts'
 import { canonicalizePathname, holocronUrl, getHolocronApiKey, withBasePath } from './lib/holocron-url.ts'
 import { createGitHubStarsPromise, findGitHubUrl } from './lib/github-stars.ts'
 import {
@@ -72,10 +72,12 @@ import {
   type HolocronSiteData,
   collectAncestorGroupKeys,
   findActiveVersion,
+  findActiveTab,
   findFirstPage,
   resolveActiveDropdownHref,
   resolveActiveTabHref,
   resolveActiveVersionHref,
+  tabDisablesCompact,
 } from './site-data.ts'
 import type { HolocronConfig, ConfigNavTab, ConfigNavGroup } from './config.ts'
 import { collectIconRefs, dedupeIconRefs, type IconRef } from './lib/collect-icons.ts'
@@ -340,7 +342,12 @@ function renderMdxPage({
   demoteBodyH1s(mdast.children)
   assignUniqueHeadingIds(mdast.children)
 
-  const configuredPageMode = loaderData.currentPageFrontmatter?.mode ?? site.config.layout.mode
+  const activeTab = findActiveTab(site, loaderData.currentPageHref)
+  const configuredPageMode = resolvePageMode({
+    frontmatterMode: loaderData.currentPageFrontmatter?.mode,
+    siteMode: site.config.layout.mode,
+    disableCompact: tabDisablesCompact(activeTab),
+  })
 
   // Compute the baseUrl for resolving relative imports in MDX.
   // The slug mirrors the file path inside pagesDir (e.g. 'api/overview'

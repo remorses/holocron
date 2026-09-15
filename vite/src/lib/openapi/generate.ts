@@ -233,6 +233,7 @@ function buildEndpointMdx({
       description: plainText(overrides.description ?? op.operation.description ?? op.operation.summary ?? '').slice(0, 200),
       api: `${op.method.toUpperCase()} ${op.path}`,
       gridGap: 30,
+      mode: 'default',
       ...(op.operation.deprecated ? { deprecated: true } : {}),
     },
     aside,

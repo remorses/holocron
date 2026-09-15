@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest'
 import { processMdx as _processMdx, rewriteMdxImages, type ResolvedImage, type ProcessedMdx } from './mdx-processor.ts'
-import { getPageRendering, parsePageFrontmatter } from './page-frontmatter.ts'
+import { getPageRendering, parsePageFrontmatter, resolvePageMode } from './page-frontmatter.ts'
 
 /** Wrapper that asserts processMdx succeeded (not a parse error). */
 function processMdx(...args: Parameters<typeof _processMdx>): ProcessedMdx {
@@ -1169,5 +1169,30 @@ describe('getPageRendering', () => {
   test('ignores an invalid rendering value and falls back to ssr', () => {
     // invalid enum → whole frontmatter parse fails → {} → ssr default
     expect(getPageRendering(parsePageFrontmatter('---\nrendering: nonsense\n---\n'))).toBe('ssr')
+  })
+})
+
+describe('resolvePageMode', () => {
+  test('keeps compact for authored docs pages', () => {
+    expect(resolvePageMode({
+      frontmatterMode: undefined,
+      siteMode: 'compact',
+    })).toBe('compact')
+  })
+
+  test('turns compact into default for MCP and OpenAPI tabs', () => {
+    expect(resolvePageMode({
+      frontmatterMode: undefined,
+      siteMode: 'compact',
+      disableCompact: true,
+    })).toBe('default')
+  })
+
+  test('keeps an explicit non-compact frontmatter mode', () => {
+    expect(resolvePageMode({
+      frontmatterMode: 'center',
+      siteMode: 'compact',
+      disableCompact: true,
+    })).toBe('center')
   })
 })

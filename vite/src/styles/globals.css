@@ -487,8 +487,7 @@
     @variant lg {
       display: block;
       grid-column: 1;
-      /* grid-row is set dynamically via inline style so the sidebar spans
-         exactly the number of content rows — no wasted implicit rows. */
+      grid-row: 1 / -1;
     }
   }
 

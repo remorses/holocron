@@ -55,8 +55,8 @@ const lineRight = `calc(-1 * ${LINE_OFFSET})`
 const dot = {
   tl: { top: 0, left: lineLeft, transform: 'translate(-50%, -50%)' } as React.CSSProperties,
   tr: { top: 0, right: lineRight, transform: 'translate(50%, -50%)' } as React.CSSProperties,
-  bl: { bottom: 0, left: lineLeft, transform: 'translate(-50%, 50%)' } as React.CSSProperties,
-  br: { bottom: 0, right: lineRight, transform: 'translate(50%, 50%)' } as React.CSSProperties,
+  bl: { bottom: 0, left: lineLeft, transform: 'translate(-50%, -50%)' } as React.CSSProperties,
+  br: { bottom: 0, right: lineRight, transform: 'translate(50%, -50%)' } as React.CSSProperties,
 }
 
 /* ── GridLines ────────────────────────────────────────────────────────── */

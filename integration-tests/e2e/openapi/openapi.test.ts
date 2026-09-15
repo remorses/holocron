@@ -104,11 +104,23 @@ test.describe('OpenAPI tab', () => {
     expect(html).toContain('POST')
   })
 
-  test('endpoint examples stay in the main column in compact site mode', async ({ page }) => {
+  test('generated endpoint pages keep the right aside in compact site mode', async ({ page }) => {
     await page.goto('/api/post-users')
     await expect(page.getByRole('tablist', { name: 'Request example' })).toBeVisible()
-    await expect(page.locator('.slot-aside')).toHaveCount(0)
-    await expect(page.locator("[data-chat-shell='sidebar']")).toHaveCount(0)
+    await expect(page.locator('.slot-aside')).toHaveCount(1)
+  })
+
+  test('left nav stays sticky on generated pages in compact site mode', async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 900 })
+    await page.goto('/api/post-users')
+    const sidebar = page.locator('.slot-sidebar-left > div')
+    await expect(sidebar).toBeVisible()
+    const before = await sidebar.boundingBox()
+    expect(before).not.toBeNull()
+    await page.evaluate(() => window.scrollTo(0, 1200))
+    const after = await sidebar.boundingBox()
+    expect(after).not.toBeNull()
+    expect(Math.round(after!.y)).toBe(Math.round(before!.y))
   })
 
   test('deprecated endpoint shows deprecated badge', async ({ request }) => {
@@ -273,6 +285,12 @@ test.describe('OpenAPI selective mode (custom pages + endpoint refs)', () => {
     const html = await res.text()
     expect(html).toContain('Authentication')
     expect(html).toContain('Where to get your API key')
+  })
+
+  test('authored pages in an openapi tab keep the right aside in compact site mode', async ({ page }) => {
+    await page.goto('/guide/overview')
+    await expect(page.locator('.slot-page')).toHaveAttribute('data-page-mode', 'default')
+    await expect(page.locator('.slot-aside')).toHaveCount(1)
   })
 
   test('endpoint ref renders a generated endpoint page under base', async ({ request }) => {
