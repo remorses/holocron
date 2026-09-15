@@ -98,12 +98,12 @@ Simple `docs.jsonc`:
       {
         "group": "Getting Started",
         "icon": "lucide:rocket",
-        "pages": ["index", "quickstart"]
+        "pages": ["index", "docs/quickstart"]
       },
       {
         "group": "Guides",
         "icon": "lucide:map",
-        "pages": ["guides/install", "guides/deploy"]
+        "pages": ["docs/install", "docs/deploy"]
       }
     ],
     "global": {
@@ -116,34 +116,39 @@ Simple `docs.jsonc`:
 }
 ```
 
-Page slugs in `navigation.pages` map to MDX files. `quickstart` loads
-`quickstart.mdx`, and `guides/install` loads `guides/install.mdx`.
+Page slugs in `navigation.pages` map to MDX files. `docs/quickstart` loads
+`docs/quickstart.mdx`, and `docs/install` loads `docs/install.mdx`.
 
-## Organize pages into folders that mirror groups
+## Keep slugs short. Put docs under `/docs`
 
-Do not dump every page into one flat directory. **Put pages in subfolders named
-after their navigation group**, so the file layout matches the sidebar. This keeps
-large docs sites navigable and makes each slug self-documenting.
+**Prefer short slugs.** Do not nest pages to match every sidebar group.
+
+Put **info docs** under a **`docs/`** parent so later landing pages, tools, and
+products can live at the root without competing with docs URLs.
 
 ```diagram
-  docs.json group           file layout                      slug in nav
-  ┌────────────────┐       ┌──────────────────────────┐    ┌─────────────────────────┐
-  │ Getting Started│──────►│ getting-started/setup.mdx│───►│ getting-started/setup   │
-  │ Guides         │──────►│ guides/deploy.mdx        │───►│ guides/deploy           │
-  │ Reference      │──────►│ reference/commands.mdx   │───►│ reference/commands      │
-  └────────────────┘       └──────────────────────────┘    └─────────────────────────┘
+  URL                         file
+  /                        ►  index.mdx          (home, product, landing)
+  /pricing                 ►  pricing.mdx        (not a docs page)
+  /docs/quickstart         ►  docs/quickstart.mdx
+  /docs/sdk                ►  docs/sdk.mdx
+  /docs/cli/query          ►  docs/cli/query.mdx   (max extra folder)
 ```
 
 Rules:
 
-- **One folder per group.** A group named "Getting Started" holds its pages in a
-  `getting-started/` folder. Use kebab-case folder names.
-- **The slug includes the folder.** `guides/deploy.mdx` has slug `guides/deploy`
-  and renders at `/guides/deploy`. Reference that full path in `navigation.pages`.
-- **Keep `index` at the root.** The home page stays `index.mdx` at the top level.
-- **Moving a page changes its URL.** When reorganizing files into folders, update
-  every `navigation.pages` slug and every internal link that points at the old flat
-  path (`/old-slug` becomes `/group/old-slug`). The build's broken-link check catches
+- **Home stays at the root.** `index.mdx` is `/`.
+- **Docs pages use `/docs/...`.** `docs/quickstart.mdx` is `/docs/quickstart`.
+  Do not put guides at `/quickstart` or `/guides/quickstart`.
+- **Max nesting is `docs/<folder>/<page>`.** One subdirectory under `docs` is
+  the limit (`docs/cli/query.mdx`). Never `docs/cli/analytics/pages.mdx`.
+- **Never name a page `README.md` or `README.mdx`.** Either filename becomes
+  `/README` or `/docs/README`. Use a real slug (`docs/sdk.mdx`) and import
+  the shared markdown.
+- **Keep `index` only for home or a section hub.** Do not use `README` as the
+  hub filename.
+- **Moving a page changes its URL.** Add a redirect from the old slug. Update
+  `navigation.pages` and relative links. The build's broken-link check catches
   links you miss.
 
 **Anchors** in `navigation.global.anchors` are persistent sidebar links visible
@@ -178,18 +183,45 @@ group. It looks like a duplicate in the navigation tree.
 ## Local imports
 
 MDX pages can import `.md`, `.mdx`, `.tsx`, or `.ts` files. Prefer **relative
-imports** (`./` or `../`) over absolute `/` imports. For example, import a root
-README as the index page:
+imports** (`./` or `../`) over absolute `/` imports.
+
+**Reuse shared markdown with a wrapper page.** Keep `README.md`, `MCP.md`, or
+an SDK markdown file outside `pagesDir` for GitHub. Do **not** put those files
+in `pagesDir` as `README.md` or `README.mdx`. The Holocron slug is the file
+path, so `sdk/README.mdx` becomes `/sdk/README`.
+
+The wrapper inside `pagesDir` owns the public slug:
+
+```
+repo/
+  README.md
+  MCP.md
+  website/src/pages/
+    index.mdx
+    docs/sdk.mdx          → /docs/sdk
+    docs/mcp-setup.mdx    → /docs/mcp-setup
+```
 
 ```mdx
 ---
 $schema: https://holocron.so/frontmatter.json
-title: My Project
+title: "MCP Setup"
+sidebarTitle: MCP
 ---
 
-import Readme from '../../README.md'
+import SharedDocs from '../../../../MCP.md'
 
-<Readme />
+<SharedDocs />
+```
+
+File: `docs/mcp-setup.mdx`. Nav slug: `"docs/mcp-setup"`. URL: `/docs/mcp-setup`.
+
+If an old `/README` or `/sdk/README` URL exists, add a redirect:
+
+```jsonc
+"redirects": [
+  { "source": "/sdk/README", "destination": "/docs/sdk", "permanent": true }
+]
 ```
 
 See https://holocron.so/docs/create/local-imports.md for details.
@@ -209,11 +241,11 @@ Every internal link from one page to another must:
 3. **Keep the `.md`/`.mdx` extension.**
 
 ```mdx
-✅ [SDK reference](../sdk/README.mdx)
-✅ [Browser Analytics](../docs/browser-analytics.mdx)
+✅ [SDK reference](./sdk.mdx)
+✅ [Browser Analytics](./browser-analytics.mdx)
 ✅ [Quickstart](./quickstart.mdx)
 
-❌ [SDK reference](/sdk/README)          // absolute, hardcodes the route
+❌ [SDK reference](/sdk/README)
 ❌ [Browser Analytics](/docs/browser-analytics)
 ❌ [Quickstart](/quickstart)
 ```
@@ -262,11 +294,13 @@ page automatically, with no per-environment guessing.
 3. **Keep the `.md`/`.mdx` extension.** GitHub needs it to open the file;
    Holocron strips it automatically so the link resolves to the rendered page.
 
-4. **The target file must be rendered by a page in the site.** Holocron resolves
-   the rewritten link against pages. If the file you link to is itself a page (or
-   is imported by one) and that page is in `docs.json` navigation, the link
-   resolves. If nothing renders it, the site 404s — so add the page and put it in
-   navigation.
+4. **The target file must be a page inside `pagesDir`.** Holocron only maps
+   links to files under `pagesDir`. Importing a shared markdown file does **not**
+   give that file a route. From imported markdown, link to the **wrapper `.mdx`**
+   inside `pagesDir`, not to `README.md` / `MCP.md`.
+
+   `[README.md](./README.md)` becomes `/README`. Use
+   `[quick start](./website/src/pages/docs/quick-start.mdx)` instead.
 
 ```diagram
    README.md   [pricing](./docs/pricing.md)   ◄── correct relative path to a real file
@@ -530,10 +564,14 @@ https://holocron.so/docs/create/redirects.md for the full reference.
 
 ## Broken link detection
 
-Holocron warns about internal links pointing to non-existent pages during build
-and dev. Links to redirect sources and static files (`.json`, `.pdf`, etc.) are
-not flagged. The warning includes the **source page**, **line number**, and the
-broken href so you can find and fix it quickly.
+Holocron **fails production builds** when internal links point to non-existent
+pages. Dev still warns. Links in MDX, **footer**, **navbar**, and **anchors**
+are all checked. Links to redirect sources and static files (`.json`, `.pdf`,
+etc.) are not flagged. The warning includes the **source**, **line number**,
+and the broken href so you can find and fix it quickly.
+
+Do **not** put a path in `knownPaths` unless that route actually exists at
+runtime. `knownPaths` only silences the check; it does not create a page.
 
 ### Suppressing false positives with `knownPaths`
 
@@ -620,9 +658,26 @@ body text.
 
 ## Moving or renaming a page
 
-When moving or renaming a page, **always add a redirect** from the old slug to
-the new one so existing links and bookmarks don't break. Update internal links
-in other pages and the slug in `docs.json` navigation to match.
+When moving or renaming a page, **always add a redirect** from the old path to
+the new one so old URLs and bookmarks keep working. Update internal links in
+other pages and the slug in `docs.json` navigation to match.
+
+Add the redirect to the `redirects` array in `docs.json`:
+
+```jsonc
+{
+  "redirects": [
+    { "source": "/old-page", "destination": "/new-page" },
+    { "source": "/guides/setup", "destination": "/docs/setup", "permanent": true },
+    // wildcard: redirect a whole moved folder (:splat = matched suffix)
+    { "source": "/v1/*", "destination": "/v2/:splat" }
+  ]
+}
+```
+
+`source` and `destination` are **absolute paths** (leading `/`, no extension).
+Add `"permanent": true` for a 301 (default is 302). See
+https://holocron.so/docs/create/redirects.md for the full reference.
 
 ## New pages and navigation
 
@@ -690,6 +745,34 @@ npx -y "@holocron.so/cli" whoami
 
 If `whoami` succeeds and shows user, orgs, and projects, skip login. Only run
 `npx -y "@holocron.so/cli" login` if `whoami` fails.
+
+## www hostname
+
+For every new site on a custom domain, **301 `www` to the apex in one hop**.
+Never leave `www` on another host (Vercel, Pages, a second worker). Never use
+307. Chain `http://www` → `https://www` → apex is two hops; collapse it.
+
+On Cloudflare Workers:
+
+1. Add `www.example.com` as a `custom_domain` on the **same** worker as the apex.
+2. Redirect `www` to `https://example.com` + path + query with status **301**.
+
+```ts
+.use(({ request }, next) => {
+  const url = new URL(request.url)
+  if (!url.hostname.startsWith('www.')) return next()
+  url.hostname = url.hostname.slice('www.'.length)
+  url.protocol = 'https:'
+  throw redirect(url.toString(), { status: 301 })
+})
+```
+
+```jsonc
+"routes": [
+  { "pattern": "example.com", "custom_domain": true },
+  { "pattern": "www.example.com", "custom_domain": true }
+]
+```
 
 ## Deploy
 
