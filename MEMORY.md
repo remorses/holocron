@@ -681,19 +681,11 @@ Same trap applies to any margin utility on an editorial-prose element:
 
 ## Bleed tokens + `.no-bleed` scope disable (2026-04-05)
 
-Three bleed tokens in `globals.css`, all mobile-first (`0px`) with a single
-`@variant lg { ... }` block that enables the full values at ≥1080px:
-
-| token           | lg value | consumer                                     |
-|-----------------|----------|----------------------------------------------|
-| `--bleed`       | 44px     | code blocks (`.bleed` class, editorial.css)  |
-| `--bleed-image` | 28px     | images (`<Bleed>` wrapper, inline style)     |
-| `--bleed-list`  | 32px     | lists (`<OL>`/`<List>` inline style)         |
-
-All three are consumed as `calc(-1 * var(--bleed-*))` for left/right negative
-margin. The Tailwind v4 `@variant lg { ... }` block inside `:root` compiles to
-`@media (width >= 1080px) { --bleed: 44px; ... }` — verified via DOM CSS
-inspection.
+`--bleed` is `0px` on mobile and `32px` at `lg`. Consumers use `--bleed-inset`
+(`min(--bleed, --grid-gap - 16px)`) so bled code cannot fill a tight column
+gap and touch the right aside. Do not reassign `--bleed: min(var(--bleed), …)`
+on the same element; that is a custom-property cycle and the value becomes
+invalid. `.no-bleed` still zeros `--bleed` for descendants.
 
 **`.no-bleed` scope override** (`editorial.css`):
 

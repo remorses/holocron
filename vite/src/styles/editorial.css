@@ -176,13 +176,20 @@ mark.search-match {
    prose left edge. Tables use bleed-right only.
    ======================================================================== */
 
+/* Cap bleed so it cannot fill the column gap. Do not assign `--bleed` to
+   `min(var(--bleed), …)` on the same element: that is a custom-property cycle. */
+.bleed,
+.bleed-right {
+  --bleed-inset: min(var(--bleed), max(0px, calc(var(--grid-gap, 60px) - 16px)));
+}
+
 .bleed {
-  margin-left: calc(-1 * var(--bleed));
-  margin-right: calc(-1 * var(--bleed));
+  margin-left: calc(-1 * var(--bleed-inset));
+  margin-right: calc(-1 * var(--bleed-inset));
 }
 
 .bleed-right {
-  margin-right: calc(-1 * var(--bleed));
+  margin-right: calc(-1 * var(--bleed-inset));
 }
 
 /* Scope-based bleed disable. Any descendant reading --bleed picks up 0

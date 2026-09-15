@@ -139,7 +139,7 @@ export function CodeBlock({
             color: 'var(--muted-foreground)',
             // Align title with code text start. With border-box the flex
             // item width equals the total gutter space (padding included).
-            paddingLeft: showLineNumbers ? (leftBleed ? 'var(--bleed)' : '26px') : undefined,
+            paddingLeft: showLineNumbers ? (leftBleed ? 'var(--bleed-inset, var(--bleed))' : '26px') : undefined,
             // Reserve space for the copy button so long titles don't overlap it.
             paddingRight: '36px',
           }}
@@ -175,8 +175,8 @@ export function CodeBlock({
                 style={{
                   color: 'var(--text-tertiary)',
                   textAlign: 'right',
-                  paddingRight: leftBleed ? 'var(--bleed)' : '16px',
-                  width: leftBleed ? 'var(--bleed)' : '26px',
+                  paddingRight: leftBleed ? 'var(--bleed-inset, var(--bleed))' : '16px',
+                  width: leftBleed ? 'var(--bleed-inset, var(--bleed))' : '26px',
                   overflow: 'hidden',
                   userSelect: 'none',
                 }}

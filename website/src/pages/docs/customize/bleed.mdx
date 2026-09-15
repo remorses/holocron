@@ -14,7 +14,7 @@ Bleed lets content extend beyond the prose column into the page margins. This gi
 
 ## How it works
 
-Holocron defines a `--bleed` CSS variable that controls how far content extends past the prose column. It is **0px on mobile** and **32px on desktop** (≥ 1080px). The `.bleed` CSS class applies negative left and right margins equal to `--bleed`, making the element wider than its parent.
+Holocron defines a `--bleed` CSS variable that controls how far content extends past the prose column. It is **0px on mobile** and **up to 32px on desktop** (≥ 1080px). Bleed never fills the whole column gap, so code and images stay short of the right sidebar. The `.bleed` CSS class applies negative left and right margins, making the element wider than its parent.
 
 ```diagram
   Mobile (< 1080px)                      Desktop (≥ 1080px)
@@ -107,3 +107,5 @@ Change the bleed distance globally in your `style.css`:
 ```
 
 Set `--bleed: 0px` at all breakpoints to disable bleed entirely.
+
+Bleed never fills the whole **column gap**. On desktop it is capped to `columnGap - 16px`, so a tight `layout.columnGap` (for example 32px) still leaves space before the right sidebar.

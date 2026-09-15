@@ -10,16 +10,7 @@ import { SectionHeading, type HeadingLevel } from './typography.tsx'
 
 export function Bleed({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      style={{
-        marginLeft: 'calc(-1 * var(--bleed))',
-        marginRight: 'calc(-1 * var(--bleed))',
-        display: 'flex',
-        justifyContent: 'center',
-        maxWidth: 'calc(100% + 2 * var(--bleed))',
-        overflow: 'hidden',
-      }}
-    >
+    <div className='bleed flex justify-center overflow-hidden'>
       {children}
     </div>
   )

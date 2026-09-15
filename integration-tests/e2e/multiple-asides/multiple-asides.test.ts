@@ -14,6 +14,22 @@ function getSlotAsideIndex(locator: Locator) {
 }
 
 test.describe("multiple asides fixture", () => {
+  test("code bleed stays left of the right aside", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+
+    const code = page.locator(".slot-main figure").first();
+    const aside = page.locator(".slot-aside").first();
+    await expect(code).toBeVisible();
+    await expect(aside).toBeVisible();
+
+    const codeBox = await code.boundingBox();
+    const asideBox = await aside.boundingBox();
+    expect(codeBox).not.toBeNull();
+    expect(asideBox).not.toBeNull();
+    expect(codeBox!.x + codeBox!.width).toBeLessThan(asideBox!.x);
+  });
+
   test("multiple Aside blocks in one section share one sidebar container", async ({
     page,
     request,
