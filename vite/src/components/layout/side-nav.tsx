@@ -111,6 +111,9 @@ export function SideNav() {
   // null = no active search (show everything). Non-null = active filter.
   const [searchState, setSearchState] = useState<SearchState | null>(null)
   const [highlightedIndex, setHighlightedIndex] = useState(0)
+  // The active-row highlight is only meaningful while the search input is
+  // focused (arrow-key navigation). Without focus we must not paint it.
+  const [isSearchFocused, setIsSearchFocused] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const highlightedRef = useRef<HTMLAnchorElement>(null)
 
@@ -121,7 +124,7 @@ export function SideNav() {
     [searchState, searchEntries],
   )
 
-  const highlightedHref: string | null = focusableHrefs[highlightedIndex] ?? null
+  const highlightedHref: string | null = isSearchFocused ? (focusableHrefs[highlightedIndex] ?? null) : null
 
   const handleQueryChange = useCallback(
     (value: string) => {
@@ -237,6 +240,8 @@ export function SideNav() {
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
+          onFocus={() => setIsSearchFocused(true)}
+          onBlur={() => setIsSearchFocused(false)}
           placeholder={siteConfig.search.prompt || 'Search...'}
           className={`w-full outline-none box-border search-input${query ? ' search-input-active' : ''}`}
           style={{
