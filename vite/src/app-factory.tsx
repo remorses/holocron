@@ -80,7 +80,7 @@ import {
 import type { HolocronConfig, ConfigNavTab, ConfigNavGroup } from './config.ts'
 import { collectIconRefs, dedupeIconRefs, type IconRef } from './lib/collect-icons.ts'
 import type { IconAtlas } from './lib/resolve-icons.ts'
-import { resolveConfigOverride, shouldShowConfigPanel } from './lib/config-override.ts'
+import { resolveConfigOverride } from './lib/config-override.ts'
 import { normalize as normalizeConfig } from './lib/normalize-config.ts'
 import {
   type CustomTabProvider,
@@ -175,8 +175,6 @@ export type HolocronLoaderData = {
   headRobots: string | undefined
   /** Parsed frontmatter for the active page. */
   currentPageFrontmatter: PageFrontmatter | undefined
-  /** Whether the config customization panel should be shown. */
-  showConfigPanel: boolean
 
   /**
    * Non-blocking promise that resolves to a map of GitHub repo URLs → star
@@ -1016,12 +1014,11 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
   // spiceflow passes `children === null` (true 404 case).
   const loaderFn = async ({ request }: { request: Request }): Promise<HolocronLoaderData> => {
     const slug = slugFromRequest(request)
-    const showPanel = shouldShowConfigPanel(request)
     const origin = new URL(request.url).origin
 
     // Run page lookup, MDX source check, and config override fetch in parallel.
-    // The override fetch only does work when the cookie is present; otherwise
-    // it returns the base config immediately (zero overhead).
+    // The override fetch only does work when the cookie or query param is
+    // present; otherwise it returns the base config immediately (zero overhead).
     const [currentPage, hasMdx, effectiveConfig] = await Promise.all([
       findPageBySlug({ nav: site.navigation, slug, getMdxSource: providers.getMdxSource }),
       providers.getMdxSource(slug),
@@ -1048,7 +1045,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         headTitle: `Page not found — ${effectiveConfig.name}`,
         headRobots: 'noindex',
         currentPageFrontmatter: undefined,
-        showConfigPanel: showPanel,
         githubStars: githubStarsPromise,
       }
     }
@@ -1067,7 +1063,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       headTitle: buildPageTitle(currentPage.title, effectiveConfig.name),
       headRobots: getPageRobots(currentPage.frontmatter),
       currentPageFrontmatter: currentPage.frontmatter,
-      showConfigPanel: showPanel,
       githubStars: githubStarsPromise,
     }
   }
@@ -1102,9 +1097,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     request: Request
     loaderData: HolocronLoaderData
   }) {
-    // Use the loader's site data which includes any config overrides
-    // from the holo-config-override cookie. The closure `site` is the
-    // base config; `loaderData.site.config` is the merged effective config.
     const effectiveConfig = loaderData.site.config
 
     const cookies = parseCookies(request.headers.get('cookie') || '')
@@ -2083,8 +2075,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         headTitle: buildPageTitle(pageTitle, effectiveConfig.name),
         headRobots: getPageRobots(frontmatter),
         currentPageFrontmatter: frontmatter,
-        showConfigPanel: shouldShowConfigPanel(request),
-
         githubStars: githubStarsPromise,
       }
 

@@ -25,7 +25,7 @@ import { NavSelect, type NavSelectItem } from './nav-select.tsx'
 import { Icon, resolveIconColor } from '../icon.tsx'
 import { NavTooltip } from '../sidebar-assistant.tsx'
 import { ThemeToggle } from '../theme-toggle.tsx'
-import { ConfigPanel, ConfigOverrideListener } from '../config-panel.tsx'
+import { ConfigOverrideListener } from '../config-override-listener.tsx'
 import { Footer, Logo } from './footer.tsx'
 import { BannerDismiss } from './banner-dismiss.tsx'
 import { HolocronChatBridge } from '../holocron-chat-bridge.tsx'
@@ -114,7 +114,7 @@ export function EditorialPage({
   /** Compact mode hides the sidebar Ask AI widget. */
   hideSidebarAssistant?: boolean
 }) {
-  const { site, currentPageHref, activeTabHref, activeVersionHref, activeDropdownHref, showConfigPanel, githubStars } = useHolocronData()
+  const { site, currentPageHref, activeTabHref, activeVersionHref, activeDropdownHref, githubStars } = useHolocronData()
   const siteConfig = site.config
   const enableAssistant = siteConfig.assistant.enabled
   const floatingAssistant = enableAssistant && siteConfig.assistant.display === 'floating'
@@ -516,10 +516,8 @@ export function EditorialPage({
       {/* Mobile navigation drawer (lg:hidden) */}
       {(showLeftNav || isCustomMode) && <NavDrawer />}
 
-      {/* Config customization panel — loaded asynchronously when idle.
-          Only mounted in dev mode and on preview subdomains. DialKit
-          renders its own floating toggle button. */}
-      {showConfigPanel && <ConfigPanel config={siteConfig} />}
+      {/* Listens for config-override postMessages from the dashboard iframe
+          parent. No-op unless embedded in an iframe. */}
       <ConfigOverrideListener />
     </div>
   )

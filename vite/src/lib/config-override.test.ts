@@ -2,12 +2,8 @@ import { describe, it, expect } from 'vitest'
 import {
   mergeConfigOverride,
   parseOverrideCookie,
-  configToDialConfig,
-  dialValuesToOverride,
-  configOverrideToDocsJsonPartial,
   type ConfigOverride,
 } from './config-override.ts'
-import { getHolocronBaseUrl, holocronUrl } from './holocron-url.ts'
 import type { HolocronConfig } from '../config.ts'
 
 function makeBaseConfig(overrides: Partial<HolocronConfig> = {}): HolocronConfig {
@@ -117,95 +113,5 @@ describe('parseOverrideCookie', () => {
 
   it('returns null for malformed cookie (no colon)', () => {
     expect(parseOverrideCookie('holo-config-override=nodelimiter')).toBeNull()
-  })
-})
-
-describe('configToDialConfig roundtrip', () => {
-  it('converts config to dial format and back', () => {
-    const base = makeBaseConfig({
-      colors: { primary: '#ff5500', light: '#ffffff', dark: '#000000', _hasUserColors: true },
-      decorativeLines: 'dashed',
-      assistant: { enabled: false, display: 'sidebar' },
-    })
-    const dialConfig = configToDialConfig(base)
-    // DialKit shows: light = color for light mode (Mintlify dark), dark = color for dark mode (Mintlify light)
-    // Simulate DialKit returning the same values
-    const dialValues = {
-      colors: { light: '#000000', dark: '#ffffff' },
-      decorativeLines: 'dashed',
-      assistant: { enabled: false },
-    }
-    const override = dialValuesToOverride(dialValues)
-    // light dial value → primary + dark (Mintlify convention)
-    expect(override.colors?.primary).toBe('#000000')
-    expect(override.colors?.dark).toBe('#000000')
-    // dark dial value → light (Mintlify convention)
-    expect(override.colors?.light).toBe('#ffffff')
-    expect(override.decorativeLines).toBe('dashed')
-    expect(override.assistant?.enabled).toBe(false)
-  })
-
-  it('skips empty color strings', () => {
-    const dialValues = {
-      colors: { light: '', dark: '' },
-    }
-    const override = dialValuesToOverride(dialValues)
-    expect(override.colors?.primary).toBeUndefined()
-    expect(override.colors?.light).toBeUndefined()
-    expect(override.colors?.dark).toBeUndefined()
-  })
-})
-
-describe('configOverrideToDocsJsonPartial', () => {
-  it('produces clean JSON for clipboard', () => {
-    const override: ConfigOverride = {
-      colors: { primary: '#ff0000' },
-      decorativeLines: 'none',
-      assistant: { enabled: false },
-    }
-    const result = configOverrideToDocsJsonPartial(override)
-    expect(result).toMatchInlineSnapshot(`
-      {
-        "assistant": {
-          "enabled": false,
-        },
-        "colors": {
-          "primary": "#ff0000",
-        },
-        "decorativeLines": "none",
-      }
-    `)
-  })
-
-  it('omits empty sections', () => {
-    const override: ConfigOverride = {}
-    const result = configOverrideToDocsJsonPartial(override)
-    expect(result).toEqual({})
-  })
-})
-
-describe('holocronUrl', () => {
-  it('defaults to holocron.so', () => {
-    const previous = process.env.HOLOCRON_URL
-    delete process.env.HOLOCRON_URL
-    try {
-      expect(getHolocronBaseUrl()).toMatchInlineSnapshot(`"https://holocron.so"`)
-      expect(holocronUrl('/api/config-override')).toMatchInlineSnapshot(`"https://holocron.so/api/config-override"`)
-    } finally {
-      if (previous === undefined) delete process.env.HOLOCRON_URL
-      else process.env.HOLOCRON_URL = previous
-    }
-  })
-
-  it('uses HOLOCRON_URL without duplicating slashes', () => {
-    const previous = process.env.HOLOCRON_URL
-    process.env.HOLOCRON_URL = 'https://custom.example.com/'
-    try {
-      expect(getHolocronBaseUrl()).toMatchInlineSnapshot(`"https://custom.example.com"`)
-      expect(holocronUrl('/api/og?title=Hello')).toMatchInlineSnapshot(`"https://custom.example.com/api/og?title=Hello"`)
-    } finally {
-      if (previous === undefined) delete process.env.HOLOCRON_URL
-      else process.env.HOLOCRON_URL = previous
-    }
   })
 })

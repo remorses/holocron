@@ -1,15 +1,11 @@
 /**
- * Config override — types, merge logic, and DialKit conversion.
+ * Config override — types and merge logic.
  *
- * Supports live customization of docs.json fields. Two modes:
- *
- * 1. Visual override (DialKit panel): only colors, layout, fonts, etc.
- *    Stored via cookie `holo-config-override=<doId>:<hash>`.
- *
- * 2. Full config override (notaku dashboard preview): any docs.json field.
- *    Passed via `?configOverride=<doId>:<hash>` query param from parent
- *    iframe, then set as cookie by a postMessage listener for subsequent
- *    router.refresh() calls.
+ * Supports live customization of docs.json fields for the dashboard preview:
+ * any docs.json field can be overridden. The override key is passed via
+ * `?configOverride=<doId>:<hash>` query param from the parent iframe, then
+ * set as a cookie by a postMessage listener for subsequent router.refresh()
+ * calls.
  *
  * Overrides are stored in a Durable Object on holocron.so. The merge is
  * always a full snapshot applied on top of the base config, not a diff.
@@ -18,7 +14,6 @@
 import type { HolocronConfig } from '../config.ts'
 import { parse as parseCookies } from 'cookie'
 import { holocronUrl } from './holocron-url.ts'
-import type { DialConfig } from 'dialkit'
 
 /* ── Iframe postMessage protocol ──────────────────────────────────────
  *
@@ -83,8 +78,8 @@ export type ConfigOverride = {
 
 /** Deep-merge visual override fields into a base config. Returns a new
  *  object; never mutates `base`. Only handles the known visual/theming
- *  fields from DialKit. Full-config overrides are handled separately
- *  by normalizing the raw JSON via `applyOverride()`. */
+ *  fields (colors, appearance, layout, fonts, etc). Full-config overrides
+ *  are handled separately by normalizing the raw JSON via `applyOverride()`. */
 export function mergeConfigOverride(
   base: HolocronConfig,
   override: ConfigOverride | Record<string, unknown>,
@@ -145,144 +140,6 @@ export function parseOverrideCookie(
   return { doId, hash }
 }
 
-/* ── Config → DialKit conversion ─────────────────────────────────────── */
-
-/** Convert the current HolocronConfig into a DialKit config object.
- *  Each field maps to the appropriate DialKit control type. */
-export function configToDialConfig(config: HolocronConfig): DialConfig {
-  return {
-    colors: {
-      light: { type: 'color' as const, default: config.colors.dark || config.colors.primary || '#0D9373' },
-      dark: { type: 'color' as const, default: config.colors.light || '#ffffff' },
-    },
-    layout: {
-      maxWidth: [config.layout.maxWidth, 800, 2600, 50] as [number, number, number, number],
-      radius: [config.layout.radius, 0, 20, 1] as [number, number, number, number],
-    },
-
-    fonts: {
-      bodySize: [config.fonts?.fontSize ?? 14, 12, 18, 1] as [number, number, number, number],
-      headingSize: [config.fonts?.heading?.fontSize ?? 16, 12, 36, 1] as [number, number, number, number],
-    },
-    decorativeLines: {
-      type: 'select' as const,
-      options: ['none', 'lines', 'dashed', 'lines-with-dots'],
-      default: config.decorativeLines,
-    },
-    assistant: {
-      enabled: config.assistant.enabled,
-    },
-    actions: {
-      copy: { type: 'action' as const },
-      reset: { type: 'action' as const },
-    },
-
-  }
-}
-
-/** Convert DialKit reactive values back to a ConfigOverride. */
-export function dialValuesToOverride(values: Record<string, any>): ConfigOverride {
-  const override: ConfigOverride = {}
-
-  if (values.colors) {
-    override.colors = {}
-    // DialKit shows light/dark labels matching the mode they appear in:
-    // "light" = color used in light mode (Mintlify's colors.dark)
-    // "dark" = color used in dark mode (Mintlify's colors.light)
-    if (values.colors.light) {
-      override.colors.primary = values.colors.light
-      override.colors.dark = values.colors.light
-    }
-    if (values.colors.dark) override.colors.light = values.colors.dark
-  }
-
-  if (values.layout) {
-    override.layout = {}
-    if (values.layout.maxWidth !== undefined) override.layout.maxWidth = values.layout.maxWidth
-    if (values.layout.radius !== undefined) override.layout.radius = values.layout.radius
-  }
-
-  if (values.fonts) {
-    override.fonts = {}
-    if (values.fonts.bodySize !== undefined) override.fonts.fontSize = values.fonts.bodySize
-    if (values.fonts.headingSize !== undefined) {
-      override.fonts.heading = { ...override.fonts.heading, fontSize: values.fonts.headingSize } as any
-    }
-  }
-
-  if (values.decorativeLines !== undefined) {
-    override.decorativeLines = values.decorativeLines
-  }
-
-  if (values.assistant) {
-    override.assistant = {}
-    if (values.assistant.enabled !== undefined) {
-      override.assistant.enabled = values.assistant.enabled
-    }
-  }
-
-  return override
-}
-
-/** Produce a clean docs.json-shaped partial object for clipboard export.
- *  Only includes fields that differ from defaults. */
-export function configOverrideToDocsJsonPartial(override: ConfigOverride): Record<string, unknown> {
-  const result: Record<string, unknown> = {}
-
-  if (override.colors) {
-    const colors: Record<string, string> = {}
-    if (override.colors.primary) colors.primary = override.colors.primary
-    if (override.colors.light) colors.light = override.colors.light
-    if (override.colors.dark) colors.dark = override.colors.dark
-    if (Object.keys(colors).length > 0) result.colors = colors
-  }
-
-  if (override.appearance) {
-    const appearance: Record<string, unknown> = {}
-    if (override.appearance.default) appearance.default = override.appearance.default
-    if (override.appearance.strict !== undefined) appearance.strict = override.appearance.strict
-    if (Object.keys(appearance).length > 0) result.appearance = appearance
-  }
-
-  if (override.decorativeLines !== undefined) {
-    result.decorativeLines = override.decorativeLines
-  }
-
-  if (override.banner) {
-    const banner: Record<string, unknown> = {}
-    if (override.banner.content !== undefined) banner.content = override.banner.content
-    if (override.banner.dismissible !== undefined) banner.dismissible = override.banner.dismissible
-    if (Object.keys(banner).length > 0) result.banner = banner
-  }
-
-  if (override.assistant) {
-    if (override.assistant.enabled !== undefined) {
-      result.assistant = { enabled: override.assistant.enabled }
-    }
-  }
-
-  if (override.layout) {
-    const layout: Record<string, unknown> = {}
-    if (override.layout.mode !== undefined) layout.mode = override.layout.mode
-    if (override.layout.maxWidth !== undefined) layout.maxWidth = override.layout.maxWidth
-    if (override.layout.radius !== undefined) layout.radius = override.layout.radius
-    if (override.layout.sidebarWidth !== undefined) layout.sidebarWidth = override.layout.sidebarWidth
-    if (override.layout.columnGap !== undefined) layout.columnGap = override.layout.columnGap
-    if (Object.keys(layout).length > 0) result.layout = layout
-  }
-
-  if (override.fonts) {
-    const fonts: Record<string, unknown> = {}
-    if (override.fonts.fontSize !== undefined) fonts.fontSize = override.fonts.fontSize
-    if (override.fonts.heading?.fontSize !== undefined) {
-      fonts.heading = { fontSize: override.fonts.heading.fontSize }
-    }
-    if (Object.keys(fonts).length > 0) result.fonts = fonts
-  }
-
-  return result
-}
-
 /* ── Parse override key from query param ─────────────────────────────── */
 
 /** Parse the `configOverride` query parameter into doId + hash.
@@ -318,8 +175,8 @@ const overrideCache = new Map<string, ConfigOverride | Record<string, unknown>>(
  *  the base config.
  *
  *  Checks two sources for the override key (first match wins):
- *  1. `?configOverride=doId:hash` query param (notaku dashboard iframe)
- *  2. `holo-config-override` cookie (DialKit config panel)
+ *  1. `?configOverride=doId:hash` query param (dashboard iframe src)
+ *  2. `holo-config-override` cookie (set by the postMessage listener)
  *
  *  Full-mode overrides (marked with `_mode: 'full'`) are normalized
  *  from raw docs.json into a complete HolocronConfig, replacing the
@@ -366,22 +223,4 @@ function applyOverride(
     return normalizeConfig(rawConfig)
   }
   return mergeConfigOverride(baseConfig, override)
-}
-
-/* ── Preview subdomain detection ─────────────────────────────────────── */
-
-/** Whether the config panel should be shown for this request.
- *  True in dev mode and on holocron.so preview deployment subdomains. */
-export function shouldShowConfigPanel(request: Request): boolean {
-  if (typeof import.meta !== 'undefined' && import.meta.env?.DEV) return true
-  try {
-    const hostname = new URL(request.url).hostname
-    // Matches preview deployment subdomains like mysite-site-preview.holocron.so,
-    // the main preview site preview.holocron.so, and any sub-subdomain of it.
-    return hostname.endsWith('-site-preview.holocron.so')
-      || hostname === 'preview.holocron.so'
-      || hostname.endsWith('.preview.holocron.so')
-  } catch {
-    return false
-  }
 }

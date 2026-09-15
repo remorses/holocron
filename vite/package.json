@@ -131,9 +131,6 @@
     "zod": "^4.4.3",
     "zustand": "^5.0.12"
   },
-  "optionalDependencies": {
-    "dialkit": "^1.2.0"
-  },
   "devDependencies": {
     "@ai-sdk/provider": "^3.0.8",
     "@tailwindcss/cli": "^4.3.0",
