@@ -195,11 +195,6 @@ export function isAboveNode(node: RootContent): node is FlowJsxNode {
   return node.type === 'mdxJsxFlowElement' && (node.name === 'Above' || node.name === 'Hero')
 }
 
-function isInvisibleLeadNode(node: RootContent): boolean {
-  if (node.type === 'yaml' || node.type === 'definition' || node.type === 'mdxjsEsm') return true
-  return node.type === 'html' && /^\s*<!--/.test(node.value)
-}
-
 function isHeadingNode(node: RootContent): boolean {
   return node.type === 'heading'
     || (node.type === 'mdxJsxFlowElement' && (node.name === 'Heading' || /^h[1-6]$/.test(node.name ?? '')))
@@ -244,9 +239,9 @@ export function shouldInjectPageTitle({
   pageTitle?: string
 }): boolean {
   if (hideTitle === true || !pageTitle) return false
+  // <Above> heroes own the H1. Body headings (## or even #) must not skip
+  // the injected title; otherwise docs pages ship with zero H1s.
   if (nodes.some(isAboveNode)) return false
-  const firstContentNode = nodes.find((node) => !isInvisibleLeadNode(node))
-  if (firstContentNode && isHeadingNode(firstContentNode)) return false
   return true
 }
 

@@ -1498,6 +1498,15 @@ Hero
       pageTitle: 'Kimaki',
     })).toBe(true)
   })
+
+  test('injects the title when the body starts with a markdown heading', () => {
+    const root = mdxParse('## Relay server logs\n\nBody')
+    expect(shouldInjectPageTitle({
+      nodes: root.children,
+      hideTitle: false,
+      pageTitle: 'Troubleshooting',
+    })).toBe(true)
+  })
 })
 
 describe('demoteBodyH1s', () => {

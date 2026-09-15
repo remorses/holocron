@@ -337,6 +337,9 @@ function renderMdxPage({
   const pageOgTitle = pageSeoMeta['og:title'] ?? loaderData.headTitle
   const pageTwitterTitle = pageSeoMeta['twitter:title'] ?? loaderData.headTitle
   const pageTwitterCard = pageSeoMeta['twitter:card'] ?? 'summary_large_image'
+  const pageHref = loaderData.currentPageHref || '/'
+  const pageOgType = pageSeoMeta['og:type'] ?? (pageHref === '/' ? 'website' : 'article')
+  const pageOgUrl = pageSeoMeta['og:url'] ?? new URL(pageHref, requestUrl.origin).toString()
 
   const mdast = preParsedMdast
   demoteBodyH1s(mdast.children)
@@ -376,6 +379,8 @@ function renderMdxPage({
           {pageKeywords && <Head.Meta name='keywords' content={pageKeywords} />}
           {loaderData.headRobots && <Head.Meta name='robots' content={loaderData.headRobots} />}
           <Head.Meta property='og:image' content={pageOgImage} />
+          <Head.Meta property='og:type' content={pageOgType} />
+          <Head.Meta property='og:url' content={pageOgUrl} />
           <Head.Meta name='twitter:image' content={pageTwitterImage} />
           <Head.Meta name='twitter:card' content={pageTwitterCard} />
         </Head>
@@ -388,8 +393,8 @@ function renderMdxPage({
 
   const aboveNodes = mdast.children.filter(isAboveNode)
   const contentChildren: Root['children'] = mdast.children.filter((node) => !isAboveNode(node))
-  // Frontmatter title is the generated H1. Skip it when the page has <Above>,
-  // the body already starts with a heading, or hideTitle is set.
+  // Frontmatter title is the generated H1. Skip it when the page has <Above>
+  // (the hero owns the H1) or hideTitle is set. Body ## headings do not skip it.
   const shouldInjectH1 = shouldInjectPageTitle({
     nodes: mdast.children,
     hideTitle: loaderData.currentPageFrontmatter?.hideTitle,
@@ -529,6 +534,8 @@ function renderMdxPage({
         {pageKeywords && <Head.Meta name='keywords' content={pageKeywords} />}
         {loaderData.headRobots && <Head.Meta name='robots' content={loaderData.headRobots} />}
         <Head.Meta property='og:image' content={pageOgImage} />
+        <Head.Meta property='og:type' content={pageOgType} />
+        <Head.Meta property='og:url' content={pageOgUrl} />
         <Head.Meta name='twitter:image' content={pageTwitterImage} />
         <Head.Meta name='twitter:card' content={pageTwitterCard} />
         {Object.entries(pageSeoMeta)
@@ -537,6 +544,8 @@ function renderMdxPage({
             'og:title',
             'og:description',
             'og:image',
+            'og:type',
+            'og:url',
             'twitter:title',
             'twitter:description',
             'twitter:image',
