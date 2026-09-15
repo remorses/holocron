@@ -21,6 +21,7 @@ import { strataBetterAuth } from '@strada.sh/sdk/better-auth'
 import { json } from 'spiceflow'
 import { memoize } from './lib/memoize.ts'
 import { ACTIVE_SUBSCRIPTION_STATUSES } from './lib/billing-rules.ts'
+import { trackProduct } from './lib/product-events.ts'
 
 // ── Drizzle client via D1 ───────────────────────────────────────────
 
@@ -224,6 +225,7 @@ export async function ensureOrg(
       db.insert(schema.org).values({ id: orgId, name: userName }),
       db.insert(schema.orgMember).values({ orgId, userId, role: 'admin' }),
     ])
+    trackProduct('org.created', { orgId, source: 'ensure-org' })
     return { id: orgId, name: userName }
   } catch (err) {
     // Race: another request already created the org for this user.

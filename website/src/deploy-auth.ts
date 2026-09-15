@@ -10,6 +10,7 @@ import { ulid } from 'ulid'
 import * as schema from 'db/schema'
 import type { ApiKeyScope } from 'db/schema'
 import { ensureOrg, getDb, getSession, validateApiKey } from './db.ts'
+import { trackProduct } from './lib/product-events.ts'
 
 function githubOrgAccessUrl() {
   return `https://github.com/settings/connections/applications/${env.GITHUB_CLIENT_ID}`
@@ -441,6 +442,12 @@ async function upsertProjectForOidc({
     githubRepo,
     defaultBranch,
     subdomain,
+  })
+  trackProduct('project.created', {
+    projectId,
+    orgId,
+    source: 'github-oidc',
+    githubOwner,
   })
 
   return projectId

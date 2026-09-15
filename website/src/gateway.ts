@@ -22,6 +22,7 @@ import { streamText, generateText, jsonSchema, tool as aiTool, type LanguageMode
 import { createGateway } from '@ai-sdk/gateway'
 import { createFallback } from 'ai-fallback'
 import { captureException, getLogger } from '@strada.sh/sdk'
+import { trackProduct } from './lib/product-events.ts'
 import { env, waitUntil } from 'cloudflare:workers'
 import { unzipSync, strFromU8 } from 'fflate'
 import { Spiceflow } from 'spiceflow'
@@ -289,6 +290,7 @@ export const gatewayApp = new Spiceflow()
         if (!success) {
           // Yield a friendly notice (rendered as a card in the chat UI) instead
           // of throwing a raw 429 that would surface as a generic error.
+          trackProduct('chat.limit_hit', { reason: 'ip-rate-limit', authenticated: false })
           yield NOTICE_RATE_LIMIT_REACHED
           return
         }
@@ -333,6 +335,12 @@ export const gatewayApp = new Spiceflow()
         : null
 
       if (limitCheck && !limitCheck.allowed) {
+        trackProduct('chat.limit_hit', {
+          reason: 'credit-limit',
+          authenticated: true,
+          projectId: chatProjectId,
+          orgId: authResult?.orgId,
+        })
         yield NOTICE_USAGE_LIMIT_REACHED
         return
       }
@@ -584,35 +592,35 @@ export const gatewayApp = new Spiceflow()
           yield streamErrorNotice(err.message)
         }
       } finally {
-        // ── One log line per turn (queryable in Strada) ────────────────
-        // SELECT … FROM otel_logs WHERE LogAttributes['event'] = 'ai.chat.turn'
-        //   AND LogAttributes['renderable'] = 'false'
+        // ── One product event per turn (queryable in Strada) ────────────
+        // SELECT … FROM otel_logs WHERE LogAttributes['event.name'] = 'chat.turn'
+        //   AND LogAttributes['custom.renderable'] = 'false'
         //
-        // A turn is "renderable" when the user got text, reasoning, or a tool
-        // call. Intermediate client-tool turns legitimately have no text, so
+        // A turn is "renderable" when the user got text or a tool call.
+        // Reasoning is never shown, so reasoning-only turns count as empty.
+        // Intermediate client-tool turns legitimately have no text, so
         // keying the failure signal on textChars alone would flood Strada.
-        const hasRenderableOutput = turn.textChars > 0 || turn.reasoningChars > 0 || turn.toolCalls > 0
-        const turnLog = {
-          event: 'ai.chat.turn',
+        // Never include the prompt or answer text.
+        const hasRenderableOutput = turn.textChars > 0 || turn.toolCalls > 0
+        const turnEvent = {
           model: modelName,
-          projectId: chatProjectId ?? '',
-          sessionId: body.sessionId ?? '',
-          pageSlug,
+          projectId: chatProjectId,
+          orgId: authResult?.orgId,
           authenticated: !!authResult,
           durationMs: Date.now() - turnStartedAt,
-          ttftMs: turn.ttftMs,
+          ttftMs: turn.ttftMs ?? 0,
           textChars: turn.textChars,
           textParts: turn.textParts,
           reasoningChars: turn.reasoningChars,
           toolCalls: turn.toolCalls,
           sawTextEnd: turn.sawTextEnd,
           renderable: hasRenderableOutput,
-          finishReason: turn.finishReason,
+          finishReason: turn.finishReason || '',
           clientTools: Object.keys(clientTools).length,
-          errorText: turn.errorText,
         }
+        trackProduct('chat.turn', turnEvent)
         if (!hasRenderableOutput) {
-          chatLogger.error({ message: 'chat turn produced nothing renderable', ...turnLog })
+          chatLogger.error({ message: 'chat turn produced nothing renderable', ...turnEvent, errorText: turn.errorText })
           // Not covered by the error paths above: the model finished
           // "successfully" but emitted nothing at all.
           if (!turn.errorText) {
@@ -628,8 +636,6 @@ export const gatewayApp = new Spiceflow()
               },
             )
           }
-        } else {
-          chatLogger.info({ message: 'chat turn', ...turnLog })
         }
 
         // Usage recording runs on every path (stream error, abort, disconnect)

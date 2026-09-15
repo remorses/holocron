@@ -26,6 +26,7 @@ import { unzipSync } from 'fflate'
 import { getDb } from './db.ts'
 import { canDeploy, ACTIVE_SUBSCRIPTION_STATUSES, subscriptionRequiredPayload } from './lib/billing-rules.ts'
 import { resolveProjectSubdomain, resolveCreateDeployAuth, requireDeployAccess, sanitizeForDns, TEMPLATE_DEFAULT_SITE_NAME } from './deploy-auth.ts'
+import { trackProduct } from './lib/product-events.ts'
 
 /** Build a subdomain for a base-path deployment.
  *  Format: `{sanitized-base}-base-{project-subdomain}`.
@@ -182,6 +183,14 @@ export const deployApp = new Spiceflow()
         triggeredByUserId: auth.userId ?? null,
         githubActor: auth.type === 'github-oidc' ? auth.githubActor ?? null : null,
         basePath: body.basePath ?? null,
+      })
+      trackProduct('deployment.created', {
+        deploymentId,
+        projectId: auth.projectId,
+        orgId: auth.orgId,
+        kind: isPreview ? 'preview' : 'production',
+        source: auth.type,
+        hasBasePath: !!body.basePath,
       })
 
       // Bump project.updatedAt so the project list is ordered by last deploy activity.
@@ -496,6 +505,16 @@ export const deployApp = new Spiceflow()
       // project pointer, so only they should send the welcome email.
       const isRootProduction = isProduction && !deploy.basePath
       const isFirstDeploy = isRootProduction && !proj.currentDeploymentId
+      if (deploy.status === 'uploading') {
+        trackProduct('deployment.live', {
+          deploymentId: deploy.id,
+          projectId: deploy.projectId,
+          orgId: proj.orgId,
+          kind: isProduction ? 'production' : 'preview',
+          firstDeploy: isFirstDeploy,
+          hasBasePath: !!deploy.basePath,
+        })
+      }
       if (isFirstDeploy && proj.githubOwner && proj.githubRepo) {
         waitUntil(sendFirstDeployEmail({
           db,

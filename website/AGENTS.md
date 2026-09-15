@@ -26,6 +26,12 @@ To add a new model:
 
 All runtime errors must be reported via `captureException` from `@strada.sh/sdk`, not swallowed with `console.error` or `console.warn`. The server app's `.onError` handler already captures uncaught route errors, but any error handled inline (like webhook failures, API call errors, etc.) must call `captureException(error, { tags: { ... } })` explicitly. Always include relevant tags like `route` and context-specific identifiers so errors are filterable in strada.
 
+## Product analytics with strada
+
+Use `trackProduct()` from `src/lib/product-events.ts` (wraps `track()` from `@strada.sh/sdk`) for product events. Do not use `getLogger({ event: 'x' })`; that is an ordinary log and `strada analytics events` will miss it.
+
+Call `trackProduct` on the server at mutation success: project create/delete, org create, deploy create/live, API key create, subscription update, chat turn, chat limit. Never attach prompts, API keys, session tokens, or raw user content. Counts, ids, model names, durations, and booleans are fine. Auth signup/login/logout is already emitted by `strataBetterAuth()`.
+
 ## Documentation command examples
 
 Use `npx` for one-off command examples in MDX docs, like `npx vite` and `npx vite build`. It is more common and works regardless of whether the user installed dependencies with npm, pnpm, yarn, or bun.

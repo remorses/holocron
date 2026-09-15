@@ -18,6 +18,7 @@ import { captureException } from '@strada.sh/sdk'
 import { env } from 'cloudflare:workers'
 import { getDb } from '../db.ts'
 import { PRO_PRICE_LOOKUP_KEYS, type BillingInterval } from './billing-rules.ts'
+import { trackProduct } from './product-events.ts'
 
 // ── Tagged errors ───────────────────────────────────────────────────
 
@@ -177,6 +178,7 @@ export async function handleSubscriptionChange(
   const interval = intervalRaw === 'month' || intervalRaw === 'year' ? intervalRaw : null
   const periodEnd = firstItem.current_period_end
 
+  const currentPeriodEnd = periodEnd ? periodEnd * 1000 : null
   const record: typeof schema.subscription.$inferInsert = {
     subscriptionId: latest.id,
     orgId: ids.orgId,
@@ -186,18 +188,38 @@ export async function handleSubscriptionChange(
     productId: typeof price.product === 'string' ? price.product : price.product.id,
     status: latest.status,
     interval,
-    currentPeriodEnd: periodEnd ? periodEnd * 1000 : null,
+    currentPeriodEnd,
     cancelAtPeriodEnd: latest.cancel_at_period_end,
     updatedAt: Date.now(),
   }
 
   const db = getDb()
+  const existing = await db.query.subscription
+    .findFirst({ where: { subscriptionId: latest.id } })
+    .catch((e) => new DbError({ operation: 'subscription.findFirst', cause: e }))
+  if (existing instanceof Error) return existing
+  const changed = !existing
+    || existing.status !== record.status
+    || existing.interval !== record.interval
+    || existing.priceId !== record.priceId
+    || existing.currentPeriodEnd !== record.currentPeriodEnd
+    || existing.cancelAtPeriodEnd !== record.cancelAtPeriodEnd
+
   const upsert = await db
     .insert(schema.subscription)
     .values(record)
     .onConflictDoUpdate({ target: schema.subscription.subscriptionId, set: record })
     .catch((e) => new DbError({ operation: 'subscription.upsert', cause: e }))
   if (DbError.is(upsert)) return upsert
+  if (changed) {
+    trackProduct('subscription.updated', {
+      projectId: ids.projectId,
+      orgId: ids.orgId,
+      status: latest.status,
+      interval,
+      cancelAtPeriodEnd: latest.cancel_at_period_end,
+    })
+  }
 
   return null
 }

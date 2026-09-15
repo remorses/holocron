@@ -893,13 +893,13 @@ The AI chat runs entirely via the **Vercel AI SDK** (`ai` package) + **Cloudflar
 - **That "no answer" notice is UI-only and never persisted**, so `modelMessagesToChatMessages` recreates it. Without that, reloading a conversation whose last turn rendered nothing drops the assistant message entirely and leaves a question with no reply.
 - Each turn logs `[holocron:chat] turn …` with `textChars`, `sawTextEnd`, tool counts and timings. `textChars=0` is the signature of a lost answer.
 
-On the gateway side (`website/src/gateway.ts`) every turn emits one Strada log with `event: 'ai.chat.turn'` from an outer `finally` (so browser disconnects — the turns worth seeing — are logged and billed too), and a turn with nothing renderable calls `captureException`. Raw provider messages go to Strada only; the browser gets curated text from `safeProviderMessage()`. Query lost answers with:
+On the gateway side (`website/src/gateway.ts`) every turn emits one Strada product event `chat.turn` via `trackProduct()` from an outer `finally` (so browser disconnects — the turns worth seeing — are logged and billed too), and a turn with nothing renderable calls `captureException`. Never attach the prompt. Raw provider messages go to Strada only; the browser gets curated text from `safeProviderMessage()`. Query lost answers with:
 
 ```sql
-SELECT Timestamp, LogAttributes['model'], LogAttributes['finishReason'], LogAttributes['errorText']
+SELECT Timestamp, LogAttributes['custom.model'], LogAttributes['custom.finishReason']
 FROM otel_logs
-WHERE LogAttributes['event'] = 'ai.chat.turn'
-  AND LogAttributes['renderable'] = 'false'
+WHERE LogAttributes['event.name'] = 'chat.turn'
+  AND LogAttributes['custom.renderable'] = 'false'
 ORDER BY Timestamp DESC LIMIT 50
 ```
 

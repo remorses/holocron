@@ -31,6 +31,7 @@ import { deployApp } from './deploy-api.ts'
 import { domainApp } from './domain-api.ts'
 import { maintainApi } from './maintain-api.ts'
 import { resolveGithubOidcDeployAuth, validateCustomSubdomain } from './deploy-auth.ts'
+import { trackProduct } from './lib/product-events.ts'
 
 // ── Shared schemas (derived from Drizzle tables) ────────────────────────
 //
@@ -183,6 +184,7 @@ export const apiApp = new Spiceflow()
           prefix,
           hash,
         })
+        trackProduct('api_key.created', { orgId, scope: 'org' })
         return { id, name: body.name, prefix, key: fullKey, scope: 'org' as const, projectId: null }
       }
 
@@ -222,6 +224,7 @@ export const apiApp = new Spiceflow()
         prefix,
         hash,
       })
+      trackProduct('api_key.created', { orgId: project.orgId, projectId: body.projectId, scope: 'project' })
 
       return {
         id,
@@ -577,6 +580,12 @@ export const apiApp = new Spiceflow()
           source: body.source ?? null,
           externalId: body.externalId ?? null,
         }).returning()
+        trackProduct('project.created', {
+          projectId,
+          orgId,
+          source: body.source ?? (auth.type === 'api-key' ? 'api-key' : 'cli'),
+          hasSubdomain: !!subdomain,
+        })
         return created!
       } catch (err) {
         // Unique constraint race on subdomain or externalId

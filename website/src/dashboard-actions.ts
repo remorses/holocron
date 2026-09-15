@@ -15,6 +15,7 @@ import * as schema from 'db/schema'
 import { env } from 'cloudflare:workers'
 import { getActionRequest, redirect } from 'spiceflow'
 import { getDb, requireSession, generateApiKey, hashApiKey } from './db.ts'
+import { trackProduct } from './lib/product-events.ts'
 
 async function authenticateRequest() {
   const request = getActionRequest()
@@ -69,6 +70,7 @@ export async function createApiKeyAction({ name, projectId }: {
     prefix: generated.prefix,
     hash: keyHash,
   })
+  trackProduct('api_key.created', { orgId, projectId, scope: 'project' })
 
   // Return the full key; this is the only time it's ever available
   return { id, fullKey: generated.fullKey, prefix: generated.prefix }
@@ -140,6 +142,7 @@ export async function createOrgAction({ name }: {
     db.insert(schema.org).values({ id: orgId, name: name.trim() }),
     db.insert(schema.orgMember).values({ orgId, userId: session.userId, role: 'admin' }),
   ])
+  trackProduct('org.created', { orgId, source: 'dashboard' })
 
   return { orgId }
 }
@@ -172,7 +175,7 @@ export async function deleteProjectAction({ projectId }: {
   if (!projectId) throw new Error('Project ID is required')
 
   const session = await authenticateRequest()
-  await requireProjectMembership(session.userId, projectId, { adminOnly: true })
+  const { orgId } = await requireProjectMembership(session.userId, projectId, { adminOnly: true })
 
   const db = getDb()
 
@@ -209,6 +212,7 @@ export async function deleteProjectAction({ projectId }: {
   // Delete the project row; cascades to deployments, api_keys, subscriptions
   await db.delete(schema.project)
     .where(orm.eq(schema.project.projectId, projectId))
+  trackProduct('project.deleted', { projectId, orgId })
 
   throw redirect('/dashboard')
 }
