@@ -2580,6 +2580,53 @@ and [missing](/unknown-page).
     expect(warnings).toHaveLength(1)
   })
 
+  test('warns about broken footer and navbar hrefs in docs.json', async () => {
+    const project = tracked(createProject(
+      {
+        navigation: [
+          { group: 'Guide', pages: ['index'] },
+        ],
+        navbar: {
+          primary: { label: 'Cloud Login', href: '/dashboard' },
+        },
+        footer: {
+          links: [
+            {
+              header: 'platform',
+              items: [
+                { label: 'Changelog', href: '/changelog/intro' },
+                { label: 'GitHub', href: 'https://github.com/example/docs' },
+              ],
+            },
+          ],
+        },
+        knownPaths: ['/dashboard'],
+      },
+      {
+        index: `---
+title: Home
+---
+
+Hello.
+`,
+      },
+    ))
+    const config = readConfig({ root: project.root })
+    const warnSpy = vi.spyOn(logger, 'warn')
+    await syncNavigation({
+      config,
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    const warnings = warnSpy.mock.calls.map((c) => c[0]).filter((msg) => typeof msg === 'string' && msg.includes('broken link'))
+    expect(warnings.some((w) => w.includes('/changelog/intro'))).toBe(true)
+    expect(warnings.some((w) => w.includes('/dashboard'))).toBe(false)
+    expect(warnings).toHaveLength(1)
+  })
+
   test('strips hash fragments before validating links', async () => {
     const project = tracked(createProject(
       {

@@ -638,6 +638,7 @@ export async function syncNavigation({
     pageInternalLinks,
     redirects: config.redirects,
     knownPaths: config.knownPaths,
+    configLinks: collectConfigInternalLinks(config),
   })
 
   // 4e. Validate local asset references — warn about images/media pointing to non-existent files.
@@ -1217,16 +1218,33 @@ function filterErroredMdxContent({ content, mdxContentErrors }: { content: Recor
  * - Relative links `./foo` or `../bar` → resolve from the linking page's slug directory
  * - A link is valid if it matches a page href OR a redirect source
  */
+function collectConfigInternalLinks(config: HolocronConfig): InternalLink[] {
+  const links: InternalLink[] = []
+  const add = (href: string) => {
+    if (!href || !href.startsWith('/') || href.startsWith('//')) return
+    links.push({ href })
+  }
+  for (const link of config.navbar.links) add(link.href)
+  if (config.navbar.primary) add(config.navbar.primary.href)
+  for (const col of config.footer.links) {
+    for (const item of col.items) add(item.href)
+  }
+  for (const anchor of config.navigation.anchors) add(anchor.href)
+  return links
+}
+
 function validateInternalLinks({
   navigation,
   pageInternalLinks,
   redirects,
   knownPaths,
+  configLinks,
 }: {
   navigation: Navigation
   pageInternalLinks: Record<string, InternalLink[]>
   redirects: HolocronConfig['redirects']
   knownPaths: string[]
+  configLinks: InternalLink[]
 }): { brokenLinkCount: number; brokenRedirectCount: number; affectedPageCount: number } {
   const pageIndex = buildPageIndex(navigation)
   // Build a set of all known hrefs (pages + redirect sources)
@@ -1259,26 +1277,33 @@ function validateInternalLinks({
   let brokenLinkCount = 0
   const pagesWithBrokenLinks = new Set<string>()
 
+  const reportBrokenLink = ({ href, source, slugDir, line }: { href: string; source: string; slugDir: string; line?: number }) => {
+    const resolved = resolveInternalHref(href, slugDir)
+    if (!resolved) return
+    if (knownHrefs.has(resolved)) return
+    if (knownPathPrefixes.some((prefix) => resolved.startsWith(prefix))) return
+
+    brokenLinkCount++
+    pagesWithBrokenLinks.add(source)
+
+    const location = line
+      ? ` ${colors.cyan(source)}:${colors.yellow(String(line))}`
+      : ` ${colors.cyan(source)}`
+    logger.warn(formatHolocronWarning(
+      `broken link${location} → ${colors.yellow(href)} (no matching page found)`,
+    ))
+  }
+
   for (const [slug, links] of Object.entries(pageInternalLinks)) {
     const source = slug === 'index' ? '/' : `/${slug}`
     const slugDir = slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/')) : ''
-
     for (const { href, line } of links) {
-      const resolved = resolveInternalHref(href, slugDir)
-      if (!resolved) continue // Skip hrefs we can't resolve (e.g. malformed)
-      if (knownHrefs.has(resolved)) continue
-      if (knownPathPrefixes.some((prefix) => resolved.startsWith(prefix))) continue
-
-      brokenLinkCount++
-      pagesWithBrokenLinks.add(slug)
-
-      const location = line
-        ? ` ${colors.cyan(source)}:${colors.yellow(String(line))}`
-        : ` ${colors.cyan(source)}`
-      logger.warn(formatHolocronWarning(
-        `broken link${location} → ${colors.yellow(href)} (no matching page found)`,
-      ))
+      reportBrokenLink({ href, source, slugDir, line })
     }
+  }
+
+  for (const { href } of configLinks) {
+    reportBrokenLink({ href, source: 'docs.json', slugDir: '' })
   }
 
   // Validate redirect destinations — warn if a static destination doesn't
