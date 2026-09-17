@@ -774,47 +774,59 @@
 }
 
 /*
- * Viewport frost under the floating Ask AI pill.
+ * Floating Ask AI pill + its viewport frost — tablet and desktop only.
  *
- * The page scrolls on the window, not on `.slot-main`, so a `mask-image`
- * opacity fade on the content column cannot be anchored to the viewport: it
- * fades the element's own box, which scrolls away (verified — masking the
- * scroll root erases the whole viewport once scrolled). A viewport-anchored
- * fade must be a fixed overlay. Instead of painting `--background` on top
- * (a white tint that looks wrong over images or colored blocks), this fixed
- * band applies `backdrop-filter: blur()` masked by a gradient, so the frost
- * ramps from sharp (top) to fully blurred (bottom). It only blurs the
- * backdrop and never adds color, so it reads correctly over ANY content.
- * Lives on `html` because `.slot-page` has `overflow-x: clip`, which would
- * trap `position: fixed` descendants.
+ * Phones (< lg) never render the floating pill: touch viewports get no
+ * floating AI at all, no pill-clearance padding, and no backdrop-filter
+ * scroll cost. Everything below is therefore gated to `lg` and up.
+ *
+ * The frost band: the page scrolls on the window, not on `.slot-main`, so a
+ * `mask-image` opacity fade on the content column cannot be anchored to the
+ * viewport — it fades the element's own box, which scrolls away (verified:
+ * masking the scroll root erases the whole viewport once scrolled). A
+ * viewport-anchored fade must be a fixed overlay. Instead of painting
+ * `--background` on top (a white tint that looks wrong over images or
+ * colored blocks), this fixed band applies `backdrop-filter: blur()` masked
+ * by a gradient, so the frost ramps from sharp (top) to fully blurred
+ * (bottom). It only blurs the backdrop and never adds color, so it reads
+ * correctly over ANY content. Lives on `html` because `.slot-page` has
+ * `overflow-x: clip`, which would trap `position: fixed` descendants.
  *
  * Hidden while the pill is `[inert]` (drawer open). Extra padding lives
  * on the footer so the powered-by row can scroll above the pill.
  * `:has(.holocron-chat-pill)` covers older pages that render the pill
  * without `data-assistant-display="floating"`.
  */
-html:has(.slot-page[data-assistant-display='floating']),
-html:has(.holocron-chat-pill) {
-    --assistant-fade-size: 60px;
-    scroll-padding-bottom: var(--assistant-fade-size);
+@media (width < 1024px) {
+    .holocron-chat-pill {
+        display: none;
+    }
 }
 
-.slot-page[data-assistant-display='floating'] footer,
-.slot-page:has(.holocron-chat-pill) footer {
-    padding-bottom: var(--assistant-fade-size);
-}
+@variant lg {
+    html:has(.slot-page[data-assistant-display='floating']),
+    html:has(.holocron-chat-pill) {
+        --assistant-fade-size: 60px;
+        scroll-padding-bottom: var(--assistant-fade-size);
+    }
 
-html:has(.slot-page[data-assistant-display='floating'] .holocron-chat-pill:not([inert]))::after,
-html:has(.holocron-chat-pill:not([inert]))::after {
-    content: '';
-    position: fixed;
-    inset-inline: 0;
-    bottom: 0;
-    height: var(--assistant-fade-size);
-    pointer-events: none;
-    z-index: 150;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    -webkit-mask-image: linear-gradient(to top, black 0, black 20px, transparent 100%);
-    mask-image: linear-gradient(to top, black 0, black 20px, transparent 100%);
+    .slot-page[data-assistant-display='floating'] footer,
+    .slot-page:has(.holocron-chat-pill) footer {
+        padding-bottom: var(--assistant-fade-size);
+    }
+
+    html:has(.slot-page[data-assistant-display='floating'] .holocron-chat-pill:not([inert]))::after,
+    html:has(.holocron-chat-pill:not([inert]))::after {
+        content: '';
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        height: var(--assistant-fade-size);
+        pointer-events: none;
+        z-index: 150;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        -webkit-mask-image: linear-gradient(to top, black 0, black 20px, transparent 100%);
+        mask-image: linear-gradient(to top, black 0, black 20px, transparent 100%);
+    }
 }
