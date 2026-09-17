@@ -129,7 +129,7 @@ export function buildColorStyles(config: HolocronConfig): string[] {
 }
 
 export function buildPageTitle(pageTitle: string, siteName: string): string {
-  return pageTitle.startsWith(siteName) ? pageTitle : `${pageTitle} — ${siteName}`
+  return pageTitle.startsWith(siteName) ? pageTitle : `${pageTitle} - ${siteName}`
 }
 
 export function SiteHead({ config, titleOverride }: { config: HolocronConfig; titleOverride?: string }) {

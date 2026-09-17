@@ -1058,7 +1058,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         activeVersionHref: resolveActiveVersionHref(enrichedSite, '/' + slug),
         activeDropdownHref: resolveActiveDropdownHref(enrichedSite, '/' + slug),
         notFoundPath: '/' + slug,
-        headTitle: `Page not found — ${effectiveConfig.name}`,
+        headTitle: `Page not found - ${effectiveConfig.name}`,
         headRobots: 'noindex',
         currentPageFrontmatter: undefined,
         githubStars: githubStarsPromise,
@@ -1145,7 +1145,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       >
         <SiteHead
           config={effectiveConfig}
-          titleOverride={isNotFound ? (loaderData?.headTitle ?? `Page not found — ${effectiveConfig.name}`) : undefined}
+          titleOverride={isNotFound ? (loaderData?.headTitle ?? `Page not found - ${effectiveConfig.name}`) : undefined}
         />
         {isNotFound && (
           <Head>

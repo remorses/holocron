@@ -57,10 +57,11 @@ test.describe("page heading semantics", () => {
     await expect(page.getByRole("heading", { level: 2, name: "Recent changes" })).toBeVisible();
   });
 
-  test("does not inject a page h1 when the body starts with a heading", async ({ page }) => {
+  test("injects the frontmatter title as an h1 even when the body starts with a heading", async ({ page }) => {
     await page.goto("/getting-started", { waitUntil: "domcontentloaded" });
 
-    await expect(page.locator("h1")).toHaveCount(0);
+    await expect(page.locator("h1")).toHaveCount(1);
+    await expect(page.getByRole("heading", { level: 1, name: "Getting Started" })).toBeVisible();
     await expect(page.getByRole("heading", { level: 2, name: "Installation" })).toBeVisible();
   });
 });
@@ -505,7 +506,7 @@ test.describe("not found", () => {
       headers: { "sec-fetch-dest": "document" },
     });
     const html = await response.text();
-    expect(html).toMatch(/<title[^>]*>Page not found — /);
+    expect(html).toMatch(/<title[^>]*>Page not found - /);
     expect(html).toMatch(/<meta[^>]*name="robots"[^>]*content="noindex"/);
   });
 
