@@ -774,13 +774,19 @@
 }
 
 /*
- * Viewport fade under the floating Ask AI pill.
+ * Viewport frost under the floating Ask AI pill.
  *
- * The page scrolls on the window, not on `.slot-main`, so a sidebar-style
- * `mask-image` on the content column would fade each section's own bottom
- * edge. A fixed overlay on `html` dissolves whatever sits under the pill
- * into `--background` instead. Lives on `html` because `.slot-page` has
- * `overflow-x: clip`, which would trap `position: fixed` descendants.
+ * The page scrolls on the window, not on `.slot-main`, so a `mask-image`
+ * opacity fade on the content column cannot be anchored to the viewport: it
+ * fades the element's own box, which scrolls away (verified — masking the
+ * scroll root erases the whole viewport once scrolled). A viewport-anchored
+ * fade must be a fixed overlay. Instead of painting `--background` on top
+ * (a white tint that looks wrong over images or colored blocks), this fixed
+ * band applies `backdrop-filter: blur()` masked by a gradient, so the frost
+ * ramps from sharp (top) to fully blurred (bottom). It only blurs the
+ * backdrop and never adds color, so it reads correctly over ANY content.
+ * Lives on `html` because `.slot-page` has `overflow-x: clip`, which would
+ * trap `position: fixed` descendants.
  *
  * Hidden while the pill is `[inert]` (drawer open). Extra padding lives
  * on the footer so the powered-by row can scroll above the pill.
@@ -807,11 +813,8 @@ html:has(.holocron-chat-pill:not([inert]))::after {
     height: var(--assistant-fade-size);
     pointer-events: none;
     z-index: 150;
-    background: linear-gradient(
-        to top,
-        color-mix(in srgb, var(--background) 60%, transparent) 0,
-        color-mix(in srgb, var(--background) 60%, transparent) 28px,
-        color-mix(in srgb, var(--background) 30%, transparent) 44px,
-        transparent 100%
-    );
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    -webkit-mask-image: linear-gradient(to top, black 0, black 20px, transparent 100%);
+    mask-image: linear-gradient(to top, black 0, black 20px, transparent 100%);
 }
