@@ -381,10 +381,10 @@ export async function switchChatSession(sessionId: string): Promise<void> {
 }
 
 /**
- * One-shot question with no session and no history. Used by inline surfaces
- * such as <FAQ> that need an answer without touching the drawer conversation.
- * The proxy skips session cookies for `ephemeral` requests, so nothing is
- * persisted server-side and the drawer's session id is never overwritten.
+ * One-shot question with no session and no history, used by the <FAQ> ask
+ * row. The proxy skips session cookies for `ephemeral` requests, so nothing
+ * is persisted server-side and the drawer's session id is never overwritten.
+ * `surface: 'faq'` swaps the chat tone for a short FAQ-entry prompt.
  */
 export async function askEphemeralQuestion(
   question: string,
@@ -401,6 +401,7 @@ export async function askEphemeralQuestion(
       message: question,
       currentSlug: currentSlug || '/',
       ephemeral: true,
+      surface: 'faq',
     }),
     signal: options.signal,
   })

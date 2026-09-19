@@ -34,7 +34,7 @@ icon: message-circle-question
 
 ## Ask row
 
-The last row is an input. Submitting a question appends a new row with the question as its title, shows a loading indicator, then streams the answer in place. Readers can keep asking; each answer becomes another row above the input.
+The last row is an input. Submitting a question shows a loading indicator, then streams the answer right under the input. The question stays editable: change it and the arrow lights up again, so submitting replaces the answer.
 
 Answers use the same gateway as the AI chat, so they search your docs before replying. Ask requests are **one-shot**: nothing is persisted and the chat drawer conversation is never touched.
 

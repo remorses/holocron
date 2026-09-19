@@ -620,6 +620,8 @@ function parseChatRequestBody(value: unknown): {
   context?: Record<string, unknown>
   /** One-shot request (e.g. <FAQ> ask row): no session cookie, nothing persisted. */
   ephemeral: boolean
+  /** Where the answer is shown. `faq` renders inline as a FAQ entry. */
+  surface: 'chat' | 'faq'
 } {
   if (!isRecord(value) || !Array.isArray(value.modelMessages) || typeof value.message !== 'string' || typeof value.currentSlug !== 'string') {
     throw new Error('Invalid chat request body')
@@ -632,6 +634,7 @@ function parseChatRequestBody(value: unknown): {
     toolSchemas: Array.isArray(value.toolSchemas) ? value.toolSchemas as any : undefined,
     context: isRecord(value.context) ? value.context : undefined,
     ephemeral: value.ephemeral === true,
+    surface: value.surface === 'faq' ? 'faq' : 'chat',
   }
 }
 
@@ -1761,14 +1764,26 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         ? ((await providers.getMdxSource(currentPageSlug)) ?? '')
         : ''
 
+      const tone = body.surface === 'faq'
+        ? dedent`
+          ## Tone
+          - Your answer is shown as one entry of a FAQ component on the page, in markdown, right under the question
+          - Write it like the other FAQ answers: one short paragraph, two or three sentences
+          - No greeting, no repeating the question, no follow-up questions
+          - No headings; use a bullet list or a short code snippet only when it is the clearest answer
+        `
+        : dedent`
+          ## Tone
+          - Behave like a real human in a messenger app: short, direct, casual
+          - Be extremely concise; no fluff, no filler, no repeating the question back
+          - Use bullet points over paragraphs
+          - Only include code examples when specifically asked or when a short snippet is the fastest way to answer
+        `
+
       const systemPrompt = dedent`
         You are a documentation assistant for ${site.config.name || 'this site'}.
 
-        ## Tone
-        - Behave like a real human in a messenger app: short, direct, casual
-        - Be extremely concise; no fluff, no filler, no repeating the question back
-        - Use bullet points over paragraphs
-        - Only include code examples when specifically asked or when a short snippet is the fastest way to answer
+        ${tone}
 
         ## Answering
         - Link to docs pages instead of explaining things already documented

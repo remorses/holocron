@@ -3,8 +3,8 @@
 /**
  * FAQ list: divider-separated question rows that expand inline, plus an
  * optional trailing "ask" row that answers free-form questions with the AI
- * chat gateway. Answered questions are appended as regular rows so the list
- * keeps the same rhythm while the user asks more.
+ * chat gateway. The row stays editable: the answer renders under the input
+ * and editing the question re-arms the arrow to ask again.
  *
  * Ask requests are ephemeral (no session, no history) so they never touch
  * the drawer conversation. See askEphemeralQuestion in chat-submit.ts.
@@ -57,7 +57,7 @@ function FaqRow({
 }) {
   const bodyId = useId()
   return (
-    <div className='flex flex-col border-b border-border'>
+    <div className='flex flex-col border-b border-border last:border-b-0'>
       <button
         type='button'
         aria-expanded={open}
@@ -97,19 +97,20 @@ export function FAQItem({
   )
 }
 
-// ── AI-answered rows ──────────────────────────────────────────────────
+// ── AI-answered ask row ───────────────────────────────────────────────
 
-type AskedItem = {
-  id: number
+type Answer = {
+  /** The question the answer belongs to. Editing the input past this text
+   *  re-arms the arrow so the reader can ask again. */
   question: string
   parts: ChatPart[]
   status: 'loading' | 'done'
   error?: string
 }
 
-/** Everything a FAQ row shows. Successful tool calls stay hidden (the row is
- *  an answer, not a transcript) but tool errors must surface: a failed docs
- *  search with no follow-up text would otherwise leave the row blank.
+/** Everything the answer shows. Successful tool calls stay hidden (it is an
+ *  answer, not a transcript) but tool errors must surface: a failed docs
+ *  search with no follow-up text would otherwise leave it blank.
  *  Notices that are the answer (rate limit, credit limit, errors) render;
  *  standing content such as the Holocron promotion never shows in a FAQ. */
 function visibleParts(parts: ChatPart[]): ChatPart[] {
@@ -123,11 +124,11 @@ function visibleParts(parts: ChatPart[]): ChatPart[] {
 
 const NO_ANSWER_MESSAGE = 'No response received. Please try again.'
 
-function AskedRow({ item, open, onToggle }: { item: AskedItem; open: boolean; onToggle: () => void }) {
-  const parts = visibleParts(item.parts)
-  const hasAnswer = parts.length > 0 || !!item.error
+function AnswerBody({ answer }: { answer: Answer }) {
+  const parts = visibleParts(answer.parts)
+  const hasAnswer = parts.length > 0 || !!answer.error
   return (
-    <FaqRow question={item.question} open={open} onToggle={onToggle}>
+    <div className={BODY_CLASS}>
       {parts.map((part, index) => {
         if (part.type === 'text') {
           return (
@@ -153,65 +154,86 @@ function AskedRow({ item, open, onToggle }: { item: AskedItem; open: boolean; on
         }
         return null
       })}
-      {item.error && <div className='text-sm text-red'>{item.error}</div>}
-      {item.status === 'loading' && !hasAnswer && <ChatLoadingDots />}
-      {item.status === 'done' && !hasAnswer && (
+      {answer.error && <div className='text-sm text-red'>{answer.error}</div>}
+      {answer.status === 'loading' && !hasAnswer && <ChatLoadingDots />}
+      {answer.status === 'done' && !hasAnswer && (
         <div className='text-sm text-muted-foreground'>{NO_ANSWER_MESSAGE}</div>
       )}
-    </FaqRow>
+    </div>
   )
 }
 
-function AskRow({
-  placeholder,
-  disabled,
-  onSubmit,
-}: {
-  placeholder: string
-  disabled: boolean
-  onSubmit: (question: string) => void
-}) {
+/** Single editable ask row. The answer renders right below the input and is
+ *  replaced when the reader edits the question and submits again. */
+function AskRow({ placeholder }: { placeholder: string }) {
   const [value, setValue] = useState('')
-  const canSubmit = !disabled && value.trim().length > 0
+  const [answer, setAnswer] = useState<Answer | null>(null)
+  const question = value.trim()
+  const isLoading = answer?.status === 'loading'
+  const isUnchanged = answer?.question === question
+  const canSubmit = !isLoading && question.length > 0 && !isUnchanged
 
-  const submit = () => {
-    const question = value.trim()
-    if (!canSubmit || !question) return
-    setValue('')
-    onSubmit(question)
+  // One request at a time, so a single controller is enough. Aborted on
+  // unmount so navigating away stops the model instead of billing for an
+  // answer nobody will see.
+  const requestRef = useRef<AbortController | null>(null)
+  useEffect(() => {
+    return () => requestRef.current?.abort()
+  }, [])
+
+  const submit = async () => {
+    if (!canSubmit) return
+    const controller = new AbortController()
+    requestRef.current = controller
+    setAnswer({ question, parts: [], status: 'loading' })
+    try {
+      await askEphemeralQuestion(question, {
+        signal: controller.signal,
+        onPart: (part) => setAnswer((current) => (current ? { ...current, parts: [...current.parts, part] } : current)),
+      })
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return
+      const message = error instanceof Error ? error.message : String(error)
+      setAnswer((current) => (current ? { ...current, error: message } : current))
+    } finally {
+      setAnswer((current) => (current ? { ...current, status: 'done' } : current))
+    }
   }
 
   return (
-    <form
-      className={cn(ROW_CLASS, 'border-b border-border')}
-      onSubmit={(event) => {
-        event.preventDefault()
-        submit()
-      }}
-    >
-      <input
-        type='text'
-        value={value}
-        placeholder={placeholder}
-        aria-label={placeholder}
-        onChange={(event) => setValue(event.target.value)}
-        className={cn(QUESTION_CLASS, 'bg-transparent outline-none placeholder:text-muted-foreground')}
-      />
-      <button
-        type='submit'
-        aria-label='Ask'
-        disabled={!canSubmit}
-        className={cn(
-          TRAILING_SLOT_CLASS,
-          'rounded-full transition-colors',
-          canSubmit
-            ? 'cursor-pointer bg-primary text-primary-foreground hover:opacity-85'
-            : 'cursor-default bg-transparent text-muted-foreground',
-        )}
+    <div className='flex flex-col border-b border-border last:border-b-0'>
+      <form
+        className={ROW_CLASS}
+        onSubmit={(event) => {
+          event.preventDefault()
+          void submit()
+        }}
       >
-        <ArrowRightIcon size={14} />
-      </button>
-    </form>
+        <input
+          type='text'
+          value={value}
+          placeholder={placeholder}
+          aria-label={placeholder}
+          onChange={(event) => setValue(event.target.value)}
+          className={cn(QUESTION_CLASS, 'bg-transparent outline-none placeholder:text-muted-foreground')}
+        />
+        <button
+          type='submit'
+          aria-label='Ask'
+          disabled={!canSubmit}
+          className={cn(
+            TRAILING_SLOT_CLASS,
+            'rounded-full transition-colors',
+            canSubmit
+              ? 'cursor-pointer bg-primary text-primary-foreground hover:opacity-85'
+              : 'cursor-default bg-transparent text-muted-foreground',
+          )}
+        >
+          <ArrowRightIcon size={14} />
+        </button>
+      </form>
+      {answer && <AnswerBody answer={answer} />}
+    </div>
   )
 }
 
@@ -229,54 +251,10 @@ export function FAQ({
 }) {
   const { site } = useHolocronData()
   const showAsk = (ask === true || ask === 'true') && site.config.assistant.enabled
-  const [asked, setAsked] = useState<AskedItem[]>([])
-  const [openId, setOpenId] = useState<number | null>(null)
-  const isLoading = asked.some((item) => item.status === 'loading')
-
-  // One request at a time (the ask row is disabled while loading), so a
-  // single controller is enough. Aborted on unmount so navigating away
-  // stops the model instead of billing for an answer nobody will see.
-  const requestRef = useRef<AbortController | null>(null)
-  useEffect(() => {
-    return () => requestRef.current?.abort()
-  }, [])
-
-  const updateItem = (id: number, patch: (item: AskedItem) => AskedItem) => {
-    setAsked((items) => items.map((item) => (item.id === id ? patch(item) : item)))
-  }
-
-  const handleAsk = async (question: string) => {
-    const id = Date.now()
-    const controller = new AbortController()
-    requestRef.current = controller
-    setAsked((items) => [...items, { id, question, parts: [], status: 'loading' }])
-    setOpenId(id)
-    try {
-      await askEphemeralQuestion(question, {
-        signal: controller.signal,
-        onPart: (part) => updateItem(id, (item) => ({ ...item, parts: [...item.parts, part] })),
-      })
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') return
-      const message = error instanceof Error ? error.message : String(error)
-      updateItem(id, (item) => ({ ...item, error: message }))
-    } finally {
-      updateItem(id, (item) => ({ ...item, status: 'done' }))
-    }
-  }
-
   return (
     <div className={cn('no-bleed flex flex-col', className)}>
       {children}
-      {asked.map((item) => (
-        <AskedRow
-          key={item.id}
-          item={item}
-          open={openId === item.id}
-          onToggle={() => setOpenId((current) => (current === item.id ? null : item.id))}
-        />
-      ))}
-      {showAsk && <AskRow placeholder={askPlaceholder} disabled={isLoading} onSubmit={handleAsk} />}
+      {showAsk && <AskRow placeholder={askPlaceholder} />}
     </div>
   )
 }
