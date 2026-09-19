@@ -379,7 +379,7 @@ function NavPageLink({
           {frontmatter.tag && typeof frontmatter.api !== 'string' && <NavBadge label={String(frontmatter.tag)} color={frontmatter.tagColor ? String(frontmatter.tagColor) : undefined} />}
         </span>
       </Link>
-      <ExpandableContainer open={showToc} animate={animate}>
+      <ExpandableContainer open={showToc} animate={animate} sidebarRows>
         {/* Skip mounting heading links entirely on suppressed pages (unless
             search needs them) — keeps the DOM slim for TOC-panel pages. */}
         {visibleHeadings.length > 0 && (isSearchActive || !tocSuppressed) && (
@@ -578,7 +578,7 @@ export function NavGroupNode({
           labelIndent={`${folderDepth} * var(--sidebar-indent)`}
         />
       )}
-      <ExpandableContainer open={isExpanded} animate={animate}>
+      <ExpandableContainer open={isExpanded} animate={animate} sidebarRows>
         {isExpanded && (
           /* `paddingTop` matches the row-gap rhythm so the first child sits
              exactly one row-gap under its group label. Closed subtrees stay

@@ -56,7 +56,19 @@ function useFirstPaintDone(): boolean {
  * `useFirstPaintDone()` additionally disables the transition on the very
  * first render so the opacity fade doesn't run during hydration.
  */
-export function ExpandableContainer({ open, children, animate }: { open: boolean; children: React.ReactNode; animate?: boolean }) {
+export function ExpandableContainer({
+  open,
+  children,
+  animate,
+  sidebarRows = false,
+}: {
+  open: boolean
+  children: React.ReactNode
+  animate?: boolean
+  /** Reserve `--sidebar-row-padding-x` clearance inside the clip so sidebar
+   *  row highlights keep their rounded corners. Only the nav tree needs it. */
+  sidebarRows?: boolean
+}) {
   const firstPaintDone = useFirstPaintDone()
   // When `animate` is explicitly false, never transition (used by the sidebar
   // nav tree to disable animations by default). When undefined, fall back to
@@ -81,12 +93,17 @@ export function ExpandableContainer({ open, children, animate }: { open: boolean
         * (see --sidebar-row-padding-x), so reserve exactly that much
         * clearance inside the clip — otherwise a nested row's hover pill
         * loses its left rounded corners. See MEMORY.md "box-shadow for
-        * 'bleed' highlight outlines" for the history of this trap. */}
+        * 'bleed' highlight outlines" for the history of this trap. Content
+        * components skip it: the clearance would overflow their column. */}
       <div style={{
         overflow: 'hidden',
         minHeight: 0,
-        paddingInline: 'var(--sidebar-row-padding-x, 8px)',
-        marginInline: 'calc(-1 * var(--sidebar-row-padding-x, 8px))',
+        ...(sidebarRows
+          ? {
+              paddingInline: 'var(--sidebar-row-padding-x, 8px)',
+              marginInline: 'calc(-1 * var(--sidebar-row-padding-x, 8px))',
+            }
+          : {}),
       }}>{children}</div>
     </div>
   )
