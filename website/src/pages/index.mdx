@@ -56,3 +56,23 @@ import Readme from '../../../README.md'
     Node.js, Cloudflare Workers, and build output.
   </Card>
 </CardGroup>
+
+## Questions
+
+<FAQ askPlaceholder="Ask anything about Holocron...">
+  <FAQ.Item question="How is Holocron different from Mintlify?">
+    Holocron is an **open source, MIT licensed** drop-in replacement. It reads the same `docs.json` and MDX components, but builds locally as a **Vite plugin** instead of on a hosted platform. You can self-host on Node.js or Cloudflare Workers, or deploy with the Holocron CLI. See the [full comparison](./docs/mintlify-open-source-alternative.mdx).
+  </FAQ.Item>
+  <FAQ.Item question="Can I keep my existing Mintlify docs.json?">
+    Yes. Holocron follows the Mintlify `docs.json` shape for navigation, tabs, groups, anchors, versions, theme colors, and more. Unknown Mintlify fields pass through without validation errors, so you can paste a full config as-is. See [Migration from Mintlify](./docs/migration.mdx).
+  </FAQ.Item>
+  <FAQ.Item question="Can my docs update themselves when the code changes?">
+    Yes. Every page can carry a **`prompt`** in its frontmatter that records how it was generated and which source files it references. **Holocron Maintain** reruns those prompts when the referenced sources change and, in GitHub Actions, opens a pull request with the updated pages. See [Maintain](./maintain/index.mdx).
+  </FAQ.Item>
+  <FAQ.Item question="Does it come with AI chat?">
+    Yes. Every site gets a built-in **AI assistant** that searches your docs before answering, plus agent-readable routes: `/llms.txt`, `/llms-full.txt`, `.md` for every page, and `/docs.zip`. The ask row at the bottom of this list uses the same assistant. See [AI features](./docs/ai/assistant.mdx).
+  </FAQ.Item>
+  <FAQ.Item question="How much does it cost?">
+    The framework is **free** and open source. Hosting is free to start, with one trial deployment and a trial AI model. **Pro** is $99/month per site and unlocks the full AI model, unlimited preview deployments, custom domains, subpath hosting, and Maintain. See [Pricing](./docs/pricing.mdx).
+  </FAQ.Item>
+</FAQ>
