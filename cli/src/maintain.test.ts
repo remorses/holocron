@@ -1,9 +1,8 @@
 // Tests Maintain --model parsing for Holocron-hosted vs OpenCode BYOK ids.
 
 import { describe, expect, test } from 'vitest'
-import { parseMaintainModel, pinOpencodeOnPath } from './maintain.ts'
+import { parseMaintainModel, resolveOpencodeBinary, startOpencodeServer } from './maintain.ts'
 import fs from 'node:fs'
-import path from 'node:path'
 
 describe('parseMaintainModel', () => {
   test('defaults to a Holocron-hosted model', () => {
@@ -86,16 +85,28 @@ describe('parseMaintainModel', () => {
   })
 })
 
-describe('pinOpencodeOnPath', () => {
-  test('puts the pinned opencode-ai binary first on PATH', () => {
-    const restore = pinOpencodeOnPath()
-    try {
-      const first = process.env.PATH?.split(path.delimiter)[0]
-      if (!first) throw new Error('expected PATH')
-      expect(fs.existsSync(path.join(first, 'opencode.exe'))).toBe(true)
-      expect(first.replaceAll('\\', '/')).toMatch(/opencode-ai\/bin$/)
-    } finally {
-      restore()
-    }
+describe('startOpencodeServer', () => {
+  test('resolves the pinned opencode-ai binary', () => {
+    const binary = resolveOpencodeBinary()
+    expect(fs.existsSync(binary)).toBe(true)
+    expect(binary.replaceAll('\\', '/')).toMatch(/opencode-ai\/bin\/opencode\.exe$/)
   })
+
+  test('close() kills the server process and does not leave an orphan', async () => {
+    const server = await startOpencodeServer({ config: {} })
+    if (server instanceof Error) throw server
+    expect(server.url).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/)
+    expect(isProcessAlive(server.pid)).toBe(true)
+    await server.close()
+    expect(isProcessAlive(server.pid)).toBe(false)
+  }, 30_000)
 })
+
+function isProcessAlive(pid: number) {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === 'EPERM'
+  }
+}

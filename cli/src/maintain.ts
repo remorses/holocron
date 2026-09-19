@@ -2,9 +2,10 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import * as clack from '@clack/prompts'
 import { createOpencodeClient } from '@opencode-ai/sdk/v2/client'
-import { createOpencodeServer } from '@opencode-ai/sdk/v2/server'
+import type { Config as OpencodeConfig } from '@opencode-ai/sdk/v2/types'
 import { createRequire } from 'node:module'
 import { goke, isAgent } from 'goke'
 import dedent from 'string-dedent'
@@ -136,7 +137,7 @@ maintainCli
       runPromptFile,
       changedFiles,
       patches,
-      gitDiffRange: gitDiffRangeSpec(range),
+      gitDiffRange: range ? gitDiffRangeSpec(range) : undefined,
       release: githubEvent?.release,
       githubActions,
     }
@@ -305,7 +306,7 @@ async function runOpenCode({
   runPromptFile?: string
   changedFiles: string[]
   patches: string
-  gitDiffRange: string
+  gitDiffRange?: string
   release?: GithubMaintainRelease
   githubActions?: { branch: string; targetBranch: string }
   model:
@@ -330,12 +331,17 @@ async function runOpenCode({
     { permission: 'todowrite', pattern: '*', action: 'allow' as const },
     { permission: 'bash', pattern: 'git diff *', action: 'allow' as const },
     { permission: 'bash', pattern: 'git log *', action: 'allow' as const },
+    // Last matching rule wins. Only the maintain branch may be pushed; gh is limited to PR create/read.
     ...(githubActions
       ? [
         { permission: 'bash', pattern: 'git *', action: 'allow' as const },
-        { permission: 'bash', pattern: 'gh *', action: 'allow' as const },
-        { permission: 'bash', pattern: `git push * ${githubActions.targetBranch}`, action: 'deny' as const },
-        { permission: 'bash', pattern: `git push origin ${githubActions.targetBranch}`, action: 'deny' as const },
+        { permission: 'bash', pattern: 'git push *', action: 'deny' as const },
+        { permission: 'bash', pattern: `git push * ${githubActions.branch}`, action: 'allow' as const },
+        { permission: 'bash', pattern: `git push * HEAD:${githubActions.branch}`, action: 'allow' as const },
+        { permission: 'bash', pattern: 'gh pr create *', action: 'allow' as const },
+        { permission: 'bash', pattern: 'gh pr view *', action: 'allow' as const },
+        { permission: 'bash', pattern: 'gh pr list *', action: 'allow' as const },
+        { permission: 'bash', pattern: 'gh auth status *', action: 'allow' as const },
       ]
       : []),
     ...pages.flatMap((page) => [
@@ -349,11 +355,7 @@ async function runOpenCode({
 
   const providerId = model.providerId
   const modelId = model.modelId
-  const restorePath = pinOpencodeOnPath()
-  const server = await createOpencodeServer({
-    hostname: '127.0.0.1',
-    port: 0,
-    timeout: 30_000,
+  const server = await startOpencodeServer({
     signal: controller.signal,
     config: {
       model: `${providerId}/${modelId}`,
@@ -369,8 +371,7 @@ async function runOpenCode({
         }
         : undefined,
     },
-  }).catch((error) => new Error('OpenCode server failed to start.', { cause: error }))
-  restorePath()
+  })
   if (server instanceof Error) {
     clearTimeout(timeout)
     return server
@@ -393,7 +394,7 @@ async function runOpenCode({
       release,
       githubActions,
     })
-    await client.session.prompt({
+    const result = await client.session.prompt({
       sessionID: session.data.id,
       model: { providerID: providerId, modelID: modelId },
       agent: 'build',
@@ -401,7 +402,20 @@ async function runOpenCode({
       tools: { bash: true, websearch: false, task: true, read: true, glob: true, grep: true, edit: true, webfetch: true },
       parts: [{ type: 'text', text: prompt }],
     }, { throwOnError: true })
+    // HTTP 200 does not mean the turn succeeded: provider failures land on info.error.
+    const failure = result.data.info.error
+    if (failure) {
+      const message = failure.name === 'MessageOutputLengthError' ? 'The model hit its output length limit.' : failure.data.message
+      return openCodeFailed({
+        kind: model.kind,
+        prefix: `OpenCode failed to maintain the selected pages (${failure.name}).`,
+        detail: message ? ` ${message}` : '',
+      })
+    }
   } catch (error) {
+    if (controller.signal.aborted) {
+      return new Error(`OpenCode did not finish within ${RUN_TIMEOUT_MS / 60_000} minutes.`)
+    }
     const message = error instanceof Error ? error.message : String(error)
     return openCodeFailed({
       kind: model.kind,
@@ -410,18 +424,89 @@ async function runOpenCode({
     })
   } finally {
     clearTimeout(timeout)
-    server.close()
+    await server.close()
   }
 }
 
-export function pinOpencodeOnPath() {
-  const binDir = path.dirname(require.resolve('opencode-ai/bin/opencode.exe'))
-  const previous = process.env.PATH
-  process.env.PATH = `${binDir}${path.delimiter}${previous ?? ''}`
-  return () => {
-    if (previous === undefined) delete process.env.PATH
-    else process.env.PATH = previous
+export function resolveOpencodeBinary() {
+  return require.resolve('opencode-ai/bin/opencode.exe')
+}
+
+// Spawns the pinned opencode binary by absolute path. The SDK's createOpencodeServer
+// resolves `opencode` on PATH, which hits pnpm's `node_modules/.bin/opencode` sh shim.
+// That shim runs the binary without `exec`, so killing the shim orphaned `opencode.exe`,
+// which kept the stdio pipes open and hung `holocron maintain` until the CI job timed out.
+export async function startOpencodeServer({
+  config,
+  signal,
+  startTimeoutMs = 30_000,
+}: {
+  config: OpencodeConfig
+  signal?: AbortSignal
+  startTimeoutMs?: number
+}): Promise<{ url: string; pid: number; close: () => Promise<void> } | Error> {
+  const proc = spawn(resolveOpencodeBinary(), ['serve', '--hostname=127.0.0.1', '--port=0'], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+    env: { ...process.env, OPENCODE_CONFIG_CONTENT: JSON.stringify(config) },
+  })
+  // Spawn failures emit 'error' and may never emit 'exit'.
+  const exited = new Promise<void>((resolve) => {
+    proc.once('exit', () => resolve())
+    proc.once('error', () => resolve())
+  })
+  const close = async () => {
+    stopProcess(proc)
+    const killTimer = setTimeout(() => proc.kill('SIGKILL'), 5_000)
+    await exited
+    clearTimeout(killTimer)
+    // Release our read ends so a leaked grandchild holding the pipes cannot keep Node alive.
+    proc.stdout?.destroy()
+    proc.stderr?.destroy()
   }
+  const onAbort = () => void close()
+  signal?.addEventListener('abort', onAbort, { once: true })
+  proc.once('exit', () => signal?.removeEventListener('abort', onAbort))
+
+  let output = ''
+  const url = await new Promise<string | Error>((resolve) => {
+    const timer = setTimeout(() => {
+      resolve(new Error(`Timeout waiting for OpenCode server to start after ${startTimeoutMs}ms`))
+    }, startTimeoutMs)
+    const onData = (chunk: Buffer) => {
+      output += chunk.toString()
+      const match = output.match(/^opencode server listening on\s+(https?:\/\/\S+)/m)
+      if (!match) return
+      clearTimeout(timer)
+      resolve(match[1]!)
+    }
+    proc.stdout?.on('data', onData)
+    proc.stderr?.on('data', (chunk: Buffer) => {
+      output += chunk.toString()
+    })
+    proc.once('exit', (code) => {
+      clearTimeout(timer)
+      resolve(new Error(`OpenCode server exited with code ${code}${output.trim() ? `\n${output}` : ''}`))
+    })
+    proc.once('error', (error) => {
+      clearTimeout(timer)
+      resolve(error)
+    })
+  })
+  if (url instanceof Error) {
+    await close()
+    return new Error('OpenCode server failed to start.', { cause: url })
+  }
+  return { url, pid: proc.pid!, close }
+}
+
+function stopProcess(proc: ChildProcess) {
+  if (proc.exitCode !== null || proc.signalCode !== null) return
+  if (process.platform === 'win32' && proc.pid) {
+    const out = spawnSync('taskkill', ['/pid', String(proc.pid), '/T', '/F'], { windowsHide: true })
+    if (!out.error && out.status === 0) return
+  }
+  proc.kill()
 }
 
 function openCodeFailed({
@@ -464,7 +549,15 @@ function githubActionsPublishPrompt({
   `
 }
 
-function buildMaintainSystemPrompt({ gitDiffRange }: { gitDiffRange: string }) {
+function buildMaintainSystemPrompt({ gitDiffRange }: { gitDiffRange?: string }) {
+  const diffHint = gitDiffRange
+    ? dedent`
+      To see what changed in a source file, run git.
+
+      git diff ${gitDiffRange} -- path/to/file
+      git log -p ${gitDiffRange} -- path/to/file
+    `
+    : 'There is no source change range for this run. Read the referenced sources as they are now.'
   return dedent`
     You update Holocron documentation pages. You do not generate pages from scratch.
 
@@ -474,10 +567,7 @@ function buildMaintainSystemPrompt({ gitDiffRange }: { gitDiffRange: string }) {
 
     Resolve @./ and @../ relative to that page. Resolve @/ from the repository root. Resolve @https:// and @http:// as remote sources. Bare URLs without @ are not references. In a run-instruction file, relative refs are relative to that file. @/ still means the repository root.
 
-    To see what changed in a source file, run git.
-
-    git diff ${gitDiffRange} -- path/to/file
-    git log -p ${gitDiffRange} -- path/to/file
+    ${diffHint}
 
     Update a page's frontmatter prompt only when its source paths or intended coverage changed. Do not edit files outside the selected pages.
   `
@@ -525,8 +615,7 @@ function buildMaintainUserPrompt({
   ].filter((block) => block !== '').join('\n')
 }
 
-function gitDiffRangeSpec(range?: { from: string; to: string; pullRequest?: boolean }) {
-  if (!range) return 'HEAD'
+function gitDiffRangeSpec(range: { from: string; to: string; pullRequest?: boolean }) {
   if (/^0+$/.test(range.from)) return range.to
   const separator = range.pullRequest ? '...' : '..'
   return `${range.from}${separator}${range.to}`
