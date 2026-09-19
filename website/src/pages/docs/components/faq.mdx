@@ -1,0 +1,77 @@
+---
+$schema: https://holocron.so/frontmatter.json
+prompt: |
+  Write the FAQ docs from @/vite/src/components/markdown/faq.tsx.
+title: FAQ
+description: A question list with an AI-answered ask row at the end.
+icon: message-circle-question
+---
+
+`FAQ` renders a divider-separated list of questions that expand inline. When the site assistant is enabled, a final row lets readers type their own question and get an answer generated from your docs, right inside the list.
+
+<FAQ askPlaceholder="Ask anything about Holocron...">
+  <FAQ.Item question="What is Holocron?">
+    Holocron is a Vite plugin that turns MDX files and a `docs.json` into a full documentation site. It is a drop-in replacement for Mintlify.
+  </FAQ.Item>
+  <FAQ.Item question="Can I self-host it?">
+    Yes. `vite build` produces a standard server bundle you can run on Node.js, Docker, or Cloudflare Workers. See [Deploy on Node.js](../deploy/node.mdx) or [Cloudflare](../deploy/cloudflare.mdx).
+  </FAQ.Item>
+  <FAQ.Item question="Do I need to migrate my Mintlify config?">
+    No. Holocron reads the same `docs.json` shape. Unknown Mintlify fields pass through without validation errors.
+  </FAQ.Item>
+</FAQ>
+
+```mdx
+<FAQ askPlaceholder="Ask anything about Holocron...">
+  <FAQ.Item question="What is Holocron?">
+    Holocron is a Vite plugin that turns MDX files and a `docs.json` into a full documentation site.
+  </FAQ.Item>
+  <FAQ.Item question="Can I self-host it?">
+    Yes. See [Deploy on Node.js](../deploy/node.mdx) or [Cloudflare](../deploy/cloudflare.mdx).
+  </FAQ.Item>
+</FAQ>
+```
+
+## Ask row
+
+The last row is an input. Submitting a question appends a new row with the question as its title, shows a loading indicator, then streams the answer in place. Readers can keep asking; each answer becomes another row above the input.
+
+Answers use the same gateway as the AI chat, so they search your docs before replying. Ask requests are **one-shot**: nothing is persisted and the chat drawer conversation is never touched.
+
+The row only renders when `assistant.enabled` is `true` in `docs.json`. Pass `ask={false}` to hide it on a specific list.
+
+<FAQ ask={false}>
+  <FAQ.Item question="Is the ask row optional?" defaultOpen>
+    Yes. This list was rendered with `ask={false}`.
+  </FAQ.Item>
+</FAQ>
+
+```mdx
+<FAQ ask={false}>
+  <FAQ.Item question="Is the ask row optional?" defaultOpen>
+    Yes. This list was rendered with `ask={false}`.
+  </FAQ.Item>
+</FAQ>
+```
+
+## Props
+
+### FAQ
+
+<ResponseField name="ask" type="boolean" default="true">
+Show the trailing ask row. Ignored when the site assistant is disabled.
+</ResponseField>
+
+<ResponseField name="askPlaceholder" type="string" default='"Ask a question..."'>
+Placeholder text for the ask input.
+</ResponseField>
+
+### FAQ.Item
+
+<ResponseField name="question" type="string" required>
+The row title. `title` is accepted as an alias.
+</ResponseField>
+
+<ResponseField name="defaultOpen" type="boolean" default="false">
+Render the answer expanded on first paint.
+</ResponseField>

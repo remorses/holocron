@@ -3,7 +3,7 @@
  * Maps MDX element names and mdast nodes to editorial components.
  */
 
-import { Children, Fragment, type ElementType, type ReactNode } from 'react'
+import { Children, Fragment, type ComponentProps, type ElementType, type ReactNode } from 'react'
 import { SafeMdxRenderer } from 'safe-mdx'
 import type { PhrasingContent, Root, RootContent } from 'mdast'
 import type { MyRootContent } from 'safe-mdx'
@@ -49,12 +49,14 @@ import {
   CodeCard,
   RequestExample,
   ResponseExample,
-  Tree,
+  Tree as TreeClient,
   TreeFolder,
   TreeFile,
-  Color,
+  Color as ColorClient,
   ColorRow,
   ColorItem,
+  FAQ as FAQClient,
+  FAQItem,
   Visibility,
   Icon,
   Logo,
@@ -77,6 +79,25 @@ import {
 import { SidebarAssistant, PageNavRow } from '../components/sidebar-assistant.tsx'
 import { OpenAPIEndpoint } from './openapi/render-openapi.tsx'
 import { MCPTool, MCPResource } from './mcp/render-mcp.tsx'
+
+/**
+ * Namespace component for dotted MDX tags (`<Tree.Folder>`, `<FAQ.Item>`).
+ * safe-mdx resolves `Tree.Folder` as `components.Tree.Folder`, a property
+ * read, never a `'Tree.Folder'` map key. This map runs on the server where
+ * `Tree` is a client reference, and client references carry no static
+ * properties, so the sub-component must hang off a plain server wrapper.
+ */
+function withSubComponents<C extends ElementType, S extends Record<string, ElementType>>(
+  Component: C,
+  sub: S,
+): ((props: ComponentProps<C>) => ReactNode) & S {
+  const Namespace = (props: ComponentProps<C>) => <Component {...props} />
+  return Object.assign(Namespace, sub)
+}
+
+const Tree = withSubComponents(TreeClient, { Folder: TreeFolder, File: TreeFile })
+const Color = withSubComponents(ColorClient, { Row: ColorRow, Item: ColorItem })
+const FAQ = withSubComponents(FAQClient, { Item: FAQItem })
 
 const Markdown = ({ children, inline = false }: { children: ReactNode, inline?: boolean }) => {
   const markdown = Children.toArray(children).join('')
@@ -143,6 +164,7 @@ export const mdxComponents = {
   Columns,
   Column,
   Expandable,
+  FAQ,
   Frame,
   Prompt,
   ParamField,
@@ -158,11 +180,7 @@ export const mdxComponents = {
   RequestExample,
   ResponseExample,
   Tree,
-  'Tree.Folder': TreeFolder,
-  'Tree.File': TreeFile,
   Color,
-  'Color.Row': ColorRow,
-  'Color.Item': ColorItem,
   Icon: Icon,
   Logo,
   Markdown,
@@ -179,7 +197,7 @@ export const mdxComponents = {
   OpenAPIEndpoint,
   MCPTool,
   MCPResource,
-} satisfies Record<SafeMdxComponentName | `${string}.${string}`, ElementType>
+} satisfies Record<SafeMdxComponentName, ElementType>
 
 
 export interface RenderNodeOptions {

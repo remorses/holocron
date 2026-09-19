@@ -54,6 +54,7 @@ export {
 export { Badge } from './badge.tsx'
 export { Card, CardGroup, Columns, Column } from './card.tsx'
 export { Expandable } from './expandable.tsx'
+export { FAQ, FAQItem } from './faq.tsx'
 export { Frame } from './frame.tsx'
 export { Prompt } from './prompt.tsx'
 export { ParamField, ResponseField } from './fields.tsx'

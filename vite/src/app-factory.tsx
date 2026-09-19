@@ -618,6 +618,8 @@ function parseChatRequestBody(value: unknown): {
   currentSlug: string
   toolSchemas?: { name: string; description: string; inputJsonSchema: Record<string, unknown> }[]
   context?: Record<string, unknown>
+  /** One-shot request (e.g. <FAQ> ask row): no session cookie, nothing persisted. */
+  ephemeral: boolean
 } {
   if (!isRecord(value) || !Array.isArray(value.modelMessages) || typeof value.message !== 'string' || typeof value.currentSlug !== 'string') {
     throw new Error('Invalid chat request body')
@@ -629,6 +631,7 @@ function parseChatRequestBody(value: unknown): {
     currentSlug: value.currentSlug,
     toolSchemas: Array.isArray(value.toolSchemas) ? value.toolSchemas as any : undefined,
     context: isRecord(value.context) ? value.context : undefined,
+    ephemeral: value.ephemeral === true,
   }
 }
 
@@ -1737,9 +1740,10 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       // Resolve or mint the persistent session id. Newly minted ids are
       // announced to the client via a `session` stream chunk (for the
       // cross-origin widget) and set as a first-party httpOnly cookie
-      // (for the embedded docs site).
-      const existingSessionId = readChatSessionId(request)
-      const sessionId = existingSessionId ?? generateChatSessionId()
+      // (for the embedded docs site). Ephemeral requests get no session at
+      // all: the gateway persists nothing and the drawer's cookie is untouched.
+      const existingSessionId = body.ephemeral ? null : readChatSessionId(request)
+      const sessionId = body.ephemeral ? undefined : existingSessionId ?? generateChatSessionId()
 
       // Build system prompt
       const allPages = collectAllPages(site.navigation)
@@ -1828,7 +1832,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       async function* generateParts() {
         // Announce a freshly minted session id so the widget can persist it
         // (localStorage in cross-origin mode; the cookie covers embedded mode).
-        if (!existingSessionId) {
+        if (sessionId && !existingSessionId) {
           yield { type: 'session' as const, sessionId }
         }
         // Forward to the Holocron chat gateway (holocron.so or HOLOCRON_URL override).
@@ -1862,7 +1866,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
             ...docsPayload,
             skillUrls: [],
             pageSlug: body.currentSlug,
-            sessionId,
+            ...(sessionId ? { sessionId } : {}),
             ...(body.toolSchemas?.length ? { toolSchemas: body.toolSchemas } : {}),
           },
         })
@@ -1922,10 +1926,12 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
       }
       // Refresh (or set) the session cookie on every turn so active
       // conversations keep sliding their 30-day expiry forward.
-      response.headers.append(
-        'set-cookie',
-        chatSessionCookie({ sessionId, requestUrl: request.url, maxAgeSeconds: CHAT_SESSION_MAX_AGE_SECONDS, path: chatSessionCookiePath }),
-      )
+      if (sessionId) {
+        response.headers.append(
+          'set-cookie',
+          chatSessionCookie({ sessionId, requestUrl: request.url, maxAgeSeconds: CHAT_SESSION_MAX_AGE_SECONDS, path: chatSessionCookiePath }),
+        )
+      }
       return response
     })
   }

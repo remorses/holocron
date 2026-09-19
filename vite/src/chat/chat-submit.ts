@@ -380,6 +380,47 @@ export async function switchChatSession(sessionId: string): Promise<void> {
   await restorePromise
 }
 
+/**
+ * One-shot question with no session and no history. Used by inline surfaces
+ * such as <FAQ> that need an answer without touching the drawer conversation.
+ * The proxy skips session cookies for `ephemeral` requests, so nothing is
+ * persisted server-side and the drawer's session id is never overwritten.
+ */
+export async function askEphemeralQuestion(
+  question: string,
+  options: { signal?: AbortSignal; onPart: (part: ChatPart) => void },
+): Promise<void> {
+  const { chatApiUrl, currentSlug } = chatWidgetStore.getState()
+  if (!chatApiUrl) throw new Error('The AI assistant is not configured for this site.')
+
+  const response = await fetch(chatApiUrl, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      modelMessages: [],
+      message: question,
+      currentSlug: currentSlug || '/',
+      ephemeral: true,
+    }),
+    signal: options.signal,
+  })
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => undefined)
+    throw new Error(
+      typeof errorBody?.error === 'string'
+        ? errorBody.error
+        : `Chat request failed: ${response.status} ${response.statusText}`,
+    )
+  }
+
+  const decoded = await decodeFederationPayload<{ stream: AsyncIterable<StreamChunk> }>(response)
+  for await (const part of decoded.stream) {
+    if (part.type === 'session' || part.type === 'title' || part.type === 'model-messages') continue
+    options.onPart(part)
+  }
+}
+
 /** Pending client tool call detected during streaming. */
 type PendingClientToolCall = {
   toolCallId: string

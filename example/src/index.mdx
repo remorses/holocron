@@ -681,3 +681,25 @@ await withRetry(async () => {
   await page.locator('text=Submit').click()
   await page.waitForResponse('**/api/submit')
 })
+```
+
+## Questions
+
+<FAQ askPlaceholder="Ask anything about Playwriter...">
+  <FAQ.Item question="What is Playwriter?">
+    Playwriter is a CLI and MCP server that drives your own Chrome through a browser extension. Agents write Playwright code and it runs against your logged-in tabs.
+  </FAQ.Item>
+  <FAQ.Item question="Which Playwright versions are supported?">
+    Any recent Playwright release works. The `page` object you get is a real Playwright `Page`, so the full API is available:
+
+    - `page.goto()`, `page.click()`, `page.fill()`
+    - `page.screenshot()` and `page.pdf()`
+    - `page.route()` for network interception
+  </FAQ.Item>
+  <FAQ.Item question="Can I self-host the relay?">
+    Yes. Start the relay on the host machine with a tunnel and point `PLAYWRITER_RELAY_URL` at it from anywhere. See [Remote access](#remote-access).
+  </FAQ.Item>
+  <FAQ.Item question="Where are my sessions stored?">
+    Sessions live in memory on the relay. Nothing is written to disk unless you save a recording or a screenshot.
+  </FAQ.Item>
+</FAQ>

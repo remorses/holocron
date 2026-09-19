@@ -1145,6 +1145,11 @@ function ColorPlaceholder() {
 ColorPlaceholder.Row = PlaceholderMdxImport
 ColorPlaceholder.Item = PlaceholderMdxImport
 
+function FAQPlaceholder() {
+  return null
+}
+FAQPlaceholder.Item = PlaceholderMdxImport
+
 function createPlaceholderModules(imports: ResolvedImport[]): EagerModules {
   const modules: EagerModules = {}
   for (const { moduleKey } of imports) {
@@ -1175,6 +1180,7 @@ function createSafeMdxComponents() {
   const components = Object.fromEntries(SAFE_MDX_COMPONENT_NAMES.map((name) => [name, PlaceholderMdxImport]))
   components.Tree = TreePlaceholder
   components.Color = ColorPlaceholder
+  components.FAQ = FAQPlaceholder
   return components
 }
 
