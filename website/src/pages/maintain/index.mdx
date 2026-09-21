@@ -122,6 +122,8 @@ The run prompt is **temporary**. It does not replace page generation prompts.
 
 Maintain uses **one OpenCode session** for the complete run. The main agent groups independent pages by source and delegates those groups as parallel tasks. Holocron then validates every changed MDX file.
 
+The CLI **polls the OpenCode session** for the final reply instead of waiting on a single blocking request, so a run can now use the full **25-minute budget** — long runs used to fail at the 5-minute HTTP timeout.
+
 **GitHub Actions** adds publish instructions to the session prompt, not the system prompt, so tasks never try to open a pull request. The parent session creates `holocron/maintain-<timestamp>` and runs `gh pr create` only when MDX files changed. The [GitHub Actions](./github-actions.mdx) page covers the no-args push range.
 
 **Parent-agent** runs omit that prompt block. Git commit, push, and `gh` stay denied. The parent continues with its own PR setup after the command exits.
