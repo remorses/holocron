@@ -108,6 +108,9 @@ importers:
       string-dedent:
         specifier: ^3.0.2
         version: 3.0.2
+      undici:
+        specifier: ^7.24.8
+        version: 7.24.8
       unist-util-visit:
         specifier: ^5.1.0
         version: 5.1.0
