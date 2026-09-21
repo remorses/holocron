@@ -433,6 +433,27 @@ export function getCurrentBranch(repoRoot: string) {
   return runGit(repoRoot, ['branch', '--show-current']).trim() || 'main'
 }
 
+export function remoteBranchExists(repoRoot: string, branch: string) {
+  try {
+    return runGit(repoRoot, ['ls-remote', '--heads', 'origin', `refs/heads/${branch}`]).trim() !== ''
+  } catch {
+    return false
+  }
+}
+
+export function findPullRequestUrl(repoRoot: string, headBranch: string) {
+  try {
+    const output = childProcess.execFileSync(
+      'gh',
+      ['pr', 'list', '--head', headBranch, '--state', 'open', '--json', 'url', '--jq', '.[0].url // empty'],
+      gitExecOptions(repoRoot, GIT_TIMEOUT_MS),
+    ).trim()
+    return output || undefined
+  } catch {
+    return undefined
+  }
+}
+
 export function getChangedPatches(repoRoot: string, range: { from: string; to: string; pullRequest?: boolean }, files: string[]) {
   if (files.length === 0) return ''
   const gitlinks = listGitlinkPaths(repoRoot)

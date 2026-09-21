@@ -25,6 +25,8 @@ import {
   getHeadSha,
   getWorkingTreeChanges,
   extractPromptReferences,
+  findPullRequestUrl,
+  remoteBranchExists,
   hasMissingLocalReferences,
   matchChangedReferences,
   type MaintainPage,
@@ -128,7 +130,8 @@ maintainCli
     const githubActions = process.env.GITHUB_ACTIONS === 'true'
       ? {
         branch: `holocron/maintain-${Date.now()}`,
-        targetBranch: githubEvent && !githubEvent.existingPullRequest ? githubEvent.baseBranch : 'main',
+        // For pull_request events baseBranch is the PR head, so docs land inside that PR.
+        targetBranch: githubEvent?.baseBranch ?? 'main',
       }
       : undefined
     const openCodeArgs = {
@@ -244,6 +247,24 @@ maintainCli
     }
 
     output.log(logger.success(`Updated ${changedPages.length} page${changedPages.length === 1 ? '' : 's'}.`))
+    if (!githubActions) return
+
+    // OpenCode was told to push the maintain branch and open a PR. A green job with no PR is a silent failure.
+    if (working.some((file) => selectedPages.some((page) => page.path === file))) {
+      output.error(logger.error(`OpenCode updated pages but left them uncommitted. Expected a commit on ${githubActions.branch}.`))
+      return proc.exit(1)
+    }
+    if (!remoteBranchExists(repoRoot, githubActions.branch)) {
+      output.error(logger.error(`OpenCode committed the pages but did not push ${githubActions.branch}.`))
+      return proc.exit(1)
+    }
+    const pullRequestUrl = findPullRequestUrl(repoRoot, githubActions.branch)
+    if (!pullRequestUrl) {
+      output.error(logger.error(`OpenCode pushed ${githubActions.branch} but did not open a pull request into ${githubActions.targetBranch}.`))
+      output.error(logger.error('Enable "Allow GitHub Actions to create and approve pull requests" in the repository Actions settings.'))
+      return proc.exit(1)
+    }
+    output.log(logger.success(`Opened ${pullRequestUrl}`))
   })
 
 async function resolveProjectId({

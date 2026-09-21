@@ -57,6 +57,7 @@ export function parseGithubEvent({
   payload: GithubPayload
 }): GithubMaintainEvent {
   const repositoryUrl = `https://github.com/${repository}`
+  const defaultBranch = String(payload.repository?.default_branch ?? 'main')
   if (eventName === 'push') {
     return {
       runId,
@@ -90,7 +91,7 @@ export function parseGithubEvent({
       runId,
       all: false,
       changedUrls: [repositoryUrl, `${repositoryUrl}/releases`, releaseUrl],
-      baseBranch: String(payload.repository?.default_branch ?? 'main'),
+      baseBranch: defaultBranch,
       release: {
         tagName: payload.release?.tag_name,
         name: payload.release?.name,
@@ -106,7 +107,7 @@ export function parseGithubEvent({
     runId,
     all: eventName === 'workflow_dispatch',
     changedUrls: [],
-    baseBranch: 'main',
+    baseBranch: defaultBranch,
   }
 }
 

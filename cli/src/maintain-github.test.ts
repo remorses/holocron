@@ -59,6 +59,22 @@ describe('maintain GitHub events', () => {
     `)
   })
 
+  test('targets the repository default branch on schedules', () => {
+    expect(parseGithubEvent({
+      eventName: 'schedule',
+      repository: 'owner/repo',
+      runId: '45',
+      payload: { repository: { default_branch: 'master' } },
+    })).toMatchInlineSnapshot(`
+      {
+        "all": false,
+        "baseBranch": "master",
+        "changedUrls": [],
+        "runId": "45",
+      }
+    `)
+  })
+
   test('runs all pages for workflow dispatch', () => {
     expect(parseGithubEvent({
       eventName: 'workflow_dispatch',
