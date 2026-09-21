@@ -64,7 +64,7 @@ That range is the **whole push**. Five commits in one push all count. It is not 
 
 Checkout needs **`fetch-depth: 0`** so those SHAs exist locally. A new-branch push has `before` all zeros. Maintain then uses `git diff-tree --root` on `after`.
 
-If MDX files change, OpenCode creates **`holocron/maintain-<timestamp>`** and opens one pull request into `main`. It never commits on `main` or on any other existing branch.
+If MDX files change, OpenCode creates **`holocron/maintain-<timestamp>`** and opens one pull request into `main`. It never commits on `main` or on any other existing branch. Each commit is authored by `holocron.so <bot@holocron.so>` (set in code through git author env vars, not by editing your repo's git config), and the PR body ends with the line *PR opened by [holocron.so](https://holocron.so)*.
 
 ```yaml
 name: Maintain documentation

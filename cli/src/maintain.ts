@@ -35,6 +35,10 @@ import { loadGithubEvent, type GithubMaintainRelease } from './maintain-github.t
 
 const RUN_TIMEOUT_MS = 25 * 60 * 1000
 const HOSTED_PROVIDER = 'holocron'
+// Commit identity for GitHub Actions runs. Set via git env vars so every commit
+// OpenCode makes is authored by Holocron, regardless of the repo's git config.
+const MAINTAIN_GIT_NAME = 'holocron.so'
+const MAINTAIN_GIT_EMAIL = 'bot@holocron.so'
 const require = createRequire(import.meta.url)
 const BYOK_MODEL_EXAMPLE = 'anthropic/claude-sonnet-4-5'
 const EMPTY_MODEL_MESSAGE = `Pass a model id, for example glm-5.3-flash or ${BYOK_MODEL_EXAMPLE}.`
@@ -379,6 +383,15 @@ async function runOpenCode({
   const modelId = model.modelId
   const server = await startOpencodeServer({
     signal: controller.signal,
+    // Author every maintain commit as Holocron. Git honors these over user config.
+    env: githubActions
+      ? {
+        GIT_AUTHOR_NAME: MAINTAIN_GIT_NAME,
+        GIT_AUTHOR_EMAIL: MAINTAIN_GIT_EMAIL,
+        GIT_COMMITTER_NAME: MAINTAIN_GIT_NAME,
+        GIT_COMMITTER_EMAIL: MAINTAIN_GIT_EMAIL,
+      }
+      : undefined,
     config: {
       model: `${providerId}/${modelId}`,
       provider: model.kind === 'hosted'
@@ -477,16 +490,18 @@ export function resolveOpencodeBinary() {
 export async function startOpencodeServer({
   config,
   signal,
+  env,
   startTimeoutMs = 30_000,
 }: {
   config: OpencodeConfig
   signal?: AbortSignal
+  env?: Record<string, string>
   startTimeoutMs?: number
 }): Promise<{ url: string; pid: number; close: () => Promise<void> } | Error> {
   const proc = spawn(resolveOpencodeBinary(), ['serve', '--hostname=127.0.0.1', '--port=0'], {
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
-    env: { ...process.env, OPENCODE_CONFIG_CONTENT: JSON.stringify(config) },
+    env: { ...process.env, ...env, OPENCODE_CONFIG_CONTENT: JSON.stringify(config) },
   })
   // Spawn failures emit 'error' and may never emit 'exit'.
   const exited = new Promise<void>((resolve) => {
@@ -574,14 +589,16 @@ function githubActionsPublishPrompt({
 
     After the page updates finish, if any selected MDX files were updated, publish them. If none were updated, do not create a branch, commit, or pull request.
 
+    The commit author identity is already set for you through the environment. Do not run git config to change user.name or user.email.
+
     If files were updated:
     1. Create and switch to this new branch before any commit: ${branch}
-    2. If git user.name is unset, set user.name to github-actions[bot] and user.email to 41898282+github-actions[bot]@users.noreply.github.com
-    3. Commit only the updated MDX files
-    4. Push only that branch. Never push to ${targetBranch}. Never push to any other existing branch. Never commit on ${targetBranch}.
-    5. Open one pull request into ${targetBranch} with gh pr create.
+    2. Commit only the updated MDX files
+    3. Push only that branch. Never push to ${targetBranch}. Never push to any other existing branch. Never commit on ${targetBranch}.
+    4. Open one pull request into ${targetBranch} with gh pr create.
        Title: short. Prefix with [holocron], unless this repository already has a clear PR title convention, then follow that.
-       Body: a short bullet list of the changes. No headings.
+       Body: a short bullet list of the changes. No headings. End the body with an empty line followed by exactly this line:
+       *PR opened by [holocron.so](https://holocron.so)*
 
     Do this yourself after tasks finish. Do not ask tasks to commit, create branches, or open pull requests.
   `
