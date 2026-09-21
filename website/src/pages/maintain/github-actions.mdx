@@ -66,6 +66,8 @@ Checkout needs **`fetch-depth: 0`** so those SHAs exist locally. A new-branch pu
 
 If MDX files change, OpenCode creates **`holocron/maintain-<timestamp>`** and opens one pull request into `main`. It never commits on `main` or on any other existing branch.
 
+When OpenCode finishes, Maintain **verifies the publish step**. Pages updated but left **uncommitted**, a commit on the maintain branch that was **not pushed**, or no **pull request** opened into `main` each fail the job with the specific missing step and a reminder to allow GitHub Actions to create pull requests. When the pull request exists, Maintain prints **`Opened <pull request url>`** and the job passes.
+
 ```yaml
 name: Maintain documentation
 
@@ -104,6 +106,8 @@ GitHub blocks pull requests from Actions until you enable **Allow GitHub Actions
 ## Scheduled maintenance
 
 Use a schedule for **routine audits** that do not depend on a specific source change.
+
+Schedule and manual runs open the pull request into the repository's **default branch**, read from the event payload (falling back to `main`), so the workflow works whether the default branch is `main`, `master`, or something else. A **push** run targets the pushed branch instead.
 
 ```yaml
 name: Weekly documentation review
