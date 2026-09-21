@@ -4,8 +4,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import * as clack from '@clack/prompts'
-import { createOpencodeClient } from '@opencode-ai/sdk/v2/client'
-import type { Config as OpencodeConfig } from '@opencode-ai/sdk/v2/types'
+import { createOpencodeClient, type OpencodeClient } from '@opencode-ai/sdk/v2/client'
+import type { AssistantMessage, Config as OpencodeConfig } from '@opencode-ai/sdk/v2/types'
 import { createRequire } from 'node:module'
 import { goke, isAgent } from 'goke'
 import dedent from 'string-dedent'
@@ -394,7 +394,11 @@ async function runOpenCode({
       release,
       githubActions,
     })
-    const result = await client.session.prompt({
+    // promptAsync + polling instead of the blocking `prompt` call: Node's fetch
+    // (undici) aborts any request whose response headers take more than 5
+    // minutes with a bare "fetch failed", and the sync endpoint only answers
+    // once the whole run is done. Long maintain runs died at exactly 5:00.
+    await client.session.promptAsync({
       sessionID: session.data.id,
       model: { providerID: providerId, modelID: modelId },
       agent: 'build',
@@ -402,8 +406,10 @@ async function runOpenCode({
       tools: { bash: true, websearch: false, task: true, read: true, glob: true, grep: true, edit: true, webfetch: true },
       parts: [{ type: 'text', text: prompt }],
     }, { throwOnError: true })
-    // HTTP 200 does not mean the turn succeeded: provider failures land on info.error.
-    const failure = result.data.info.error
+    const reply = await waitForAssistantReply({ client, sessionID: session.data.id, signal: controller.signal })
+    if (reply instanceof Error) return reply
+    // Session idle does not mean the turn succeeded: provider failures land on info.error.
+    const failure = reply.error
     if (failure) {
       const message = failure.name === 'MessageOutputLengthError' ? 'The model hit its output length limit.' : failure.data.message
       return openCodeFailed({
@@ -425,6 +431,39 @@ async function runOpenCode({
   } finally {
     clearTimeout(timeout)
     await server.close()
+  }
+}
+
+const REPLY_POLL_INTERVAL_MS = 2_000
+// promptAsync returns before the run flips the session to busy; do not read an
+// early idle status as "finished with no reply".
+const REPLY_START_GRACE_MS = 30_000
+
+// Polls until the session is idle and its last assistant message has completed.
+export async function waitForAssistantReply({
+  client,
+  sessionID,
+  signal,
+}: {
+  client: OpencodeClient
+  sessionID: string
+  signal: AbortSignal
+}): Promise<AssistantMessage | Error> {
+  const startedAt = Date.now()
+  while (true) {
+    signal.throwIfAborted()
+    const status = await client.session.status({}, { throwOnError: true })
+    const sessionStatus = status.data[sessionID]
+    const busy = sessionStatus !== undefined && sessionStatus.type !== 'idle'
+    if (!busy) {
+      const messages = await client.session.messages({ sessionID }, { throwOnError: true })
+      const reply = messages.data.map((message) => message.info).findLast((info) => info.role === 'assistant')
+      if (reply?.time.completed) return reply
+      if (!reply && Date.now() - startedAt > REPLY_START_GRACE_MS) {
+        return new Error('OpenCode finished without producing a response.')
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, REPLY_POLL_INTERVAL_MS))
   }
 }
 

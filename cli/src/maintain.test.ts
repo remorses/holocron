@@ -1,8 +1,12 @@
 // Tests Maintain --model parsing for Holocron-hosted vs OpenCode BYOK ids.
 
 import { describe, expect, test } from 'vitest'
-import { parseMaintainModel, resolveOpencodeBinary, startOpencodeServer } from './maintain.ts'
+import { createOpencodeClient } from '@opencode-ai/sdk/v2/client'
+import { parseMaintainModel, resolveOpencodeBinary, startOpencodeServer, waitForAssistantReply } from './maintain.ts'
 import fs from 'node:fs'
+import http from 'node:http'
+import os from 'node:os'
+import path from 'node:path'
 
 describe('parseMaintainModel', () => {
   test('defaults to a Holocron-hosted model', () => {
@@ -100,6 +104,59 @@ describe('startOpencodeServer', () => {
     await server.close()
     expect(isProcessAlive(server.pid)).toBe(false)
   }, 30_000)
+})
+
+describe('waitForAssistantReply', () => {
+  test('resolves the completed assistant message, including provider failures', async () => {
+    // Provider endpoint that always fails: exercises promptAsync + polling
+    // end-to-end without a real model, and proves the error lands on the reply.
+    // 401 and not 500: OpenCode retries 5xx with backoff for minutes.
+    const provider = http.createServer((_req, res) => {
+      res.writeHead(401, { 'content-type': 'application/json' })
+      res.end(JSON.stringify({ error: { message: 'bad key' } }))
+    })
+    await new Promise<void>((resolve) => provider.listen(0, '127.0.0.1', resolve))
+    const address = provider.address()
+    if (!address || typeof address === 'string') throw new Error('expected a TCP address')
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-maintain-'))
+
+    const server = await startOpencodeServer({
+      config: {
+        model: 'fake/fake-model',
+        provider: {
+          fake: {
+            npm: '@ai-sdk/openai-compatible',
+            options: { apiKey: 'x', baseURL: `http://127.0.0.1:${address.port}/v1` },
+            models: { 'fake-model': { name: 'fake-model' } },
+          },
+        },
+      },
+    })
+    if (server instanceof Error) throw server
+    try {
+      const client = createOpencodeClient({ baseUrl: server.url, directory })
+      const session = await client.session.create({ title: 'test' }, { throwOnError: true })
+      await client.session.promptAsync({
+        sessionID: session.data.id,
+        model: { providerID: 'fake', modelID: 'fake-model' },
+        parts: [{ type: 'text', text: 'hello' }],
+      }, { throwOnError: true })
+
+      const reply = await waitForAssistantReply({
+        client,
+        sessionID: session.data.id,
+        signal: AbortSignal.timeout(60_000),
+      })
+      if (reply instanceof Error) throw reply
+      expect(reply.role).toBe('assistant')
+      expect(reply.time.completed).toBeTypeOf('number')
+      expect(reply.error?.name).toBeTypeOf('string')
+    } finally {
+      await server.close()
+      provider.close()
+      fs.rmSync(directory, { recursive: true, force: true })
+    }
+  }, 90_000)
 })
 
 function isProcessAlive(pid: number) {
