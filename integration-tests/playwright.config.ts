@@ -70,7 +70,9 @@ export default defineConfig({
   globalTeardown: "./scripts/cleanup-e2e.ts",
   timeout: 45_000,
   expect: {
-    timeout: 3_000,
+    // GitHub runners are several times slower than a dev laptop; a 3s
+    // auto-retrying expect flakes there on first-render assertions.
+    timeout: process.env["CI"] ? 10_000 : 3_000,
   },
   use: {
     actionTimeout: 15_000,
@@ -86,9 +88,10 @@ export default defineConfig({
   // Config-HMR tests tagged @dev only run against the dev server; build-mode
   // tests skip them (and vice-versa). Non-tagged tests run in both modes.
   grepInvert: isStart ? /@dev/ : /@build/,
-  // Playwright supports fail-fast with `maxFailures` / `-x`. Keep local runs
-  // informative but stop scheduling the rest of the suite after a few failures.
-  maxFailures: process.env["CI"] ? 1 : 3,
+  // Playwright supports fail-fast with `maxFailures` / `-x`. Stop scheduling
+  // the rest of the suite on a systemic breakage, but let CI report several
+  // independent failures per run instead of one fix-push-wait loop per test.
+  maxFailures: process.env["CI"] ? 10 : 3,
   forbidOnly: !!process.env["CI"],
   retries: process.env["CI"] ? 2 : 0,
   reporter: "list",

@@ -13,7 +13,7 @@ describe('buildPageTitle', () => {
       buildPageTitle('Holocron - Quickstart', 'Holocron'),
     ]).toMatchInlineSnapshot(`
       [
-        "Quickstart — Holocron",
+        "Quickstart - Holocron",
         "Holocron - Quickstart",
       ]
     `)

@@ -126,20 +126,11 @@ test.describe("Update component", () => {
 
     const secondUpdate = page.locator(SECOND);
     await secondUpdate.scrollIntoViewIfNeeded();
-    // Give sticky positioning a tick to settle.
-    await page.waitForTimeout(200);
 
-    const secondLabelVisible = await page
-      .locator(`${SECOND} [data-component-part='update-label']`)
-      .evaluate((el) => {
-        const r = el.getBoundingClientRect();
-        return (
-          r.bottom > 0 &&
-          r.top < (window.innerHeight || document.documentElement.clientHeight)
-        );
-      });
-
-    expect(secondLabelVisible).toBe(true);
+    // Retrying assertion: sticky positioning settles asynchronously after scroll.
+    await expect(
+      page.locator(`${SECOND} [data-component-part='update-label']`),
+    ).toBeInViewport();
   });
 
   test("clicking the label updates the location hash", async ({ page }) => {

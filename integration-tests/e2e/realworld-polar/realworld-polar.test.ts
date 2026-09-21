@@ -148,8 +148,10 @@ test.describe("realworld-polar fixture", () => {
       }).filter((item) => item.heading !== null),
     );
 
+    // The frontmatter title is injected as an H1 into the first section, so
+    // the first section's leading heading is the page title, not "Lemon Squeezy".
     expect(sectionBoxes.map((item) => item.heading)).toEqual([
-      "Lemon Squeezy",
+      "Migrate to Polar",
       "Getting Started",
       "Supported Migrations",
       "Open Source",
