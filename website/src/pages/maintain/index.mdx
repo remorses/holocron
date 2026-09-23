@@ -72,7 +72,7 @@ Use a session or API key to authenticate API requests.
                    └── @./setup.mdx            relative to this page
 ```
 
-**`@/`** always starts at the git repository root, so the path stays valid if you move the MDX file. **`@./`** and **`@../`** start at the MDX file. **`@https://`** marks a remote source. A file reference selects the page when that file changes. A folder reference selects it when any tracked file inside that folder changes, including files inside a git submodule. Use the parent-root path for submodule sources, for example `@/template/src/index.mdx`. GitHub release events and explicit routine runs can select matching `@https://` URL references.
+**`@/`** always starts at the git repository root, so the path stays valid if you move the MDX file. **`@./`** and **`@../`** start at the MDX file. **`@https://`** marks a remote source. A file reference selects the page when that file changes. A folder reference selects it when any tracked file inside that folder changes, including files inside a git submodule. Use the parent-root path for submodule sources, for example `@/template/src/index.mdx`. GitHub release events select pages whose `@https://` references match the release URLs.
 
 The **Holocron skill adds this field by default** when an AI coding agent creates a new MDX page. It records the real sources used to produce the page, so future agents can reproduce and update the content instead of guessing its intent. See [skill discovery](../docs/ai/skill-discovery.mdx) for agent setup.
 
@@ -122,7 +122,7 @@ The run prompt is **temporary**. It does not replace page generation prompts.
 
 Maintain uses **one OpenCode session** for the complete run. The main agent groups independent pages by source and delegates those groups as parallel tasks. Holocron then validates every changed MDX file.
 
-In **GitHub Actions**, Maintain creates `holocron/maintain-<timestamp>` before OpenCode starts and adds publish instructions to the session prompt, not the system prompt, so tasks never commit. When pages changed, the parent session commits them and runs `holocron maintain-open-pr` with the pull request title and body. Maintain then pushes and opens the pull request. The [GitHub Actions](./github-actions.mdx) page covers the no-args push range.
+In **GitHub Actions**, Maintain creates `holocron/maintain-<timestamp>` before OpenCode starts and adds publish instructions to the session prompt, not the system prompt, so tasks never commit. When pages changed, the parent session commits them and runs `holocron maintain-open-pr` with the pull request title and body. Maintain keeps the GitHub token out of the OpenCode environment and uses it after the run to push the branch and open the pull request. The [GitHub Actions](./github-actions.mdx) page covers the no-args push range.
 
 **Parent-agent** runs omit that prompt block and tell OpenCode to leave the pages uncommitted. `git push` and `gh` are denied in every mode. The parent continues with its own PR setup after the command exits.
 
