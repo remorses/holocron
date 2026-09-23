@@ -1,3 +1,21 @@
+## 0.22.4
+
+1. **`holocron maintain` in GitHub Actions opens the pull request reliably.** Before, the model had to commit, push, and open the PR itself. It sometimes stopped after the edits, so runs failed with `OpenCode updated pages but left them uncommitted` or passed with no PR. The work is now split:
+
+   - The CLI creates `holocron/maintain-<timestamp>` before OpenCode starts.
+   - When pages changed, OpenCode commits them and runs a hidden command with the PR title and body:
+
+     ```bash
+     holocron maintain-open-pr --title "[holocron] Update docs" <<'EOF'
+     - Document the new flag
+     EOF
+     ```
+
+     The command checks the branch and tells the model what to fix (for example, uncommitted pages).
+   - After the session the CLI pushes the branch and opens the pull request with the Octokit REST client. If pages changed but the model never ran the command, the job fails and prints the model's last message. When no page changed, nothing is committed and no PR is opened.
+
+   OpenCode no longer gets `git push` or `gh` permissions. Commits are still authored by `holocron.so <bot@holocron.so>`.
+
 ## 0.22.3
 
 1. **`holocron maintain` no longer fails with `fetch failed` after five minutes.** Node's `fetch` gave up on OpenCode's blocking prompt response after 5 minutes, so long runs on hosted models never finished. The OpenCode client now disables the undici headers and body timeouts, so runs can use the full 25 minute budget. A run that exceeds 25 minutes reports the timeout instead of a generic failure.
