@@ -160,7 +160,7 @@ maintainCli
       gitDiffRange: range ? gitDiffRangeSpec(range) : undefined,
       release: githubEvent?.release,
       githubActions: githubState && githubActions
-        ? { branch: githubState.branch, targetBranch: githubState.targetBranch, env: githubActions.env }
+        ? { branch: githubState.branch, targetBranch: githubState.targetBranch, env: githubActions.env, stateDir: githubActions.stateDir }
         : undefined,
     }
     let runError: Error | undefined
@@ -365,7 +365,7 @@ async function runOpenCode({
   patches: string
   gitDiffRange?: string
   release?: GithubMaintainRelease
-  githubActions?: { branch: string; targetBranch: string; env: Record<string, string> }
+  githubActions?: { branch: string; targetBranch: string; env: Record<string, string>; stateDir: string }
   model:
     | {
       kind: 'hosted'
@@ -450,23 +450,33 @@ async function runOpenCode({
       release,
       githubActions,
     })
-    const result = await client.session.prompt({
+    const send = (text: string) => client.session.prompt({
       sessionID: session.data.id,
       model: { providerID: providerId, modelID: modelId },
       agent: 'build',
       system,
       tools: { bash: true, websearch: false, task: true, read: true, glob: true, grep: true, edit: true, webfetch: true },
-      parts: [{ type: 'text', text: prompt }],
+      parts: [{ type: 'text', text }],
     }, { throwOnError: true })
     // HTTP 200 does not mean the turn succeeded: provider failures land on info.error.
-    const failure = result.data.info.error
-    if (failure) {
+    const turnFailure = (turn: Awaited<ReturnType<typeof send>>) => {
+      const failure = turn.data.info.error
+      if (!failure) return undefined
       const message = failure.name === 'MessageOutputLengthError' ? 'The model hit its output length limit.' : failure.data.message
       return openCodeFailed({
         kind: model.kind,
         prefix: `OpenCode failed to maintain the selected pages (${failure.name}).`,
         detail: message ? ` ${message}` : '',
       })
+    }
+    let result = await send(prompt)
+    const failed = turnFailure(result)
+    if (failed) return failed
+    // Models often stop after the edits. Remind once in the same session before the CLI fails the run.
+    if (githubActions && !readMaintainResult(githubActions.stateDir)) {
+      result = await send(MAINTAIN_PUBLISH_REMINDER)
+      const failedAgain = turnFailure(result)
+      if (failedAgain) return failedAgain
     }
     return { finalText: result.data.parts.flatMap((part) => part.type === 'text' ? [part.text] : []).join('\n') }
   } catch (error) {
@@ -599,6 +609,13 @@ function openCodeFailed({
   return new Error(`${prefix}${detail}${hint}`)
 }
 
+const MAINTAIN_PUBLISH_REMINDER = dedent`
+  You have not run \`holocron maintain-open-pr\` or \`holocron maintain-no-changes\` yet. The run fails without one of them.
+  If you changed and committed pages, run holocron maintain-open-pr with a title and the body on stdin.
+  If no page needed changes, run holocron maintain-no-changes --reason "<one sentence>".
+  Run exactly one of them now.
+`
+
 function githubActionsPublishPrompt({
   branch,
   targetBranch,
@@ -609,7 +626,7 @@ function githubActionsPublishPrompt({
   return dedent`
     You are running in GitHub Actions on the branch ${branch}, created for this run. Holocron pushes it and opens the pull request into ${targetBranch} after you finish.
 
-    After the tasks finish, you must run exactly one of these two commands. The run fails if you run neither.
+    After the tasks finish, your last action must be exactly one of these two commands, also when no page changed. The run fails if you run neither.
 
     If any selected MDX pages changed:
     1. Commit only the changed MDX pages with git add and git commit. The commit author is already set through the environment. Do not run git config.
