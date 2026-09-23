@@ -15,6 +15,7 @@ import { remark } from 'remark'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkMdx from 'remark-mdx'
 import { getDeployClient } from './api-client.ts'
+import { createEventPrinter, formatServerLog, streamOpencodeEvents } from './maintain-events.ts'
 import { logger, colors as c, actionableDetailFromFetchError, printActionableError } from './logger.ts'
 import {
   didGenerationPromptChange,
@@ -174,6 +175,7 @@ maintainCli
       output.log(logger.step('Starting OpenCode...'))
       const result = await runOpenCode({
         ...openCodeArgs,
+        log: (line) => output.log(line),
         model: modelChoice,
       })
       if (result instanceof Error) runError = result
@@ -213,6 +215,7 @@ maintainCli
           output.log(logger.step('Starting OpenCode...'))
           const result = await runOpenCode({
             ...openCodeArgs,
+            log: (line) => output.log(line),
             model: {
               kind: 'hosted',
               apiKey: run.apiKey,
@@ -343,7 +346,9 @@ async function runOpenCode({
   release,
   githubActions,
   model,
+  log,
 }: {
+  log: (line: string) => void
   repoRoot: string
   pages: MaintainPage[]
   runPrompt?: string
@@ -399,6 +404,7 @@ async function runOpenCode({
   const server = await startOpencodeServer({
     signal: controller.signal,
     env: githubActions?.env,
+    onLog: (line) => log(formatServerLog(line)),
     config: {
       model: `${providerId}/${modelId}`,
       provider: model.kind === 'hosted'
@@ -418,6 +424,7 @@ async function runOpenCode({
     clearTimeout(timeout)
     return server
   }
+  const events = new AbortController()
   try {
     const client = createMaintainClient({ baseUrl: server.url, directory: repoRoot })
     const session = await client.session.create({
@@ -425,6 +432,12 @@ async function runOpenCode({
       model: { id: modelId, providerID: providerId },
       permission,
     }, { throwOnError: true })
+    void streamOpencodeEvents({
+      client,
+      directory: repoRoot,
+      signal: events.signal,
+      printer: createEventPrinter({ repoRoot, rootSessionID: session.data.id, write: log }),
+    }).catch((error) => log(c.dim(`  opencode event stream stopped: ${error instanceof Error ? error.message : String(error)}`)))
 
     const system = buildMaintainSystemPrompt({ gitDiffRange })
     const prompt = buildMaintainUserPrompt({
@@ -467,6 +480,7 @@ async function runOpenCode({
     })
   } finally {
     clearTimeout(timeout)
+    events.abort()
     await server.close()
   }
 }
@@ -499,14 +513,18 @@ export async function startOpencodeServer({
   config,
   signal,
   env,
+  onLog,
   startTimeoutMs = 30_000,
 }: {
   config: OpencodeConfig
   signal?: AbortSignal
   env?: Record<string, string>
+  /** Receives server warnings and errors (`--print-logs --log-level WARN`) after startup. */
+  onLog?: (line: string) => void
   startTimeoutMs?: number
 }): Promise<{ url: string; pid: number; close: () => Promise<void> } | Error> {
-  const proc = spawn(resolveOpencodeBinary(), ['serve', '--hostname=127.0.0.1', '--port=0'], {
+  const logArgs = onLog ? ['--print-logs', '--log-level=WARN'] : []
+  const proc = spawn(resolveOpencodeBinary(), ['serve', '--hostname=127.0.0.1', '--port=0', ...logArgs], {
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
     env: { ...process.env, ...env, OPENCODE_CONFIG_CONTENT: JSON.stringify(config) },
@@ -557,6 +575,15 @@ export async function startOpencodeServer({
   if (url instanceof Error) {
     await close()
     return new Error('OpenCode server failed to start.', { cause: url })
+  }
+  if (onLog) {
+    let pending = ''
+    proc.stderr?.on('data', (chunk: Buffer) => {
+      pending += chunk.toString()
+      const lines = pending.split('\n')
+      pending = lines.pop() ?? ''
+      for (const line of lines) if (line.trim()) onLog(line.trim())
+    })
   }
   return { url, pid: proc.pid!, close }
 }
