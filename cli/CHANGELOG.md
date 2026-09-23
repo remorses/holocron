@@ -1,3 +1,19 @@
+## 0.22.3
+
+1. **`holocron maintain` no longer fails with `fetch failed` after five minutes.** Node's `fetch` gave up on OpenCode's blocking prompt response after 5 minutes, so long runs on hosted models never finished. The OpenCode client now disables the undici headers and body timeouts, so runs can use the full 25 minute budget. A run that exceeds 25 minutes reports the timeout instead of a generic failure.
+
+2. **`holocron maintain` no longer hangs after finishing.** The OpenCode server was started through pnpm's `.bin/opencode` shell shim, so stopping it left the real process running and the CI job hung until timeout. The CLI now spawns the pinned `opencode` binary directly and waits for it to exit.
+
+3. **Provider errors fail the run.** When the OpenCode turn ends with an auth, rate limit, context overflow, or API error, `holocron maintain` now fails with a clear error. Before, it printed "Documentation is already current." and exited 0.
+
+4. **Maintain verifies the pull request in GitHub Actions.** If pages were updated but not committed, the branch was not pushed, or no pull request was opened, the job fails with a clear message. On success it prints the pull request URL.
+
+   Pull request events now open the docs PR into the PR head branch instead of always `main`. Schedule and manual runs target the repository default branch instead of a hard-coded `main`.
+
+5. **Tighter permissions in GitHub Actions.** OpenCode may only push the `holocron/maintain-*` branch it creates. `gh` is limited to `gh pr create`, `gh pr view`, `gh pr list`, and `gh auth status`.
+
+6. **Maintain commits are authored by `holocron.so <bot@holocron.so>`.** The identity is set through `GIT_AUTHOR_*` / `GIT_COMMITTER_*` env vars, so it never falls back to `github-actions[bot]` and the repo git config is untouched. PR bodies end with `*PR opened by [holocron.so](https://holocron.so)*`.
+
 ## 0.22.2
 
 1. **Print the real OpenCode error when Maintain fails**, instead of `{}`.

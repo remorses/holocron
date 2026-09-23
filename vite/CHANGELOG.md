@@ -1,5 +1,54 @@
 # @holocron.so/vite
 
+## 0.36.0
+
+1. **New `FAQ` and `FAQ.Item` MDX components.** `FAQ` renders a divider-separated question list where each row expands inline. When the site assistant is enabled, a trailing ask row lets readers type their own question; the answer is generated from the docs and shown under the input. Editing the question re-arms the arrow to ask again. Ask requests are ephemeral and never touch the chat drawer session.
+
+   ```mdx
+   <FAQ askPlaceholder="Ask anything about Holocron...">
+     <FAQ.Item question="What is Holocron?">
+       A Vite plugin that turns MDX files and a docs.json into a docs site.
+     </FAQ.Item>
+   </FAQ>
+   ```
+
+   See the [FAQ docs](https://holocron.so/docs/components/faq).
+
+2. **Every page now has exactly one H1, plus default Open Graph tags.** Docs pages that opened with `##` previously shipped with **no H1**. The generated title is now always injected as the H1 unless the page uses `<Above>` or `hideTitle`. Open Graph now always includes `og:type` (`website` on `/`, `article` elsewhere) and `og:url` (the canonical absolute page URL). Frontmatter still overrides both.
+
+3. **Broken `docs.json` links fail the build.** Production builds already failed on broken MDX links. Footer, navbar, and anchor hrefs in `docs.json` are now validated the same way, so a footer link to a missing page fails the build instead of going live as a 404.
+
+4. **Page titles use a hyphen separator.** `<title>` is now `Page Title - Site Name` instead of `Page Title — Site Name`. The hyphen is narrower, so less of the title gets truncated in Google results. The 404 page title uses the same separator.
+
+5. **Frosted floating Ask AI pill, desktop and tablet only.** The band under the floating pill now uses a masked `backdrop-filter: blur()` instead of a `--background` color gradient, so images, colored blocks and dark code no longer get a tint at the bottom of the viewport. The floating pill and its frost now render only at `lg` and up; phones no longer show the floating pill at all. The pill clearance is now **60px** of padding under the footer instead of empty space on the page.
+
+6. **AI chat drawer is full screen on mobile.** On phones the open chat is edge to edge with no inset gap. The pill width is capped to the viewport instead of `100vw`, so it no longer overflows when focused. Desktop keeps the rounded side panel.
+
+7. **Quieter AI chat tool calls.** Tool rows use a `└` tree glyph, smaller muted monospace, and tighter spacing between consecutive calls, so they sit behind the answer instead of competing with it.
+
+8. **Right aside stays on MCP and OpenAPI tabs in compact layout.** Compact still applies to authored docs pages. Every page in an MCP or OpenAPI tab, including authored overview pages, uses the default three-column frame so request examples and the aside stay visible. Short MCP and API pages keep the left nav pinned.
+
+9. **`VideoBackgroundShader` opacity fixes.** `canvasClassName` opacity classes now apply after the canvas fades in; before, an inline `opacity: 1` overrode them. The `dotAlphaMultiplier` prop (0-1, default 1) is now documented for washing the dots out without fading the whole canvas:
+
+   ```mdx
+   <VideoBackgroundShader
+     src="/hero-bg.mp4"
+     canvasClassName="dark:opacity-60 opacity-40"
+     dotAlphaMultiplier={0.4}
+   />
+   ```
+
+10. **Holocron logo is an inline SVG.** The wordmark in AI chat, login, and the dashboard now inherits `currentColor`, so it follows light and dark text.
+
+11. **Removed the DialKit config panel.** The live docs.json tweak pane on dev and preview subdomains is gone, and `dialkit` is no longer in the client bundle. The dashboard live preview still works through `?configOverride=` and the `config-override` postMessage listener.
+
+12. **Fixed dotted MDX components.** `<Tree.Folder>`, `<Tree.File>`, `<Color.Row>` and `<Color.Item>` no longer render as "Unsupported jsx component".
+
+13. **Code-block bleed keeps a gap to the right sidebar.** With a tight `layout.columnGap`, fenced code no longer sits flush against the Ask AI widget. Bleed now leaves a 16px gap to the adjacent column. The default 60px gap is unchanged.
+
+14. **Sidebar search highlight only shows while the input is focused.** The arrow-key active-row highlight no longer stays painted after the search input loses focus.
+
+
 ## 0.35.2
 
 1. **Keep sidebar search compact.** Parent pages of heading hits stay visible. Sibling pages and sibling headings hide. **Search with AI chat** sits at the top of the filtered tree.
