@@ -76,8 +76,8 @@ export function createEventPrinter({
 
 export function formatToolPart(part: ToolPart, repoRoot: string) {
   const { state } = part
-  const summary = summarizeToolInput(part.tool, state.input, repoRoot)
-  const duration = 'time' in state && 'end' in state.time
+  const summary = summarizeToolInput({ tool: part.tool, input: state.input, repoRoot })
+  const duration = state.status === 'completed' || state.status === 'error'
     ? c.dim(` ${formatDuration(state.time.end - state.time.start)}`)
     : ''
   if (state.status === 'error') {
@@ -87,7 +87,7 @@ export function formatToolPart(part: ToolPart, repoRoot: string) {
   return `${c.green('└')} ${c.bold(part.tool)} ${summary}${duration}`
 }
 
-export function summarizeToolInput(tool: string, input: Record<string, unknown>, repoRoot: string) {
+export function summarizeToolInput({ tool, input, repoRoot }: { tool: string; input: ToolPart['state']['input']; repoRoot: string }) {
   const str = (key: string) => typeof input[key] === 'string' ? input[key] : undefined
   const rel = (file: string | undefined) => file && path.isAbsolute(file) ? path.relative(repoRoot, file) || '.' : file
   const value = (() => {
@@ -104,7 +104,8 @@ export function summarizeToolInput(tool: string, input: Record<string, unknown>,
       default: return JSON.stringify(input)
     }
   })()
-  return truncate(firstLine(value ?? ''), MAX_SUMMARY)
+  const line = firstLine(value ?? '')
+  return line.length > MAX_SUMMARY ? `${line.slice(0, MAX_SUMMARY - 1)}…` : line
 }
 
 // Subscribes before the prompt starts and prints until `signal` aborts.
@@ -138,15 +139,14 @@ function firstLine(text: string) {
   return lines.length > 1 ? `${lines[0]} …` : lines[0] ?? ''
 }
 
-function truncate(text: string, max: number) {
-  return text.length > max ? `${text.slice(0, max - 1)}…` : text
-}
-
 function truncateLines(text: string, max: number) {
   const lines = text.split('\n')
   if (lines.length <= max) return lines
   return [...lines.slice(0, max), `… ${lines.length - max} more lines`]
 }
+
+// Fields that repeat on every line or are already shown by holocron (model, session ids).
+const HIDDEN_LOG_FIELDS = new Set(['timestamp', 'run', 'level', 'message', 'session.id', 'providerID', 'modelID', 'small', 'mode'])
 
 // OpenCode server logs are logfmt: `timestamp=… level=WARN run=… message="…" key=value`.
 // Drops timestamp and run id, colors the level, and keeps the remaining fields.
@@ -159,7 +159,7 @@ export function formatServerLog(line: string) {
   const get = (key: string) => fields.find((field) => field.key === key)?.value
   const level = get('level') ?? 'LOG'
   const rest = fields
-    .filter((field) => !['timestamp', 'run', 'level', 'message'].includes(field.key))
+    .filter((field) => !HIDDEN_LOG_FIELDS.has(field.key))
     .map((field) => `${field.key}=${field.value}`)
     .join(' ')
   const tag = level === 'ERROR' ? c.red(level) : c.yellow(level)

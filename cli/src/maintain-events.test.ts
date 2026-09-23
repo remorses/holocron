@@ -9,8 +9,8 @@ const plain = (text: string) => stripVTControlCharacters(text)
 
 describe('formatServerLog', () => {
   test('drops timestamp and run id, keeps message and fields', () => {
-    const line = 'timestamp=2026-09-23T11:24:50.706Z level=ERROR run=9ebc9cc1 message="stream error" providerID=holocron agent=general error.error="AI_APICallError: Rate limit exceeded."'
-    expect(plain(formatServerLog(line))).toMatchInlineSnapshot(`"  opencode ERROR stream error providerID=holocron agent=general error.error=AI_APICallError: Rate limit exceeded."`)
+    const line = 'timestamp=2026-09-23T11:24:50.706Z level=ERROR run=9ebc9cc1 message="stream error" providerID=holocron modelID=deepseek-v4-flash session.id=ses_1 small=false agent=general mode=subagent error.error="AI_APICallError: Rate limit exceeded."'
+    expect(plain(formatServerLog(line))).toMatchInlineSnapshot(`"  opencode ERROR stream error agent=general error.error=AI_APICallError: Rate limit exceeded."`)
   })
 })
 

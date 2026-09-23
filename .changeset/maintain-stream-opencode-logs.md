@@ -9,5 +9,5 @@
   [task 1] └ read cli/src/maintain.ts 34ms
   [task 1] └ edit website/src/pages/maintain/index.mdx 2ms
   ✗ bash git push origin main 3ms → The user has specified a rule which prevents you from using this specific tool call.
-  opencode ERROR stream error providerID=holocron agent=general error.error=AI_APICallError: Rate limit exceeded.
+  opencode ERROR stream error agent=general error.error=AI_APICallError: Rate limit exceeded.
 ```
