@@ -53,6 +53,7 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.0.0",
+    "@octokit/rest": "^22.0.1",
     "@opencode-ai/sdk": "1.18.5",
     "fflate": "^0.8.2",
     "goke": "^6.14.0",

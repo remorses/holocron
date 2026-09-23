@@ -4,13 +4,13 @@ prompt: |
   Write GitHub Actions examples from @/cli/src/maintain.ts and @/cli/src/maintain-github.ts.
   Cover default-branch pushes, schedules, OIDC authentication, and full Git history.
   Explain that no-args `holocron maintain` on a push reads before and after SHAs from GITHUB_EVENT_PATH and diffs that whole push, not HEAD~1.
-  Explain that in GitHub Actions the session prompt tells OpenCode to create holocron/maintain-<timestamp> and open a PR when MDX files change. Never update main or other existing branches.
+  Explain that in GitHub Actions the CLI creates holocron/maintain-<timestamp> before OpenCode starts. OpenCode commits the changed MDX pages and must end by running the hidden `holocron maintain-open-pr` or `holocron maintain-no-changes` command. The CLI then pushes the branch and opens the PR with Octokit. Never update main or other existing branches.
   Contrast with the parent-agent flow on @/website/src/pages/maintain/index.mdx, where Maintain only edits MDX and the parent opens the PR.
   Cover the default Holocron-hosted model (Pro + OIDC) and `--model provider/model` BYOK with provider env vars from OpenCode providers docs.
   Do not document --pull-request. Do not document a pull_request workflow that commits onto the existing PR branch.
 title: Run documentation maintenance in GitHub Actions
 sidebarTitle: GitHub Actions
-description: No-args Maintain on a push diffs that push's before and after SHAs, then OpenCode opens a pull request when MDX pages change.
+description: No-args Maintain on a push diffs that push's before and after SHAs, then opens a pull request when MDX pages change.
 icon: lucide:github
 ---
 
@@ -18,28 +18,28 @@ This is the **GitHub Actions** path. Maintain reads the push event, updates matc
 
 GitHub Actions provides the **Git range, repository identity, OIDC authentication, and GitHub token**. No stored Holocron key is needed.
 
-On a GitHub Actions run, Maintain adds **publish instructions to the session prompt**. OpenCode updates the selected MDX pages, then opens a pull request when those files changed. Local and parent-agent runs do not get those instructions, so they never create a branch or pull request.
+On a GitHub Actions run, Maintain creates the branch first. OpenCode updates and **commits** the selected MDX pages, then reports the outcome with one of two commands: `holocron maintain-open-pr` (pages changed) or `holocron maintain-no-changes`. Maintain then validates the pages, pushes the branch, and opens the pull request itself. If OpenCode runs neither command, the job fails. Local and parent-agent runs never create a branch or pull request.
 
 ```diagram
   push to main
         │
         v
-  holocron maintain
+  holocron maintain  ──> creates holocron/maintain-<timestamp>
         │
         v
   OpenCode updates MDX pages
         │
-        ├── no MDX changes ──> stop
+        ├── no MDX changes ──> maintain-no-changes, stop
         └── MDX files changed
                 │
                 v
-         branch holocron/maintain-<timestamp>
+         OpenCode commits, runs maintain-open-pr
                 │
                 v
-         gh pr create into main
+         Maintain pushes, opens the PR into main
 ```
 
-Keep **`GITHUB_TOKEN`** on the Maintain step so OpenCode can push the new branch and open the pull request. Leave checkout credentials enabled. Do not set `persist-credentials: false`.
+Keep **`GITHUB_TOKEN`** on the Maintain step so Maintain can push the new branch and open the pull request. Leave checkout credentials enabled. Do not set `persist-credentials: false`.
 
 ## After every main-branch push
 
@@ -64,7 +64,7 @@ That range is the **whole push**. Five commits in one push all count. It is not 
 
 Checkout needs **`fetch-depth: 0`** so those SHAs exist locally. A new-branch push has `before` all zeros. Maintain then uses `git diff-tree --root` on `after`.
 
-If MDX files change, OpenCode creates **`holocron/maintain-<timestamp>`** and opens one pull request into `main`. It never commits on `main` or on any other existing branch. Each commit is authored by `holocron.so <bot@holocron.so>` (set in code through git author env vars, not by editing your repo's git config), and the PR body ends with the line *PR opened by [holocron.so](https://holocron.so)*.
+If MDX files change, the commit lands on **`holocron/maintain-<timestamp>`** and Maintain opens one pull request into `main`. Nothing is committed on `main` or on any other existing branch. Each commit is authored by `holocron.so <bot@holocron.so>` (set in code through git author env vars, not by editing your repo's git config), and the PR body ends with the line *PR opened by [holocron.so](https://holocron.so)*.
 
 ```yaml
 name: Maintain documentation
@@ -91,7 +91,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 ```
 
-`contents: write` lets OpenCode create the maintain branch. `pull-requests: write` lets it open the pull request. `id-token: write` authenticates Holocron over OIDC.
+`contents: write` lets Maintain push the maintain branch. `pull-requests: write` lets it open the pull request. `id-token: write` authenticates Holocron over OIDC.
 
 Protect `main` with a ruleset that requires a pull request and does not let GitHub Actions bypass it. The token can still create `holocron/maintain-*` branches.
 
@@ -146,7 +146,7 @@ The workflows above use the **Holocron-hosted model** and bill the project's Pro
 
 To run **Anthropic, OpenAI, or any other OpenCode provider**, pass `--model provider/model` and set that provider's env var. Holocron auth is not used. See the OpenCode **[providers](https://opencode.ai/docs/providers/)** page for the supported keys.
 
-Use a **dedicated provider key**. The OpenCode session can run `git` and `gh`, and it can read the environment.
+Use a **dedicated provider key**. The OpenCode session can run `git add`, `git commit`, and read-only git commands, and it can read the environment.
 
 ```yaml
 - run: npx -y "@holocron.so/cli" maintain --model anthropic/claude-sonnet-4-5
@@ -155,4 +155,4 @@ Use a **dedicated provider key**. The OpenCode session can run `git` and `gh`, a
     GITHUB_TOKEN: ${{ github.token }}
 ```
 
-You can drop `id-token: write` when the Holocron-hosted model is not used. Keep `contents: write` and `pull-requests: write` so OpenCode can still open the pull request.
+You can drop `id-token: write` when the Holocron-hosted model is not used. Keep `contents: write` and `pull-requests: write` so Maintain can still open the pull request.

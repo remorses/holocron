@@ -2,6 +2,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import * as clack from '@clack/prompts'
 import { createOpencodeClient } from '@opencode-ai/sdk/v2/client'
@@ -25,20 +26,21 @@ import {
   getHeadSha,
   getWorkingTreeChanges,
   extractPromptReferences,
-  findPullRequestUrl,
-  remoteBranchExists,
   hasMissingLocalReferences,
   matchChangedReferences,
   type MaintainPage,
 } from './maintain-discovery.ts'
-import { loadGithubEvent, type GithubMaintainRelease } from './maintain-github.ts'
+import {
+  loadGithubEvent,
+  openMaintainPullRequest,
+  prepareMaintainBranch,
+  readMaintainResult,
+  type GithubMaintainRelease,
+  type MaintainState,
+} from './maintain-github.ts'
 
 const RUN_TIMEOUT_MS = 25 * 60 * 1000
 const HOSTED_PROVIDER = 'holocron'
-// Commit identity for GitHub Actions runs. Set via git env vars so every commit
-// OpenCode makes is authored by Holocron, regardless of the repo's git config.
-const MAINTAIN_GIT_NAME = 'holocron.so'
-const MAINTAIN_GIT_EMAIL = 'bot@holocron.so'
 const require = createRequire(import.meta.url)
 const BYOK_MODEL_EXAMPLE = 'anthropic/claude-sonnet-4-5'
 const EMPTY_MODEL_MESSAGE = `Pass a model id, for example glm-5.3-flash or ${BYOK_MODEL_EXAMPLE}.`
@@ -131,13 +133,23 @@ maintainCli
     const beforeChangedFiles = new Set(getWorkingTreeChanges(repoRoot))
     const startSha = getHeadSha(repoRoot)
     const patches = range ? getChangedPatches(repoRoot, range, changedFiles) : ''
-    const githubActions = process.env.GITHUB_ACTIONS === 'true'
+    const githubState: MaintainState | undefined = process.env.GITHUB_ACTIONS === 'true'
       ? {
+        repoRoot,
+        baseSha: startSha,
         branch: `holocron/maintain-${Date.now()}`,
         // For pull_request events baseBranch is the PR head, so docs land inside that PR.
         targetBranch: githubEvent?.baseBranch ?? 'main',
+        pages: selectedPages.map((page) => page.path),
       }
       : undefined
+    const githubActions = githubState
+      ? prepareMaintainBranch({ state: githubState, binPath: fileURLToPath(new URL('./bin.js', import.meta.url)) })
+      : undefined
+    if (githubActions instanceof Error) {
+      output.error(logger.error(githubActions.message))
+      return proc.exit(1)
+    }
     const openCodeArgs = {
       repoRoot,
       pages: selectedPages,
@@ -147,9 +159,12 @@ maintainCli
       patches,
       gitDiffRange: range ? gitDiffRangeSpec(range) : undefined,
       release: githubEvent?.release,
-      githubActions,
+      githubActions: githubState && githubActions
+        ? { branch: githubState.branch, targetBranch: githubState.targetBranch, env: githubActions.env }
+        : undefined,
     }
     let runError: Error | undefined
+    let finalText = ''
 
     if (modelChoice.kind === 'byok') {
       if (options.project) {
@@ -162,6 +177,7 @@ maintainCli
         model: modelChoice,
       })
       if (result instanceof Error) runError = result
+      else finalText = result.finalText
     } else {
       let clientResult: Awaited<ReturnType<typeof getDeployClient>>
       try {
@@ -207,6 +223,7 @@ maintainCli
             },
           })
           if (result instanceof Error) runError = result
+          else finalText = result.finalText
         }
       } finally {
         const completionClient = clientResult.auth.type === 'github-oidc'
@@ -245,27 +262,41 @@ maintainCli
       output.error(logger.error(validation.message))
       return proc.exit(1)
     }
-    if (changedPages.length === 0) {
-      output.log(logger.success('Documentation is already current.'))
+    if (!githubState || !githubActions) {
+      output.log(logger.success(changedPages.length === 0
+        ? 'Documentation is already current.'
+        : `Updated ${changedPages.length} page${changedPages.length === 1 ? '' : 's'}.`))
       return
     }
 
+    // OpenCode must end by running maintain-open-pr or maintain-no-changes. No result means it stopped early.
+    const result = readMaintainResult(githubActions.stateDir)
+    if (!result) {
+      output.error(logger.error('OpenCode finished without running `holocron maintain-open-pr` or `holocron maintain-no-changes`.'))
+      if (finalText.trim()) output.error(`OpenCode's last message:\n${finalText.trim()}`)
+      return proc.exit(1)
+    }
+    if (result.kind === 'no-changes') {
+      if (changedPages.length > 0) {
+        output.error(logger.error(`OpenCode reported no changes but changed ${changedPages.map((page) => page.path).join(', ')}.`))
+        return proc.exit(1)
+      }
+      output.log(logger.success(`Documentation is already current. ${result.reason}`.trim()))
+      return
+    }
+    const uncommitted = working.filter((file) => githubState.pages.includes(file))
+    if (uncommitted.length > 0) {
+      output.error(logger.error(`OpenCode left these pages uncommitted: ${uncommitted.join(', ')}`))
+      return proc.exit(1)
+    }
+    if (changedPages.length === 0) {
+      output.error(logger.error('OpenCode asked for a pull request but no selected page changed.'))
+      return proc.exit(1)
+    }
     output.log(logger.success(`Updated ${changedPages.length} page${changedPages.length === 1 ? '' : 's'}.`))
-    if (!githubActions) return
-
-    // OpenCode was told to push the maintain branch and open a PR. A green job with no PR is a silent failure.
-    if (working.some((file) => selectedPages.some((page) => page.path === file))) {
-      output.error(logger.error(`OpenCode updated pages but left them uncommitted. Expected a commit on ${githubActions.branch}.`))
-      return proc.exit(1)
-    }
-    if (!remoteBranchExists(repoRoot, githubActions.branch)) {
-      output.error(logger.error(`OpenCode committed the pages but did not push ${githubActions.branch}.`))
-      return proc.exit(1)
-    }
-    const pullRequestUrl = findPullRequestUrl(repoRoot, githubActions.branch)
-    if (!pullRequestUrl) {
-      output.error(logger.error(`OpenCode pushed ${githubActions.branch} but did not open a pull request into ${githubActions.targetBranch}.`))
-      output.error(logger.error('Enable "Allow GitHub Actions to create and approve pull requests" in the repository Actions settings.'))
+    const pullRequestUrl = await openMaintainPullRequest({ state: githubState, title: result.title, body: result.body })
+    if (pullRequestUrl instanceof Error) {
+      output.error(logger.error(pullRequestUrl.message))
       return proc.exit(1)
     }
     output.log(logger.success(`Opened ${pullRequestUrl}`))
@@ -334,7 +365,7 @@ async function runOpenCode({
   patches: string
   gitDiffRange?: string
   release?: GithubMaintainRelease
-  githubActions?: { branch: string; targetBranch: string }
+  githubActions?: { branch: string; targetBranch: string; env: Record<string, string> }
   model:
     | {
       kind: 'hosted'
@@ -357,17 +388,15 @@ async function runOpenCode({
     { permission: 'todowrite', pattern: '*', action: 'allow' as const },
     { permission: 'bash', pattern: 'git diff *', action: 'allow' as const },
     { permission: 'bash', pattern: 'git log *', action: 'allow' as const },
-    // Last matching rule wins. Only the maintain branch may be pushed; gh is limited to PR create/read.
+    // In GitHub Actions the parent session commits on the branch the CLI created, then records the outcome.
     ...(githubActions
       ? [
-        { permission: 'bash', pattern: 'git *', action: 'allow' as const },
-        { permission: 'bash', pattern: 'git push *', action: 'deny' as const },
-        { permission: 'bash', pattern: `git push * ${githubActions.branch}`, action: 'allow' as const },
-        { permission: 'bash', pattern: `git push * HEAD:${githubActions.branch}`, action: 'allow' as const },
-        { permission: 'bash', pattern: 'gh pr create *', action: 'allow' as const },
-        { permission: 'bash', pattern: 'gh pr view *', action: 'allow' as const },
-        { permission: 'bash', pattern: 'gh pr list *', action: 'allow' as const },
-        { permission: 'bash', pattern: 'gh auth status *', action: 'allow' as const },
+        { permission: 'bash', pattern: 'git status *', action: 'allow' as const },
+        { permission: 'bash', pattern: 'git show *', action: 'allow' as const },
+        { permission: 'bash', pattern: 'git add *', action: 'allow' as const },
+        { permission: 'bash', pattern: 'git commit *', action: 'allow' as const },
+        { permission: 'bash', pattern: 'holocron maintain-open-pr *', action: 'allow' as const },
+        { permission: 'bash', pattern: 'holocron maintain-no-changes *', action: 'allow' as const },
       ]
       : []),
     ...pages.flatMap((page) => [
@@ -383,15 +412,7 @@ async function runOpenCode({
   const modelId = model.modelId
   const server = await startOpencodeServer({
     signal: controller.signal,
-    // Author every maintain commit as Holocron. Git honors these over user config.
-    env: githubActions
-      ? {
-        GIT_AUTHOR_NAME: MAINTAIN_GIT_NAME,
-        GIT_AUTHOR_EMAIL: MAINTAIN_GIT_EMAIL,
-        GIT_COMMITTER_NAME: MAINTAIN_GIT_NAME,
-        GIT_COMMITTER_EMAIL: MAINTAIN_GIT_EMAIL,
-      }
-      : undefined,
+    env: githubActions?.env,
     config: {
       model: `${providerId}/${modelId}`,
       provider: model.kind === 'hosted'
@@ -447,6 +468,7 @@ async function runOpenCode({
         detail: message ? ` ${message}` : '',
       })
     }
+    return { finalText: result.data.parts.flatMap((part) => part.type === 'text' ? [part.text] : []).join('\n') }
   } catch (error) {
     if (controller.signal.aborted) {
       return new Error(`OpenCode did not finish within ${RUN_TIMEOUT_MS / 60_000} minutes.`)
@@ -585,22 +607,24 @@ function githubActionsPublishPrompt({
   targetBranch: string
 }) {
   return dedent`
-    You are running in GitHub Actions.
+    You are running in GitHub Actions on the branch ${branch}, created for this run. Holocron pushes it and opens the pull request into ${targetBranch} after you finish.
 
-    After the page updates finish, if any selected MDX files were updated, publish them. If none were updated, do not create a branch, commit, or pull request.
+    After the tasks finish, you must run exactly one of these two commands. The run fails if you run neither.
 
-    The commit author identity is already set for you through the environment. Do not run git config to change user.name or user.email.
+    If any selected MDX pages changed:
+    1. Commit only the changed MDX pages with git add and git commit. The commit author is already set through the environment. Do not run git config.
+    2. Run this, with the pull request body on stdin:
+       holocron maintain-open-pr --title "<title>" <<'EOF'
+       - short bullet for each change
+       EOF
+       Title: short. Prefix with [holocron], unless this repository has a clear commit title convention in git log, then follow that.
+       Body: a short bullet list of the changes. No headings.
 
-    If files were updated:
-    1. Create and switch to this new branch before any commit: ${branch}
-    2. Commit only the updated MDX files
-    3. Push only that branch. Never push to ${targetBranch}. Never push to any other existing branch. Never commit on ${targetBranch}.
-    4. Open one pull request into ${targetBranch} with gh pr create.
-       Title: short. Prefix with [holocron], unless this repository already has a clear PR title convention, then follow that.
-       Body: a short bullet list of the changes. No headings. End the body with an empty line followed by exactly this line:
-       *PR opened by [holocron.so](https://holocron.so)*
+    If no selected page needed changes:
+       Run: holocron maintain-no-changes --reason "<one sentence>"
 
-    Do this yourself after tasks finish. Do not ask tasks to commit, create branches, or open pull requests.
+    Never push, switch branches, or run gh. If a holocron command fails, fix what it reports and run it again.
+    Do the commit and the command yourself. Do not ask tasks to commit.
   `
 }
 

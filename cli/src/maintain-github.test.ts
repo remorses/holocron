@@ -1,7 +1,12 @@
-// Tests GitHub event ranges used to select Maintain pages.
+// Tests GitHub event ranges used to select Maintain pages, and the hidden publish commands.
 
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import childProcess from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
-import { parseGithubEvent } from './maintain-github.ts'
+import { parseGithubEvent, prepareMaintainBranch, readMaintainResult } from './maintain-github.ts'
 
 describe('maintain GitHub events', () => {
   test('uses the exact before and after range for pushes', () => {
@@ -89,5 +94,64 @@ describe('maintain GitHub events', () => {
         "runId": "44",
       }
     `)
+  })
+})
+
+const OPEN_PR = `holocron maintain-open-pr --title "[holocron] Update page" <<'EOF'\n- change\nEOF`
+
+describe('maintain publish commands', () => {
+  function setup() {
+    const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-publish-'))
+    const git = (...args: string[]) => childProcess.execFileSync('git', args, { cwd: repo, encoding: 'utf8' }).trim()
+    git('init', '-b', 'main')
+    git('config', 'user.name', 'someone')
+    git('config', 'user.email', 'someone@example.com')
+    fs.writeFileSync(path.join(repo, 'page.mdx'), 'old\n')
+    git('add', '.')
+    git('commit', '-m', 'init')
+    const prepared = prepareMaintainBranch({
+      state: { repoRoot: repo, baseSha: git('rev-parse', 'HEAD'), branch: 'holocron/maintain-1', targetBranch: 'main', pages: ['page.mdx'] },
+      // Node 24 strips types, so the shim can run the TypeScript entry directly.
+      binPath: fileURLToPath(new URL('./bin.ts', import.meta.url)),
+    })
+    if (prepared instanceof Error) throw prepared
+    // Same shell environment OpenCode's bash tool gets: `holocron` resolves through the shim on PATH.
+    const sh = (command: string) => {
+      const out = childProcess.spawnSync('sh', ['-c', command], { cwd: repo, encoding: 'utf8', env: { ...process.env, ...prepared.env } })
+      return `exit ${out.status}: ${(out.stdout + out.stderr).trim()}`
+    }
+    return { repo, git, sh, stateDir: prepared.stateDir }
+  }
+
+  test('open-pr requires committed pages, then records the pull request', () => {
+    const { repo, git, sh, stateDir } = setup()
+    expect(git('branch', '--show-current')).toMatchInlineSnapshot(`"holocron/maintain-1"`)
+    expect(sh(OPEN_PR)).toMatchInlineSnapshot(`"exit 1: No commits on holocron/maintain-1. Commit the updated pages first, or run holocron maintain-no-changes."`)
+    fs.writeFileSync(path.join(repo, 'page.mdx'), 'new\n')
+    expect(sh(OPEN_PR)).toMatchInlineSnapshot(`"exit 1: Commit these pages first: page.mdx"`)
+    expect(readMaintainResult(stateDir)).toMatchInlineSnapshot(`undefined`)
+    expect(sh('git add page.mdx && git commit -q -m "Update page" && git log -1 --format="%an <%ae>"')).toMatchInlineSnapshot(`"exit 0: holocron.so <bot@holocron.so>"`)
+    expect(sh(OPEN_PR)).toMatchInlineSnapshot(`"exit 0: Recorded. Holocron pushes holocron/maintain-1 and opens the pull request into main after this session."`)
+    expect(readMaintainResult(stateDir)).toMatchInlineSnapshot(`
+      {
+        "body": "- change
+      ",
+        "kind": "pull-request",
+        "title": "[holocron] Update page",
+      }
+    `)
+  })
+
+  test('no-changes is rejected once pages were committed', () => {
+    const { repo, sh, stateDir } = setup()
+    expect(sh('holocron maintain-no-changes --reason "Sources did not affect the page."')).toMatchInlineSnapshot(`"exit 0: Recorded. No pull request will be opened."`)
+    expect(readMaintainResult(stateDir)).toMatchInlineSnapshot(`
+      {
+        "kind": "no-changes",
+        "reason": "Sources did not affect the page.",
+      }
+    `)
+    fs.writeFileSync(path.join(repo, 'page.mdx'), 'new\n')
+    expect(sh('git commit -q -am "Update page" && holocron maintain-no-changes --reason "none"')).toMatchInlineSnapshot(`"exit 1: Pages were changed. Commit them and run holocron maintain-open-pr instead."`)
   })
 })

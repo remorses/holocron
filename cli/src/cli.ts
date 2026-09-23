@@ -8,6 +8,7 @@ import { loginCli } from './login.ts'
 import { keysCli } from './keys.ts'
 import { projectsCli } from './projects.ts'
 import { maintainCli } from './maintain.ts'
+import { maintainPublishCli } from './maintain-github.ts'
 import { createCli } from './create.ts'
 import { deployCli } from './deploy.ts'
 import { subscribeCli } from './subscribe.ts'
@@ -25,6 +26,7 @@ export const cli = goke('holocron')
   .use(keysCli)
   .use(projectsCli)
   .use(maintainCli)
+  .use(maintainPublishCli)
   .use(createCli)
   .use(deployCli)
   .use(subscribeCli)
