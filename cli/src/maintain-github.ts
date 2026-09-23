@@ -23,8 +23,7 @@ export type GithubMaintainEvent = {
   all: boolean
   changedUrls: string[]
   range?: { from: string; to: string; pullRequest?: boolean }
-  baseBranch: string
-  headBranch?: string
+  defaultBranch: string
   existingPullRequest?: number
   release?: GithubMaintainRelease
 }
@@ -70,7 +69,7 @@ export function parseGithubEvent({
       all: false,
       range: { from: String(payload.before), to: String(payload.after) },
       changedUrls: [repositoryUrl],
-      baseBranch: String(payload.ref ?? 'refs/heads/main').replace(/^refs\/heads\//, ''),
+      defaultBranch,
     }
   }
   if (eventName === 'pull_request') {
@@ -86,8 +85,7 @@ export function parseGithubEvent({
         pullRequest: true,
       },
       changedUrls: [repositoryUrl, String(pullRequest?.html_url)],
-      baseBranch: String(pullRequest?.head?.ref),
-      headBranch: String(pullRequest?.head?.ref),
+      defaultBranch,
       existingPullRequest: Number(payload.number),
     }
   }
@@ -97,7 +95,7 @@ export function parseGithubEvent({
       runId,
       all: false,
       changedUrls: [repositoryUrl, `${repositoryUrl}/releases`, releaseUrl],
-      baseBranch: defaultBranch,
+      defaultBranch,
       release: {
         tagName: payload.release?.tag_name,
         name: payload.release?.name,
@@ -113,8 +111,20 @@ export function parseGithubEvent({
     runId,
     all: eventName === 'workflow_dispatch',
     changedUrls: [],
-    baseBranch: defaultBranch,
+    defaultBranch,
   }
+}
+
+// The pull request targets the branch that is checked out: `actions/checkout` creates a local
+// branch for push, workflow_dispatch, and `ref: <branch>`. A detached HEAD (tag, SHA, PR merge
+// ref) falls back to the release target branch, then the repository default branch.
+// prepareMaintainBranch then checks HEAD is on that branch, so a wrong guess fails early.
+export function resolveBaseBranch({ repoRoot, event }: { repoRoot: string; event: GithubMaintainEvent | undefined }) {
+  const current = git(repoRoot, ['branch', '--show-current'])
+  if (typeof current === 'string' && current) return current
+  const target = event?.release?.targetCommitish
+  if (target && !/^[0-9a-f]{40}$/.test(target)) return target.replace(/^refs\/heads\//, '')
+  return event?.defaultBranch ?? 'main'
 }
 
 export function loadGithubEvent(): GithubMaintainEvent | undefined {
@@ -179,7 +189,7 @@ export function prepareMaintainBranch({ state, binPath }: { state: MaintainState
   const onBase = git(state.repoRoot, ['merge-base', '--is-ancestor', 'HEAD', `refs/remotes/origin/${state.targetBranch}`])
   if (onBase instanceof Error) {
     return new Error(
-      `HEAD is not on origin/${state.targetBranch}, so a pull request into ${state.targetBranch} would include unrelated commits. Check out ${state.targetBranch} with fetch-depth: 0, or pass --base <branch>.`,
+      `HEAD is not on origin/${state.targetBranch}, so a pull request into ${state.targetBranch} would include unrelated commits. Check out the branch the pull request should target, with fetch-depth: 0.`,
       { cause: onBase },
     )
   }

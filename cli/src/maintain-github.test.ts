@@ -6,7 +6,7 @@ import path from 'node:path'
 import childProcess from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
-import { parseGithubEvent, prepareMaintainBranch, readMaintainResult } from './maintain-github.ts'
+import { parseGithubEvent, prepareMaintainBranch, readMaintainResult, resolveBaseBranch } from './maintain-github.ts'
 
 describe('maintain GitHub events', () => {
   test('uses the exact before and after range for pushes', () => {
@@ -18,10 +18,10 @@ describe('maintain GitHub events', () => {
     })).toMatchInlineSnapshot(`
       {
         "all": false,
-        "baseBranch": "main",
         "changedUrls": [
           "https://github.com/owner/repo",
         ],
+        "defaultBranch": "main",
         "range": {
           "from": "aaa",
           "to": "bbb",
@@ -47,13 +47,12 @@ describe('maintain GitHub events', () => {
     })).toMatchInlineSnapshot(`
       {
         "all": false,
-        "baseBranch": "feature",
         "changedUrls": [
           "https://github.com/owner/repo",
           "https://github.com/owner/repo/pull/7",
         ],
+        "defaultBranch": "main",
         "existingPullRequest": 7,
-        "headBranch": "feature",
         "range": {
           "from": "base",
           "pullRequest": true,
@@ -73,8 +72,8 @@ describe('maintain GitHub events', () => {
     })).toMatchInlineSnapshot(`
       {
         "all": false,
-        "baseBranch": "master",
         "changedUrls": [],
+        "defaultBranch": "master",
         "runId": "45",
       }
     `)
@@ -89,11 +88,41 @@ describe('maintain GitHub events', () => {
     })).toMatchInlineSnapshot(`
       {
         "all": true,
-        "baseBranch": "main",
         "changedUrls": [],
+        "defaultBranch": "main",
         "runId": "44",
       }
     `)
+  })
+})
+
+describe('resolveBaseBranch', () => {
+  test('uses the checked-out branch, else the release target, else the default branch', () => {
+    const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-base-'))
+    const git = (...args: string[]) => childProcess.execFileSync('git', args, { cwd: repo, encoding: 'utf8' }).trim()
+    git('init', '-q', '-b', 'docs')
+    git('-c', 'user.name=a', '-c', 'user.email=a@a', 'commit', '-q', '--allow-empty', '-m', 'init')
+    const event = { runId: '1', all: false, changedUrls: [], defaultBranch: 'main' }
+    const release = { ...event, release: { targetCommitish: 'release/2.x' } }
+    const releaseSha = { ...event, release: { targetCommitish: git('rev-parse', 'HEAD') } }
+    const onBranch = resolveBaseBranch({ repoRoot: repo, event: release })
+    git('checkout', '-q', '--detach')
+    expect({
+      onBranch,
+      detached: resolveBaseBranch({ repoRoot: repo, event }),
+      detachedRelease: resolveBaseBranch({ repoRoot: repo, event: release }),
+      detachedReleaseSha: resolveBaseBranch({ repoRoot: repo, event: releaseSha }),
+      noEvent: resolveBaseBranch({ repoRoot: repo, event: undefined }),
+    }).toMatchInlineSnapshot(`
+      {
+        "detached": "main",
+        "detachedRelease": "release/2.x",
+        "detachedReleaseSha": "main",
+        "noEvent": "main",
+        "onBranch": "docs",
+      }
+    `)
+    fs.rmSync(repo, { recursive: true, force: true })
   })
 })
 
@@ -129,8 +158,8 @@ describe('maintain publish commands', () => {
   }
 
   test('rejects a base branch that does not contain HEAD', () => {
-    expect(String(setup({ localCommit: true }))).toMatchInlineSnapshot(`"Error: HEAD is not on origin/main, so a pull request into main would include unrelated commits. Check out main with fetch-depth: 0, or pass --base <branch>."`)
-    expect(String(setup({ targetBranch: 'release' }))).toMatchInlineSnapshot(`"Error: HEAD is not on origin/release, so a pull request into release would include unrelated commits. Check out release with fetch-depth: 0, or pass --base <branch>."`)
+    expect(String(setup({ localCommit: true }))).toMatchInlineSnapshot(`"Error: HEAD is not on origin/main, so a pull request into main would include unrelated commits. Check out the branch the pull request should target, with fetch-depth: 0."`)
+    expect(String(setup({ targetBranch: 'release' }))).toMatchInlineSnapshot(`"Error: HEAD is not on origin/release, so a pull request into release would include unrelated commits. Check out the branch the pull request should target, with fetch-depth: 0."`)
   })
 
   test('open-pr requires committed pages, then records the pull request', () => {
