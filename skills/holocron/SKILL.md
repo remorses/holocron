@@ -746,34 +746,6 @@ npx -y "@holocron.so/cli" whoami
 If `whoami` succeeds and shows user, orgs, and projects, skip login. Only run
 `npx -y "@holocron.so/cli" login` if `whoami` fails.
 
-## www hostname
-
-For every new site on a custom domain, **301 `www` to the apex in one hop**.
-Never leave `www` on another host (Vercel, Pages, a second worker). Never use
-307. Chain `http://www` → `https://www` → apex is two hops; collapse it.
-
-On Cloudflare Workers:
-
-1. Add `www.example.com` as a `custom_domain` on the **same** worker as the apex.
-2. Redirect `www` to `https://example.com` + path + query with status **301**.
-
-```ts
-.use(({ request }, next) => {
-  const url = new URL(request.url)
-  if (!url.hostname.startsWith('www.')) return next()
-  url.hostname = url.hostname.slice('www.'.length)
-  url.protocol = 'https:'
-  throw redirect(url.toString(), { status: 301 })
-})
-```
-
-```jsonc
-"routes": [
-  { "pattern": "example.com", "custom_domain": true },
-  { "pattern": "www.example.com", "custom_domain": true }
-]
-```
-
 ## Deploy
 
 When the user asks to "deploy the site", they may mean deploying with their own

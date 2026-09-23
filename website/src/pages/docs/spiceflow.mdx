@@ -185,6 +185,40 @@ export default defineConfig({
 
 See [Cloudflare Workers deployment](/docs/deploy/cloudflare) for `wrangler.jsonc` setup and build commands.
 
+## Redirect www to the apex domain
+
+When your docs run on a custom domain, point `www` at the **same worker** as the apex and redirect it with a **301 in one hop**. Keeping `www` on a different host (Vercel, Pages, a second worker) or chaining `http://www` → `https://www` → apex adds extra redirects that slow down the first load and split link equity in search engines.
+
+Add a middleware before `.use(holocronApp)` that rewrites the hostname, forces `https`, and keeps the path and query string:
+
+```tsx
+import { Spiceflow, redirect } from 'spiceflow'
+import { app as holocronApp } from '@holocron.so/vite/app'
+
+export const app = new Spiceflow()
+  .use(({ request }, next) => {
+    const url = new URL(request.url)
+    if (!url.hostname.startsWith('www.')) return next()
+    url.hostname = url.hostname.slice('www.'.length)
+    url.protocol = 'https:'
+    throw redirect(url.toString(), { status: 301 })
+  })
+  .use(holocronApp)
+```
+
+Then register both hostnames as custom domains on the worker in `wrangler.jsonc`:
+
+```jsonc
+"routes": [
+  { "pattern": "example.com", "custom_domain": true },
+  { "pattern": "www.example.com", "custom_domain": true }
+]
+```
+
+<Note>
+Use `301`, not `307`. A permanent redirect lets browsers and crawlers cache the canonical host.
+</Note>
+
 ## Real-world examples
 
 - The [holocron.so website](https://github.com/remorses/holocron/tree/main/website) uses a custom entry with auth routes (better-auth), an AI gateway proxy, and device authorization flow alongside the docs.
