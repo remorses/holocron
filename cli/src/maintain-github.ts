@@ -131,13 +131,11 @@ export function loadGithubEvent(): GithubMaintainEvent | undefined {
 }
 
 // ── Publishing (GitHub Actions only) ─────────────────────────────────────────
-// The CLI creates the maintain branch before OpenCode starts. OpenCode edits and
-// commits the pages, then must run exactly one hidden command:
-//   holocron maintain-open-pr --title ... --body ...   (pages changed)
-//   holocron maintain-no-changes --reason ...          (nothing to update)
-// Each command validates the branch and writes result.json into the state dir.
-// After the session, the CLI requires that file, pushes, and opens the PR with Octokit.
-// A missing result.json means the model stopped early, which fails the job loudly.
+// The CLI creates the maintain branch before OpenCode starts. When pages changed,
+// OpenCode commits them and runs the hidden `holocron maintain-open-pr` command,
+// which validates the branch and writes result.json into the state dir.
+// After the session the CLI pushes and opens the PR with Octokit. No result.json
+// with changed pages means the model stopped early, which fails the job.
 
 export const MAINTAIN_STATE_DIR_ENV = 'HOLOCRON_MAINTAIN_STATE_DIR'
 export const MAINTAIN_PR_FOOTER = '*PR opened by [holocron.so](https://holocron.so)*'
@@ -156,9 +154,7 @@ export type MaintainState = {
   pages: string[]
 }
 
-export type MaintainResult =
-  | { kind: 'pull-request'; title: string; body: string }
-  | { kind: 'no-changes'; reason: string }
+export type MaintainResult = { title: string; body: string }
 
 function git(repoRoot: string, args: string[]): string | Error {
   try {
@@ -219,27 +215,18 @@ function uncommittedPages(state: MaintainState) {
 export function recordMaintainResult({ stateDir, result }: { stateDir: string | undefined; result: MaintainResult }): string | Error {
   const state = readMaintainState(stateDir)
   if (state instanceof Error) return state
-  const commits = git(state.repoRoot, ['rev-list', '--count', `${state.baseSha}..HEAD`])
-  if (commits instanceof Error) return commits
+  if (!result.title.trim()) return new Error('Pass a non-empty --title.')
   const branch = git(state.repoRoot, ['branch', '--show-current'])
   if (branch instanceof Error) return branch
   if (branch !== state.branch) return new Error(`HEAD is on ${branch || 'a detached commit'}. Switch back to ${state.branch}.`)
   const uncommitted = uncommittedPages(state)
   if (uncommitted instanceof Error) return uncommitted
-
-  if (result.kind === 'pull-request') {
-    if (!result.title.trim()) return new Error('Pass a non-empty --title.')
-    if (uncommitted.length > 0) return new Error(`Commit these pages first: ${uncommitted.join(', ')}`)
-    if (commits === '0') return new Error(`No commits on ${state.branch}. Commit the updated pages first, or run holocron maintain-no-changes.`)
-  } else {
-    if (commits !== '0' || uncommitted.length > 0) {
-      return new Error('Pages were changed. Commit them and run holocron maintain-open-pr instead.')
-    }
-  }
+  if (uncommitted.length > 0) return new Error(`Commit these pages first: ${uncommitted.join(', ')}`)
+  const commits = git(state.repoRoot, ['rev-list', '--count', `${state.baseSha}..HEAD`])
+  if (commits instanceof Error) return commits
+  if (commits === '0') return new Error(`No commits on ${state.branch}. Commit the updated pages first. If no page changed, do not open a pull request.`)
   fs.writeFileSync(path.join(stateDir!, 'result.json'), JSON.stringify(result, null, 2))
-  return result.kind === 'pull-request'
-    ? `Recorded. Holocron pushes ${state.branch} and opens the pull request into ${state.targetBranch} after this session.`
-    : 'Recorded. No pull request will be opened.'
+  return `Recorded. Holocron pushes ${state.branch} and opens the pull request into ${state.targetBranch} after this session.`
 }
 
 export async function openMaintainPullRequest({
@@ -284,25 +271,9 @@ maintainPublishCli
     const recorded = body.trim()
       ? recordMaintainResult({
         stateDir: process.env[MAINTAIN_STATE_DIR_ENV],
-        result: { kind: 'pull-request', title: options.title ?? '', body },
+        result: { title: options.title ?? '', body },
       })
       : new Error('Pass the pull request body on stdin with a heredoc.')
-    if (recorded instanceof Error) {
-      output.error(recorded.message)
-      return proc.exit(1)
-    }
-    output.log(recorded)
-  })
-
-maintainPublishCli
-  .command('maintain-no-changes', 'Used by holocron maintain in GitHub Actions: record that no page needs changes')
-  .hidden()
-  .option('--reason <reason>', 'One sentence on why no page changed')
-  .action((options, { console: output, process: proc }) => {
-    const recorded = recordMaintainResult({
-      stateDir: process.env[MAINTAIN_STATE_DIR_ENV],
-      result: { kind: 'no-changes', reason: options.reason ?? '' },
-    })
     if (recorded instanceof Error) {
       output.error(recorded.message)
       return proc.exit(1)

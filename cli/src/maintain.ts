@@ -160,7 +160,7 @@ maintainCli
       gitDiffRange: range ? gitDiffRangeSpec(range) : undefined,
       release: githubEvent?.release,
       githubActions: githubState && githubActions
-        ? { branch: githubState.branch, targetBranch: githubState.targetBranch, env: githubActions.env, stateDir: githubActions.stateDir }
+        ? { branch: githubState.branch, targetBranch: githubState.targetBranch, env: githubActions.env }
         : undefined,
     }
     let runError: Error | undefined
@@ -262,38 +262,25 @@ maintainCli
       output.error(logger.error(validation.message))
       return proc.exit(1)
     }
-    if (!githubState || !githubActions) {
-      output.log(logger.success(changedPages.length === 0
-        ? 'Documentation is already current.'
-        : `Updated ${changedPages.length} page${changedPages.length === 1 ? '' : 's'}.`))
+    if (changedPages.length === 0) {
+      output.log(logger.success('Documentation is already current.'))
       return
     }
+    output.log(logger.success(`Updated ${changedPages.length} page${changedPages.length === 1 ? '' : 's'}.`))
+    if (!githubState || !githubActions) return
 
-    // OpenCode must end by running maintain-open-pr or maintain-no-changes. No result means it stopped early.
+    // Pages changed, so OpenCode must have committed them and run maintain-open-pr.
     const result = readMaintainResult(githubActions.stateDir)
     if (!result) {
-      output.error(logger.error('OpenCode finished without running `holocron maintain-open-pr` or `holocron maintain-no-changes`.'))
+      output.error(logger.error(`OpenCode changed ${changedPages.map((page) => page.path).join(', ')} but did not run \`holocron maintain-open-pr\`.`))
       if (finalText.trim()) output.error(`OpenCode's last message:\n${finalText.trim()}`)
       return proc.exit(1)
-    }
-    if (result.kind === 'no-changes') {
-      if (changedPages.length > 0) {
-        output.error(logger.error(`OpenCode reported no changes but changed ${changedPages.map((page) => page.path).join(', ')}.`))
-        return proc.exit(1)
-      }
-      output.log(logger.success(`Documentation is already current. ${result.reason}`.trim()))
-      return
     }
     const uncommitted = working.filter((file) => githubState.pages.includes(file))
     if (uncommitted.length > 0) {
       output.error(logger.error(`OpenCode left these pages uncommitted: ${uncommitted.join(', ')}`))
       return proc.exit(1)
     }
-    if (changedPages.length === 0) {
-      output.error(logger.error('OpenCode asked for a pull request but no selected page changed.'))
-      return proc.exit(1)
-    }
-    output.log(logger.success(`Updated ${changedPages.length} page${changedPages.length === 1 ? '' : 's'}.`))
     const pullRequestUrl = await openMaintainPullRequest({ state: githubState, title: result.title, body: result.body })
     if (pullRequestUrl instanceof Error) {
       output.error(logger.error(pullRequestUrl.message))
@@ -365,7 +352,7 @@ async function runOpenCode({
   patches: string
   gitDiffRange?: string
   release?: GithubMaintainRelease
-  githubActions?: { branch: string; targetBranch: string; env: Record<string, string>; stateDir: string }
+  githubActions?: { branch: string; targetBranch: string; env: Record<string, string> }
   model:
     | {
       kind: 'hosted'
@@ -396,7 +383,6 @@ async function runOpenCode({
         { permission: 'bash', pattern: 'git add *', action: 'allow' as const },
         { permission: 'bash', pattern: 'git commit *', action: 'allow' as const },
         { permission: 'bash', pattern: 'holocron maintain-open-pr *', action: 'allow' as const },
-        { permission: 'bash', pattern: 'holocron maintain-no-changes *', action: 'allow' as const },
       ]
       : []),
     ...pages.flatMap((page) => [
@@ -450,33 +436,23 @@ async function runOpenCode({
       release,
       githubActions,
     })
-    const send = (text: string) => client.session.prompt({
+    const result = await client.session.prompt({
       sessionID: session.data.id,
       model: { providerID: providerId, modelID: modelId },
       agent: 'build',
       system,
       tools: { bash: true, websearch: false, task: true, read: true, glob: true, grep: true, edit: true, webfetch: true },
-      parts: [{ type: 'text', text }],
+      parts: [{ type: 'text', text: prompt }],
     }, { throwOnError: true })
     // HTTP 200 does not mean the turn succeeded: provider failures land on info.error.
-    const turnFailure = (turn: Awaited<ReturnType<typeof send>>) => {
-      const failure = turn.data.info.error
-      if (!failure) return undefined
+    const failure = result.data.info.error
+    if (failure) {
       const message = failure.name === 'MessageOutputLengthError' ? 'The model hit its output length limit.' : failure.data.message
       return openCodeFailed({
         kind: model.kind,
         prefix: `OpenCode failed to maintain the selected pages (${failure.name}).`,
         detail: message ? ` ${message}` : '',
       })
-    }
-    let result = await send(prompt)
-    const failed = turnFailure(result)
-    if (failed) return failed
-    // Models often stop after the edits. Remind once in the same session before the CLI fails the run.
-    if (githubActions && !readMaintainResult(githubActions.stateDir)) {
-      result = await send(MAINTAIN_PUBLISH_REMINDER)
-      const failedAgain = turnFailure(result)
-      if (failedAgain) return failedAgain
     }
     return { finalText: result.data.parts.flatMap((part) => part.type === 'text' ? [part.text] : []).join('\n') }
   } catch (error) {
@@ -609,13 +585,6 @@ function openCodeFailed({
   return new Error(`${prefix}${detail}${hint}`)
 }
 
-const MAINTAIN_PUBLISH_REMINDER = dedent`
-  You have not run \`holocron maintain-open-pr\` or \`holocron maintain-no-changes\` yet. The run fails without one of them.
-  If you changed and committed pages, run holocron maintain-open-pr with a title and the body on stdin.
-  If no page needed changes, run holocron maintain-no-changes --reason "<one sentence>".
-  Run exactly one of them now.
-`
-
 function githubActionsPublishPrompt({
   branch,
   targetBranch,
@@ -626,9 +595,9 @@ function githubActionsPublishPrompt({
   return dedent`
     You are running in GitHub Actions on the branch ${branch}, created for this run. Holocron pushes it and opens the pull request into ${targetBranch} after you finish.
 
-    After the tasks finish, your last action must be exactly one of these two commands, also when no page changed. The run fails if you run neither.
+    If no selected page changed, you are done. Do not commit and do not run any holocron command.
 
-    If any selected MDX pages changed:
+    If any selected MDX pages changed, after the tasks finish:
     1. Commit only the changed MDX pages with git add and git commit. The commit author is already set through the environment. Do not run git config.
     2. Run this, with the pull request body on stdin:
        holocron maintain-open-pr --title "<title>" <<'EOF'
@@ -636,9 +605,6 @@ function githubActionsPublishPrompt({
        EOF
        Title: short. Prefix with [holocron], unless this repository has a clear commit title convention in git log, then follow that.
        Body: a short bullet list of the changes. No headings.
-
-    If no selected page needed changes:
-       Run: holocron maintain-no-changes --reason "<one sentence>"
 
     Never push, switch branches, or run gh. If a holocron command fails, fix what it reports and run it again.
     Do the commit and the command yourself. Do not ask tasks to commit.

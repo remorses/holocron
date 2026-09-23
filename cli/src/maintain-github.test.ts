@@ -126,7 +126,7 @@ describe('maintain publish commands', () => {
   test('open-pr requires committed pages, then records the pull request', () => {
     const { repo, git, sh, stateDir } = setup()
     expect(git('branch', '--show-current')).toMatchInlineSnapshot(`"holocron/maintain-1"`)
-    expect(sh(OPEN_PR)).toMatchInlineSnapshot(`"exit 1: No commits on holocron/maintain-1. Commit the updated pages first, or run holocron maintain-no-changes."`)
+    expect(sh(OPEN_PR)).toMatchInlineSnapshot(`"exit 1: No commits on holocron/maintain-1. Commit the updated pages first. If no page changed, do not open a pull request."`)
     fs.writeFileSync(path.join(repo, 'page.mdx'), 'new\n')
     expect(sh(OPEN_PR)).toMatchInlineSnapshot(`"exit 1: Commit these pages first: page.mdx"`)
     expect(readMaintainResult(stateDir)).toMatchInlineSnapshot(`undefined`)
@@ -136,22 +136,8 @@ describe('maintain publish commands', () => {
       {
         "body": "- change
       ",
-        "kind": "pull-request",
         "title": "[holocron] Update page",
       }
     `)
-  })
-
-  test('no-changes is rejected once pages were committed', () => {
-    const { repo, sh, stateDir } = setup()
-    expect(sh('holocron maintain-no-changes --reason "Sources did not affect the page."')).toMatchInlineSnapshot(`"exit 0: Recorded. No pull request will be opened."`)
-    expect(readMaintainResult(stateDir)).toMatchInlineSnapshot(`
-      {
-        "kind": "no-changes",
-        "reason": "Sources did not affect the page.",
-      }
-    `)
-    fs.writeFileSync(path.join(repo, 'page.mdx'), 'new\n')
-    expect(sh('git commit -q -am "Update page" && holocron maintain-no-changes --reason "none"')).toMatchInlineSnapshot(`"exit 1: Pages were changed. Commit them and run holocron maintain-open-pr instead."`)
   })
 })

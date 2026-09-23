@@ -4,7 +4,7 @@ prompt: |
   Write GitHub Actions examples from @/cli/src/maintain.ts and @/cli/src/maintain-github.ts.
   Cover default-branch pushes, schedules, OIDC authentication, and full Git history.
   Explain that no-args `holocron maintain` on a push reads before and after SHAs from GITHUB_EVENT_PATH and diffs that whole push, not HEAD~1.
-  Explain that in GitHub Actions the CLI creates holocron/maintain-<timestamp> before OpenCode starts. OpenCode commits the changed MDX pages and must end by running the hidden `holocron maintain-open-pr` or `holocron maintain-no-changes` command. The CLI then pushes the branch and opens the PR with Octokit. Never update main or other existing branches.
+  Explain that in GitHub Actions the CLI creates holocron/maintain-<timestamp> before OpenCode starts. When MDX pages change, OpenCode commits them and runs the hidden `holocron maintain-open-pr` command with a title and body. The CLI then pushes the branch and opens the PR with Octokit. Never update main or other existing branches.
   Contrast with the parent-agent flow on @/website/src/pages/maintain/index.mdx, where Maintain only edits MDX and the parent opens the PR.
   Cover the default Holocron-hosted model (Pro + OIDC) and `--model provider/model` BYOK with provider env vars from OpenCode providers docs.
   Do not document --pull-request. Do not document a pull_request workflow that commits onto the existing PR branch.
@@ -18,7 +18,7 @@ This is the **GitHub Actions** path. Maintain reads the push event, updates matc
 
 GitHub Actions provides the **Git range, repository identity, OIDC authentication, and GitHub token**. No stored Holocron key is needed.
 
-On a GitHub Actions run, Maintain creates the branch first. OpenCode updates and **commits** the selected MDX pages, then reports the outcome with one of two commands: `holocron maintain-open-pr` (pages changed) or `holocron maintain-no-changes`. Maintain then validates the pages, pushes the branch, and opens the pull request itself. If OpenCode runs neither command, the job fails. Local and parent-agent runs never create a branch or pull request.
+On a GitHub Actions run, Maintain creates the branch first. OpenCode updates the selected MDX pages. When pages changed, it **commits** them and runs `holocron maintain-open-pr` with the pull request title and body. Maintain then validates the pages, pushes the branch, and opens the pull request itself. If pages changed but OpenCode skipped that command, the job fails. Local and parent-agent runs never create a branch or pull request.
 
 ```diagram
   push to main
@@ -29,7 +29,7 @@ On a GitHub Actions run, Maintain creates the branch first. OpenCode updates and
         v
   OpenCode updates MDX pages
         │
-        ├── no MDX changes ──> maintain-no-changes, stop
+        ├── no MDX changes ──> stop
         └── MDX files changed
                 │
                 v
