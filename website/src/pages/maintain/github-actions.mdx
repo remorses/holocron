@@ -7,7 +7,7 @@ prompt: |
   Explain that in GitHub Actions the CLI creates holocron/maintain-<timestamp> before OpenCode starts. When MDX pages change, OpenCode commits them and runs the hidden `holocron maintain-open-pr` command with a title and body. The CLI then pushes the branch and opens the PR with Octokit. Never update main or other existing branches.
   Contrast with the parent-agent flow on @/website/src/pages/maintain/index.mdx, where Maintain only edits MDX and the parent opens the PR.
   Cover the default Holocron-hosted model (Pro + OIDC) and `--model provider/model` BYOK with provider env vars from OpenCode providers docs.
-  Do not document --pull-request. Do not document a pull_request workflow that commits onto the existing PR branch.
+  Do not document --pull-request. Explain that pull_request events are rejected. Show persist-credentials: false in every workflow.
 title: Run documentation maintenance in GitHub Actions
 sidebarTitle: GitHub Actions
 description: No-args Maintain on a push diffs that push's before and after SHAs, then opens a pull request when MDX pages change.
@@ -39,7 +39,7 @@ On a GitHub Actions run, Maintain creates the branch first. OpenCode updates the
          Maintain pushes, opens the PR into main
 ```
 
-Keep **`GITHUB_TOKEN`** on the Maintain step so Maintain can push the new branch and open the pull request. Leave checkout credentials enabled. Do not set `persist-credentials: false`.
+Keep **`GITHUB_TOKEN`** on the Maintain step. Maintain removes it from the OpenCode environment and uses it only after the run, to push the new branch and open the pull request. Set **`persist-credentials: false`** on `actions/checkout`, so the git config holds no credentials the model could push with.
 
 ## After every main-branch push
 
@@ -85,6 +85,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - run: npx -y "@holocron.so/cli" maintain
         env:
@@ -125,6 +126,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - run: |
           npx -y "@holocron.so/cli" maintain \
@@ -138,21 +140,24 @@ jobs:
 
 The pull request targets the **branch that is checked out**. There is no option for it. To target another branch, check it out.
 
-| Checkout                                   | Pull request base            |
-| ------------------------------------------ | ---------------------------- |
-| a branch (push, `workflow_dispatch`)       | that branch                  |
-| `actions/checkout` with `ref: docs`        | `docs`                       |
-| detached HEAD on a `release` event         | the release target branch    |
-| any other detached HEAD (tag, SHA)         | the repository default       |
+| Checkout                             | Pull request base                           |
+| ------------------------------------ | ------------------------------------------- |
+| a branch (push, `workflow_dispatch`) | that branch, also a feature or preview one  |
+| `actions/checkout` with `ref: docs`  | `docs`                                      |
+| detached HEAD on a `release` event   | `target_commitish`, if it is a branch name  |
+| any other detached HEAD (tag, SHA)   | the repository default                      |
 
 ```yaml
       - uses: actions/checkout@v4
         with:
           ref: docs
           fetch-depth: 0
+          persist-credentials: false
 ```
 
-Maintain branches off the **checked-out commit**, so that commit must already be on `origin/<base>`. Otherwise the pull request would carry unrelated commits, and Maintain fails before it starts OpenCode. This is why `pull_request` workflows fail: their checkout is a merge commit that is on no branch.
+Maintain branches off the **checked-out commit**, so that commit must already be on `origin/<base>`. Otherwise the pull request would carry unrelated commits, and Maintain fails before it starts OpenCode. The release target branch is only a guess, and this check catches a wrong guess.
+
+Maintain does not run on **`pull_request`** events. Their checkout is a merge commit that is on no branch. It also refuses to run when the checked-out branch is a `holocron/maintain-*` branch, so a workflow that runs on every branch never opens a pull request into its own maintain branch.
 
 The maintain branch is not rebased. It starts at the commit that triggered the run, and GitHub merges it like any other pull request. It only conflicts when someone else edits the same pages first.
 
@@ -168,7 +173,7 @@ The workflows above use the **Holocron-hosted model** and bill the project's Pro
 
 To run **Anthropic, OpenAI, or any other OpenCode provider**, pass `--model provider/model` and set that provider's env var. Holocron auth is not used. See the OpenCode **[providers](https://opencode.ai/docs/providers/)** page for the supported keys.
 
-Use a **dedicated provider key**. The OpenCode session can run any shell command except `git push` and `gh`, and it can read the environment. Maintain rejects the run if files outside the selected pages change.
+Use a **dedicated provider key**. The OpenCode session can run any shell command and can read the environment, including the provider key. Maintain removes `GITHUB_TOKEN`, `GH_TOKEN`, `HOLOCRON_KEY`, and the GitHub OIDC request token from that environment, and it rejects the run if files outside the selected pages change.
 
 ```yaml
 - run: npx -y "@holocron.so/cli" maintain --model anthropic/claude-sonnet-4-5

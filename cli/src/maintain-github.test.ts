@@ -6,7 +6,7 @@ import path from 'node:path'
 import childProcess from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
-import { parseGithubEvent, prepareMaintainBranch, readMaintainResult, resolveBaseBranch } from './maintain-github.ts'
+import { openMaintainPullRequest, parseGithubEvent, prepareMaintainBranch, readGithubPublishEnv, readMaintainResult, resolveBaseBranch } from './maintain-github.ts'
 
 describe('maintain GitHub events', () => {
   test('uses the exact before and after range for pushes', () => {
@@ -31,36 +31,8 @@ describe('maintain GitHub events', () => {
     `)
   })
 
-  test('uses the merge-base range and existing PR branch for pull requests', () => {
-    expect(parseGithubEvent({
-      eventName: 'pull_request',
-      repository: 'owner/repo',
-      runId: '43',
-      payload: {
-        number: 7,
-        pull_request: {
-          base: { ref: 'main', sha: 'base' },
-          head: { ref: 'feature', sha: 'head', repo: { full_name: 'owner/repo' } },
-          html_url: 'https://github.com/owner/repo/pull/7',
-        },
-      },
-    })).toMatchInlineSnapshot(`
-      {
-        "all": false,
-        "changedUrls": [
-          "https://github.com/owner/repo",
-          "https://github.com/owner/repo/pull/7",
-        ],
-        "defaultBranch": "main",
-        "existingPullRequest": 7,
-        "range": {
-          "from": "base",
-          "pullRequest": true,
-          "to": "head",
-        },
-        "runId": "43",
-      }
-    `)
+  test('rejects pull_request events', () => {
+    expect(String(parseGithubEvent({ eventName: 'pull_request', repository: 'owner/repo', runId: '43', payload: {} }))).toMatchInlineSnapshot(`"Error: holocron maintain does not run on pull_request events. Run it on push to your default branch, or on a schedule."`)
   })
 
   test('targets the repository default branch on schedules', () => {
@@ -154,12 +126,13 @@ describe('maintain publish commands', () => {
       const out = childProcess.spawnSync('sh', ['-c', command], { cwd: repo, encoding: 'utf8', env: { ...process.env, ...prepared.env } })
       return `exit ${out.status}: ${(out.stdout + out.stderr).trim()}`
     }
-    return { repo, git, sh, stateDir: prepared.stateDir }
+    return { repo, git, sh, stateDir: prepared.stateDir, state: { repoRoot: repo, baseSha: git('rev-parse', 'main'), branch: 'holocron/maintain-1', targetBranch, pages: ['page.mdx'] } }
   }
 
   test('rejects a base branch that does not contain HEAD', () => {
     expect(String(setup({ localCommit: true }))).toMatchInlineSnapshot(`"Error: HEAD is not on origin/main, so a pull request into main would include unrelated commits. Check out the branch the pull request should target, with fetch-depth: 0."`)
-    expect(String(setup({ targetBranch: 'release' }))).toMatchInlineSnapshot(`"Error: HEAD is not on origin/release, so a pull request into release would include unrelated commits. Check out the branch the pull request should target, with fetch-depth: 0."`)
+    expect(String(setup({ targetBranch: 'holocron/maintain-9' }))).toMatchInlineSnapshot(`"Error: HEAD is on holocron/maintain-9, a branch created by holocron maintain. Do not run maintain on its own branches."`)
+    expect(String(setup({ targetBranch: 'release' }))).toMatchInlineSnapshot(`"Error: origin/release is not fetched. Use actions/checkout with fetch-depth: 0."`)
   })
 
   test('open-pr requires committed pages, then records the pull request', () => {
@@ -181,4 +154,29 @@ describe('maintain publish commands', () => {
       }
     `)
   })
+
+  test('pushes with the token URL, then deletes the branch when the PR cannot be opened', async () => {
+    const prepared = setup()
+    if (prepared instanceof Error) throw prepared
+    const { repo, sh, state } = prepared
+    const publish = { token: 't', repository: `${repo.slice(1)}`, serverUrl: 'file:///', apiUrl: 'http://127.0.0.1:9' }
+    expect(String(await openMaintainPullRequest({ state, publish, title: 't', body: 'b' }))).toMatchInlineSnapshot(`"Error: No commits on holocron/maintain-1. Commit the updated pages first. If no page changed, do not open a pull request."`)
+    fs.writeFileSync(path.join(repo, 'page.mdx'), 'new\n')
+    sh('git commit -q -am "Update page"')
+    const result = await openMaintainPullRequest({ state, publish, title: 't', body: 'b' })
+    expect(String(result).replace(/into main: .*? The branch/, 'into main: <network error>. The branch')).toMatchInlineSnapshot(`"Error: Could not open a pull request into main: <network error>. The branch holocron/maintain-1 was pushed and could not be deleted. Check that the job has pull-requests: write, and that "Allow GitHub Actions to create and approve pull requests" is enabled in the repository Actions settings."`)
+    expect(sh(`git ls-remote ${repo}.git 'refs/heads/holocron/*'`).replace(/[0-9a-f]{40}/, '<sha>')).toMatchInlineSnapshot(`"exit 0: <sha>	refs/heads/holocron/maintain-1"`)
+  })
+})
+
+test('readGithubPublishEnv requires GITHUB_TOKEN', () => {
+  expect(String(readGithubPublishEnv({ GITHUB_REPOSITORY: 'o/r' }))).toMatchInlineSnapshot(`"Error: GITHUB_TOKEN is not set. Add \`env: { GITHUB_TOKEN: \${{ github.token }} }\` to the maintain step."`)
+  expect(readGithubPublishEnv({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'o/r' })).toMatchInlineSnapshot(`
+    {
+      "apiUrl": undefined,
+      "repository": "o/r",
+      "serverUrl": "https://github.com",
+      "token": "t",
+    }
+  `)
 })

@@ -24,7 +24,6 @@ export type GithubMaintainEvent = {
   changedUrls: string[]
   range?: { from: string; to: string; pullRequest?: boolean }
   defaultBranch: string
-  existingPullRequest?: number
   release?: GithubMaintainRelease
 }
 
@@ -32,12 +31,6 @@ type GithubPayload = {
   before?: string
   after?: string
   ref?: string
-  number?: number
-  pull_request?: {
-    base?: { ref?: string; sha?: string }
-    head?: { ref?: string; sha?: string; repo?: { full_name?: string } }
-    html_url?: string
-  }
   release?: {
     tag_name?: string
     name?: string
@@ -60,7 +53,7 @@ export function parseGithubEvent({
   repository: string
   runId: string
   payload: GithubPayload
-}): GithubMaintainEvent {
+}): GithubMaintainEvent | Error {
   const repositoryUrl = `https://github.com/${repository}`
   const defaultBranch = String(payload.repository?.default_branch ?? 'main')
   if (eventName === 'push') {
@@ -72,22 +65,10 @@ export function parseGithubEvent({
       defaultBranch,
     }
   }
-  if (eventName === 'pull_request') {
-    const pullRequest = payload.pull_request
-    const headRepo = pullRequest?.head?.repo?.full_name
-    if (headRepo && headRepo !== repository) throw new Error('Maintain cannot update pull requests from forks.')
-    return {
-      runId,
-      all: false,
-      range: {
-        from: String(pullRequest?.base?.sha),
-        to: String(pullRequest?.head?.sha),
-        pullRequest: true,
-      },
-      changedUrls: [repositoryUrl, String(pullRequest?.html_url)],
-      defaultBranch,
-      existingPullRequest: Number(payload.number),
-    }
+  // The pull_request checkout is a merge commit that is on no branch, so a maintain PR would
+  // carry unrelated commits. Run maintain on pushes to the branch instead.
+  if (eventName === 'pull_request' || eventName === 'pull_request_target') {
+    return new Error('holocron maintain does not run on pull_request events. Run it on push to your default branch, or on a schedule.')
   }
   if (eventName === 'release') {
     const releaseUrl = String(payload.release?.html_url ?? `${repositoryUrl}/releases`)
@@ -127,7 +108,7 @@ export function resolveBaseBranch({ repoRoot, event }: { repoRoot: string; event
   return event?.defaultBranch ?? 'main'
 }
 
-export function loadGithubEvent(): GithubMaintainEvent | undefined {
+export function loadGithubEvent(): GithubMaintainEvent | Error | undefined {
   const eventPath = process.env.GITHUB_EVENT_PATH
   const repository = process.env.GITHUB_REPOSITORY
   if (!eventPath || !repository || !process.env.GITHUB_ACTIONS) return undefined
@@ -147,6 +128,7 @@ export function loadGithubEvent(): GithubMaintainEvent | undefined {
 // After the session the CLI pushes and opens the PR with Octokit. No result.json
 // with changed pages means the model stopped early, which fails the job.
 
+export const MAINTAIN_BRANCH_PREFIX = 'holocron/maintain-'
 export const MAINTAIN_STATE_DIR_ENV = 'HOLOCRON_MAINTAIN_STATE_DIR'
 export const MAINTAIN_PR_FOOTER = '*PR opened by [holocron.so](https://holocron.so)*'
 export const MAINTAIN_GIT_ENV = {
@@ -166,6 +148,23 @@ export type MaintainState = {
 
 export type MaintainResult = { title: string; body: string }
 
+// Credentials the CLI uses to push and open the PR. Read before OpenCode starts, and removed
+// from the OpenCode server env (see startOpencodeServer), so the model cannot push with them.
+export type GithubPublishEnv = { token: string; repository: string; serverUrl: string; apiUrl?: string }
+
+export function readGithubPublishEnv(env: NodeJS.ProcessEnv): GithubPublishEnv | Error {
+  if (!env.GITHUB_TOKEN) {
+    return new Error('GITHUB_TOKEN is not set. Add `env: { GITHUB_TOKEN: ${{ github.token }} }` to the maintain step.')
+  }
+  if (!env.GITHUB_REPOSITORY) return new Error('GITHUB_REPOSITORY is not set.')
+  return {
+    token: env.GITHUB_TOKEN,
+    repository: env.GITHUB_REPOSITORY,
+    serverUrl: env.GITHUB_SERVER_URL ?? 'https://github.com',
+    apiUrl: env.GITHUB_API_URL,
+  }
+}
+
 function git(repoRoot: string, args: string[]): string | Error {
   try {
     return childProcess.execFileSync('git', args, {
@@ -184,8 +183,18 @@ function git(repoRoot: string, args: string[]): string | Error {
 
 // Creates the branch, the state dir, and a `holocron` shim so OpenCode's bash can call the hidden commands.
 export function prepareMaintainBranch({ state, binPath }: { state: MaintainState; binPath: string }) {
+  if (state.targetBranch.startsWith(MAINTAIN_BRANCH_PREFIX)) {
+    return new Error(`HEAD is on ${state.targetBranch}, a branch created by holocron maintain. Do not run maintain on its own branches.`)
+  }
+  const baseRef = `refs/remotes/origin/${state.targetBranch}`
+  if (git(state.repoRoot, ['rev-parse', '--verify', '--quiet', baseRef]) instanceof Error) {
+    return new Error(`origin/${state.targetBranch} is not fetched. Use actions/checkout with fetch-depth: 0.`)
+  }
+  if (git(state.repoRoot, ['rev-parse', '--is-shallow-repository']) === 'true') {
+    return new Error('The checkout is shallow. Use actions/checkout with fetch-depth: 0.')
+  }
   // The maintain branch starts at HEAD. If HEAD is not already on the base branch,
-  // the pull request would carry unrelated commits (for example a pull_request merge commit).
+  // the pull request would carry unrelated commits.
   const onBase = git(state.repoRoot, ['merge-base', '--is-ancestor', 'HEAD', `refs/remotes/origin/${state.targetBranch}`])
   if (onBase instanceof Error) {
     return new Error(
@@ -231,37 +240,56 @@ function uncommittedPages(state: MaintainState) {
   return changed.split('\0').filter(Boolean)
 }
 
-export function recordMaintainResult({ stateDir, result }: { stateDir: string | undefined; result: MaintainResult }): string | Error {
-  const state = readMaintainState(stateDir)
-  if (state instanceof Error) return state
-  if (!result.title.trim()) return new Error('Pass a non-empty --title.')
+// Checked when the model records the PR and again right before the push, so the push never
+// relies on state the model reported earlier.
+function checkMaintainBranch(state: MaintainState): Error | undefined {
   const branch = git(state.repoRoot, ['branch', '--show-current'])
   if (branch instanceof Error) return branch
   if (branch !== state.branch) return new Error(`HEAD is on ${branch || 'a detached commit'}. Switch back to ${state.branch}.`)
   const uncommitted = uncommittedPages(state)
   if (uncommitted instanceof Error) return uncommitted
   if (uncommitted.length > 0) return new Error(`Commit these pages first: ${uncommitted.join(', ')}`)
+  if (git(state.repoRoot, ['merge-base', '--is-ancestor', state.baseSha, 'HEAD']) instanceof Error) {
+    return new Error(`${state.branch} no longer starts from ${state.baseSha.slice(0, 8)}. Do not rebase or reset it.`)
+  }
   const commits = git(state.repoRoot, ['rev-list', '--count', `${state.baseSha}..HEAD`])
   if (commits instanceof Error) return commits
   if (commits === '0') return new Error(`No commits on ${state.branch}. Commit the updated pages first. If no page changed, do not open a pull request.`)
+  return undefined
+}
+
+export function recordMaintainResult({ stateDir, result }: { stateDir: string | undefined; result: MaintainResult }): string | Error {
+  const state = readMaintainState(stateDir)
+  if (state instanceof Error) return state
+  if (!result.title.trim()) return new Error('Pass a non-empty --title.')
+  const invalid = checkMaintainBranch(state)
+  if (invalid) return invalid
   fs.writeFileSync(path.join(stateDir!, 'result.json'), JSON.stringify(result, null, 2))
   return `Recorded. Holocron pushes ${state.branch} and opens the pull request into ${state.targetBranch} after this session.`
 }
 
 export async function openMaintainPullRequest({
   state,
+  publish,
   title,
   body,
 }: {
   state: MaintainState
+  publish: GithubPublishEnv
   title: string
   body: string
 }): Promise<string | Error> {
-  const pushed = git(state.repoRoot, ['push', 'origin', `HEAD:refs/heads/${state.branch}`])
+  const invalid = checkMaintainBranch(state)
+  if (invalid) return invalid
+  // Push with the token explicitly, so the workflow can use persist-credentials: false and the
+  // model never has git credentials. Git redacts URL credentials in its error messages.
+  const remote = new URL(`/${publish.repository}.git`, publish.serverUrl)
+  remote.username = 'x-access-token'
+  remote.password = publish.token
+  const pushed = git(state.repoRoot, ['push', remote.href, `HEAD:refs/heads/${state.branch}`])
   if (pushed instanceof Error) return pushed
-  const [owner, repo] = (process.env.GITHUB_REPOSITORY ?? '').split('/')
-  if (!owner || !repo) return new Error('GITHUB_REPOSITORY is not set.')
-  const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN, baseUrl: process.env.GITHUB_API_URL })
+  const [owner = '', repo = ''] = publish.repository.split('/')
+  const octokit = new Octokit({ auth: publish.token, baseUrl: publish.apiUrl })
   const created = await octokit.rest.pulls.create({
     owner,
     repo,
@@ -269,12 +297,14 @@ export async function openMaintainPullRequest({
     head: state.branch,
     title: title.trim(),
     body: `${body.replaceAll(MAINTAIN_PR_FOOTER, '').trim()}\n\n${MAINTAIN_PR_FOOTER}`,
-  }).catch((error: Error) => new Error(
-    `Pushed ${state.branch} but could not open a pull request into ${state.targetBranch}: ${error.message}. If GitHub Actions is not permitted to create pull requests, enable "Allow GitHub Actions to create and approve pull requests" in the repository Actions settings.`,
-    { cause: error },
-  ))
-  if (created instanceof Error) return created
-  return created.data.html_url
+  }).catch((error: Error) => error)
+  if (!(created instanceof Error)) return created.data.html_url
+  // Do not leave an orphan branch behind when the PR cannot be opened.
+  const deleted = await octokit.rest.git.deleteRef({ owner, repo, ref: `heads/${state.branch}` }).catch((error: Error) => error)
+  return new Error(
+    `Could not open a pull request into ${state.targetBranch}: ${created.message}. ${deleted instanceof Error ? `The branch ${state.branch} was pushed and could not be deleted.` : `Deleted the pushed branch ${state.branch}.`} Check that the job has pull-requests: write, and that "Allow GitHub Actions to create and approve pull requests" is enabled in the repository Actions settings.`,
+    { cause: created },
+  )
 }
 
 export const maintainPublishCli = goke()

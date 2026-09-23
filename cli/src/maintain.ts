@@ -33,8 +33,10 @@ import {
 } from './maintain-discovery.ts'
 import {
   loadGithubEvent,
+  MAINTAIN_BRANCH_PREFIX,
   openMaintainPullRequest,
   prepareMaintainBranch,
+  readGithubPublishEnv,
   readMaintainResult,
   resolveBaseBranch,
   type GithubMaintainRelease,
@@ -101,6 +103,10 @@ maintainCli
 
     const repoRoot = findRepoRoot(proc.cwd)
     const githubEvent = loadGithubEvent()
+    if (githubEvent instanceof Error) {
+      output.error(logger.error(githubEvent.message))
+      return proc.exit(1)
+    }
     const explicitRange = options.since
       ? { from: options.since, to: 'HEAD', pullRequest: true }
       : undefined
@@ -139,11 +145,16 @@ maintainCli
       ? {
         repoRoot,
         baseSha: startSha,
-        branch: `holocron/maintain-${Date.now()}`,
+        branch: `${MAINTAIN_BRANCH_PREFIX}${Date.now()}`,
         targetBranch: resolveBaseBranch({ repoRoot, event: githubEvent }),
         pages: selectedPages.map((page) => page.path),
       }
       : undefined
+    const publish = githubState ? readGithubPublishEnv(process.env) : undefined
+    if (publish instanceof Error) {
+      output.error(logger.error(publish.message))
+      return proc.exit(1)
+    }
     const githubActions = githubState
       ? prepareMaintainBranch({ state: githubState, binPath: fileURLToPath(new URL('./bin.js', import.meta.url)) })
       : undefined
@@ -279,12 +290,7 @@ maintainCli
       if (finalText.trim()) output.error(`OpenCode's last message:\n${finalText.trim()}`)
       return proc.exit(1)
     }
-    const uncommitted = working.filter((file) => githubState.pages.includes(file))
-    if (uncommitted.length > 0) {
-      output.error(logger.error(`OpenCode left these pages uncommitted: ${uncommitted.join(', ')}`))
-      return proc.exit(1)
-    }
-    const pullRequestUrl = await openMaintainPullRequest({ state: githubState, title: result.title, body: result.body })
+    const pullRequestUrl = await openMaintainPullRequest({ state: githubState, publish: publish!, title: result.title, body: result.body })
     if (pullRequestUrl instanceof Error) {
       output.error(logger.error(pullRequestUrl.message))
       return proc.exit(1)
@@ -507,7 +513,7 @@ export async function startOpencodeServer({
   const proc = spawn(resolveOpencodeBinary(), ['serve', '--hostname=127.0.0.1', '--port=0', ...logArgs], {
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
-    env: { ...process.env, ...env, OPENCODE_CONFIG_CONTENT: JSON.stringify(config) },
+    env: { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !CREDENTIAL_ENV.includes(key))), ...env, OPENCODE_CONFIG_CONTENT: JSON.stringify(config) },
   })
   // Spawn failures emit 'error' and may never emit 'exit'.
   const exited = new Promise<void>((resolve) => {
@@ -567,6 +573,10 @@ export async function startOpencodeServer({
   }
   return { url, pid: proc.pid!, close }
 }
+
+// The model can run any shell command, so it must not see tokens that push code, open PRs,
+// or mint GitHub OIDC tokens. The CLI keeps them and publishes after the run.
+const CREDENTIAL_ENV = ['GITHUB_TOKEN', 'GH_TOKEN', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN', 'ACTIONS_ID_TOKEN_REQUEST_URL', 'ACTIONS_RUNTIME_TOKEN', 'HOLOCRON_KEY']
 
 function stopProcess(proc: ChildProcess) {
   if (proc.exitCode !== null || proc.signalCode !== null) return
