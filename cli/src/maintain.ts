@@ -371,32 +371,12 @@ async function runOpenCode({
 }) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), RUN_TIMEOUT_MS)
+  // Relaxed on purpose: allow-lists were not inherited by task subagents anyway. Only deny rules
+  // reach subagents, so the hard limits are denies. The CLI checks the changed files after the run.
   const permission = [
-    { permission: '*', pattern: '*', action: 'deny' as const },
-    { permission: 'read', pattern: '*', action: 'allow' as const },
-    { permission: 'glob', pattern: '*', action: 'allow' as const },
-    { permission: 'grep', pattern: '*', action: 'allow' as const },
-    { permission: 'task', pattern: '*', action: 'allow' as const },
-    { permission: 'todowrite', pattern: '*', action: 'allow' as const },
-    { permission: 'bash', pattern: 'git diff *', action: 'allow' as const },
-    { permission: 'bash', pattern: 'git log *', action: 'allow' as const },
-    // In GitHub Actions the parent session commits on the branch the CLI created, then records the outcome.
-    ...(githubActions
-      ? [
-        { permission: 'bash', pattern: 'git status *', action: 'allow' as const },
-        { permission: 'bash', pattern: 'git show *', action: 'allow' as const },
-        { permission: 'bash', pattern: 'git add *', action: 'allow' as const },
-        { permission: 'bash', pattern: 'git commit *', action: 'allow' as const },
-        { permission: 'bash', pattern: 'holocron maintain-open-pr *', action: 'allow' as const },
-      ]
-      : []),
-    ...pages.flatMap((page) => [
-      { permission: 'edit', pattern: page.path, action: 'allow' as const },
-      { permission: 'edit', pattern: page.absolutePath, action: 'allow' as const },
-    ]),
-    ...pages.flatMap((page) => page.references.urls.map((url) => (
-      { permission: 'webfetch', pattern: url, action: 'allow' as const }
-    ))),
+    { permission: '*', pattern: '*', action: 'allow' as const },
+    { permission: 'bash', pattern: 'git push *', action: 'deny' as const },
+    { permission: 'bash', pattern: 'gh *', action: 'deny' as const },
   ]
 
   const providerId = model.providerId
@@ -700,7 +680,7 @@ function buildMaintainUserPrompt({
       : '',
     githubActions
       ? `\n<github_actions>\n${githubActionsPublishPrompt(githubActions)}\n</github_actions>`
-      : '',
+      : '\nDo not commit, push, or run gh. Leave the updated pages uncommitted.',
   ].filter((block) => block !== '').join('\n')
 }
 

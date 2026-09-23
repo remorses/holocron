@@ -124,7 +124,7 @@ Maintain uses **one OpenCode session** for the complete run. The main agent grou
 
 In **GitHub Actions**, Maintain creates `holocron/maintain-<timestamp>` before OpenCode starts and adds publish instructions to the session prompt, not the system prompt, so tasks never commit. When pages changed, the parent session commits them and runs `holocron maintain-open-pr` with the pull request title and body. Maintain then pushes and opens the pull request. The [GitHub Actions](./github-actions.mdx) page covers the no-args push range.
 
-**Parent-agent** runs omit that prompt block. Git commit, push, and `gh` stay denied. The parent continues with its own PR setup after the command exits.
+**Parent-agent** runs omit that prompt block and tell OpenCode to leave the pages uncommitted. `git push` and `gh` are denied in every mode. The parent continues with its own PR setup after the command exits.
 
 ## Models
 
