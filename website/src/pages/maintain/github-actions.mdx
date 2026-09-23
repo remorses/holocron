@@ -18,7 +18,9 @@ This is the **GitHub Actions** path. Maintain reads the push event, updates matc
 
 GitHub Actions provides the **Git range, repository identity, OIDC authentication, and GitHub token**. No stored Holocron key is needed.
 
-On a GitHub Actions run, Maintain creates the branch first. OpenCode updates and **commits** the selected MDX pages, then reports the outcome with one of two commands: `holocron maintain-open-pr` (pages changed) or `holocron maintain-no-changes`. Maintain then validates the pages, pushes the branch, and opens the pull request itself. If OpenCode runs neither command, the job fails. Local and parent-agent runs never create a branch or pull request.
+On a GitHub Actions run, Maintain creates the branch first. OpenCode updates and **commits** the selected MDX pages, then must end with exactly one of two commands: `holocron maintain-open-pr` (pages changed) or `holocron maintain-no-changes`, also when no page changed. Maintain then validates the pages, pushes the branch, and opens the pull request itself.
+
+OpenCode often stops after editing. If it finishes without running either command, Maintain sends **one reminder** in the same session telling it to run exactly one, then lets it retry before the job would fail. If neither command is recorded after that, the job fails. Local and parent-agent runs never create a branch or pull request.
 
 ```diagram
   push to main
@@ -30,13 +32,12 @@ On a GitHub Actions run, Maintain creates the branch first. OpenCode updates and
   OpenCode updates MDX pages
         │
         ├── no MDX changes ──> maintain-no-changes, stop
-        └── MDX files changed
-                │
-                v
-         OpenCode commits, runs maintain-open-pr
-                │
-                v
-         Maintain pushes, opens the PR into main
+        └── MDX files changed ──> OpenCode commits, runs maintain-open-pr
+                        │
+      ran neither ──> reminder ──> model retries ──> one command
+                        │
+                        v
+        Maintain pushes, opens the PR into main
 ```
 
 Keep **`GITHUB_TOKEN`** on the Maintain step so Maintain can push the new branch and open the pull request. Leave checkout credentials enabled. Do not set `persist-credentials: false`.
