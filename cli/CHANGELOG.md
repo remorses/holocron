@@ -1,3 +1,30 @@
+## 0.22.5
+
+1. **`holocron maintain` streams what OpenCode does.** Before, the log showed only `Starting OpenCode...` until the run ended. Now it prints task sessions, assistant messages, and every finished tool call with its duration. Failed tool calls show the error inline, and OpenCode server warnings and errors (for example provider rate limits) are printed too:
+
+   ```
+     ◆ task 1 Update index.mdx (@general subagent)
+     [task 1] └ read cli/src/maintain.ts 34ms
+     [task 1] └ edit website/src/pages/maintain/index.mdx 2ms
+     └ bash holocron maintain-open-pr --title "[holocron] Update maintain docs" … 13ms
+     opencode ERROR stream error agent=general error.error=AI_APICallError: Rate limit exceeded.
+   ✓ holocron Opened https://github.com/owner/repo/pull/110
+   ```
+
+2. **The maintain pull request targets the checked-out branch.** Before, the branch came from the event payload, so `workflow_dispatch` on another branch or `actions/checkout` with `ref: docs` still opened the PR into the default branch. A detached HEAD uses the release target branch on `release` events, else the repository default branch.
+
+   ```yaml
+   - uses: actions/checkout@v4
+     with:
+       ref: docs            # the maintain pull request targets docs
+       fetch-depth: 0
+       persist-credentials: false
+   ```
+
+3. **OpenCode gets relaxed permissions, but no GitHub credentials.** The model can run any shell command, read any file, and fetch any URL, so it no longer fails on denied helper commands. `GITHUB_TOKEN`, `GH_TOKEN`, `HOLOCRON_KEY`, and the GitHub OIDC request token are removed from its environment. The CLI pushes with the token itself, so set `persist-credentials: false` on `actions/checkout`. Maintain still fails the run if files outside the selected pages change.
+
+4. **Checks run before OpenCode starts, and again before the push.** A missing `GITHUB_TOKEN`, a `pull_request` event, a checkout on a `holocron/maintain-*` branch, a shallow clone, a missing `origin/<base>` ref, or a checkout that is not on the base branch fail right away with a clear message, before any model cost. Right before the push, the CLI checks the branch again instead of trusting the model. If the pull request cannot be opened, the CLI deletes the branch it pushed and tells you which permission to check.
+
 ## 0.22.4
 
 1. **`holocron maintain` in GitHub Actions opens the pull request reliably.** Before, the model had to commit, push, and open the PR itself. It sometimes stopped after the edits, so runs failed with `OpenCode updated pages but left them uncommitted` or passed with no PR. The work is now split:
