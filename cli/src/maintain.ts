@@ -83,6 +83,7 @@ maintainCli
   .option('--dry-run', 'Show matched pages without calling a model')
   .option('--model [id]', 'Holocron-hosted model, or `provider/model` for your own OpenCode keys')
   .option('--project [projectId]', 'Project ID (only needed with session auth when multiple projects exist)')
+  .option('--base [branch]', 'GitHub Actions only: branch the pull request targets. Defaults to the pushed branch, or the default branch for schedules and releases')
   .example('holocron maintain --since origin/main --dry-run')
   .example('holocron maintain --all --prompt-file .holocron/prompts/weekly-review.md')
   .example('holocron maintain --model glm-5.3-flash')
@@ -139,11 +140,14 @@ maintainCli
         repoRoot,
         baseSha: startSha,
         branch: `holocron/maintain-${Date.now()}`,
-        // For pull_request events baseBranch is the PR head, so docs land inside that PR.
-        targetBranch: githubEvent?.baseBranch ?? 'main',
+        // Push: the pushed branch. pull_request: the PR head. Schedule, dispatch, release: the default branch.
+        targetBranch: options.base ?? githubEvent?.baseBranch ?? 'main',
         pages: selectedPages.map((page) => page.path),
       }
       : undefined
+    if (options.base && !githubState) {
+      output.log(logger.warn('--base is ignored outside GitHub Actions. Maintain only opens pull requests there.'))
+    }
     const githubActions = githubState
       ? prepareMaintainBranch({ state: githubState, binPath: fileURLToPath(new URL('./bin.js', import.meta.url)) })
       : undefined

@@ -100,7 +100,7 @@ describe('maintain GitHub events', () => {
 const OPEN_PR = `holocron maintain-open-pr --title "[holocron] Update page" <<'EOF'\n- change\nEOF`
 
 describe('maintain publish commands', () => {
-  function setup() {
+  function setup({ targetBranch = 'main', localCommit = false } = {}) {
     const repo = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-publish-'))
     const git = (...args: string[]) => childProcess.execFileSync('git', args, { cwd: repo, encoding: 'utf8' }).trim()
     git('init', '-b', 'main')
@@ -109,12 +109,17 @@ describe('maintain publish commands', () => {
     fs.writeFileSync(path.join(repo, 'page.mdx'), 'old\n')
     git('add', '.')
     git('commit', '-m', 'init')
+    childProcess.execFileSync('git', ['init', '--bare', '-b', 'main', `${repo}.git`])
+    git('remote', 'add', 'origin', `${repo}.git`)
+    git('push', '-q', 'origin', 'main')
+    git('fetch', '-q', 'origin')
+    if (localCommit) git('commit', '-q', '--allow-empty', '-m', 'not on origin')
     const prepared = prepareMaintainBranch({
-      state: { repoRoot: repo, baseSha: git('rev-parse', 'HEAD'), branch: 'holocron/maintain-1', targetBranch: 'main', pages: ['page.mdx'] },
+      state: { repoRoot: repo, baseSha: git('rev-parse', 'HEAD'), branch: 'holocron/maintain-1', targetBranch, pages: ['page.mdx'] },
       // Node 24 strips types, so the shim can run the TypeScript entry directly.
       binPath: fileURLToPath(new URL('./bin.ts', import.meta.url)),
     })
-    if (prepared instanceof Error) throw prepared
+    if (prepared instanceof Error) return prepared
     // Same shell environment OpenCode's bash tool gets: `holocron` resolves through the shim on PATH.
     const sh = (command: string) => {
       const out = childProcess.spawnSync('sh', ['-c', command], { cwd: repo, encoding: 'utf8', env: { ...process.env, ...prepared.env } })
@@ -123,8 +128,15 @@ describe('maintain publish commands', () => {
     return { repo, git, sh, stateDir: prepared.stateDir }
   }
 
+  test('rejects a base branch that does not contain HEAD', () => {
+    expect(String(setup({ localCommit: true }))).toMatchInlineSnapshot(`"Error: HEAD is not on origin/main, so a pull request into main would include unrelated commits. Check out main with fetch-depth: 0, or pass --base <branch>."`)
+    expect(String(setup({ targetBranch: 'release' }))).toMatchInlineSnapshot(`"Error: HEAD is not on origin/release, so a pull request into release would include unrelated commits. Check out release with fetch-depth: 0, or pass --base <branch>."`)
+  })
+
   test('open-pr requires committed pages, then records the pull request', () => {
-    const { repo, git, sh, stateDir } = setup()
+    const prepared = setup()
+    if (prepared instanceof Error) throw prepared
+    const { repo, git, sh, stateDir } = prepared
     expect(git('branch', '--show-current')).toMatchInlineSnapshot(`"holocron/maintain-1"`)
     expect(sh(OPEN_PR)).toMatchInlineSnapshot(`"exit 1: No commits on holocron/maintain-1. Commit the updated pages first. If no page changed, do not open a pull request."`)
     fs.writeFileSync(path.join(repo, 'page.mdx'), 'new\n')

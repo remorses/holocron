@@ -64,7 +64,7 @@ That range is the **whole push**. Five commits in one push all count. It is not 
 
 Checkout needs **`fetch-depth: 0`** so those SHAs exist locally. A new-branch push has `before` all zeros. Maintain then uses `git diff-tree --root` on `after`.
 
-If MDX files change, the commit lands on **`holocron/maintain-<timestamp>`** and Maintain opens one pull request into `main`. Nothing is committed on `main` or on any other existing branch. Each commit is authored by `holocron.so <bot@holocron.so>` (set in code through git author env vars, not by editing your repo's git config), and the PR body ends with the line *PR opened by [holocron.so](https://holocron.so)*.
+If MDX files change, the commit lands on **`holocron/maintain-<timestamp>`** and Maintain opens one pull request into the pushed branch, `main` here. See [choose the base branch](#choose-the-base-branch) to target another branch. Nothing is committed on `main` or on any other existing branch. Each commit is authored by `holocron.so <bot@holocron.so>` (set in code through git author env vars, not by editing your repo's git config), and the PR body ends with the line *PR opened by [holocron.so](https://holocron.so)*.
 
 ```yaml
 name: Maintain documentation
@@ -133,6 +133,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
 ```
+
+## Choose the base branch
+
+The pull request targets the **branch that triggered the run**. Pass **`--base`** to target another branch.
+
+| Trigger                            | Default base              |
+| ---------------------------------- | ------------------------- |
+| `push`                             | the pushed branch         |
+| `schedule`, `workflow_dispatch`    | the repository default    |
+| `release`                          | the repository default    |
+
+```yaml
+      - run: npx -y "@holocron.so/cli" maintain --base docs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+```
+
+Maintain branches off the **checked-out commit**, so that commit must already be on `origin/<base>`. Otherwise the pull request would carry unrelated commits, and Maintain fails before it starts OpenCode. Check out the base branch with `fetch-depth: 0`, for example `ref: docs` on `actions/checkout`.
+
+The maintain branch is not rebased. It starts at the commit that triggered the run, and GitHub merges it like any other pull request. It only conflicts when someone else edits the same pages first.
 
 ## Do not cancel active runs
 

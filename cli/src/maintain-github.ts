@@ -174,6 +174,15 @@ function git(repoRoot: string, args: string[]): string | Error {
 
 // Creates the branch, the state dir, and a `holocron` shim so OpenCode's bash can call the hidden commands.
 export function prepareMaintainBranch({ state, binPath }: { state: MaintainState; binPath: string }) {
+  // The maintain branch starts at HEAD. If HEAD is not already on the base branch,
+  // the pull request would carry unrelated commits (for example a pull_request merge commit).
+  const onBase = git(state.repoRoot, ['merge-base', '--is-ancestor', 'HEAD', `refs/remotes/origin/${state.targetBranch}`])
+  if (onBase instanceof Error) {
+    return new Error(
+      `HEAD is not on origin/${state.targetBranch}, so a pull request into ${state.targetBranch} would include unrelated commits. Check out ${state.targetBranch} with fetch-depth: 0, or pass --base <branch>.`,
+      { cause: onBase },
+    )
+  }
   const switched = git(state.repoRoot, ['switch', '-c', state.branch])
   if (switched instanceof Error) return switched
   const stateDir = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-maintain-'))
