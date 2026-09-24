@@ -24,13 +24,14 @@ const headingTagByLevel: Record<number, string> = {
   6: 'h6',
 }
 
+// text-pretty avoids one-word last lines but still fills the column (balance would shrink left-aligned headings)
 const headingClassByLevel: Record<number, string> = {
-  1: 'editorial-heading editorial-h1',
-  2: 'editorial-heading editorial-h2',
-  3: 'editorial-heading editorial-h3',
-  4: 'editorial-heading',
-  5: 'editorial-heading',
-  6: 'editorial-heading',
+  1: 'editorial-heading editorial-h1 text-pretty',
+  2: 'editorial-heading editorial-h2 text-pretty',
+  3: 'editorial-heading editorial-h3 text-pretty',
+  4: 'editorial-heading text-pretty',
+  5: 'editorial-heading text-pretty',
+  6: 'editorial-heading text-pretty',
 }
 
 function normalizeHeadingLevel(level: HeadingLevel | number | string | undefined): HeadingLevel {
@@ -65,7 +66,7 @@ export function SectionHeading({
 }) {
 level ||= 1
   const tag = headingTagByLevel[level] || 'h4'
-  const cls = headingClassByLevel[level] || 'editorial-heading'
+  const cls = headingClassByLevel[level] || 'editorial-heading text-pretty'
 
   return React.createElement(tag, {
     id,
@@ -94,7 +95,7 @@ export function Heading({
 
   if (noAnchor) {
     const tag = headingTagByLevel[resolvedLevel] || 'h4'
-    const className = headingClassByLevel[resolvedLevel] || 'editorial-heading'
+    const className = headingClassByLevel[resolvedLevel] || 'editorial-heading text-pretty'
     return React.createElement(tag, { id: headingId, className }, children)
   }
 

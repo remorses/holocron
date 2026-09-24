@@ -411,7 +411,7 @@ describe('Callout icons — full production pipeline', () => {
 
   it('assigns unique ids to duplicate heading titles after re-parse', () => {
     const { html } = renderMdx('### Accounts\n\n### Accounts')
-    expect(html).toMatchInlineSnapshot(`"<h3 id="accounts" class="editorial-heading editorial-h3" data-toc-heading="true" data-toc-level="3"><span>Accounts</span></h3><h3 id="accounts-1" class="editorial-heading editorial-h3" data-toc-heading="true" data-toc-level="3"><span>Accounts</span></h3>"`)
+    expect(html).toMatchInlineSnapshot(`"<h3 id="accounts" class="editorial-heading editorial-h3 text-pretty" data-toc-heading="true" data-toc-level="3"><span>Accounts</span></h3><h3 id="accounts-1" class="editorial-heading editorial-h3 text-pretty" data-toc-heading="true" data-toc-level="3"><span>Accounts</span></h3>"`)
   })
 })
 
