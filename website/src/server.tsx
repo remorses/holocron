@@ -308,6 +308,12 @@ export const app = new Spiceflow({ tracer: trace.getTracer('holocron') })
   .use(aiLogoApp)
   .use(configOverrideApp)
   .get('/api/og', ({ request }: { request: Request }) => env.OG_WORKER.fetch(request))
+  // Probed by a Strada health check every 10 min. Fails with 500 if D1 does not respond.
+  .get('/api/health', async () => {
+    const start = Date.now()
+    await env.DB.prepare('SELECT 1').first()
+    return Response.json({ ok: true, latencyMs: Date.now() - start }, { headers: { 'cache-control': 'no-store' } })
+  })
   .use(schemaApp)
   .use(holocronApp)
 
