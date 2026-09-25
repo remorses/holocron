@@ -122,6 +122,20 @@ The run prompt is **temporary**. It does not replace page generation prompts.
 
 Maintain uses **one OpenCode session** for the complete run. The main agent groups independent pages by source and delegates those groups as parallel tasks. Holocron then validates every changed MDX file.
 
+**Maintain streams what OpenCode does live** to your terminal instead of sitting at "Starting OpenCode...". It subscribes to the OpenCode server event stream and prints the spawned subagent task sessions, assistant messages, and every finished tool call with its duration, so long runs stay visible.
+
+```text
+  ◆ task 1 Update index.mdx (@general subagent)
+  [task 1] └ read cli/src/maintain.ts 34ms
+  [task 1] └ edit website/src/pages/maintain/index.mdx 2ms
+  ✗ bash git push origin main 3ms → The user has specified a rule which prevents
+    you from using this specific tool call.
+  opencode ERROR stream error providerID=holocron agent=general
+    error.error=AI_APICallError: Rate limit exceeded.
+```
+
+**Failed tool calls** (for example a denied `git push`) print the error inline, and **OpenCode server warnings and errors** (such as a provider rate limit) are printed as `opencode` log lines. This surfaces denied tools and model failures instead of silently continuing.
+
 In **GitHub Actions**, Maintain creates `holocron/maintain-<timestamp>` before OpenCode starts and adds publish instructions to the session prompt, not the system prompt, so tasks never commit. When pages changed, the parent session commits them and runs `holocron maintain-open-pr` with the pull request title and body. Maintain then pushes and opens the pull request. The [GitHub Actions](./github-actions.mdx) page covers the no-args push range.
 
 **Parent-agent** runs omit that prompt block and tell OpenCode to leave the pages uncommitted. `git push` and `gh` are denied in every mode. The parent continues with its own PR setup after the command exits.
