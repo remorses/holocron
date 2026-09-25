@@ -11,7 +11,7 @@ import { Icon } from '../icon.tsx'
 
 /** Icon color + surface tint from one tone. Body text stays --foreground;
  *  the tint mixes against --background so it works in light and dark. */
-function calloutTone(tone: string, tint = 94): React.CSSProperties {
+function calloutTone(tone: string, tint = 89): React.CSSProperties {
   return { color: tone, backgroundColor: `color-mix(in srgb, var(--background) ${tint}%, ${tone})` }
 }
 
@@ -27,8 +27,8 @@ function harmonized(semantic: string, brandPercent = 15): string {
 const CALLOUT_VARIANTS = {
   note:    calloutTone('var(--primary)'),
   // --muted-foreground is translucent, so tint from --foreground instead
-  info:    { color: 'var(--muted-foreground)', backgroundColor: 'color-mix(in srgb, var(--background) 96%, var(--foreground))' },
-  warning: calloutTone(harmonized('--yellow', 8), 93),
+  info:    { color: 'var(--muted-foreground)', backgroundColor: 'color-mix(in srgb, var(--background) 94%, var(--foreground))' },
+  warning: calloutTone(harmonized('--yellow', 8), 88),
   tip:     calloutTone(harmonized('--green')),
   check:   calloutTone(harmonized('--green')),
   danger:  calloutTone('var(--red)'),
