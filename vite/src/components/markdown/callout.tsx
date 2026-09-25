@@ -9,18 +9,30 @@
 import React from 'react'
 import { Icon } from '../icon.tsx'
 
-/** Variant style map for callout icon + surface tint.
- *  The body text stays default (--foreground); only the icon picks up the
- *  variant color through currentColor. Background tint is mixed against the
- *  current surface so it stays visible in both light and dark themes. */
+/** Icon color + surface tint from one tone. Body text stays --foreground;
+ *  the tint mixes against --background so it works in light and dark. */
+function calloutTone(tone: string, tint = 94): React.CSSProperties {
+  return { color: tone, backgroundColor: `color-mix(in srgb, var(--background) ${tint}%, ${tone})` }
+}
+
+/** Pull a semantic hue toward the brand (Material "harmonization"), so a
+ *  green brand and a green tip never render as two clashing greens.
+ *  Warning uses a smaller pull. Danger is never pulled: red must stay red,
+ *  and oklch hue mixing turns red orange next to a green brand. */
+function harmonized(semantic: string, brandPercent = 15): string {
+  return `color-mix(in oklch, var(${semantic}) ${100 - brandPercent}%, var(--primary))`
+}
+
+/** note = brand, info = neutral (Mintlify parity), others keep their meaning. */
 const CALLOUT_VARIANTS = {
-  note:    { color: 'var(--blue)', backgroundColor: 'color-mix(in srgb, var(--background) 94%, var(--blue))' },
-  warning: { color: 'var(--yellow)', backgroundColor: 'color-mix(in srgb, var(--background) 93%, var(--yellow))' },
-  info:    { color: 'var(--blue)', backgroundColor: 'color-mix(in srgb, var(--background) 94%, var(--blue))' },
-  tip:     { color: 'var(--green)', backgroundColor: 'color-mix(in srgb, var(--background) 94%, var(--green))' },
-  check:   { color: 'var(--green)', backgroundColor: 'color-mix(in srgb, var(--background) 94%, var(--green))' },
-  danger:  { color: 'var(--red)', backgroundColor: 'color-mix(in srgb, var(--background) 94%, var(--red))' },
-} as const
+  note:    calloutTone('var(--primary)'),
+  // --muted-foreground is translucent, so tint from --foreground instead
+  info:    { color: 'var(--muted-foreground)', backgroundColor: 'color-mix(in srgb, var(--background) 96%, var(--foreground))' },
+  warning: calloutTone(harmonized('--yellow', 8), 93),
+  tip:     calloutTone(harmonized('--green')),
+  check:   calloutTone(harmonized('--green')),
+  danger:  calloutTone('var(--red)'),
+} satisfies Record<string, React.CSSProperties>
 
 export type CalloutType = keyof typeof CALLOUT_VARIANTS
 
@@ -147,9 +159,7 @@ export function Callout({ children, type, variant, title, color, icon, iconType,
   }
 
   // Preset variant (or unstyled fallback)
-  const variantStyle = resolvedType
-    ? CALLOUT_VARIANTS[resolvedType]
-    : { color: 'var(--blue)', backgroundColor: 'color-mix(in srgb, var(--background) 94%, var(--blue))' }
+  const variantStyle = CALLOUT_VARIANTS[resolvedType ?? 'info']
   return (
     <div className={baseClass} aria-label={ariaLabel} style={variantStyle}>
       {resolvedIcon !== undefined && resolvedIcon !== null && (

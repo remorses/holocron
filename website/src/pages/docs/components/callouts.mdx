@@ -13,7 +13,7 @@ icon: triangle-alert
 Holocron supports the same common callout vocabulary most Mintlify authors expect.
 
 <Note>
-Use `Note` for neutral supporting information.
+Use `Note` for supporting information. It uses your brand color.
 </Note>
 
 <Warning>
@@ -39,6 +39,21 @@ Use `Danger` for destructive or high-risk actions.
 <Callout icon='sparkles' color='#7c3aed'>
   Generic `Callout` gives you a custom icon and color when the preset semantic variants are not enough.
 </Callout>
+
+## Colors follow your brand
+
+Callout colors derive from `colors.primary` in `docs.json`, so they always match your site. `Note` uses the **primary** color, `Info` is neutral gray, and `Tip`, `Check` and `Warning` keep their meaning but shift slightly toward the primary hue. `Danger` always stays red.
+
+To change a semantic color, override its CSS variable:
+
+```css
+:root {
+  --green: #15803d;
+}
+.dark {
+  --green: #86efac;
+}
+```
 
 ## Callouts inside Aside
 
