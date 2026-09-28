@@ -20,6 +20,16 @@ GitHub Actions provides the **Git range, repository identity, OIDC authenticatio
 
 On a GitHub Actions run, Maintain creates the branch first. OpenCode updates the selected MDX pages. When pages changed, it **commits** them and runs `holocron maintain-open-pr` with the pull request title and body. Maintain then validates the pages, pushes the branch, and opens the pull request itself. If pages changed but OpenCode skipped that command, the job fails. Local and parent-agent runs never create a branch or pull request.
 
+While the model works, Maintain **streams OpenCode's activity to the CI logs** instead of waiting silently: each task session and assistant message, and every finished tool call with its duration. A denied or failed tool call (for example a `git push`) prints its error inline, and OpenCode server warnings or errors (such as a provider rate limit) are shown too.
+
+```text
+  ◆ task 1 Update index.mdx (@general subagent)
+  [task 1] └ read cli/src/maintain.ts 34ms
+  [task 1] └ edit website/src/pages/maintain/index.mdx 2ms
+  ✗ bash git push origin main 3ms → The user has specified a rule which prevents you from using this specific tool call.
+  opencode WARN message=... error.error=AI_APICallError: Rate limit exceeded.
+```
+
 ```diagram
   push to main
         │
