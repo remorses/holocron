@@ -18,14 +18,19 @@ Every docs page in Holocron is also available as agent-readable Markdown by appe
 | ---------------- | ---------------------------------- |
 | `/quickstart`    | HTML page                          |
 | `/quickstart.md` | Transformed MDX source as Markdown |
+| `/quickstart.mdx` | Same raw Markdown as `.md`        |
 
 This makes your docs machine-readable out of the box. AI agents, documentation scrapers, and CLI tools can fetch page source without parsing HTML. Holocron strips human-only `<Visibility>` blocks and prepends an agent directive to the response.
 
+Both `.md` and `.mdx` URLs serve the identical raw Markdown. When no home page exists, `/index.md` and `/index.mdx` redirect (307) to the first page in your navigation.
+
+The `.md` and `.mdx` routes set `x-robots-tag: noindex, nofollow`, so search engines keep indexing the HTML pages instead of the raw Markdown.
+
 ## AI agent redirect
 
-Holocron detects AI agents by their User-Agent string and automatically redirects them from the HTML page to the `.md` version with a 302. This means agents requesting `/quickstart` get the Markdown content directly.
+Holocron redirects clients that explicitly ask for Markdown from the HTML page to the `.md` version with a 302. Detection is based on the request's `Accept` header: when it starts with `text/markdown`, the client is redirected to the `.md` URL and gets the Markdown content directly.
 
-The redirect only applies to recognized agent User-Agent strings. Normal browsers always get the HTML page.
+There is no User-Agent sniffing. Normal browsers that accept HTML always get the HTML page.
 
 ## Sitemap comments
 

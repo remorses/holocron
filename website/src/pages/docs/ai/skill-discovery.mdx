@@ -21,7 +21,9 @@ Holocron implements the **agent-skills 0.2.0 discovery spec** (RFC 8615 extensio
 | `/.well-known/skills/index.json`            | Legacy JSON index   |
 | `/.well-known/skills/<name>/SKILL.md`       | Legacy skill file   |
 
-The `<name>` is derived from your site's `name` field in `docs.json` (lowercased, kebab-cased).
+The `<name>` is derived from your site's `name` field in `docs.json`: lowercased and kebab-cased, capped at 1-64 characters. If the site name produces an empty slug (for example a non-Latin name), it falls back to `docs`.
+
+The v0.2.0 index includes a `digest` field with the SHA-256 hash of the SKILL.md content, so agents can verify the file and detect changes. The legacy index omits it.
 
 ## SKILL.md content
 

@@ -90,11 +90,11 @@ Use a real inbox that your team reads. The assistant will quote this address in 
 
 The assistant uses the hosted Holocron AI gateway to process questions. When deployed, the docs app sends the current page plus either inline docs in local development or a `docs.zip` URL in production, then streams the answer back into the chat UI.
 
-Hosted chat uses Cloudflare Workers AI. Authenticated sites send `HOLOCRON_KEY`; unauthenticated requests use a temporary fallback with stricter IP rate limits. The default model is GLM 4.7 Flash.
+Hosted chat routes through the Holocron AI gateway, which proxies to upstream providers via the Vercel AI Gateway. Authenticated sites send `HOLOCRON_KEY`; unauthenticated requests use a temporary fallback with stricter IP rate limits. The default model is `deepseek-v4-flash`, with `glm-5.3-flash` as a fallback.
 
 ## Table of contents in the sidebar
 
-With `display: "sidebar"` (the default), the AI assistant widget occupies the right sidebar. If you prefer a traditional **table of contents** instead (or alongside the widget), add the `TableOfContentsPanel` component to your page:
+The AI assistant widget occupies the right sidebar by default. If you prefer a traditional **table of contents** instead (or alongside the widget), add the `TableOfContentsPanel` component to your page:
 
 ```mdx
 <Aside full>
