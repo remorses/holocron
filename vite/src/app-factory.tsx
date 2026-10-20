@@ -1133,15 +1133,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     loaderData: HolocronLoaderData
   }) {
     const effectiveConfig = loaderData.site.config
-
-    const cookies = parseCookies(request.headers.get('cookie') || '')
-    const cookieTheme = effectiveConfig.appearance.strict
-      ? null
-      : (cookies['color-theme'] === 'light' || cookies['color-theme'] === 'dark' ? cookies['color-theme'] : null)
-    const isDark =
-      cookieTheme === 'dark' ||
-      (!cookieTheme && effectiveConfig.appearance.default === 'dark')
-
     const isNotFound = children === null
     const pageLanguage = findActiveVersion(loaderData.site, loaderData.currentPageHref)?.lang ?? 'en'
     const bannerJsx = getBannerJsx(loaderData.site, request)
@@ -1157,7 +1148,9 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     return (
       <html
         lang={pageLanguage}
-        className={[isDark ? 'dark' : '', effectiveConfig.sidebar.animate ? 'sidebar-animate' : ''].filter(Boolean).join(' ') || undefined}
+        // Never render `dark` here. THEME_SCRIPT owns it. A server class differs between
+        // prerendered pages (no cookie) and dynamic ones, so client navigation would reset it.
+        className={effectiveConfig.sidebar.animate ? 'sidebar-animate' : undefined}
         data-default-theme={effectiveConfig.appearance.default}
         suppressHydrationWarning
         {...(effectiveConfig.appearance.strict ? { 'data-strict-theme': '' } : {})}
@@ -1174,9 +1167,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         <body>
           {/* Blocking theme script — runs before any content is painted to set
               .dark class from the color-theme cookie. Prevents flash of wrong
-              theme on reload. The server also sets className on <html> from the
-              cookie, but this script handles streaming race conditions where the
-              browser renders before the server class attribute arrives. */}
+              theme on reload. It is the only owner of the .dark class. */}
           <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
           <GtmNoscript integrations={effectiveConfig.integrations} />
           <div className='sr-only'>{buildAgentDocsDirective(site.base)}</div>

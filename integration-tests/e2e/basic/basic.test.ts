@@ -48,6 +48,22 @@ test.describe("home page", () => {
   });
 });
 
+test.describe("dark mode", () => {
+  // Prerendered pages are rendered without the cookie. Clearing it before a
+  // client navigation reproduces that: the RSC payload must not reset `.dark`.
+  test("keeps dark class when the next RSC payload has no theme cookie", async ({ page, context, baseURL }) => {
+    await context.addCookies([{ name: "color-theme", value: "dark", url: baseURL! }]);
+    await page.goto("/getting-started", { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle");
+    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+
+    await context.clearCookies();
+    await page.locator("footer").getByRole("link", { name: /Previous: Welcome to Test Docs/ }).click();
+    await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible();
+    await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+  });
+});
+
 test.describe("page heading semantics", () => {
   test("renders one frontmatter h1 before callout-first content", async ({ page }) => {
     await page.goto("/questions-(what's-new)", { waitUntil: "domcontentloaded" });

@@ -2,8 +2,8 @@
 
 /**
  * Theme select — native <select> with System / Light / Dark, shown in the footer.
- * Writes a `color-theme` cookie so the server and THEME_SCRIPT render the
- * right class on <html>. "system" follows the OS preference live.
+ * Writes a `color-theme` cookie so THEME_SCRIPT sets the right class on
+ * <html> on the next load. "system" follows the OS preference live.
  * Hidden when `appearance.strict` is true.
  */
 
