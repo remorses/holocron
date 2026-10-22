@@ -255,3 +255,31 @@ export function HolocronLogo({ className }: { className?: string }) {
     </svg>
   )
 }
+
+// ── Loading dots (keyframes in chat-shared.css) ──────────────────────
+
+export function ChatLoadingDots() {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
+        padding: '8px 0',
+      }}
+    >
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          style={{
+            width: '5px',
+            height: '5px',
+            borderRadius: '50%',
+            backgroundColor: 'var(--muted-foreground)',
+            animation: `holocron-chat-dot 1.2s ease-in-out ${i * 0.2}s infinite`,
+          }}
+        />
+      ))}
+    </div>
+  )
+}

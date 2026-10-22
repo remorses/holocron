@@ -6,7 +6,8 @@
  * Point it at your holocron docs domain and get a working AI chat.
  * The widget fetches docs, streams responses via RSC federation, and
  * renders inside a Shadow DOM for style isolation. Pill ↔ drawer morph
- * uses Motion layoutId (Chrome ignores CSS view-transition-name in shadow).
+ * is a native view transition: the shells expose part="holocron-chat-shell"
+ * and a document stylesheet names them through ::part() (see chat-store.ts).
  *
  * Usage:
  *   import { ChatWidget } from '@holocron.so/vite/chat'
@@ -17,7 +18,7 @@
 
 import React, { useEffect, useCallback, useSyncExternalStore } from 'react'
 import { chatWidgetStore } from './chat-widget-store.ts'
-import { chatStore } from './chat-store.ts'
+import { chatStore, setChatDrawerState } from './chat-store.ts'
 import { ChatDrawer } from './chat-drawer.tsx'
 import { ChatPill } from './chat-pill.tsx'
 import { ChatShadowHost } from './chat-shadow-host.tsx'
@@ -149,7 +150,7 @@ export function ChatWidget({
 
   const handleToggle = useCallback(() => {
     const current = chatStore.getState().drawerState
-    chatStore.setState({ drawerState: current === 'open' ? 'closed' : 'open' })
+    setChatDrawerState(current === 'open' ? 'closed' : 'open')
   }, [])
 
   return (
@@ -157,8 +158,8 @@ export function ChatWidget({
       {/* Custom trigger stays outside shadow so users can style it with page CSS */}
       {TriggerComponent ? <TriggerComponent onClick={handleToggle} /> : null}
 
-      {/* Pill + drawer inside shadow DOM for style isolation. Motion layoutId
-       * morphs pill ↔ drawer (works in shadow; CSS view transitions do not). */}
+      {/* Pill + drawer inside shadow DOM for style isolation. setChatDrawerState()
+       * morphs pill ↔ drawer with a view transition named through ::part(). */}
       <ChatShadowHost
         className={className}
         style={style}

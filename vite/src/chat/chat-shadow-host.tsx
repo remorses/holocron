@@ -8,16 +8,16 @@
  * shadow DOM. This keeps a single React root (the parent app's) so there are
  * no dual-root lifecycle conflicts or HMR "removeChild" races.
  *
- * Pill ↔ drawer morph uses Motion layoutId. The drawer portals into a node
- * *inside* LayoutGroup (not the outer mount) so shared layout stays in one
- * projection tree.
+ * Pill ↔ drawer morph is a document view transition. Names set inside this
+ * shadow root are tree-scoped and ignored, so the shells expose
+ * part="holocron-chat-shell" and a document stylesheet names them through
+ * ::part() (see setChatDrawerState in chat-store.ts).
  *
  * No SSR/DSD needed — the widget is client-only.
  */
 
 import React, { useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { LayoutGroup } from 'motion/react'
 
 import { chatCssBundle } from './chat-css-bundle.ts'
 
@@ -35,10 +35,10 @@ export function ChatLayoutRoot({
   }, [onMountPoint])
 
   return (
-    <LayoutGroup id='holocron-chat'>
+    <>
       <div ref={portalRef} data-holocron-chat-portal='' />
       {children}
-    </LayoutGroup>
+    </>
   )
 }
 

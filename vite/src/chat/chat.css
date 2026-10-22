@@ -11,7 +11,9 @@
  * This file only adds the shadow-DOM-specific parts: Tailwind directives,
  * token defaults, --tw-* fallbacks, and scrollbar styling.
  *
- * Pill ↔ drawer morph uses Motion layoutId (JS), so shadow isolation is fine.
+ * Pill ↔ drawer morph is a document view transition. Its ::view-transition
+ * rules cannot live here (shadow styles do not reach the document pseudo tree),
+ * so setChatDrawerState() injects them into document.head.
  */
 
 /* ── Tailwind directives (for standalone widget CSS generation) ───────

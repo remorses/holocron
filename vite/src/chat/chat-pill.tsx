@@ -1,38 +1,28 @@
 'use client'
 
 /**
- * ChatPill — widget-mode trigger. Outer shell owns layoutId; inner `layout` child counter-scales.
+ * ChatPill — widget-mode trigger. Carries the chat shell part while closed so
+ * setChatDrawerState() morphs it into the drawer.
  */
 
 import React, { useRef, useState, useSyncExternalStore } from 'react'
-import { motion, useReducedMotion } from 'motion/react'
-import {
-  chatStore,
-  chatShellLayoutId,
-  CHAT_LAYOUT_COLLAPSE,
-  CHAT_CONTENT_ENTER,
-  CHAT_CONTENT_EXIT,
-} from './chat-store.ts'
-import { chatWidgetStore } from './chat-widget-store.ts'
+import { chatStore, setChatDrawerState, preloadChatDrawer, CHAT_SHELL_PART } from './chat-store.ts'
 import { ArrowUpIcon } from './chat-icons.tsx'
 
 const getDrawerState = () => chatStore.getState().drawerState
-const getChatPageKey = () => chatWidgetStore.getState().currentSlug || '/'
 
 export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: string }) {
   const [inputValue, setInputValue] = useState('')
   const [focused, setFocused] = useState(false)
   const drawerState = useSyncExternalStore(chatStore.subscribe, getDrawerState, getDrawerState)
-  const pageKey = useSyncExternalStore(chatWidgetStore.subscribe, getChatPageKey, getChatPageKey)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const reduceMotion = useReducedMotion()
 
   const handleSubmit = () => {
     const text = inputValue.trim()
     if (!text) return
     setInputValue('')
     textareaRef.current?.blur()
-    chatStore.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' })
+    setChatDrawerState('open', { draftText: text, pendingSubmit: true })
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -45,35 +35,25 @@ export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: st
     }
   }
 
-  const pillRef = useRef<HTMLDivElement>(null)
-
   const hasText = inputValue.trim().length > 0
   const expanded = focused || inputValue.length > 0
   const isDrawerOpen = drawerState === 'open'
 
-  // Stay mounted + inert while open so close can morph back. visibility:hidden kills the crossfade.
+  // Stays mounted + inert while open; the drawer owns the shell part then, so
+  // setChatDrawerState() morphs between the two.
   return (
-    <motion.div
-      ref={pillRef}
+    <div
       className='holocron-chat-pill'
       data-chat-shell='pill'
       data-expanded={expanded ? '' : undefined}
-      layoutId={chatShellLayoutId(pageKey)}
-      transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_COLLAPSE }}
+      part={isDrawerOpen ? undefined : CHAT_SHELL_PART}
       inert={isDrawerOpen}
-      style={{ borderRadius: 24 }}
+      onPointerEnter={preloadChatDrawer}
+      onFocus={preloadChatDrawer}
     >
-      <motion.div
-        layout
-        animate={{ opacity: isDrawerOpen ? 0 : 1 }}
-        transition={
-          reduceMotion
-            ? { duration: 0 }
-            : isDrawerOpen
-              ? CHAT_CONTENT_EXIT
-              : CHAT_CONTENT_ENTER
-        }
+      <div
         className='holocron-chat-pill-content flex items-end gap-2 py-1.5 pr-1.5 pl-5'
+        style={{ opacity: isDrawerOpen ? 0 : 1 }}
       >
         <textarea
           ref={textareaRef}
@@ -103,7 +83,7 @@ export function ChatPill({ placeholder = 'How can I help?' }: { placeholder?: st
         >
           <ArrowUpIcon size={14} />
         </button>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   )
 }

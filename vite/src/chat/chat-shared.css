@@ -12,8 +12,7 @@
  * which also covers `.holocron-chat.dark`).
  */
 
-/* Pill trigger. No CSS transform — that fights Motion projection.
- * width:auto + left/right inset + max-width. Never use 100vw: it includes
+/* Pill trigger. width:auto + left/right inset + max-width. Never use 100vw: it includes
  * the scrollbar and the focused pill overflows. */
 .holocron-chat-pill {
   position: fixed;
@@ -73,8 +72,8 @@
 }
 
 /* Fullscreen on small screens. Desktop keeps the floating side panel.
- * border-radius is owned by the inline style so Motion can morph it.
- * Hairline via box-shadow; a real border smears during the morph. */
+ * border-radius and box-shadow are read by setChatDrawerState() to animate
+ * the morph. Hairline via box-shadow; a real border smears during the morph. */
 .holocron-chat-drawer-panel {
   position: fixed;
   inset: 0;
@@ -176,6 +175,23 @@
 .holocron-chat-suggestion:hover svg {
   opacity: 1;
   transform: translateX(2px);
+}
+
+/* ── Welcome screen staggered entrance ─────────────────────────────────
+ * Each item sets --enter-step (0, 1, 2…) inline. */
+.holocron-chat-enter {
+  animation: holocron-chat-enter 180ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: calc(80ms + var(--enter-step, 0) * 40ms);
+}
+
+@keyframes holocron-chat-enter {
+  from { opacity: 0; transform: translateY(10px); filter: blur(2px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .holocron-chat-enter {
+    animation: none;
+  }
 }
 
 /* ── Session dropdown open animation (subtle fade + scale) ───────────── */

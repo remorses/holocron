@@ -15,35 +15,36 @@ import { test, expect, type Page } from "../helpers/test.ts";
 
 declare global {
   interface Window {
-    __tfPoll: number;
-    __tfSamples: string[];
+    __vtPoll: number;
+    __vtSamples: string[];
   }
 }
 
-async function sampleTransforms({
+/** Pseudo-elements of every running animation, sampled while `action` runs. */
+async function sampleAnimatedPseudos({
   page,
-  selector,
   action,
 }: {
   page: Page;
-  selector: string;
   action: () => Promise<void>;
 }): Promise<string[]> {
-  await page.evaluate((sel) => {
+  await page.evaluate(() => {
     const samples: string[] = [];
-    window.__tfSamples = samples;
-    window.__tfPoll = window.setInterval(() => {
-      const el = document.querySelector(sel);
-      if (el) samples.push(getComputedStyle(el).transform);
+    window.__vtSamples = samples;
+    window.__vtPoll = window.setInterval(() => {
+      for (const animation of document.getAnimations()) {
+        const effect = animation.effect as KeyframeEffect | null;
+        if (effect?.pseudoElement) samples.push(effect.pseudoElement);
+      }
     }, 16);
-  }, selector);
+  });
   await action();
   await page.evaluate(
     () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
   );
   return page.evaluate(() => {
-    window.clearInterval(window.__tfPoll);
-    return window.__tfSamples;
+    window.clearInterval(window.__vtPoll);
+    return window.__vtSamples;
   });
 }
 
@@ -142,15 +143,15 @@ test("typing in sidebar input and pressing Enter opens the chat drawer", async (
   await expect(page.locator(".holocron-chat-input-frame textarea")).toHaveValue("");
 });
 
-test("chat shell morphs on open and stays still on client navigation", async ({ page }) => {
+test("chat shell morphs on open and close, and stays still on client navigation", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
   await expect(page.getByText("Ask AI about this page")).toBeVisible({ timeout: 10000 });
 
-  const openSamples = await sampleTransforms({
+  const shellGroup = "::view-transition-group(holocron-chat-shell)";
+  const openSamples = await sampleAnimatedPseudos({
     page,
-    selector: "[data-chat-shell='drawer']",
     action: async () => {
       const chatInput = page.locator("textarea").first();
       await chatInput.fill("hello");
@@ -158,22 +159,28 @@ test("chat shell morphs on open and stays still on client navigation", async ({ 
       await expect(page.locator("button[aria-label='New chat']")).toBeVisible({ timeout: 10000 });
     },
   });
-  expect(openSamples.some((t) => t.startsWith("matrix"))).toBe(true);
+  expect(openSamples).toContain(shellGroup);
 
-  await page.locator("button[aria-label='Close']").click();
-  await expect(page.locator("button[aria-label='New chat']")).not.toBeVisible({ timeout: 5000 });
-
-  const navSamples = await sampleTransforms({
+  const closeSamples = await sampleAnimatedPseudos({
     page,
-    selector: "[data-chat-shell='sidebar']",
+    action: async () => {
+      await page.locator("button[aria-label='Close']").click();
+      await expect(page.locator("button[aria-label='New chat']")).not.toBeVisible({ timeout: 5000 });
+    },
+  });
+  expect(closeSamples).toContain(shellGroup);
+  // The close morph outlives the drawer unmount; let it finish first.
+  await page.waitForFunction(() => !document.documentElement.hasAttribute("data-holocron-chat-vt"));
+
+  const navSamples = await sampleAnimatedPseudos({
+    page,
     action: async () => {
       await page.locator('.slot-sidebar-left a[href="/getting-started"]').click();
       await expect(page).toHaveURL(/getting-started/, { timeout: 5000 });
       await expect(page.getByText("Follow these steps to get up and running with Chat Test Docs.")).toBeVisible({ timeout: 10000 });
     },
   });
-  expect(navSamples.length).toBeGreaterThan(0);
-  expect(navSamples.every((t) => t === "none")).toBe(true);
+  expect(navSamples).not.toContain(shellGroup);
 });
 
 test("existing chat keeps the textarea normal and opens from the heading", async ({ page }) => {

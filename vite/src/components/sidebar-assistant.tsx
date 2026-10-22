@@ -1,14 +1,12 @@
 'use client'
 
-import React, { useState, useRef, useCallback } from 'react'
-import { motion, useReducedMotion } from 'motion/react'
+import React, { useState, useCallback } from 'react'
 import { useSyncExternalStore } from 'react'
 import {
   chatStore,
-  chatShellLayoutId,
-  CHAT_LAYOUT_COLLAPSE,
-  CHAT_CONTENT_ENTER,
-  CHAT_CONTENT_EXIT,
+  setChatDrawerState,
+  preloadChatDrawer,
+  CHAT_SHELL_PART,
   type ChatState,
 } from '../chat/chat-store.ts'
 
@@ -58,10 +56,7 @@ export function SidebarAssistant() {
     hasPersistedChat,
     getServerHasExistingChat,
   )
-  const reduceMotion = useReducedMotion()
-
-  const { site, currentPageHref } = useHolocronData()
-  const sidebarRef = useRef<HTMLDivElement>(null)
+  const { site } = useHolocronData()
   const handleChange = (value: string) => {
     setInputValue(value)
     chatStore.setState({ draftText: value })
@@ -71,43 +66,34 @@ export function SidebarAssistant() {
     const text = inputValue.trim()
     if (!text) return
     setInputValue('')
-    chatStore.setState({ draftText: text, pendingSubmit: true, drawerState: 'open' })
+    setChatDrawerState('open', { draftText: text, pendingSubmit: true })
   }
 
   const openExistingChat = () => {
-    chatStore.setState({ drawerState: 'open' })
+    setChatDrawerState('open')
     void ensureSessionRestored()
   }
 
-  // Remount per page; changing layoutId alone still animates one Motion instance's new box.
-  // Stay mounted + inert while open. Opaque mix, not bg-accent (accent is rgba).
+  // Stays mounted + inert while open; the drawer owns the shell part then, so
+  // setChatDrawerState() morphs between the two. Opaque mix, not bg-accent (accent is rgba).
   const isDrawerOpen = drawerState === 'open'
   return (
-    <motion.div
-      key={currentPageHref || '/'}
-      ref={sidebarRef}
+    <div
       className='hidden lg:block w-full overflow-hidden rounded-2xl'
       data-chat-shell='sidebar'
-      layoutId={chatShellLayoutId(currentPageHref || '/')}
-      transition={reduceMotion ? { duration: 0 } : { layout: CHAT_LAYOUT_COLLAPSE }}
+      part={isDrawerOpen ? undefined : CHAT_SHELL_PART}
       inert={isDrawerOpen}
+      onPointerEnter={preloadChatDrawer}
+      onFocus={preloadChatDrawer}
       style={{
         borderRadius: 16,
         backgroundColor: 'var(--background)',
       }}
     >
-      <motion.div
-        layout
-        animate={{ opacity: isDrawerOpen ? 0 : 1 }}
-        transition={
-          reduceMotion
-            ? { duration: 0 }
-            : isDrawerOpen
-              ? CHAT_CONTENT_EXIT
-              : CHAT_CONTENT_ENTER
-        }
+      <div
         className='px-0.5 pt-px pb-0.5'
         style={{
+          opacity: isDrawerOpen ? 0 : 1,
           backgroundColor: 'color-mix(in srgb, var(--foreground) 8%, var(--background))',
         }}
       >
@@ -143,8 +129,8 @@ export function SidebarAssistant() {
           // the accent ring visually uniform around the corners.
           className='rounded-[14px]'
         />
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   )
 }
 

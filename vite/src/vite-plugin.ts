@@ -1201,26 +1201,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       // from bundling/optimization in every environment via regex.
       addNoExternal(config, holocronPackagePattern)
 
-      // motion/react re-exports framer-motion, which imports React hooks.
-      // Keep both packages in Vite's SSR dependency graph so their React
-      // imports share the optimizer's React instance instead of loading
-      // React natively via Node (which creates a second module evaluation
-      // with its own __currentDispatcher → "Invalid hook call" crash).
-      if (name === 'ssr') {
-        addNoExternal(config, 'motion')
-        addNoExternal(config, 'framer-motion')
-        // Pre-include motion/react so the SSR optimizer doesn't discover it
-        // mid-request on the first page render. Late discovery re-optimizes
-        // the SSR pre-bundle and invalidates in-flight module graphs, making
-        // the NEXT request fail with "There is a new version of the
-        // pre-bundle" (browsers auto-reload; API/tests see a raw 500).
-        config.optimizeDeps ??= {}
-        config.optimizeDeps.include = mergeUnique(
-          config.optimizeDeps.include,
-          ['@holocron.so/vite > motion/react'],
-        )
-      }
-
       if (name === 'client') {
         config.optimizeDeps ??= {}
         config.optimizeDeps.exclude = mergeUnique(
@@ -1241,7 +1221,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             // Pre-include deps discovered on first page render so the client
             // optimizer doesn't churn ("optimized dependencies changed.
             // reloading") right after dev server startup.
-            '@holocron.so/vite > motion/react',
             '@holocron.so/vite > github-slugger',
             '@holocron.so/vite > @radix-ui/react-dropdown-menu',
           ],

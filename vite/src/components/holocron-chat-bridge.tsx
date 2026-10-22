@@ -8,7 +8,6 @@
  */
 
 import { useLayoutEffect, useEffect, useRef } from 'react'
-import { LayoutGroup } from 'motion/react'
 import { router } from 'spiceflow/react'
 import { useHolocronData } from '../router.ts'
 import { chatWidgetStore } from '../chat/chat-widget-store.ts'
@@ -65,10 +64,10 @@ function FloatingChat() {
   }, [])
 
   return (
-    <LayoutGroup id='holocron-chat'>
+    <>
       <div ref={portalRef} data-holocron-chat-portal='' />
       <ChatPill />
       <ChatDrawer />
-    </LayoutGroup>
+    </>
   )
 }

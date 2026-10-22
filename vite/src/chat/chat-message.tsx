@@ -520,37 +520,3 @@ function PieLoader() {
 
   return <span className='inline-block'>{pies[index]} </span>
 }
-
-// ── Loading dots (shown before first part arrives) ───────────────────
-
-export function ChatLoadingDots() {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px',
-        padding: '8px 0',
-      }}
-    >
-      {[0, 1, 2].map((i) => (
-        <span
-          key={i}
-          style={{
-            width: '5px',
-            height: '5px',
-            borderRadius: '50%',
-            backgroundColor: 'var(--muted-foreground)',
-            animation: `holocron-chat-dot 1.2s ease-in-out ${i * 0.2}s infinite`,
-          }}
-        />
-      ))}
-      <style>{`
-        @keyframes holocron-chat-dot {
-          0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
-          40% { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
-    </div>
-  )
-}
