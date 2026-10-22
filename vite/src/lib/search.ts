@@ -3,7 +3,7 @@
  * Pure logic, no React/DOM. Feeds the SideNav search input.
  */
 
-import { create, insertMultiple, search, type AnyOrama } from '@orama/orama'
+import type { AnyOrama } from '@orama/orama'
 
 /* ── Types ───────────────────────────────────────────────────────────── */
 
@@ -50,26 +50,42 @@ const tocSchema = {
   text: 'string',
 } as const
 
+type Orama = typeof import('@orama/orama')
+
+/** Populated Orama DB plus the module that queries it. */
+export type SearchIndex = { db: AnyOrama; orama: Orama }
+
 /** Create and populate an Orama DB from search entries. Synchronous. */
-export function createSearchDb({ entries }: { entries: SearchEntry[] }): AnyOrama {
-  const db = create({ schema: tocSchema })
-  const insertResult = insertMultiple(db, entries.map((e) => ({ href: e.href, text: e.searchText })))
+export function createSearchIndex({ orama, entries }: { orama: Orama; entries: SearchEntry[] }): SearchIndex {
+  const db = orama.create({ schema: tocSchema })
+  const insertResult = orama.insertMultiple(db, entries.map((e) => ({ href: e.href, text: e.searchText })))
   if (insertResult instanceof Promise) {
     throw new Error('Expected synchronous search index insert')
   }
-  return db
+  return { db, orama }
 }
 
-const searchDbs = new WeakMap<SearchEntry[], AnyOrama>()
+let oramaPromise: Promise<Orama> | null = null
+const searchIndexes = new WeakMap<SearchEntry[], SearchIndex>()
 
-/** Index lazily on the first query. Building it during render cost ~30% of SSR CPU per request. */
-export function getSearchDb(entries: SearchEntry[]): AnyOrama {
-  let db = searchDbs.get(entries)
-  if (!db) {
-    db = createSearchDb({ entries })
-    searchDbs.set(entries, db)
+/**
+ * Load Orama (~70KB, kept out of the page bundle) and index on the first
+ * query. Building the index during render cost ~30% of SSR CPU per request.
+ */
+export async function loadSearchIndex(entries: SearchEntry[]): Promise<SearchIndex> {
+  const cached = searchIndexes.get(entries)
+  if (cached) return cached
+  oramaPromise ??= import('@orama/orama').catch((error: unknown) => {
+    oramaPromise = null
+    throw error
+  })
+  const orama = await oramaPromise
+  let index = searchIndexes.get(entries)
+  if (!index) {
+    index = createSearchIndex({ orama, entries })
+    searchIndexes.set(entries, index)
   }
-  return db
+  return index
 }
 
 /* ── Search ──────────────────────────────────────────────────────────── */
@@ -83,15 +99,15 @@ export function getSearchDb(entries: SearchEntry[]): AnyOrama {
  *   expandGroupKeys — every ancestor group prefix (for force-expanding parent groups)
  *   visiblePages   — pages to show in the sidebar (matched pages + parent pages of heading hits)
  */
-export function searchSidebar({ db, query, entries }: {
-  db: AnyOrama
+export function searchSidebar({ index, query, entries }: {
+  index: SearchIndex
   query: string
   entries: SearchEntry[]
 }): SearchState | null {
   const trimmed = query.trim()
   if (!trimmed) return null
 
-  const searchResult = search(db, {
+  const searchResult = index.orama.search(index.db, {
     term: trimmed,
     properties: ['text'],
     tolerance: 1,

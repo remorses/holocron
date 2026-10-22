@@ -3,7 +3,8 @@
  * Pure function tests — no fixtures, no DOM, no Orama side-effects on assertions.
  */
 import { describe, test, expect } from 'vitest'
-import { createSearchDb, searchSidebar, buildFocusableHrefs, visibleSidebarHeadings, splitHighlightedText, type SearchEntry, type SearchState } from './search.ts'
+import * as orama from '@orama/orama'
+import { createSearchIndex, searchSidebar, buildFocusableHrefs, visibleSidebarHeadings, splitHighlightedText, type SearchEntry, type SearchState } from './search.ts'
 
 /** Build a minimal SearchEntry for a page. */
 function page({ href, title, groupPath }: { href: string; title: string; groupPath: string }): SearchEntry {
@@ -27,8 +28,8 @@ function heading({ pageHref, slug, text, groupPath }: {
 }
 
 function setup(entries: SearchEntry[]) {
-  const db = createSearchDb({ entries })
-  const run = (query: string) => searchSidebar({ db, query, entries })
+  const index = createSearchIndex({ orama, entries })
+  const run = (query: string) => searchSidebar({ index, query, entries })
   return { run }
 }
 
@@ -149,8 +150,8 @@ describe('buildFocusableHrefs', () => {
       page({ href: '/b', title: 'Beta', groupPath: 'Guides' }),
       page({ href: '/c', title: 'Gamma', groupPath: 'Guides' }),
     ]
-    const db = createSearchDb({ entries })
-    const state = searchSidebar({ db, query: 'Alpha', entries })!
+    const index = createSearchIndex({ orama, entries })
+    const state = searchSidebar({ index, query: 'Alpha', entries })!
     const focusable = buildFocusableHrefs(state, entries)
     expect(focusable).toMatchInlineSnapshot(`
       [
@@ -166,8 +167,8 @@ describe('buildFocusableHrefs', () => {
       heading({ pageHref: '/guide', slug: 'config', text: 'Configuration', groupPath: 'Docs' }),
       page({ href: '/other', title: 'Other', groupPath: 'Docs' }),
     ]
-    const db = createSearchDb({ entries })
-    const state = searchSidebar({ db, query: 'Installation', entries })!
+    const index = createSearchIndex({ orama, entries })
+    const state = searchSidebar({ index, query: 'Installation', entries })!
     const focusable = buildFocusableHrefs(state, entries)
     expect(focusable).toMatchInlineSnapshot(`
       [

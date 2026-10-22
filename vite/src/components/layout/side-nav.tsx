@@ -12,13 +12,13 @@ import { router, useRouterState } from 'spiceflow/react'
 import { Link } from '../link.tsx'
 import { useActiveTocState } from '../../hooks/use-active-toc.ts'
 import { getActiveGroups } from '../../navigation.ts'
-import { getSearchDb, searchSidebar, buildFocusableHrefs, type SearchState } from '../../lib/search.ts'
+import { loadSearchIndex, searchSidebar, buildFocusableHrefs, type SearchState } from '../../lib/search.ts'
 import { useHolocronData } from '../../router.ts'
 import { buildSearchEntries, buildSidebarAnchors, collectAncestorGroupKeys, collectDefaultExpandedKeys, resolveActiveNavigationTabs, type SidebarAnchor } from '../../site-data.ts'
 import { SearchIcon } from '../markdown/icons.tsx'
 import { Icon, resolveIconColor } from '../icon.tsx'
 import { NavGroupNode, SidebarTreeProvider, sidebarRowSpacing } from './nav-tree.tsx'
-import { chatStore } from '../../chat/chat-store.ts'
+import { setChatDrawerState } from '../../chat/chat-store.ts'
 import { startNewChat } from '../../chat/chat-submit.ts'
 import { navStore } from '../../lib/nav-store.ts'
 
@@ -121,11 +121,24 @@ export function SideNav() {
 
   const highlightedHref: string | null = isSearchFocused ? (focusableHrefs[highlightedIndex] ?? null) : null
 
+  // Latest typed query, so a slow first index load cannot apply a stale result.
+  const latestQueryRef = useRef('')
   const handleQueryChange = useCallback(
     (value: string) => {
       setQuery(value)
-      setSearchState(searchSidebar({ db: getSearchDb(searchEntries), query: value, entries: searchEntries }))
       setHighlightedIndex(0)
+      latestQueryRef.current = value
+      if (!value.trim()) {
+        setSearchState(null)
+        return
+      }
+      loadSearchIndex(searchEntries).then(
+        (index) => {
+          if (latestQueryRef.current !== value) return
+          setSearchState(searchSidebar({ index, query: value, entries: searchEntries }))
+        },
+        (error: unknown) => console.error('[holocron] failed to load sidebar search', error),
+      )
     },
     [searchEntries],
   )
@@ -156,10 +169,9 @@ export function SideNav() {
     // Close mobile nav drawer so it does not cover the chat drawer
     // (both use z-index 200 portals). Harmless on desktop.
     navStore.setState({ navDrawerOpen: false })
-    chatStore.setState({
+    setChatDrawerState('open', {
       draftText: `search for ${JSON.stringify(q)}. find all relevant information and show links of relevant pages. be concise.`,
       pendingSubmit: true,
-      drawerState: 'open',
     })
   }, [query])
 
@@ -235,7 +247,11 @@ export function SideNav() {
           value={query}
           onChange={(e) => handleQueryChange(e.target.value)}
           onKeyDown={handleSearchKeyDown}
-          onFocus={() => setIsSearchFocused(true)}
+          onFocus={() => {
+            setIsSearchFocused(true)
+            // Warm Orama + the index before the first keystroke
+            loadSearchIndex(searchEntries).catch(() => {})
+          }}
           onBlur={() => setIsSearchFocused(false)}
           placeholder={siteConfig.search.prompt || 'Search...'}
           className={`w-full outline-none box-border search-input${query ? ' search-input-active' : ''}`}
