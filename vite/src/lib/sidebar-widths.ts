@@ -131,7 +131,7 @@ export function computeSidebarWidthFromAsideNodes(
  * Content width is a CSS calc() derived from the visible grid tracks:
  *
  *   default: content = max-width - nav - sidebar - 2*gap
- *   compact: content = max-width - nav - gap
+ *   compact: content = max-width - nav - gap (center pages: max-width - sidebar - gap)
  *
  * This keeps the page max-width constant regardless of sidebar width.
  * Bump `--grid-max-width` and the content column grows automatically.
@@ -144,19 +144,23 @@ export function buildGridTokenStyle({
   gridGap,
   configLayout,
   compact = false,
+  rightAside = false,
 }: {
   sidebarWidth: number
   gridGap?: number
   configLayout?: HolocronConfig['layout']
   compact?: boolean
+  /** Compact frames hold two columns: the right aside (center pages) or the left nav. */
+  rightAside?: boolean
 }): HolocronCSSProperties {
   const nav = configLayout?.sidebarWidth ?? GRID_TOKENS['--grid-nav-width']
   const maxW = configLayout?.maxWidth ?? GRID_TOKENS['--grid-max-width']
   const gap = gridGap ?? configLayout?.columnGap ?? GRID_TOKENS['--grid-gap']
   const radius = configLayout?.radius
   const shellMaxWidth = compact ? maxW - DEFAULT_SIDEBAR_WIDTH - gap : maxW
+  const compactRail = rightAside ? 'var(--grid-sidebar-width)' : 'var(--grid-nav-width)'
   const contentWidth = compact
-    ? 'minmax(0, min(720px, calc(var(--grid-max-width) - var(--grid-nav-width) - var(--grid-gap))))'
+    ? `minmax(0, min(720px, calc(var(--grid-max-width) - ${compactRail} - var(--grid-gap))))`
     : 'minmax(0, min(720px, calc(var(--grid-max-width) - var(--grid-nav-width) - var(--grid-sidebar-width) - 2 * var(--grid-gap))))'
 
   return {

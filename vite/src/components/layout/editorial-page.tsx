@@ -46,6 +46,7 @@ function resolveEditorialPageMode(mode: PageMode | undefined): 'default' | 'comp
   //   sections grid, right aside column.
   // - "compact": keeps left nav and removes the optional right aside.
   // - "center": hides left nav, centers content in 2-column grid.
+  // The `compact` prop narrows the frame; the `rightAside` prop decides the right rail.
   // - "custom": strips the editorial grid entirely. Only navbar + footer are
   //   rendered; content is a plain full-width container. For landing pages
   //   and custom layouts where the user controls everything.
@@ -89,6 +90,8 @@ export function EditorialPage({
   sidebarWidth,
   gridGap,
   mode,
+  compact: compactProp,
+  rightAside: rightAsideProp,
   maxWidth,
   hideFooterLinks,
   floatAssistant,
@@ -111,6 +114,10 @@ export function EditorialPage({
   maxWidth?: number | string
   /** Mintlify-compatible page mode from MDX frontmatter. */
   mode?: PageMode
+  /** Narrow frame. From `resolvePageLayout`; defaults to `mode === 'compact'`. */
+  compact?: boolean
+  /** Show the right aside. From `resolvePageLayout`; defaults to `!compact`. */
+  rightAside?: boolean
   /** Drop footer logo, socials and link columns. Used on API and MCP reference pages. */
   hideFooterLinks?: boolean
   /** Show the floating pill even with a right aside. Used when the aside holds the API playground. */
@@ -137,12 +144,14 @@ export function EditorialPage({
   const pageMode = resolveEditorialPageMode(mode ?? siteConfig.layout.mode)
   const isCustomMode = pageMode === 'custom'
   const showLeftNav = pageMode === 'default' || pageMode === 'compact'
-  const showRightAside = pageMode !== 'compact'
+  const compact = compactProp ?? pageMode === 'compact'
+  const showRightAside = rightAsideProp ?? !compact
   // The assistant lives at the top of the right aside. Compact pages have none, so they get the floating pill.
   const floatingAssistant = enableAssistant && (!showRightAside || !!floatAssistant)
   // In center mode the content + right rail occupy the page width without the
   // left navigation column, so cap the grid width to drop that column's width.
-  const centerMaxWidthClass = 'lg:max-w-[calc(var(--grid-max-width)_-_var(--grid-nav-width)_-_var(--grid-gap))]'
+  // The compact frame already fits exactly two columns, so it needs no cap.
+  const centerMaxWidthClass = compact ? 'lg:max-w-(--grid-max-width)' : 'lg:max-w-[calc(var(--grid-max-width)_-_var(--grid-nav-width)_-_var(--grid-gap))]'
   // Above content spans the FULL grid width (left sidebar + content + right
   // sidebar), not just the center column. It's a plain full-width block capped
   // at --grid-max-width (or the reduced center-mode width when the left nav is
@@ -182,7 +191,8 @@ export function EditorialPage({
       sidebarWidth: sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH,
       gridGap,
       configLayout: siteConfig.layout,
-      compact: pageMode === 'compact',
+      compact,
+      rightAside: showRightAside,
     }),
   }
 
@@ -190,6 +200,7 @@ export function EditorialPage({
     <div
       className='slot-page flex flex-col gap-(--layout-gap) grow bg-background text-foreground [font-family:var(--font-sans)] antialiased [text-rendering:optimizeLegibility] overflow-x-clip'
       data-page-mode={pageMode}
+      data-compact={compact || undefined}
       data-assistant-display={floatingAssistant ? 'floating' : undefined}
       style={pageStyle}
     >

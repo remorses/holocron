@@ -37,7 +37,7 @@ export const pageFrontmatterSchema = z.object({
   mode: pageModeSchema
     .optional()
     .describe(
-      'Page layout mode. "default" keeps the full layout. "compact" keeps the left navigation and removes the right aside while preserving content width. Compact shows the AI assistant as a floating bottom pill instead of the sidebar widget. Authored asides and API examples render in the main column. "center" hides the left navigation. "custom" removes the editorial grid. "wide" and "frame" alias to the default layout.',
+      'Page layout mode. "default" keeps the full layout. "compact" keeps the left navigation and removes the right aside while preserving content width. Compact shows the AI assistant as a floating bottom pill instead of the sidebar widget. Authored asides and API examples render in the main column. "center" hides the left navigation. On a compact site every page uses the narrow frame: center pages keep the right aside, other modes drop it. "custom" removes the editorial grid. "wide" and "frame" alias to the default layout.',
     ),
   deprecated: z.boolean().optional().describe('Mark the page as deprecated'),
   sidebarToc: z
@@ -80,7 +80,12 @@ export type PageFrontmatter = z.output<typeof pageFrontmatterSchema>
 export type PageMode = z.output<typeof pageModeSchema>
 export type PageSeoMeta = Partial<Record<PageSeoMetaKey, string>>
 
-export function resolvePageMode({
+/**
+ * `compact` is the narrow frame (930px by default). It fits two columns, so center pages keep the
+ * right aside and every other page drops it. A compact site puts every page in the same frame, so
+ * navigating never shifts the layout. OpenAPI and MCP tabs need the wide frame for request examples.
+ */
+export function resolvePageLayout({
   frontmatterMode,
   siteMode,
   disableCompact,
@@ -88,10 +93,11 @@ export function resolvePageMode({
   frontmatterMode: PageMode | undefined
   siteMode: PageMode | undefined
   disableCompact?: boolean
-}): PageMode | undefined {
+}): { mode: PageMode | undefined; compact: boolean; rightAside: boolean } {
   const mode = frontmatterMode ?? siteMode
-  if (disableCompact && mode === 'compact') return 'default'
-  return mode
+  if (disableCompact) return { mode: mode === 'compact' ? 'default' : mode, compact: false, rightAside: true }
+  const compact = mode !== 'custom' && (siteMode === 'compact' || mode === 'compact')
+  return { mode, compact, rightAside: !compact || mode === 'center' }
 }
 
 export function parsePageFrontmatter(content: string): PageFrontmatter {

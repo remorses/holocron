@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest'
 import { processMdx as _processMdx, rewriteMdxImages, type ResolvedImage, type ProcessedMdx } from './mdx-processor.ts'
-import { getPageRendering, parsePageFrontmatter, resolvePageMode } from './page-frontmatter.ts'
+import { getPageRendering, parsePageFrontmatter, resolvePageLayout } from './page-frontmatter.ts'
 
 /** Wrapper that asserts processMdx succeeded (not a parse error). */
 function processMdx(...args: Parameters<typeof _processMdx>): ProcessedMdx {
@@ -1172,27 +1172,49 @@ describe('getPageRendering', () => {
   })
 })
 
-describe('resolvePageMode', () => {
-  test('keeps compact for authored docs pages', () => {
-    expect(resolvePageMode({
-      frontmatterMode: undefined,
-      siteMode: 'compact',
-    })).toBe('compact')
-  })
-
-  test('turns compact into default for MCP and OpenAPI tabs', () => {
-    expect(resolvePageMode({
-      frontmatterMode: undefined,
-      siteMode: 'compact',
-      disableCompact: true,
-    })).toBe('default')
-  })
-
-  test('keeps an explicit non-compact frontmatter mode', () => {
-    expect(resolvePageMode({
-      frontmatterMode: 'center',
-      siteMode: 'compact',
-      disableCompact: true,
-    })).toBe('center')
+describe('resolvePageLayout', () => {
+  test('compact site: every page uses the narrow frame, only center keeps the right aside, API tabs stay wide', () => {
+    const site = 'compact' as const
+    expect({
+      docs: resolvePageLayout({ frontmatterMode: undefined, siteMode: site }),
+      center: resolvePageLayout({ frontmatterMode: 'center', siteMode: site }),
+      default: resolvePageLayout({ frontmatterMode: 'default', siteMode: site }),
+      apiTab: resolvePageLayout({ frontmatterMode: undefined, siteMode: site, disableCompact: true }),
+      apiTabCenter: resolvePageLayout({ frontmatterMode: 'center', siteMode: site, disableCompact: true }),
+      defaultSiteCenter: resolvePageLayout({ frontmatterMode: 'center', siteMode: undefined }),
+    }).toMatchInlineSnapshot(`
+      {
+        "apiTab": {
+          "compact": false,
+          "mode": "default",
+          "rightAside": true,
+        },
+        "apiTabCenter": {
+          "compact": false,
+          "mode": "center",
+          "rightAside": true,
+        },
+        "center": {
+          "compact": true,
+          "mode": "center",
+          "rightAside": true,
+        },
+        "default": {
+          "compact": true,
+          "mode": "default",
+          "rightAside": false,
+        },
+        "defaultSiteCenter": {
+          "compact": false,
+          "mode": "center",
+          "rightAside": true,
+        },
+        "docs": {
+          "compact": true,
+          "mode": "compact",
+          "rightAside": false,
+        },
+      }
+    `)
   })
 })

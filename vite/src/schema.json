@@ -1704,7 +1704,7 @@
       "type": "object",
       "properties": {
         "mode": {
-          "description": "Default page layout mode. Individual pages can override this with\nthe `mode` frontmatter field. `compact` keeps the left navigation\nand removes the right aside, so the AI assistant shows as a floating\nbottom pill instead of the sidebar widget. Compact never opens a\nright rail. Authored asides and API examples render in the main\ncolumn. Pages in OpenAPI and MCP tabs keep the right aside, with\nthe assistant in it. Defaults to `default`",
+          "description": "Default page layout mode. Individual pages can override this with\nthe `mode` frontmatter field. `compact` keeps the left navigation\nand removes the right aside, so the AI assistant shows as a floating\nbottom pill instead of the sidebar widget. Compact never opens a\nright rail. Authored asides and API examples render in the main\ncolumn. Every page then uses the same narrow frame: `center` pages\nshow content and the right aside, other pages show the left\nnavigation and content. Pages in OpenAPI and MCP tabs keep the wide\nframe and the right aside, with the assistant in it. Defaults to\n`default`",
           "type": "string",
           "enum": [
             "default",

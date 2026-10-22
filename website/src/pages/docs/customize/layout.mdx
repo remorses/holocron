@@ -6,7 +6,9 @@ prompt: |
   @/vite/src/lib/openapi/provider.ts.
   Cover default, compact, center, custom, and maxWidth.
   Note that generated MCP and OpenAPI pages force mode default so compact
-  sites still show the request example rail.
+  sites still show the request example rail. List every compact site
+  exception from @/vite/src/app-factory.tsx and the tab providers in
+  @/vite/src/lib/ (openapi, mcp, changelog, imageboard).
 title: Layout
 description: Control the page layout, grid width, and page modes.
 icon: arrow-left-right
@@ -24,6 +26,8 @@ Every page can set a **mode** in its frontmatter to control how much of the edit
 | `custom`  | No           | No          | No             | Landing pages, custom layouts    |
 
 `wide` and `frame` are accepted for Mintlify compatibility and alias to `default`.
+
+On a **compact site** (`layout.mode: "compact"` in `docs.json`), every page uses the same narrow frame, so navigating never shifts the layout. See [Compact sites](#compact-sites).
 
 ### Compact mode
 
@@ -46,15 +50,43 @@ Set the same mode in **`docs.json`** to make it the default for the full site. C
 }
 ```
 
-See [AI Assistant](../ai/assistant.mdx) for the floating pill. Page frontmatter overrides the site default. Use `mode: "default"` on a specific page to restore the full three-column layout.
-
-Compact **never** opens a right rail on authored docs pages. Every page in an **MCP** or **OpenAPI** tab uses `mode: "default"`, including authored overview pages that have no example rail. That keeps the tab frame consistent. Generated request examples stay in the right aside. Authored asides and table-of-contents panels on compact docs pages still render in the **main column**. The sidebar Ask AI widget stays hidden.
+See [AI Assistant](../ai/assistant.mdx) for the floating pill. Authored asides and table-of-contents panels on compact docs pages render in the **main column**, and the sidebar Ask AI widget stays hidden.
 
 With the default geometry, compact mode derives a **930px frame** from the existing layout values:
 
 ```text
 1200px max width - 230px right aside - 40px column gap = 930px
 ```
+
+### Compact sites
+
+The compact frame holds **two columns**. On a compact site every page uses it, and the page mode picks which two:
+
+| Page                                             | Width | Columns                |
+| ------------------------------------------------ | ----- | ---------------------- |
+| No `mode`, `compact`, `default`, `wide`, `frame` | 930px | left sidebar + content |
+| `mode: "center"`, including **Changelog** tabs   | 930px | content + right aside  |
+| 404 and MDX error pages                          | 930px | left sidebar + content |
+
+The content column is **660px** in both shapes, so blog posts and docs pages line up.
+
+```diagram
+  930px compact frame
+  ┌──────────┬──────────────────────┐     ┌──────────────────────┬──────────┐
+  │ sidebar  │ content              │     │ content              │ aside    │
+  └──────────┴──────────────────────┘     └──────────────────────┴──────────┘
+  docs pages (any mode but center)        center pages (blog, changelog)
+```
+
+`default`, `wide` and `frame` cannot add a third column inside 930px: the content would shrink to 390px. So on a compact site they behave like `compact`, and their asides render inline.
+
+Only these pages use a wider frame:
+
+| Page                                            | Width      | Right aside | Why                                                                   |
+| ----------------------------------------------- | ---------- | ----------- | --------------------------------------------------------------------- |
+| Every page in an **OpenAPI** tab                | 1200px     | Yes         | Request and response examples need the rail (460px on endpoint pages) |
+| Every page in an **MCP** tab                    | 1200px     | Yes         | Tool examples need the rail. Overview pages keep it for one frame     |
+| `mode: "custom"`, including **Imageboard** tabs | `maxWidth` | No          | No editorial grid. The container is 1200px unless `maxWidth` is set   |
 
 There is no separate compact width setting. Changes to `layout.maxWidth` or `layout.columnGap` update the compact frame automatically.
 

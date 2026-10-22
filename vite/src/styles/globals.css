@@ -193,7 +193,7 @@
   @variant xl {
     --sidebar-font-size: 14px;
   }
-  &:has(.slot-page[data-page-mode="compact"]) {
+  &:has(.slot-page[data-compact]) {
     --sidebar-font-size: 12px;
   }
 

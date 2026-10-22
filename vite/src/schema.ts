@@ -1174,8 +1174,11 @@ export const layoutSchema = z
           and removes the right aside, so the AI assistant shows as a floating
           bottom pill instead of the sidebar widget. Compact never opens a
           right rail. Authored asides and API examples render in the main
-          column. Pages in OpenAPI and MCP tabs keep the right aside, with
-          the assistant in it. Defaults to \`default\`
+          column. Every page then uses the same narrow frame: \`center\` pages
+          show content and the right aside, other pages show the left
+          navigation and content. Pages in OpenAPI and MCP tabs keep the wide
+          frame and the right aside, with the assistant in it. Defaults to
+          \`default\`
         `,
       ),
     maxWidth: z

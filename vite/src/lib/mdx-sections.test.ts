@@ -10,7 +10,7 @@ import {
   buildSections,
   demoteBodyH1s,
   isAsideNode,
-  resolveCompactLayout,
+  resolveAsideNodes,
   shouldInjectPageTitle,
   unwrapAsides,
 } from './mdx-sections.ts'
@@ -95,12 +95,8 @@ Personal use only.
 </Warning>
 </Aside>
 `)
-    const layout = resolveCompactLayout({
-      configuredPageMode: 'compact',
-      nodes: root.children,
-    })
-    expect(layout.pageMode).toBe('compact')
-    expect(layout.nodes.some(isAsideNode)).toBe(false)
+    const nodes = resolveAsideNodes({ rightAside: false, nodes: root.children })
+    expect(nodes.some(isAsideNode)).toBe(false)
   })
 
   test('compact layout stays compact for RequestExample asides', () => {
@@ -114,12 +110,8 @@ curl
 </RequestExample>
 </Aside>
 `)
-    const layout = resolveCompactLayout({
-      configuredPageMode: 'compact',
-      nodes: root.children,
-    })
-    expect(layout.pageMode).toBe('compact')
-    expect(layout.nodes.some(isAsideNode)).toBe(false)
+    const nodes = resolveAsideNodes({ rightAside: false, nodes: root.children })
+    expect(nodes.some(isAsideNode)).toBe(false)
   })
 })
 

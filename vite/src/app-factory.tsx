@@ -53,7 +53,7 @@ import {
 import { deduplicateRedirects, interpolateDestination, redirectSourceMatches } from './lib/redirects.ts'
 import { isAgentRequest, stripVisibilityForAgents } from './lib/raw-markdown.ts'
 import { zipSync, strToU8 } from 'fflate'
-import { buildSections, demoteBodyH1s, hasApiPlayground, isAboveNode, resolveCompactLayout, shouldInjectPageTitle } from './lib/mdx-sections.ts'
+import { buildSections, demoteBodyH1s, hasApiPlayground, isAboveNode, resolveAsideNodes, shouldInjectPageTitle } from './lib/mdx-sections.ts'
 import { assignUniqueHeadingIds } from './lib/toc-tree.ts'
 import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
 import { visit } from 'unist-util-visit'
@@ -64,7 +64,7 @@ import { modelMessagesToChatMessages } from './lib/chat-restore.tsx'
 import { convertChunksToParts } from './lib/chat-stream.ts'
 import dedent from 'string-dedent'
 import { buildOgImageUrl } from './lib/og-utils.ts'
-import { getPageRendering, getPageRobots, getPageSeoMeta, isIndexablePage, parsePageFrontmatter, resolvePageMode, serializeKeywords, type PageFrontmatter, type PageRendering } from './lib/page-frontmatter.ts'
+import { getPageRendering, getPageRobots, getPageSeoMeta, isIndexablePage, parsePageFrontmatter, resolvePageLayout, serializeKeywords, type PageFrontmatter, type PageRendering } from './lib/page-frontmatter.ts'
 import { canonicalizePathname, holocronUrl, getHolocronApiKey, withBasePath } from './lib/holocron-url.ts'
 import { createGitHubStarsPromise, findGitHubUrl } from './lib/github-stars.ts'
 import {
@@ -346,7 +346,7 @@ function renderMdxPage({
   const mdast = preParsedMdast
 
   const isApiReference = isApiReferenceTab(findActiveTab(site, loaderData.currentPageHref))
-  const configuredPageMode = resolvePageMode({
+  const { mode: pageMode, compact, rightAside } = resolvePageLayout({
     frontmatterMode: loaderData.currentPageFrontmatter?.mode,
     siteMode: site.config.layout.mode,
     disableCompact: isApiReference,
@@ -362,7 +362,7 @@ function renderMdxPage({
   // Custom mode: skip section splitting, aside extraction, and all editorial
   // processing. Render the raw mdast directly so the AST stays unmutated
   // (buildSections injects AI widget / page nav into <Aside> nodes).
-  if (configuredPageMode === 'custom') {
+  if (pageMode === 'custom') {
     const maxWidth = loaderData.currentPageFrontmatter?.maxWidth
     return (
       <>
@@ -384,7 +384,7 @@ function renderMdxPage({
           <Head.Meta name='twitter:image' content={pageTwitterImage} />
           <Head.Meta name='twitter:card' content={pageTwitterCard} />
         </Head>
-        <EditorialPage mode={configuredPageMode} bannerContent={bannerJsx} maxWidth={maxWidth} hideFooterLinks={isApiReference}>
+        <EditorialPage mode={pageMode} bannerContent={bannerJsx} maxWidth={maxWidth} hideFooterLinks={isApiReference}>
           <RenderNodes markdown={pageMdx} nodes={mdast.children} modules={modules} baseUrl={mdxBaseUrl} source={mdxSourcePath} />
         </EditorialPage>
       </>
@@ -406,18 +406,14 @@ function renderMdxPage({
       contentChildren.splice(firstHeadingIndex, 1)
     }
   }
-  const compactLayout = resolveCompactLayout({
-    configuredPageMode,
-    nodes: contentChildren,
-  })
-  const contentMdast: Root = { type: 'root', children: compactLayout.nodes }
-  const pageMode = compactLayout.pageMode
+  const contentNodes = resolveAsideNodes({ rightAside, nodes: contentChildren })
+  const contentMdast: Root = { type: 'root', children: contentNodes }
   // The API playground fills the right aside, so the assistant floats there instead.
-  const floatAssistant = hasApiPlayground(compactLayout.nodes)
+  const floatAssistant = hasApiPlayground(contentNodes)
   const mdastSections = buildSections(contentMdast, {
-    // Compact pages have no right aside, so no chrome; EditorialPage shows the floating pill instead.
+    // Pages without a right aside get no chrome; EditorialPage shows the floating pill instead.
     enableAssistant: site.config.assistant.enabled && !floatAssistant,
-    includePageChrome: pageMode !== 'compact',
+    includePageChrome: rightAside,
   })
 
   // Extract import nodes (mdxjsEsm) from the full mdast so they can be
@@ -558,7 +554,7 @@ function renderMdxPage({
               : <Head.Meta key={name} name={name} content={content} />
           ))}
       </Head>
-      <EditorialPage mode={pageMode} sections={sections} above={above} bannerContent={bannerJsx} sidebarWidth={sidebarWidth} gridGap={gridGap} hideFooterLinks={isApiReference} floatAssistant={floatAssistant} />
+      <EditorialPage mode={pageMode} compact={compact} rightAside={rightAside} sections={sections} above={above} bannerContent={bannerJsx} sidebarWidth={sidebarWidth} gridGap={gridGap} hideFooterLinks={isApiReference} floatAssistant={floatAssistant} />
     </>
   )
 }

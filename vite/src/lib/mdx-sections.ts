@@ -11,7 +11,6 @@
  */
 
 import type { Root, RootContent } from 'mdast'
-import type { PageMode } from './page-frontmatter.ts'
 
 type FlowJsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
 
@@ -60,23 +59,9 @@ export function unwrapAsides(nodes: RootContent[]): RootContent[] {
   return result
 }
 
-export function resolveCompactLayout({
-  configuredPageMode,
-  nodes,
-}: {
-  configuredPageMode: PageMode | undefined
-  nodes: RootContent[]
-}) {
-  if (configuredPageMode !== 'compact') {
-    return {
-      nodes,
-      pageMode: configuredPageMode,
-    }
-  }
-  return {
-    nodes: unwrapAsides(nodes),
-    pageMode: 'compact' as const,
-  }
+/** Pages without a right aside render authored asides in the main column. */
+export function resolveAsideNodes({ rightAside, nodes }: { rightAside: boolean; nodes: RootContent[] }): RootContent[] {
+  return rightAside ? nodes : unwrapAsides(nodes)
 }
 
 function hasFullProp(node: RootContent): boolean {
