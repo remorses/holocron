@@ -79,6 +79,7 @@
                         "pages": [
                             "docs/organize/docs-json",
                             "docs/organize/navigation",
+                            "docs/organize/blog",
                             "docs/organize/versions",
                             "docs/organize/dropdowns",
                             "docs/organize/hidden-pages",

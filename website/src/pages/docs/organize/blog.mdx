@@ -1,0 +1,148 @@
+---
+$schema: https://holocron.so/frontmatter.json
+prompt: |
+  Write the blog tab guide from @/example/docs.json, @/example/src/blog/launching-playwriter.mdx,
+  @/vite/src/lib/page-frontmatter.ts and @/website/src/pages/docs/customize/layout.mdx.
+  Cover the Blog tab in docs.json, an index page with cards, posts with mode center and an
+  Above hero, why blogs hide the left sidebar, and how this mixes with a compact docs site.
+title: "Add a blog tab to your docs site"
+sidebarTitle: Blog Tab
+description: "Add a Blog tab next to your docs: an index page with one card per post, and posts that hide the left sidebar so they read like articles."
+icon: rss
+---
+
+A blog is a **tab** like any other: a `docs.json` entry plus MDX pages. The difference is the layout. Docs pages keep the left navigation. Blog pages hide it with **`mode: "center"`**, so each post reads like an article.
+
+```diagram
+  Docs tab                                  Blog tab
+  ┌──────────┬──────────────┬───────┐       ┌─────────────────────────────────────┐
+  │ sidebar  │   content    │ aside │       │ Above hero: title, date, author     │
+  │ groups   │              │       │       ├──────────────────────────┬──────────┤
+  │ pages    │              │       │       │ content                  │ aside    │
+  └──────────┴──────────────┴───────┘       └──────────────────────────┴──────────┘
+  mode: default or compact                  mode: center, no left sidebar
+```
+
+## Why blogs hide the left sidebar
+
+Docs and posts are read in **different ways**:
+
+| Docs                                       | Blog posts                                  |
+| ------------------------------------------ | ------------------------------------------- |
+| readers jump between related pages         | readers arrive from search or social on one |
+| the sidebar shows where you are            | posts have no hierarchy, only a date        |
+| the nav grows with the product, on purpose | a list of posts grows forever               |
+
+A sidebar listing every post gets longer with each post and takes **width from the reading column**. Readers navigate a blog through the **index page** and links inside posts, not a tree. So keep the posts in `docs.json` for routing and search, and hide the sidebar on the pages.
+
+## 1. Add the Blog tab
+
+List the index first, then the posts **newest first**. The first page is where the tab link goes.
+
+```jsonc
+{
+  "navigation": {
+    "tabs": [
+      { "tab": "Docs", "icon": "book-open", "groups": [/* ... */] },
+      {
+        "tab": "Blog",
+        "icon": "rss",
+        "groups": [
+          {
+            "group": "Posts",
+            "pages": ["blog/index", "blog/launching-v2", "blog/first-post"]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+`blog/index.mdx` is served at **`/blog`**, and `blog/launching-v2.mdx` at `/blog/launching-v2`.
+
+## 2. Write a post
+
+Set **`mode: "center"`** and put the title in an **`<Above>`** hero. The hero spans the full width above the grid, which suits a large post title with a date line.
+
+```mdx
+---
+$schema: https://holocron.so/frontmatter.json
+title: "Launching V2: one event stream and a pure reducer"
+sidebarTitle: Launching V2
+description: "What changed in V2, why we rebuilt it, and how to upgrade."
+mode: center
+---
+
+<Above>
+<div className='flex flex-col gap-3 my-12'>
+<h1 className='text-5xl font-bold text-balance leading-tight'>Launching V2: one event stream and a pure reducer</h1>
+<p className='text-muted-foreground'>October 22, 2026 · Your Name</p>
+</div>
+</Above>
+
+V2 is out. Here is what changed.
+
+## Why we rebuilt it
+```
+
+<Aside>
+<Note>
+With `<Above>`, the hero owns the page's only **H1**. Holocron does not inject the `title` again. Keep the hero text the **same as `title`**, so the browser tab, Google and the page agree.
+</Note>
+</Aside>
+
+The right aside stays in center mode, so **`<Aside>` callouts** and the Ask AI widget sit next to the post. Start the body with `##` headings.
+
+## 3. Add the index page
+
+The index replaces the sidebar as the way to **find posts**. Use a one-column `CardGroup`, one card per post, newest first.
+
+```mdx
+---
+$schema: https://holocron.so/frontmatter.json
+title: "Blog: product updates and engineering notes"
+sidebarTitle: All posts
+description: "Release posts, migration guides and engineering notes from the team."
+mode: center
+---
+
+<Above>
+<div className='flex flex-col gap-3 my-12'>
+<h1 className='text-5xl font-bold text-balance leading-tight'>Blog: product updates and engineering notes</h1>
+</div>
+</Above>
+
+<CardGroup cols={1}>
+<Card title='Launching V2: one event stream and a pure reducer' icon='rocket' href='/blog/launching-v2' cta='Read the post'>
+What changed in V2, why we rebuilt it, and how to upgrade.
+</Card>
+<Card title='Our first post' icon='pencil' href='/blog/first-post' cta='Read the post'>
+Why we started this blog.
+</Card>
+</CardGroup>
+```
+
+When you add a post, add it in **two places**: the top of the `pages` list and the top of the `CardGroup`.
+
+## Compact docs with a blog
+
+A site can use **compact** for docs and center for posts. Set compact once in `docs.json`. Docs pages and posts then share the same **930px frame**: docs show the left sidebar, posts show the right aside. The content column has the same width on both, so moving between tabs does not shift the layout.
+
+```json
+{
+  "layout": {
+    "mode": "compact"
+  }
+}
+```
+
+See [Layout](../customize/layout.mdx) for every page mode.
+
+## Checklist
+
+- [ ] Blog tab in `docs.json`, with `blog/index` first and posts newest first
+- [ ] `mode: "center"` on the index and on every post
+- [ ] An `<Above>` hero whose `<h1>` matches `title`
+- [ ] A unique `title` and `description` per post, for search results
+- [ ] A card on the index for every post
