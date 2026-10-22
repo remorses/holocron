@@ -144,11 +144,20 @@ test.describe("tabs fixture — navigation.tabs with external link tabs", () => 
     await expect(footer.getByRole("link", { name: "Careers" })).toBeVisible();
   });
 
-  test("renders theme toggle button", async ({ page, request }) => {
+  test("footer theme select switches between dark, light, and system", async ({ page, request }) => {
     await page.setViewportSize({ width: 1600, height: 1200 });
+    await page.emulateMedia({ colorScheme: "light" });
     await openTabsHome(page, request);
-    const toggle = page.getByRole("button", { name: /Switch to (dark|light) mode/ });
-    await expect(toggle).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    const theme = page.locator("footer").getByRole("combobox", { name: "Color theme" });
+    await expect(theme).toBeVisible();
+    await theme.selectOption("dark");
+    await expect(page.locator("html")).toHaveClass(/dark/);
+    await theme.selectOption("light");
+    await expect(page.locator("html")).not.toHaveClass(/dark/);
+    await theme.selectOption("system");
+    await page.emulateMedia({ colorScheme: "dark" });
+    await expect(page.locator("html")).toHaveClass(/dark/);
   });
 
   test("renders primary CTA button in navbar", async ({ page, request }) => {
