@@ -495,6 +495,7 @@ export type ResolvedImage = {
 export function rewriteMdxImages(mdast: Root, images: Map<string, ResolvedImage>): string {
   // Walk and mutate the tree. Process root.children and also nested children.
   mdast.children = mdast.children.flatMap((node) => rewriteNode(node, images))
+  lazyLoadImagesAfterFirst(mdast.children)
 
   // Serialize back to MDX
   return toMarkdown(mdast, {
@@ -577,6 +578,31 @@ function rewriteNode(
   }
 
   return [node]
+}
+
+/**
+ * Add loading="lazy" to every <Image> after the first one, unless the author
+ * set `loading`. React preloads every non-lazy <img> in <head>, so a page with
+ * 10 screenshots fetched them all before fonts and JS. The first image stays
+ * eager because it is the likely LCP element.
+ */
+function lazyLoadImagesAfterFirst(nodes: RootContent[]): void {
+  let seenFirst = false
+  const walk = (list: RootContent[]) => {
+    for (const node of list) {
+      if (isJsxElement(node) && node.name === 'Image') {
+        const hasLoading = node.attributes?.some((a) => a.type === 'mdxJsxAttribute' && a.name === 'loading')
+        if (seenFirst && !hasLoading) {
+          setJsxAttr({ node, attrName: 'loading', value: 'lazy' })
+        }
+        seenFirst = true
+        continue
+      }
+      const children = Reflect.get(node, 'children')
+      if (Array.isArray(children)) walk(children)
+    }
+  }
+  walk(nodes)
 }
 
 /** Create an mdxJsxFlowElement node for Image with all attributes */

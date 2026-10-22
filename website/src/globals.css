@@ -8,7 +8,8 @@
   src: url('/fonts/ivartext-regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
-  font-display: swap;
+  /* Hero text stays invisible until this font loads (preloaded by hero-section.tsx), without waiting for hydration. */
+  font-display: block;
 }
 
 /* ── Dashboard-specific CSS ────────────────────────────────────────── */

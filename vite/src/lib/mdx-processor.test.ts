@@ -578,6 +578,29 @@ description: A description
     `)
   })
 
+  test('lazy loads every image after the first unless loading is set', () => {
+    const { mdast } = processMdx(`
+![hero](./screenshot.png)
+
+<Step title="Nested">
+  <img src="./screenshot.png" />
+</Step>
+
+<Image src="./screenshot.png" alt="eager" loading="eager" />`)
+    const images = new Map([['./screenshot.png', testMeta]])
+    const result = rewriteMdxImages(mdast, images)
+    expect(result).toMatchInlineSnapshot(`
+      "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="hero" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
+
+      <Step title="Nested">
+        <Image src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" loading="lazy" />
+      </Step>
+
+      <Image src="/_holocron/images/a1b2c3-screenshot.png" alt="eager" loading="eager" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
+      "
+    `)
+  })
+
   test('does not touch code blocks containing image-like text', () => {
     const { mdast } = processMdx(`
 \`\`\`markdown

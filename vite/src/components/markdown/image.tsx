@@ -28,9 +28,9 @@ import { withBasePath } from '../../lib/holocron-url.ts'
 /**
  * Mintlify-compatible image with a pixelated placeholder. Uses a tiny pre-generated image with CSS
  * image-rendering: pixelated (nearest-neighbor sampling) for a crisp mosaic
- * effect. The real image fades in on top once loaded with a light blur-to-sharp
- * transition — no flash because the placeholder stays underneath and the real
- * image starts soft and transparent.
+ * effect. The real image is always visible and stacked on top, so it paints as
+ * soon as its bytes arrive, before hydration. No JS-driven fade: an image
+ * hidden until React mounts cannot be the LCP element until hydration ends.
  */
 export function Image({
   src,
@@ -134,14 +134,16 @@ export function Image({
         setLoaded(true)
       }}
       style={{
+        // Visible from the first paint: hiding it until hydration delayed LCP.
+        // Stacked over the placeholder, which shows until pixels arrive.
+        gridArea: '1 / 1',
+        position: 'relative',
+        zIndex: 1,
         display: 'block',
         width: '100%',
         height: '100%',
         objectFit: style?.objectFit ?? 'contain',
         objectPosition: style?.objectPosition,
-        filter: !effectivePlaceholder || loaded ? 'blur(0px)' : 'blur(6px)',
-        opacity: !effectivePlaceholder || loaded ? 1 : 0,
-        transition: 'opacity 0.16s ease-out, filter 0.16s ease-out',
       }}
     />
   )
@@ -177,8 +179,8 @@ export function Image({
           }}
         />
       )}
-      {/* Real image: starts soft and transparent, then sharpens in over the
-          placeholder. Wrapped in <Zoom> (unless disableZoom) so users can click
+      {/* Real image: painted over the placeholder as its bytes arrive.
+          Wrapped in <Zoom> (unless disableZoom) so users can click
           to expand into a Medium-style zoomed dialog. The wrapper divs
           (data-rmiz, data-rmiz-content) inherit `grid-area: 1 / 1` + full sizing
           from globals.css so the real image still stacks over the placeholder. */}
@@ -274,7 +276,6 @@ export function LazyVideo({
   className?: string
   style?: React.CSSProperties
 }) {
-  const [posterLoaded, setPosterLoaded] = useState(false)
   const videoAttrs: React.VideoHTMLAttributes<HTMLVideoElement> & { loading?: 'lazy' } = {
     controls: true,
     preload: 'none',
@@ -290,13 +291,6 @@ export function LazyVideo({
       background: 'transparent',
     },
   }
-
-  // Handles cached poster images (same pattern as Image)
-  const posterRef = useCallback((img: HTMLImageElement | null) => {
-    if (img?.complete && img.naturalWidth > 0) {
-      setPosterLoaded(true)
-    }
-  }, [])
 
   return (
     <div
@@ -327,26 +321,19 @@ export function LazyVideo({
           zIndex: 0,
         }}
       />
-      {/* Real poster: fades in and sharpens over the pixelated placeholder */}
+      {/* Real poster: painted over the pixelated placeholder as it loads, no JS needed */}
       <img
-        ref={posterRef}
         src={withBasePath(poster)}
         alt=''
         aria-hidden
         width={width}
         height={height}
-        onLoad={() => {
-          setPosterLoaded(true)
-        }}
         style={{
           position: 'absolute',
           inset: 0,
           width: '100%',
           height: '100%',
           objectFit: 'cover',
-          filter: posterLoaded ? 'blur(0px)' : 'blur(6px)',
-          opacity: posterLoaded ? 1 : 0,
-          transition: 'opacity 0.16s ease-out, filter 0.16s ease-out',
           zIndex: 1,
         }}
       />
