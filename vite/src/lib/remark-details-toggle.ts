@@ -1,15 +1,11 @@
-/** Remark plugin converting HTML details/summary blocks into Expandable MDX. */
+/** mdast transform converting HTML details/summary blocks into Expandable MDX. */
 
-import { gfmToMarkdown } from 'mdast-util-gfm'
-import { mdxToMarkdown } from 'mdast-util-mdx'
-import { toMarkdown } from 'mdast-util-to-markdown'
-import type { Paragraph, Root, RootContent } from 'mdast'
-import { remark } from 'remark'
-import remarkMdx from 'remark-mdx'
-import { visit } from 'unist-util-visit'
+import { parse, stringify, visit, type NodeOf, type Paragraph, type Root, type RootContent } from 'mdastic'
+import { gfm } from 'mdastic/gfm'
+import { mdx } from 'mdastic/mdx'
 
-type JsxElement = Extract<RootContent, { type: 'mdxJsxFlowElement' | 'mdxJsxTextElement' }>
-type FlowElement = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
+type JsxElement = NodeOf<'mdxJsxFlowElement' | 'mdxJsxTextElement'>
+type FlowElement = NodeOf<'mdxJsxFlowElement'>
 
 function isJsxElement(node: RootContent | Paragraph['children'][number]): node is JsxElement {
   return node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement'
@@ -23,14 +19,15 @@ function summaryMarkdown(summary: JsxElement): string {
         return []
       })
 
-  return toMarkdown({ type: 'root', children: [{ type: 'paragraph', children }] }, {
-    extensions: [gfmToMarkdown(), mdxToMarkdown()],
+  return stringify({ type: 'root', children: [{ type: 'paragraph', children }] }, {
+    syntax: [mdx(), gfm()],
   }).trim()
 }
 
 function titleFromSummary(summary: JsxElement): FlowElement['attributes'][number] {
   const markdown = summaryMarkdown(summary)
-  const parsed = remark().use(remarkMdx).parse(`<Expandable title={<Markdown inline children=${JSON.stringify(markdown)} />} />`)
+  const parsed = parse(`<Expandable title={<Markdown inline children=${JSON.stringify(markdown)} />} />`, { syntax: [mdx()] })
+  if (parsed instanceof Error) throw parsed
   const expandable = parsed.children[0]
 
   if (expandable?.type === 'mdxJsxFlowElement') {
@@ -85,23 +82,21 @@ function stripSummaryFromChildren(children: FlowElement['children']): FlowElemen
   })
 }
 
-export function remarkDetailsToggle() {
-  return (tree: Root) => {
-    visit(tree, 'mdxJsxFlowElement', (node) => {
-      if (node.type !== 'mdxJsxFlowElement' || node.name !== 'details') return
+export function remarkDetailsToggle(tree: Root): void {
+  visit(tree, 'mdxJsxFlowElement', (node) => {
+    if (node.type !== 'mdxJsxFlowElement' || node.name !== 'details') return
 
-      const summary = node.children.map(getSummary).find(Boolean)
-      node.name = 'Expandable'
-      node.attributes = [
-        ...(summary ? [titleFromSummary(summary)] : []),
-        ...node.attributes.map((attribute) => {
-          if (attribute.type === 'mdxJsxAttribute' && attribute.name === 'open') {
-            return { ...attribute, name: 'defaultOpen' }
-          }
-          return attribute
-        }),
-      ]
-      node.children = stripSummaryFromChildren(node.children)
-    })
-  }
+    const summary = node.children.map(getSummary).find(Boolean)
+    node.name = 'Expandable'
+    node.attributes = [
+      ...(summary ? [titleFromSummary(summary)] : []),
+      ...node.attributes.map((attribute) => {
+        if (attribute.type === 'mdxJsxAttribute' && attribute.name === 'open') {
+          return { ...attribute, name: 'defaultOpen' }
+        }
+        return attribute
+      }),
+    ]
+    node.children = stripSummaryFromChildren(node.children)
+  })
 }

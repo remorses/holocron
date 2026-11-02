@@ -20,7 +20,8 @@ import crypto from 'node:crypto'
 import { gitBlobSha } from './git-sha.ts'
 import { processMdx, rewriteMdxImages, isNonLocalAssetSrc, type ResolvedImage, type InternalLink, type AssetRef, type ProcessMdxOptions } from './mdx-processor.ts'
 import { remarkInlineImports, buildSplicedNodes, type InlineImportEntry } from './remark-inline-imports.ts'
-import { visit } from 'unist-util-visit'
+import { parse, visit, type Root, type RootContent } from 'mdastic'
+import { MDX_SYNTAX } from './normalize-mdx.ts'
 import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
 import lucidePkg from '@iconify-json/lucide/package.json' with { type: 'json' }
@@ -54,7 +55,6 @@ import { redirectSourceMatches } from './redirects.ts'
 import { parseFrontmatterObject } from './frontmatter.ts'
 import { MdastToJsx, type SafeMdxError } from 'safe-mdx'
 import { extractImports, type EagerModules } from 'safe-mdx/parse'
-import type { Root } from 'mdast'
 import {
   type Navigation,
   type NavPage,
@@ -270,7 +270,7 @@ export async function syncNavigation({
       const processMdxOptions: ProcessMdxOptions = {
         slug,
         ...(inlineImportMap.size > 0 && {
-          normalizeMdxOptions: { prependPlugins: [[remarkInlineImports, { resolvedImports: inlineImportMap }]] },
+          normalizeMdxOptions: { prependTransforms: [remarkInlineImports({ resolvedImports: inlineImportMap })] },
         }),
       }
 
@@ -447,7 +447,7 @@ export async function syncNavigation({
       slug,
       ...(inlineImportMap.size > 0 && {
         normalizeMdxOptions: {
-          prependPlugins: [[remarkInlineImports, { resolvedImports: inlineImportMap }]],
+          prependTransforms: [remarkInlineImports({ resolvedImports: inlineImportMap })],
         },
       }),
     }
@@ -918,7 +918,7 @@ export async function processDeferredProviders({
     const processMdxOptions: ProcessMdxOptions = {
       slug,
       ...(inlineImportMap.size > 0 && {
-        normalizeMdxOptions: { prependPlugins: [[remarkInlineImports, { resolvedImports: inlineImportMap }]] },
+        normalizeMdxOptions: { prependTransforms: [remarkInlineImports({ resolvedImports: inlineImportMap })] },
       }),
     }
 
@@ -1498,7 +1498,7 @@ const MAY_HAVE_MD_IMPORTS = /\.mdx?['"]/
  * remarkInlineImports' rewriteRelativeImportSources will produce).
  * A visited set prevents cycles.
  *
- * Each imported file is parsed exactly ONCE (by quickMdxParser). The
+ * Each imported file is parsed exactly ONCE (by quickMdxParse). The
  * resulting mdast is reused for three purposes:
  * 1. extractImports() — discover nested .md/.mdx imports
  * 2. collectImageDeps() — find image file paths for HMR/cache key
@@ -1538,14 +1538,8 @@ function resolveInlineImports({
     // Regex fast path for nested files: skip if no local default imports
     if (!MAY_HAVE_MD_IMPORTS.test(fileContent)) return
 
-    let mdast: Root
-    try {
-      const processor = quickMdxParser()
-      mdast = processor.parse(fileContent)
-      mdast = processor.runSync(mdast) as Root
-    } catch {
-      return
-    }
+    const mdast = quickMdxParse(fileContent)
+    if (!mdast) return
 
     const imports = extractImports(mdast)
 
@@ -1598,11 +1592,7 @@ function resolveInlineImports({
       // Single parse of the imported file. Reuse the mdast for all three
       // purposes: nested import discovery, image dep collection, and
       // pre-building the spliced nodes for the remark plugin.
-      let importedMdast: Root | undefined
-      try {
-        const proc = quickMdxParser()
-        importedMdast = proc.runSync(proc.parse(importContent)) as Root
-      } catch { /* parse errors handled by processMdx later */ }
+      const importedMdast = quickMdxParse(importContent)
 
       // Collect image dep paths from this one parse
       if (importedMdast) {
@@ -1612,7 +1602,7 @@ function resolveInlineImports({
       // Pre-build spliced nodes (strip frontmatter + rewrite URLs).
       // Uses a clone so the original mdast can still be scanned for
       // nested imports without mutation interference.
-      let parsedNodes: import('mdast').RootContent[] | undefined
+      let parsedNodes: RootContent[] | undefined
       if (importedMdast) {
         const cloned = structuredClone(importedMdast)
         parsedNodes = buildSplicedNodes(cloned, relFromPageNorm, { importDir, pagesDir })
@@ -1676,17 +1666,13 @@ function resolveInlineImports({
         ? './'
         : (relFromPage.startsWith('.') ? relFromPage : './' + relFromPage) + '/'
 
-      let nestedMdast: Root | undefined
-      try {
-        const proc = quickMdxParser()
-        nestedMdast = proc.runSync(proc.parse(importContent)) as Root
-      } catch { }
+      const nestedMdast = quickMdxParse(importContent)
 
       if (nestedMdast) {
         collectImageDeps(nestedMdast, importDir)
       }
 
-      let parsedNodes: import('mdast').RootContent[] | undefined
+      let parsedNodes: RootContent[] | undefined
       if (nestedMdast) {
         parsedNodes = buildSplicedNodes(structuredClone(nestedMdast), relFromPageNorm, { importDir, pagesDir })
       }
@@ -1756,16 +1742,10 @@ function resolveImportSourceToPath(
   return undefined
 }
 
-import remarkMdx from 'remark-mdx'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkGfm from 'remark-gfm'
-import { remark } from 'remark'
-
-function quickMdxParser() {
-  return remark()
-    .use(remarkMdx)
-    .use(remarkFrontmatter, ['yaml'])
-    .use(remarkGfm)
+/** Parse an imported file. Syntax errors return undefined; processMdx reports them later. */
+function quickMdxParse(content: string): Root | undefined {
+  const mdast = parse(content, { syntax: MDX_SYNTAX })
+  return mdast instanceof Error ? undefined : mdast
 }
 
 /* ── Cache I/O ──────────────────────────────────────────────────────── */

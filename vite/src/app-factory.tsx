@@ -25,7 +25,7 @@ import { MdastToJsx, type SafeMdxError } from 'safe-mdx'
 import { mdxParse, resolveModules, type EagerModules } from 'safe-mdx/parse'
 import { memoize, rememberCacheOrigin } from '#memoize'
 import { parse as parseCookies } from 'cookie'
-import type { Root } from 'mdast'
+import type { Root } from 'mdastic'
 import {
   EditorialPage,
   type EditorialSection,
@@ -56,7 +56,7 @@ import { zipSync, strToU8 } from 'fflate'
 import { buildSections, demoteBodyH1s, hasApiPlayground, isAboveNode, resolveAsideNodes, shouldInjectPageTitle } from './lib/mdx-sections.ts'
 import { assignUniqueHeadingIds } from './lib/toc-tree.ts'
 import { computeSidebarWidthFromAsideNodes } from './lib/sidebar-widths.ts'
-import { visit } from 'unist-util-visit'
+import { visit } from 'mdastic'
 import { RenderNodes, mdxComponents, renderNode } from './lib/mdx-components-map.tsx'
 import { SiteHead, THEME_SCRIPT, GtmNoscript, buildPageTitle } from './lib/site-head.tsx'
 import { encodeFederationPayload } from 'spiceflow/federation'

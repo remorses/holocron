@@ -49,7 +49,7 @@ export const COMPONENT_SIDEBAR_WIDTHS: Record<string, number> = {
   ResponseExample: 460,
 }
 
-type JsxElement = Extract<import('mdast').RootContent, { type: 'mdxJsxFlowElement' | 'mdxJsxTextElement' }>
+type JsxElement = Extract<import('mdastic').RootContent, { type: 'mdxJsxFlowElement' | 'mdxJsxTextElement' }>
 type JsxAttribute = Extract<JsxElement['attributes'][number], { type: 'mdxJsxAttribute' }>
 
 function jsxAttr(node: JsxElement, name: string): JsxAttribute | undefined {
@@ -91,16 +91,16 @@ function getNumericJsxAttr(node: JsxElement, name: string): number | undefined {
  * `width` sets a fixed pixel size. Known components like RequestExample
  * still raise the minimum.
  *
- * Takes `visit` as a parameter so `unist-util-visit` is NOT a module-level
+ * Takes `visit` as a parameter so `mdastic` is NOT a module-level
  * import — this prevents it leaking into the client graph when
  * `editorial-page.tsx` imports `buildGridTokenStyle` from this file.
  */
 export function computeSidebarWidthFromAsideNodes(
-  nodes: import('mdast').RootContent[],
-  visit: typeof import('unist-util-visit').visit,
+  nodes: import('mdastic').RootContent[],
+  visit: typeof import('mdastic').visit,
 ): number {
   let maxWidth = DEFAULT_SIDEBAR_WIDTH
-  const fakeRoot: import('mdast').Root = { type: 'root', children: nodes }
+  const fakeRoot: import('mdastic').Root = { type: 'root', children: nodes }
   visit(fakeRoot, (node) => {
     if (
       node.type !== 'mdxJsxFlowElement' &&

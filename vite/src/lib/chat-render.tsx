@@ -7,7 +7,7 @@
  */
 
 import type React from 'react'
-import type { Root, RootContent } from 'mdast'
+import type { Root, RootContent } from 'mdastic'
 import { SafeMdxRenderer } from 'safe-mdx'
 import { createRenderNode, mdxComponents } from './mdx-components-map.tsx'
 import { logMdxError } from './logger.ts'

@@ -1,5 +1,4 @@
-import type { Root } from 'mdast'
-import { visit } from 'unist-util-visit'
+import { visit, type Root } from 'mdastic'
 import { createElement } from './jsx-utils.ts'
 
 /**
@@ -7,22 +6,20 @@ import { createElement } from './jsx-utils.ts'
  * grouped stack. Wrap single items up front so both single and grouped author
  * syntax go through the same component structure.
  */
-export function remarkSingleAccordionItems() {
-  return (tree) => {
-    visit(tree, 'mdxJsxFlowElement', (node, index, parent) => {
-      if (node.type !== 'mdxJsxFlowElement' || node.name !== 'Accordion' || !Array.isArray(parent?.children)) {
-        return
-      }
+export function remarkSingleAccordionItems(tree: Root): void {
+  visit(tree, 'mdxJsxFlowElement', (node, index, parent) => {
+    if (node.type !== 'mdxJsxFlowElement' || node.name !== 'Accordion' || !Array.isArray(parent?.children)) {
+      return
+    }
 
-      if (parent.type === 'mdxJsxFlowElement' && parent.name === 'AccordionGroup') {
-        return
-      }
+    if (parent.type === 'mdxJsxFlowElement' && parent.name === 'AccordionGroup') {
+      return
+    }
 
-      if (typeof index !== 'number') {
-        return
-      }
+    if (typeof index !== 'number') {
+      return
+    }
 
-      parent.children.splice(index, 1, createElement({ name: 'AccordionGroup', attributes: [], children: [node] }))
-    })
-  }
+    parent.children.splice(index, 1, createElement({ name: 'AccordionGroup', attributes: [], children: [node] }))
+  })
 }

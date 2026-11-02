@@ -1,13 +1,9 @@
-import { frontmatterToMarkdown } from 'mdast-util-frontmatter'
-import { gfmToMarkdown } from 'mdast-util-gfm'
-import { mdxToMarkdown } from 'mdast-util-mdx'
-import { toMarkdown } from 'mdast-util-to-markdown'
-import type { Root, RootContent } from 'mdast'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkGfm from 'remark-gfm'
-import remarkMdx from 'remark-mdx'
-import { remark } from 'remark'
-import { remarkMarkAndUnravel } from 'safe-mdx/parse'
+import { parse, stringify, type Root, type RootContent, type Syntax } from 'mdastic'
+import { frontmatter } from 'mdastic/frontmatter'
+import { gfm } from 'mdastic/gfm'
+import { headingId } from 'mdastic/heading-id'
+import { mdx } from 'mdastic/mdx'
+import { markAndUnravel } from 'safe-mdx/parse'
 import { remarkCodeGroup } from './remark-code-group.ts'
 import { remarkDetailsToggle } from './remark-details-toggle.ts'
 import { remarkGithubCallouts } from './remark-github-callouts.ts'
@@ -18,17 +14,25 @@ import { remarkSingleAccordionItems } from './remark-single-accordion.ts'
 import { HolocronMdxParseError, extractParseErrorInfo } from './logger.ts'
 import { stripMdExtFromPath, isExternalUrl } from './link-utils.ts'
 
+/** Syntax for every Holocron MDX parse and stringify. Same order as safe-mdx. */
+export const MDX_SYNTAX: Syntax[] = [mdx(), frontmatter(['yaml']), gfm()]
+
+/** Pages also accept Mintlify `{#custom-id}` heading ids. remarkHeadings consumes them. */
+const PAGE_SYNTAX: Syntax[] = [...MDX_SYNTAX, headingId()]
+
+/** A plain mdast transform. Mutates the tree in place. */
+export type MdastTransform = (tree: Root) => void
+
 export type NormalizedMdx = {
-  /** Serialized MDX string after all remark transforms */
+  /** Serialized MDX string after all transforms */
   content: string
   /** The normalized mdast tree — reuse instead of re-parsing content */
   mdast: Root
 }
 
 export type NormalizeMdxOptions = {
-  /** Remark plugins to run before the standard pipeline (e.g. remarkInlineImports).
-   *  Each entry is [plugin, options] or just plugin. */
-  prependPlugins?: Array<[any, any] | any>
+  /** Transforms to run before the standard pipeline (e.g. remarkInlineImports). */
+  prependTransforms?: MdastTransform[]
   /** Page slug (e.g. "guides/setup/index"). When provided, relative links
    *  (./foo, ../bar) are resolved to absolute /paths at build time. This
    *  eliminates trailing-slash ambiguity for index.mdx pages. */
@@ -36,91 +40,64 @@ export type NormalizeMdxOptions = {
 }
 
 /**
- * Parse MDX content and run all remark transform plugins.
+ * Parse MDX content and run all transforms.
  * Returns HolocronMdxParseError on syntax errors instead of throwing.
  * @param source - optional file path or slug for error messages (e.g. "/getting-started")
  */
 export function normalizeMdx(content: string, source?: string, options?: NormalizeMdxOptions): HolocronMdxParseError | NormalizedMdx {
   // MDX does not support HTML comments (<!-- -->), but many markdown authors
   // use them. Strip them before parsing so they don't cause syntax errors.
-  // remark-comment (the proper micromark extension approach) can't be used
-  // because it depends on micromark-factory-space@1 while our pipeline uses
-  // @2, causing "expected last token to be open" errors in vitest.
   content = stripHtmlComments(content)
 
-  const processor = remark()
-    .use(remarkMdx)
-    .use(remarkFrontmatter, ['yaml'])
-    .use(remarkGfm)
-
-  // Prepend plugins run before the standard pipeline. This is where
-  // remarkInlineImports goes: it must expand imported .md/.mdx content
-  // before other remark plugins (headings, code groups, callouts, etc.)
-  // process the combined tree.
-  if (options?.prependPlugins) {
-    for (const entry of options.prependPlugins) {
-      if (Array.isArray(entry)) {
-        processor.use(entry[0], entry[1])
-      } else {
-        processor.use(entry)
-      }
-    }
-  }
+  const mdast = parse(content, { syntax: PAGE_SYNTAX })
+  if (mdast instanceof Error) return toParseError({ err: mdast, mdxSource: content, source })
 
   const slug = options?.slug?.replace(/^\/+/, '').replace(/\/+$/, '') // normalize leading/trailing /
   const slugDir = slug != null
     ? slug.includes('/') ? slug.slice(0, slug.lastIndexOf('/')) : ''
     : undefined
 
-  processor
-    .use(remarkRewriteLinks, { slugDir })
-    .use(remarkHeadings as never)
-    .use(remarkCodeGroup)
-    .use(remarkDetailsToggle)
-    .use(remarkGithubCallouts)
-    .use(remarkMermaidCode)
-    .use(remarkSingleAccordionItems)
-    .use(remarkSidebarComponents)
+  // Prepend transforms run first. remarkInlineImports goes there: it must
+  // expand imported .md/.mdx content before the other transforms (headings,
+  // code groups, callouts, etc.) process the combined tree.
+  const transforms: MdastTransform[] = [
+    ...(options?.prependTransforms ?? []),
+    remarkRewriteLinks({ slugDir }),
+    remarkHeadings,
+    remarkCodeGroup,
+    remarkDetailsToggle,
+    remarkGithubCallouts,
+    remarkMermaidCode,
+    remarkSingleAccordionItems,
+    remarkSidebarComponents,
+  ]
 
-  // Remark's parse() and runSync() throw VFileMessage on syntax errors.
+  // Transforms throw on invalid input (e.g. two {#id} in one heading).
   // Convert at the boundary to a returned error value.
-  const parseResult = trySync(() => processor.parse(content), content, source)
-  if (parseResult instanceof Error) return parseResult
-
-  const runResult = trySync(() => processor.runSync(parseResult) as Root, content, source)
-  if (runResult instanceof Error) return runResult
-
-  const mdast = runResult
+  try {
+    for (const transform of transforms) transform(mdast)
+  } catch (err) {
+    return toParseError({ err, mdxSource: content, source })
+  }
 
   // Serialize BEFORE unravel — mdxToMarkdown corrupts phrasing children
   // of flow elements by inserting blank lines between them, which creates
   // spurious paragraphs on re-parse. Keeping text elements inline in the
   // serialized output preserves the original paragraph structure.
-  const serialized = toMarkdown(mdast, {
-    extensions: [
-      gfmToMarkdown(),
-      mdxToMarkdown(),
-      frontmatterToMarkdown(['yaml']),
-    ],
-  })
+  const serialized = stringify(mdast, { syntax: MDX_SYNTAX })
 
   // Apply unravel AFTER serialization — promotes lone text elements in
   // paragraphs to flow elements so the mdast tree has the correct block
   // structure for heading extraction, section splitting, etc.
-  remarkMarkAndUnravel()(mdast)
+  markAndUnravel(mdast)
 
   return { content: serialized, mdast }
 }
 
-/** Sync boundary: catch thrown errors from remark and convert to HolocronMdxParseError. */
-function trySync<T>(fn: () => T, mdxSource: string, source?: string): HolocronMdxParseError | T {
-  try {
-    return fn()
-  } catch (err) {
-    if (err instanceof HolocronMdxParseError) return err
-    const { line, column, reason } = extractParseErrorInfo(err)
-    return new HolocronMdxParseError({ reason, line, column, source, mdxSource, cause: err })
-  }
+function toParseError({ err, mdxSource, source }: { err: unknown; mdxSource: string; source?: string }): HolocronMdxParseError {
+  if (err instanceof HolocronMdxParseError) return err
+  const { line, column, reason } = extractParseErrorInfo(err)
+  return new HolocronMdxParseError({ reason, line, column, source, mdxSource, cause: err })
 }
 
 /**
@@ -136,9 +113,8 @@ function trySync<T>(fn: () => T, mdxSource: string, source?: string): HolocronMd
  * [id]: /path.md, and JSX href attributes. External URLs, anchor-only
  * links, and import sources are left alone.
  */
-function remarkRewriteLinks(_opts?: { slugDir?: string }) {
-  const slugDir = _opts?.slugDir
-  return (tree: Root) => {
+function remarkRewriteLinks({ slugDir }: { slugDir?: string }): MdastTransform {
+  return (tree) => {
     walkRewriteLinks(tree.children, slugDir)
   }
 }
@@ -414,8 +390,9 @@ const FLOW_PARENTS = new Set(['root', 'blockquote', 'listItem', 'footnoteDefinit
  * kept as text for the same reason: descriptions are rendered without HTML.
  */
 export function parseCommonMark(markdown: string): Root {
-  // remark-gfm only adds parser extensions, so parse() alone gives the full tree.
-  const mdast = remark().use(remarkGfm).parse(markdown)
+  const mdast = parse(markdown, { syntax: [gfm()] })
+  // Only MDX syntax can fail to parse.
+  if (mdast instanceof Error) throw mdast
   const htmlToText = (node: Root | RootContent): void => {
     if (!('children' in node)) return
     // Block HTML needs a paragraph, or it is serialized unescaped and glued to its neighbors.
@@ -433,5 +410,5 @@ export function parseCommonMark(markdown: string): Root {
 
 /** Plain Markdown → MDX source with `{`, `<` and friends escaped, for virtual pages. */
 export function commonMarkToMdx(markdown: string): string {
-  return toMarkdown(parseCommonMark(markdown), { extensions: [gfmToMarkdown(), mdxToMarkdown()] })
+  return stringify(parseCommonMark(markdown), { syntax: [mdx(), gfm()] })
 }

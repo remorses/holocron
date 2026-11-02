@@ -7,7 +7,7 @@ import {
 } from './toc-tree.ts'
 import { slug } from 'github-slugger'
 import { mdxParse } from 'safe-mdx/parse'
-import type { Heading, PhrasingContent } from 'mdast'
+import type { Heading, PhrasingContent } from 'mdastic'
 
 /* ── slug (github-slugger) ───────────────────────────────────────────── */
 

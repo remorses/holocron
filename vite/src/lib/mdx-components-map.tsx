@@ -5,7 +5,7 @@
 
 import { Children, Fragment, type ComponentProps, type ElementType, type ReactNode } from 'react'
 import { SafeMdxRenderer } from 'safe-mdx'
-import type { PhrasingContent, Root, RootContent } from 'mdast'
+import type { PhrasingContent, Root, RootContent } from 'mdastic'
 import type { MyRootContent } from 'safe-mdx'
 import { mdxParse, type EagerModules } from 'safe-mdx/parse'
 import {

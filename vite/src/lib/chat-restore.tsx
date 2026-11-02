@@ -11,7 +11,7 @@
  * restored and streamed messages render identically.
  */
 
-import type { Root, RootContent } from 'mdast'
+import type { Root, RootContent } from 'mdastic'
 import { mdxParse } from 'safe-mdx/parse'
 import { P } from '../components/markdown/typography.tsx'
 import { ChatRenderNodes, DROPPED_CHAT_TAGS } from './chat-render.tsx'

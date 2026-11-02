@@ -1,5 +1,5 @@
 /**
- * Remark plugin that inlines .md/.mdx file imports into the parent AST.
+ * mdast transform that inlines .md/.mdx file imports into the parent AST.
  *
  * When a page has `import Guide from './snippets/guide.md'` and uses `<Guide />`,
  * this plugin reads the imported file content, parses it into mdast nodes,
@@ -13,7 +13,7 @@
  * The virtual module for the .md/.mdx file exports a no-op component
  * that is never rendered since all `<X />` usages have been replaced.
  *
- * Inlined content goes through the same remark pipeline as the parent page:
+ * Inlined content goes through the same transform pipeline as the parent page:
  * code groups, callouts, headings, mermaid, etc. all apply. Images are also
  * picked up by the build-time image processor (dimensions, placeholders,
  * copy-to-public).
@@ -27,14 +27,10 @@
  * using Vite's resolver or any async resolution strategy externally.
  */
 
-import type { Root, RootContent } from 'mdast'
-import { visit } from 'unist-util-visit'
+import { parse, visit, type NodeOf, type Root, type RootContent } from 'mdastic'
 import { extractImports } from 'safe-mdx/parse'
-import remarkMdx from 'remark-mdx'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkGfm from 'remark-gfm'
-import { remark } from 'remark'
 import path from 'node:path'
+import { MDX_SYNTAX, type MdastTransform } from './normalize-mdx.ts'
 
 export type InlineImportEntry = {
   /** Raw markdown/MDX content of the imported file */
@@ -48,7 +44,7 @@ export type InlineImportEntry = {
    * this would be `../snippets/` (from pages/ to snippets/).
    */
   relativeDir: string
-  /** Pre-built mdast nodes ready for splicing. When set, the remark plugin
+  /** Pre-built mdast nodes ready for splicing. When set, the transform
    *  skips parsing and just clones these nodes. Built by resolveInlineImports
    *  in sync.ts to avoid double-parsing imported files. */
   parsedNodes?: RootContent[]
@@ -72,13 +68,13 @@ export type RemarkInlineImportsOptions = {
   resolvedImports: Map<string, InlineImportEntry>
 }
 
-type JsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' | 'mdxJsxTextElement' }>
+type JsxNode = NodeOf<'mdxJsxFlowElement' | 'mdxJsxTextElement'>
 
 /**
- * Create a remark plugin that inlines .md/.mdx imports into the parent AST.
+ * Create a transform that inlines .md/.mdx imports into the parent AST.
  */
-export function remarkInlineImports(options: RemarkInlineImportsOptions) {
-  return (tree: Root) => {
+export function remarkInlineImports(options: RemarkInlineImportsOptions): MdastTransform {
+  return (tree) => {
     const { resolvedImports } = options
     if (resolvedImports.size === 0) return
 
@@ -140,22 +136,17 @@ export function remarkInlineImports(options: RemarkInlineImportsOptions) {
  * pre-built parsedNodes aren't available (unit tests, standalone usage).
  */
 function parseAndRewriteImportedContent(entry: InlineImportEntry): RootContent[] {
-  const processor = remark()
-    .use(remarkMdx)
-    .use(remarkFrontmatter, ['yaml'])
-    .use(remarkGfm)
-
-  const parsed = processor.parse(entry.content)
-  const mdast = processor.runSync(parsed) as Root
+  const mdast = parse(entry.content, { syntax: MDX_SYNTAX })
+  if (mdast instanceof Error) throw mdast
   return buildSplicedNodes(mdast, entry.relativeDir)
 }
 
 /**
  * Prepare mdast nodes for splicing into a parent page: strip frontmatter
  * and rewrite relative URLs/import sources. Works on an already-parsed
- * mdast tree (from quickMdxParser or remark). Called by:
+ * mdast tree (from quickMdxParse). Called by:
  * - resolveInlineImports (sync.ts) to pre-build nodes during sync
- * - parseAndRewriteImportedContent (above) as fallback in the remark plugin
+ * - parseAndRewriteImportedContent (above) as fallback in the transform
  */
 export function buildSplicedNodes(
   mdast: Root,

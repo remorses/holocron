@@ -4,7 +4,7 @@
  * Used by the build pipeline (sync.ts) and server component (app-factory.tsx).
  */
 
-import type { Root, Heading, PhrasingContent, RootContent } from 'mdast'
+import type { Root, Heading, PhrasingContent, RootContent } from 'mdastic'
 import GithubSlugger, { slug } from 'github-slugger'
 
 /* ── TOC tree types ──────────────────────────────────────────────────── */

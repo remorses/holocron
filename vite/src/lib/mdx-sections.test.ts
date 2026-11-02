@@ -1,11 +1,7 @@
 import { describe, expect, test } from 'vitest'
 
-import type { Root } from 'mdast'
+import { parse, type Root } from 'mdastic'
 import { mdxParse } from 'safe-mdx/parse'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkGfm from 'remark-gfm'
-import remarkMdx from 'remark-mdx'
-import { remark } from 'remark'
 import {
   buildSections,
   demoteBodyH1s,
@@ -14,6 +10,7 @@ import {
   shouldInjectPageTitle,
   unwrapAsides,
 } from './mdx-sections.ts'
+import { MDX_SYNTAX } from './normalize-mdx.ts'
 import { remarkInlineImports, type InlineImportEntry } from './remark-inline-imports.ts'
 import { formatSectionsToMdx } from './test-mdx-util.ts'
 
@@ -23,14 +20,10 @@ function parseAndBuild(mdx: string, options?: Parameters<typeof buildSections>[1
 }
 
 function parseInlineAndBuild(pageMdx: string, imports: Map<string, InlineImportEntry>) {
-  const processor = remark()
-    .use(remarkMdx)
-    .use(remarkFrontmatter, ['yaml'])
-    .use(remarkGfm)
-    .use(remarkInlineImports, { resolvedImports: imports })
-  const parsed = processor.parse(pageMdx)
-  const transformed = processor.runSync(parsed) as Root
-  return buildSections(transformed)
+  const root = parse(pageMdx, { syntax: MDX_SYNTAX })
+  if (root instanceof Error) throw root
+  remarkInlineImports({ resolvedImports: imports })(root)
+  return buildSections(root)
 }
 
 describe('compact asides', () => {

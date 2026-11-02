@@ -450,7 +450,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
       const zoomDir = path.dirname(zoomEntry)
       // acorn ships both CJS (dist/acorn.js) and ESM (dist/acorn.mjs). Some
       // transitive deps use require("acorn") (e.g. acorn-jsx) while others use
-      // ESM imports (e.g. micromark-extension-mdxjs). Without an alias, both
+      // ESM imports (e.g. mdastic). Without an alias, both
       // copies end up in the RSC bundle (~230KB each). Force the ESM entry.
       // Gracefully skip if the .mjs file doesn't exist (future acorn versions
       // may restructure their dist layout).

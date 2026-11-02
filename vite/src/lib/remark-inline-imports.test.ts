@@ -1,35 +1,19 @@
 import { describe, expect, test } from 'vitest'
 import { remarkInlineImports, type InlineImportEntry } from './remark-inline-imports.ts'
-import { frontmatterToMarkdown } from 'mdast-util-frontmatter'
-import { gfmToMarkdown } from 'mdast-util-gfm'
-import { mdxToMarkdown } from 'mdast-util-mdx'
-import { toMarkdown } from 'mdast-util-to-markdown'
-import type { Root } from 'mdast'
-import remarkMdx from 'remark-mdx'
-import remarkFrontmatter from 'remark-frontmatter'
-import remarkGfm from 'remark-gfm'
-import { remark } from 'remark'
+import { parse, stringify } from 'mdastic'
+import { MDX_SYNTAX } from './normalize-mdx.ts'
 
 function runInlineImports(
   content: string,
   resolvedImports: Map<string, InlineImportEntry>,
 ) {
-  const plugin = remarkInlineImports
-  const options = { resolvedImports }
-  const processor = remark()
-    .use(remarkMdx)
-    .use(remarkFrontmatter, ['yaml'])
-    .use(remarkGfm)
-    .use(plugin, options)
-
-  const parsed = processor.parse(content)
-  const transformed = processor.runSync(parsed) as Root
+  const transformed = parse(content, { syntax: MDX_SYNTAX })
+  if (transformed instanceof Error) throw transformed
+  remarkInlineImports({ resolvedImports })(transformed)
 
   return {
     transformed,
-    markdown: toMarkdown(transformed, {
-      extensions: [gfmToMarkdown(), mdxToMarkdown(), frontmatterToMarkdown(['yaml'])],
-    }),
+    markdown: stringify(transformed, { syntax: MDX_SYNTAX }),
   }
 }
 

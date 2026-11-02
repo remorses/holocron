@@ -6,16 +6,8 @@
  * for agent consumption (e.g. stripping `<Visibility for="humans">` blocks).
  */
 
-import type { Root, RootContent } from 'mdast'
-import { visit, SKIP } from 'unist-util-visit'
-import remarkMdx from 'remark-mdx'
-import remarkFrontmatter from 'remark-frontmatter'
-import { remark } from 'remark'
-import { gfmToMarkdown } from 'mdast-util-gfm'
-import { mdxToMarkdown } from 'mdast-util-mdx'
-import { frontmatterToMarkdown } from 'mdast-util-frontmatter'
-import { toMarkdown } from 'mdast-util-to-markdown'
-import remarkGfm from 'remark-gfm'
+import { parse, stringify, type NodeOf, type RootContent } from 'mdastic'
+import { MDX_SYNTAX } from './normalize-mdx.ts'
 
 /** Check if the request explicitly asks for markdown via Accept header. */
 export function isAgentRequest(request: Request): boolean {
@@ -23,12 +15,10 @@ export function isAgentRequest(request: Request): boolean {
   return accept.startsWith('text/markdown')
 }
 
-type JsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' | 'mdxJsxTextElement' }>
-
 /** Read the `for` attribute value from a Visibility JSX node.
  *  Handles both string literals (`for="agents"`) and simple JSX
  *  expressions (`for={"agents"}`). */
-function getVisibilityAudience(node: JsxNode): string | undefined {
+function getVisibilityAudience(node: NodeOf<'mdxJsxFlowElement' | 'mdxJsxTextElement'>): string | undefined {
   for (const attr of node.attributes) {
     if (attr.type !== 'mdxJsxAttribute' || attr.name !== 'for') continue
 
@@ -57,36 +47,29 @@ export function stripVisibilityForAgents(mdx: string): string {
   // Fast path: skip parsing when no Visibility blocks exist
   if (!mdx.includes('<Visibility')) return mdx
 
-  const processor = remark().use(remarkFrontmatter, ['yaml']).use(remarkMdx).use(remarkGfm)
-  const tree: Root = processor.parse(mdx)
-  processor.runSync(tree)
+  const tree = parse(mdx, { syntax: MDX_SYNTAX })
+  if (tree instanceof Error) throw tree
 
+  if (!stripVisibility(tree.children)) return mdx
+
+  return stringify(tree, { syntax: MDX_SYNTAX })
+}
+
+/** Remove or unwrap Visibility elements in place. Returns true if anything changed. */
+function stripVisibility(children: RootContent[]): boolean {
   let changed = false
-
-  visit(tree, (node, index, parent) => {
-    if (node.type !== 'mdxJsxFlowElement' && node.type !== 'mdxJsxTextElement') return
-    const jsxNode = node as JsxNode
-    if (jsxNode.name !== 'Visibility') return
-    if (typeof index !== 'number' || !parent?.children) return
-
-    const audience = getVisibilityAudience(jsxNode)
-
-    if (audience === 'agents') {
-      // Unwrap: replace <Visibility for="agents"> with its children
-      parent.children.splice(index, 1, ...(jsxNode.children as RootContent[]))
+  let index = 0
+  while (index < children.length) {
+    const node = children[index]!
+    if ((node.type === 'mdxJsxFlowElement' || node.type === 'mdxJsxTextElement') && node.name === 'Visibility') {
+      // agents: unwrap, keeping the children. humans or no `for` prop: remove entirely.
+      children.splice(index, 1, ...(getVisibilityAudience(node) === 'agents' ? node.children : []))
       changed = true
-      return [SKIP, index] // revisit at same index (new children spliced in)
+      continue // revisit the same index, the spliced children come next
     }
-
-    // audience === 'humans' or no `for` prop → remove entirely
-    parent.children.splice(index, 1)
-    changed = true
-    return [SKIP, index]
-  })
-
-  if (!changed) return mdx
-
-  return toMarkdown(tree, {
-    extensions: [gfmToMarkdown(), mdxToMarkdown(), frontmatterToMarkdown(['yaml'])],
-  })
+    const nested = Reflect.get(node, 'children')
+    if (Array.isArray(nested) && stripVisibility(nested)) changed = true
+    index++
+  }
+  return changed
 }

@@ -1,4 +1,4 @@
-import type { RootContent } from 'mdast'
+import type { RootContent } from 'mdastic'
 
 type NativeJsxElementNode = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
 type NativeJsxAttribute = Extract<NativeJsxElementNode['attributes'][number], { type: 'mdxJsxAttribute' }>
@@ -17,7 +17,7 @@ export function createElement({
   children = [],
 }: {
   name: string
-  attributes: JsxAttribute[]
+  attributes: JsxElementNode['attributes']
   children?: JsxElementNode['children']
 }): JsxElementNode {
   return {

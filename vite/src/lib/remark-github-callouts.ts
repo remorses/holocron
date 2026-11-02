@@ -1,7 +1,6 @@
 /** Remark plugin converting GitHub quote callouts into Holocron callout MDX. */
 
-import type { Blockquote, Paragraph, Root, RootContent, Text } from 'mdast'
-import { visit } from 'unist-util-visit'
+import { visit, type Blockquote, type Paragraph, type Root, type RootContent, type Text } from 'mdastic'
 
 const CALLOUTS = {
   NOTE: { component: 'Note', title: 'Note' },
@@ -74,14 +73,12 @@ function createCallout(
   }
 }
 
-export function remarkGithubCallouts() {
-  return (tree: Root) => {
-    visit(tree, 'blockquote', (node, index, parent) => {
-      if (!parent || index === undefined) return
-      const kind = readCalloutKind(node)
-      if (!kind) return
+export function remarkGithubCallouts(tree: Root): void {
+  visit(tree, 'blockquote', (node, index, parent) => {
+    if (!parent || index === undefined) return
+    const kind = readCalloutKind(node)
+    if (!kind) return
 
-      parent.children[index] = createCallout(kind, stripMarker(node))
-    })
-  }
+    parent.children[index] = createCallout(kind, stripMarker(node))
+  })
 }

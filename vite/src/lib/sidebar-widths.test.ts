@@ -6,7 +6,7 @@ import {
   buildGridTokenStyle,
   computeSidebarWidthFromAsideNodes,
 } from './sidebar-widths.ts'
-import { visit } from 'unist-util-visit'
+import { visit } from 'mdastic'
 import { buildSections } from './mdx-sections.ts'
 import { normalizeMdx } from './normalize-mdx.ts'
 

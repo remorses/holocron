@@ -1,53 +1,41 @@
-import type { Heading, Root, RootContent } from 'mdast'
+import { visit, type Heading, type NodeOf, type Root, type RootContent } from 'mdastic'
 import GithubSlugger from 'github-slugger'
-import { mdastHeadingId } from 'mdast-heading-id'
-import { micromarkHeadingId } from 'micromark-heading-id'
-import { visit } from 'unist-util-visit'
 import { createElement, expressionAttribute, literalAttribute, numberExpression, type JsxElementNode } from './jsx-utils.ts'
 
-type JsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' | 'mdxJsxTextElement' }>
+type JsxNode = NodeOf<'mdxJsxFlowElement' | 'mdxJsxTextElement'>
 
 /**
  * Normalize markdown headings into the custom <Heading> MDX component.
  * Native JSX h1-h6 tags stay native so authored classes/styles survive.
  * Keeps Mintlify's {#custom-id} syntax and injects missing ids on native JSX headings.
  */
-export function remarkHeadings(this: { data(): Record<string, unknown> }) {
-  const data = this.data()
-  const micromarkExtensions = Array.isArray(data.micromarkExtensions) ? data.micromarkExtensions : (data.micromarkExtensions = [])
-  const fromMarkdownExtensions = Array.isArray(data.fromMarkdownExtensions) ? data.fromMarkdownExtensions : (data.fromMarkdownExtensions = [])
+export function remarkHeadings(tree: Root): void {
+  const slugger = new GithubSlugger()
 
-  micromarkExtensions.push(micromarkHeadingId())
-  fromMarkdownExtensions.push(mdastHeadingId())
+  visit(tree, 'heading', (currentNode, index, parent) => {
+    if (!parent || typeof index !== 'number') {
+      return
+    }
 
-  return (tree: Root) => {
-    const slugger = new GithubSlugger()
+    const explicitId = takeExplicitId(currentNode)
 
-    visit(tree, 'heading', (currentNode, index, parent) => {
-      if (!parent || typeof index !== 'number') {
-        return
-      }
+    // Only convert to <Heading> JSX when there's an explicit {#custom-id}.
+    // Native headings without custom IDs stay as native heading nodes —
+    // renderNode in mdx-components-map.tsx handles them directly.
+    if (!explicitId) {
+      return
+    }
 
-      const explicitId = takeExplicitId(currentNode)
+    parent.children.splice(index, 1, createHeadingNode(currentNode, explicitId))
+  })
 
-      // Only convert to <Heading> JSX when there's an explicit {#custom-id}.
-      // Native headings without custom IDs stay as native heading nodes —
-      // renderNode in mdx-components-map.tsx handles them directly.
-      if (!explicitId) {
-        return
-      }
+  visit(tree, 'mdxJsxFlowElement', (currentNode) => {
+    addMissingHeadingId(currentNode, slugger)
+  })
 
-      parent.children.splice(index, 1, createHeadingNode(currentNode, explicitId))
-    })
-
-    visit(tree, 'mdxJsxFlowElement', (currentNode) => {
-      addMissingHeadingId(currentNode, slugger)
-    })
-
-    visit(tree, 'mdxJsxTextElement', (currentNode) => {
-      addMissingHeadingId(currentNode, slugger)
-    })
-  }
+  visit(tree, 'mdxJsxTextElement', (currentNode) => {
+    addMissingHeadingId(currentNode, slugger)
+  })
 }
 
 function addMissingHeadingId(node: JsxNode, slugger: GithubSlugger): void {
@@ -70,7 +58,6 @@ function createHeadingNode(node: Heading, id: string): JsxElementNode {
       expressionAttribute('level', numberExpression(node.depth)),
       literalAttribute('id', id),
     ],
-    // @ts-expect-error mdast narrows Flow JSX children more than the MDX serializer we emit here.
     children: node.children,
   })
 }

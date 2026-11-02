@@ -10,7 +10,7 @@
  * regular first-section aside so those later asides stay on their own rows.
  */
 
-import type { Root, RootContent } from 'mdast'
+import type { Root, RootContent } from 'mdastic'
 
 type FlowJsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
 

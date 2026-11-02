@@ -1,7 +1,7 @@
 /** Banner markdown renderer — compact inline-safe content that inherits shell colors. */
 
 import React from 'react'
-import type { RootContent } from 'mdast'
+import type { RootContent } from 'mdastic'
 import { SafeMdxRenderer } from 'safe-mdx'
 import { Link } from '../link.tsx'
 import { logMdxError } from '../../lib/logger.ts'

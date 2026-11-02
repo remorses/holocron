@@ -5,15 +5,11 @@
  * then serializes back to MDX string.
  */
 
-import { gfmToMarkdown } from 'mdast-util-gfm'
-import { toMarkdown } from 'mdast-util-to-markdown'
-import { mdxToMarkdown } from 'mdast-util-mdx'
-import { frontmatterToMarkdown } from 'mdast-util-frontmatter'
+import { stringify, type NodeOf, type Root, type PhrasingContent, type RootContent } from 'mdastic'
 import GithubSlugger from 'github-slugger'
-import type { Root, PhrasingContent, RootContent } from 'mdast'
 import type { NavHeading } from '../navigation.ts'
 import type { ImageMeta } from './image-processor.ts'
-import { normalizeMdx, type NormalizeMdxOptions } from './normalize-mdx.ts'
+import { MDX_SYNTAX, normalizeMdx, type NormalizeMdxOptions } from './normalize-mdx.ts'
 import { HolocronMdxParseError } from './logger.ts'
 import { parsePageFrontmatter, type PageFrontmatter } from './page-frontmatter.ts'
 import { stringIconToRefs, type IconLibrary, type IconRef } from './collect-icons.ts'
@@ -82,21 +78,21 @@ export type ProcessedMdx = {
   mdast: Root
 }
 
-type JsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' | 'mdxJsxTextElement' }>
-type FlowJsxNode = Extract<RootContent, { type: 'mdxJsxFlowElement' }>
+type JsxNode = NodeOf<'mdxJsxFlowElement' | 'mdxJsxTextElement'>
+type FlowJsxNode = NodeOf<'mdxJsxFlowElement'>
 
 /**
  * Parse MDX content and extract metadata + icon/image refs.
  * Returns HolocronMdxParseError on syntax errors instead of throwing.
  *
  * normalizeMdx already parses the content into an mdast tree (to run
- * remark plugins), so we reuse that tree directly instead of
+ * transforms), so we reuse that tree directly instead of
  * serializing → re-parsing — saving one full mdxParse per page.
  *
  * @param source - optional slug or file path for error messages (e.g. "/getting-started")
  */
 export type ProcessMdxOptions = {
-  /** Options for the normalizeMdx pipeline (e.g. prepend plugins). */
+  /** Options for the normalizeMdx pipeline (e.g. prepend transforms). */
   normalizeMdxOptions?: NormalizeMdxOptions
   /** Page slug — forwarded to normalizeMdx so relative links are resolved
    *  to absolute /paths at build time. */
@@ -498,13 +494,7 @@ export function rewriteMdxImages(mdast: Root, images: Map<string, ResolvedImage>
   lazyLoadImagesAfterFirst(mdast.children)
 
   // Serialize back to MDX
-  return toMarkdown(mdast, {
-    extensions: [
-      gfmToMarkdown(),
-      mdxToMarkdown(),
-      frontmatterToMarkdown(['yaml']),
-    ],
-  })
+  return stringify(mdast, { syntax: MDX_SYNTAX })
 }
 
 /**
