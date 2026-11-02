@@ -2170,6 +2170,36 @@ icon: rocket
     expect(result.pageIconRefs.page).toEqual(['lucide:rocket', 'lucide:github'])
   })
 
+  // Regression: image pages were serialized after markAndUnravel, which split
+  // single-line JSX text elements into separate paragraphs.
+  test('image pages keep single-line JSX children inline', async () => {
+    const project = tracked(createProject(
+      { navigation: [{ group: 'Docs', pages: ['page'] }] },
+      {
+        page: '<Note>Use `Note` for info.</Note>\n\n![dot](./dot.svg)\n',
+      },
+    ))
+    fs.writeFileSync(
+      path.join(project.pagesDir, 'dot.svg'),
+      `<svg xmlns="http://www.w3.org/2000/svg" width="8" height="4" viewBox="0 0 8 4"><rect width="8" height="4" /></svg>`,
+    )
+
+    const result = await syncNavigation({
+      config: readConfig({ root: project.root }),
+      pagesDir: project.pagesDir,
+      publicDir: project.publicDir,
+      projectRoot: project.root,
+      distDir: project.distDir,
+    })
+
+    expect(result.mdxContent.page!.replace(/\/_holocron\/images\/\w+-/, '/_holocron/images/HASH-')).toMatchInlineSnapshot(`
+      "<Note>Use \`Note\` for info.</Note>
+
+      <Image src="/_holocron/images/HASH-dot.svg" alt="dot" intrinsicWidth="8" intrinsicHeight="4" placeholder="" />
+      "
+    `)
+  })
+
   test('title falls back to first heading when no frontmatter', async () => {
     const project = tracked(createProject(
       {

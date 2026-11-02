@@ -295,7 +295,7 @@ export async function syncNavigation({
           imageOutputDir,
         })
         if (resolvedImages.size > 0) {
-          mdxContent[slug] = rewriteMdxImages(processed.mdast, resolvedImages)
+          mdxContent[slug] = rewriteMdxImages(processed.normalizedContent, resolvedImages)
         }
       }
       pageIconRefs[slug] = processed.iconRefs
@@ -486,7 +486,7 @@ export async function syncNavigation({
 
     // Mutate mdast tree: rewrite image paths + inject dimensions, serialize back
     finalMdx = resolvedImages.size > 0
-      ? rewriteMdxImages(processed.mdast, resolvedImages)
+      ? rewriteMdxImages(processed.normalizedContent, resolvedImages)
       : processed.normalizedContent
 
     pageIconRefs[slug] = processed.iconRefs
@@ -968,7 +968,7 @@ export async function processDeferredProviders({
         imageOutputDir,
       })
       if (resolvedImages.size > 0) {
-        finalMdx = rewriteMdxImages(processed.mdast, resolvedImages)
+        finalMdx = rewriteMdxImages(processed.normalizedContent, resolvedImages)
       }
     }
 

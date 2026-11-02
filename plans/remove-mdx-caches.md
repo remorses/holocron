@@ -60,10 +60,11 @@ Pages with processed images are serialized by `rewriteMdxImages` after `markAndU
 so `<Note>Use \`Note\` for info.</Note>` becomes three paragraphs. Pages without images
 are fine. Verified with `processMdx` + `rewriteMdxImages` on a 4-line page.
 
-- [ ] Failing regression test first: single-line `<Note>` plus a local image keeps the Note
-  on one line in the served MDX.
-- [ ] The tree is serialized exactly once per page, after image rewriting and before
-  unravel. `normalizeMdx` no longer stringifies on its own. Pass when the test passes.
+- [x] Failing regression test first: single-line `<Note>` plus a local image keeps the Note
+  on one line in the served MDX. Evidence: `sync.test.ts` "image pages keep single-line
+  JSX children inline" failed with the split output before the fix.
+- [x] `rewriteMdxImages` takes the normalized MDX string and parses it again (~0.05 ms)
+  instead of serializing the unraveled analysis tree. Evidence: vite tests 874 passed.
 
 ## Task 4: Image cost without the page cache
 
