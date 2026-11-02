@@ -2,6 +2,9 @@
 
 Drop-in Mintlify replacement as a Vite plugin. Users point their `vite.config.ts` at this plugin and get a full documentation site from MDX files + a `docs.json` (or `docs.jsonc` / `holocron.jsonc`) config file.
 
+Active plan: `plans/remove-mdx-caches.md`. Read it before starting work.
+Decisions: `plans/decisions/`. Search them before designing or refactoring.
+
 Read the holocron skill (`skills/holocron/SKILL.md`) before editing example docs or MDX content. It covers writing style, navigation placement, Aside usage, and diagram conventions.
 
 Read the spiceflow skill before editing any code in this package. Run `playwriter skill` or load the spiceflow skill to get the latest API reference.
