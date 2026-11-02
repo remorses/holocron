@@ -1,23 +1,18 @@
 /**
- * Cache sync engine — builds the enriched navigation tree from config + MDX files.
+ * Sync engine — builds the enriched navigation tree from config + MDX files.
  *
  * All processing (MDX parsing, image resolution, sharp placeholders) happens
- * here at build time. The resulting NavPage.mdx field is the final content;
+ * here at build time. The resulting mdxContent is the final content;
  * request-time rendering is just parse + render with zero I/O.
  *
- * Build flow:
- * 1. Read dist/holocron-cache.json + dist/holocron-mdx.json + dist/holocron-images.json
- * 2. Walk config navigation tree
- * 3. For each page: check MDX git SHA → cache hit skips everything
- * 4. Cache miss: parse MDX, resolve images, process with sharp, rewrite content
- * 5. Resolve used icon SVG bodies (Iconify only on cache miss)
- * 6. Write updated caches
+ * Every sync processes every page: with mdastic that is ~0.2 to 0.4 ms per
+ * page. Only slow non-MDX work is cached on disk:
+ * - dist/holocron-images.json: sharp dimensions and placeholders
+ * - dist/holocron-icons.json: Iconify SVG bodies, so Iconify loads only for new icons
  */
 
 import fs from 'node:fs'
 import path from 'node:path'
-import crypto from 'node:crypto'
-import { gitBlobSha } from './git-sha.ts'
 import { processMdx, rewriteMdxImages, isNonLocalAssetSrc, type ResolvedImage, type InternalLink, type AssetRef, type ProcessMdxOptions } from './mdx-processor.ts'
 import { remarkInlineImports, buildSplicedNodes, type InlineImportEntry } from './remark-inline-imports.ts'
 import { parse, visit, type Root, type RootContent } from 'mdastic'
@@ -52,7 +47,6 @@ import { imageboardProvider } from './imageboard/provider.ts'
 import type { CustomTabProvider } from './runtime-provider.ts'
 import { colors, formatHolocronError, formatHolocronWarning, logger, logMdxError, HolocronMdxParseError } from './logger.ts'
 import { redirectSourceMatches } from './redirects.ts'
-import { parseFrontmatterObject } from './frontmatter.ts'
 import { MdastToJsx, type SafeMdxError } from 'safe-mdx'
 import { extractImports, type EagerModules } from 'safe-mdx/parse'
 import {
@@ -64,8 +58,7 @@ import {
   collectAllPages,
 } from '../navigation.ts'
 
-const CACHE_FILENAME = 'holocron-cache.json'
-const MDX_CACHE_FILENAME = 'holocron-mdx.json'
+const ICON_CACHE_FILENAME = 'holocron-icons.json'
 
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg', '.avif', '.ico'])
 const MEDIA_EXTENSIONS = new Set(['.mp4', '.webm', '.ogg', '.mp3', '.wav', '.m4a', '.mov', '.avi', '.mkv', '.flac', '.aac'])
@@ -94,7 +87,6 @@ function createRedirectBackedPage(slug: string): NavPage {
     slug,
     href: slugToHref(slug),
     title,
-    gitSha: `redirect:${slug}`,
     headings: [],
     frontmatter: { title },
   }
@@ -138,7 +130,6 @@ export type SyncResult = {
    *  The actual provider objects are imported via virtual modules, not stored here. */
   runtimeTabNames: Set<string>
   parsedCount: number
-  cachedCount: number
   /** Number of pages with any MDX error (parse or render). */
   mdxContentErrorCount: number
   /** Number of broken internal links across all pages. */
@@ -165,7 +156,6 @@ export async function syncNavigation({
   logParseErrors = true,
   deferProviders = false,
   customProviders = [],
-  pageCache = true,
 }: {
   config: HolocronConfig
   pagesDir: string
@@ -182,56 +172,25 @@ export async function syncNavigation({
   /** Static custom providers loaded from user files (tab.provider with
    *  static: true). Processed at build time alongside built-in providers. */
   customProviders?: Array<{ tab: ConfigNavTab; provider: CustomTabProvider }>
-  /** Reuse processed navigation and MDX from dist/. Default true.
-   *  Image metadata still caches. Set false while developing Holocron itself. */
-  pageCache?: boolean
 }): Promise<SyncResult> {
-  // 1. Load caches from previous build
-  const cachePath = path.join(distDir, CACHE_FILENAME)
-  const mdxCachePath = path.join(distDir, MDX_CACHE_FILENAME)
-  const oldNav = pageCache ? readCache(cachePath) : null
-  const oldPages = oldNav ? buildPageIndex(oldNav) : new Map<string, NavPage>()
-  const oldMdxCache = pageCache ? readMdxCache(mdxCachePath) : emptyMdxCache()
-  const oldMdxContent = oldMdxCache.content
-  const oldPageIconRefs = oldMdxCache.pageIconRefs
-  const oldPageImportSources = oldMdxCache.pageImportSources
-  const oldPageInternalLinks = oldMdxCache.pageInternalLinks
-  const oldPageAssetRefs = oldMdxCache.pageAssetRefs
+  const iconCachePath = path.join(distDir, ICON_CACHE_FILENAME)
+  const iconCache = readIconCache(iconCachePath)
   const imageCache = loadImageCache({ distDir })
 
   const imageOutputDir = path.join(publicDir, '_holocron', 'images')
 
   let parsedCount = 0
-  let cachedCount = 0
   const mdxContent: Record<string, string> = {}
   const files: Record<string, string> = {}
   const pageIconRefs: Record<string, IconRef[]> = {}
-  /** Raw import sources per page (cached in holocron-mdx.json) */
-  const pageImportSources: Record<string, string[]> = {}
-  /** Resolved imports per page (computed fresh every sync from pageImportSources + filesystem) */
+  /** Resolved imports per page */
   const pageImports: Record<string, ResolvedImport[]> = {}
   /** Internal links per page slug (for broken-link validation after nav is built) */
   const pageInternalLinks: Record<string, InternalLink[]> = {}
   /** Local asset references per page slug (for broken-asset validation) */
   const pageAssetRefs: Record<string, AssetRef[]> = {}
-  /** Image files referenced by imported .md/.mdx (for HMR watching) */
+  /** Image files referenced by imported .md/.mdx and frontmatter (for HMR watching) */
   const allImportedImageDepPaths = new Set<string>()
-  /** Per-sync memo of asset file content hashes for cache-key computation.
-   *  Each referenced image is read at most once per sync, even when the
-   *  same file appears on many pages. */
-  const assetFileShaCache = new Map<string, string>()
-  function assetFileSha(filePath: string): string {
-    const cached = assetFileShaCache.get(filePath)
-    if (cached) return cached
-    let sha: string
-    try {
-      sha = crypto.createHash('sha1').update(fs.readFileSync(filePath)).digest('hex')
-    } catch {
-      sha = 'unreadable'
-    }
-    assetFileShaCache.set(filePath, sha)
-    return sha
-  }
   const mdxContentErrors = new Set<string>()
   const mdxParseErrors: Record<string, HolocronMdxParseError> = {}
   const redirectBackedPageSlugs = new Set(
@@ -303,7 +262,6 @@ export async function syncNavigation({
       if (processed.assetRefs.length > 0) pageAssetRefs[slug] = processed.assetRefs
       // Resolve imports (.tsx components) so virtual:holocron-modules has them.
       if (processed.importSources.length > 0) {
-        pageImportSources[slug] = processed.importSources
         pageImports[slug] = resolveImportSources({ importSources: processed.importSources, slug, pagesDir, projectRoot })
       }
       const errors = validateAndReportMdx({
@@ -321,7 +279,6 @@ export async function syncNavigation({
         href: slugToHref(slug),
         title: processed.title,
         description: processed.description,
-        gitSha: `virtual:${slug}`,
         headings: processed.headings,
         frontmatter: processed.frontmatter,
         ...(processed.hasTocPanel && { hasTocPanel: true as const }),
@@ -338,111 +295,10 @@ export async function syncNavigation({
     const content = fs.readFileSync(mdxPath, 'utf-8')
     const mdxDir = path.dirname(mdxPath)
 
-    // Resolve .md/.mdx imports early so we can incorporate their SHAs
-    // into the cache key. This makes cache hits sensitive to imported
-    // file changes, not just the page's own content.
     const inlineResult = resolveInlineImports({ content, mdxDir, pagesDir, projectRoot, publicDir })
     const inlineImportMap = inlineResult.imports
     for (const p of inlineResult.imageDepPaths) allImportedImageDepPaths.add(p)
 
-    // Resolve og:image / twitter:image frontmatter paths early so their
-    // file hashes are part of the cache key. Without this, editing the OG
-    // image file without touching the MDX would be a false cache hit.
-    const rawFrontmatter = parseFrontmatterObject(content)
-    const frontmatterImageDeps: string[] = []
-    for (const fmKey of ['og:image', 'twitter:image'] as const) {
-      const src = rawFrontmatter[fmKey]
-      if (!src || typeof src !== 'string' || isNonLocalAssetSrc(src)) continue
-      const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
-      if (resolved) {
-        frontmatterImageDeps.push(resolved.filePath)
-        allImportedImageDepPaths.add(resolved.filePath)
-      } else {
-        logger.warn(formatHolocronWarning(`frontmatter ${fmKey} references "${src}" but the file was not found`))
-      }
-    }
-
-    const contentSha = gitBlobSha(content)
-    const shaParts: string[] = []
-    if (inlineImportMap.size > 0) {
-      // Combine page SHA with imported file SHAs + image dep SHAs so
-      // changes to imported files OR their referenced images invalidate
-      // the cache.
-      shaParts.push(
-        ...[...inlineImportMap.values()]
-          .map((e) => `${e.absPath}:${gitBlobSha(e.content)}`),
-      )
-      for (const imgPath of inlineResult.imageDepPaths) {
-        try {
-          shaParts.push(`img:${imgPath}:${crypto.createHash('sha1').update(fs.readFileSync(imgPath)).digest('hex')}`)
-        } catch { /* ignore missing files */ }
-      }
-    }
-    for (const imgPath of frontmatterImageDeps) {
-      try {
-        shaParts.push(`fm-img:${imgPath}:${crypto.createHash('sha1').update(fs.readFileSync(imgPath)).digest('hex')}`)
-      } catch { /* ignore missing files */ }
-    }
-    // Image resolution fingerprint: WHERE each local asset src resolves
-    // (publicDir → served as-is vs projectRoot/relative → copied to
-    // /_holocron/images/<hash>) determines the rewritten src baked into the
-    // cached MDX. Moving an image between public/ and the project root
-    // changes the rendered path without changing the MDX content, so the
-    // resolution state must be part of the cache key. The cache-hit
-    // candidate uses the asset refs cached from the previous sync (if the
-    // content changed, the content SHA differs anyway; if it didn't, the
-    // cached refs are identical to what a fresh parse would produce). On a
-    // cache miss the stored gitSha is recomputed from the FRESH refs so the
-    // next sync's candidate matches it.
-    function computeSha(assetRefs: AssetRef[] | undefined): string {
-      const parts = [...shaParts]
-      for (const ref of assetRefs ?? []) {
-        if (isNonLocalAssetSrc(ref.src)) continue
-        const resolved = resolveImagePath({ src: ref.src, mdxDir, publicDir, projectRoot })
-        // Include the file content hash so replacing an image in place
-        // (same path, new pixels) also invalidates — copied images get a
-        // new /_holocron/images/<hash> name and public images get fresh
-        // dimensions/placeholder.
-        parts.push(resolved
-          ? `asset:${ref.src}:${path.relative(projectRoot, resolved.filePath)}:${resolved.needsCopy}:${assetFileSha(resolved.filePath)}`
-          : `asset:${ref.src}:missing`)
-      }
-      return gitBlobSha(contentSha + '\n' + parts.sort().join('\n'))
-    }
-    const sha = computeSha(oldPageAssetRefs[slug])
-
-    // Cache hit — MDX unchanged and all imported files unchanged
-    const cached = oldPages.get(slug)
-    const cachedMdx = oldMdxContent[slug]
-    if (cached && cached.gitSha === sha && cachedMdx) {
-      cachedCount++
-      mdxContent[slug] = cachedMdx
-      // Cached MDX entries were validated before being written. Do not
-      // validate again here, or cache hits would reparse every page on sync.
-      if (oldPageIconRefs[slug]) {
-        pageIconRefs[slug] = oldPageIconRefs[slug]
-      } else {
-        const reprocessed = processMdx(cachedMdx, config.icons.library, pageSource, { slug })
-        if (reprocessed instanceof Error) return handleParseError(slug, reprocessed)
-        pageIconRefs[slug] = reprocessed.iconRefs
-      }
-      // Restore cached internal links for broken-link validation
-      const cachedLinks = oldPageInternalLinks[slug]
-      if (cachedLinks && cachedLinks.length > 0) pageInternalLinks[slug] = cachedLinks
-      // Restore cached asset refs for broken-asset validation
-      const cachedAssets = oldPageAssetRefs[slug]
-      if (cachedAssets && cachedAssets.length > 0) pageAssetRefs[slug] = cachedAssets
-      // Restore cached raw import sources, then resolve fresh against the
-      // current filesystem. This ensures newly-created files are picked up
-      // without re-parsing the MDX.
-      const cachedSources = oldPageImportSources[slug] ?? []
-      pageImportSources[slug] = cachedSources
-      pageImports[slug] = resolveImportSources({ importSources: cachedSources, slug, pagesDir, projectRoot })
-      return cached
-    }
-
-    // Cache miss — full processing.
-    // inlineImportMap was already resolved above (for cache key computation).
     const processMdxOptions: ProcessMdxOptions = {
       slug,
       ...(inlineImportMap.size > 0 && {
@@ -456,13 +312,10 @@ export async function syncNavigation({
     if (processed instanceof Error) return handleParseError(slug, processed)
     parsedCount++
 
-    let finalMdx: string
     const mergedAssetRefs = [...processed.assetRefs]
 
-    // Resolve og:image / twitter:image frontmatter paths synchronously in
-    // both deferred and blocking modes. copyToPublic is just a file copy
-    // (no sharp), so it's fast and keeps frontmatter URLs correct in the
-    // navigation cache written at the end of sync.
+    // og:image / twitter:image frontmatter paths: copy to public when needed,
+    // watch for HMR, and validate like body assets.
     for (const fmKey of ['og:image', 'twitter:image'] as const) {
       const src = processed.frontmatter[fmKey]
       if (!src || typeof src !== 'string' || isNonLocalAssetSrc(src)) continue
@@ -470,7 +323,12 @@ export async function syncNavigation({
         mergedAssetRefs.push({ src, line: undefined })
       }
       const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
-      if (resolved?.needsCopy) {
+      if (!resolved) {
+        logger.warn(formatHolocronWarning(`frontmatter ${fmKey} references "${src}" but the file was not found`))
+        continue
+      }
+      allImportedImageDepPaths.add(resolved.filePath)
+      if (resolved.needsCopy) {
         processed.frontmatter[fmKey] = `/_holocron/images/${copyToPublic({ filePath: resolved.filePath, imageOutputDir, imageCache })}`
       }
     }
@@ -484,16 +342,13 @@ export async function syncNavigation({
       imageOutputDir,
     })
 
-    // Mutate mdast tree: rewrite image paths + inject dimensions, serialize back
-    finalMdx = resolvedImages.size > 0
+    const finalMdx = resolvedImages.size > 0
       ? rewriteMdxImages(processed.normalizedContent, resolvedImages)
       : processed.normalizedContent
 
     pageIconRefs[slug] = processed.iconRefs
     if (processed.internalLinks.length > 0) pageInternalLinks[slug] = processed.internalLinks
     if (mergedAssetRefs.length > 0) pageAssetRefs[slug] = mergedAssetRefs
-    // Cache raw import sources (for future cache hits) and resolve fresh
-    pageImportSources[slug] = processed.importSources
     pageImports[slug] = resolveImportSources({ importSources: processed.importSources, slug, pagesDir, projectRoot })
     const renderErrors = validateAndReportMdx({
       markdown: finalMdx,
@@ -513,11 +368,6 @@ export async function syncNavigation({
       href: slugToHref(slug),
       title: processed.title,
       description: processed.description,
-      // Recompute from the fresh asset refs — the pre-parse candidate `sha`
-      // was derived from the PREVIOUS sync's cached refs, which may be stale
-      // when the content changed. Storing the fresh-refs SHA keeps the next
-      // sync's candidate (computed from these now-cached refs) consistent.
-      gitSha: computeSha(mergedAssetRefs),
       headings: processed.headings,
       // Icon comes from MDX frontmatter (Mintlify convention: `icon: rocket`)
       ...(processed.icon && { icon: processed.icon }),
@@ -536,7 +386,6 @@ export async function syncNavigation({
       slug,
       href: slugToHref(slug),
       title: titleFromSlug(slug),
-      gitSha: 'error',
       headings: [],
       frontmatter: {},
     }
@@ -660,38 +509,29 @@ export async function syncNavigation({
     logger.error(formatHolocronError(`broken icon asset → ${colors.yellow(src)} (file not found)`))
   }
 
-  // 4f. Resolve used icon SVG bodies. Reuse holocron-mdx.json hits so a
-  // warm dist/ does not parse the Iconify packs again.
+  // 4f. Resolve used icon SVG bodies. Reuse holocron-icons.json hits so a
+  // warm dist/ does not load the Iconify packs again.
   const allMdxIconRefs = Object.values(pageIconRefs).flat()
   const allIconRefs = dedupeIconRefs([
     ...collectIconRefs({ config, navigation, mdxIconRefs: allMdxIconRefs }),
   ])
   const iconResolveResult = await resolveCachedIconAtlas({
     refs: allIconRefs,
-    cachedIcons: oldMdxCache.icons,
-    cachedUnresolved: oldMdxCache.unresolvedIconRefs,
+    cachedIcons: iconCache.icons,
+    cachedUnresolved: iconCache.unresolvedIconRefs,
     dirs: [publicDir, projectRoot],
   })
   const mergedIcons: IconAtlas = {
-    icons: { ...oldMdxCache.icons.icons, ...iconResolveResult.atlas.icons },
+    icons: { ...iconCache.icons.icons, ...iconResolveResult.atlas.icons },
   }
   const unresolvedIconRefs = mergeUnresolvedIconRefs({
-    previous: oldMdxCache.unresolvedIconRefs,
+    previous: iconCache.unresolvedIconRefs,
     currentUnresolved: iconResolveResult.unresolvedRefs,
     nowResolved: Object.keys(iconResolveResult.atlas.icons),
   })
 
   // 5. Write caches.
-  writeCache(cachePath, navigation)
-  writeMdxCache(mdxCachePath, {
-    content: filterErroredMdxContent({ content: mdxContent, mdxContentErrors }),
-    pageIconRefs,
-    pageImportSources,
-    pageInternalLinks,
-    pageAssetRefs,
-    icons: mergedIcons,
-    unresolvedIconRefs,
-  })
+  writeIconCache(iconCachePath, { icons: mergedIcons, unresolvedIconRefs })
   saveImageCache({ distDir, cache: imageCache })
 
   // 6. Log build summary tips for broken links and MDX errors so agents
@@ -744,7 +584,7 @@ export async function syncNavigation({
     navigation, switchers, mdxContent, files, mdxParseErrors, pageIconRefs, pageImports,
     icons: iconResolveResult.atlas,
     importedImageDepPaths: [...allImportedImageDepPaths], providerWatchPaths,
-    runtimeTabNames, parsedCount, cachedCount,
+    runtimeTabNames, parsedCount,
     mdxContentErrorCount: mdxContentErrors.size,
     brokenLinkCount: brokenLinkStats.brokenLinkCount,
     brokenRedirectCount: brokenLinkStats.brokenRedirectCount,
@@ -928,7 +768,6 @@ export async function processDeferredProviders({
         slug,
         href: slugToHref(slug),
         title: titleFromSlug(slug),
-        gitSha: 'error',
         headings: [],
         frontmatter: {},
       }
@@ -981,7 +820,6 @@ export async function processDeferredProviders({
       href: slugToHref(slug),
       title: processed.title,
       description: processed.description,
-      gitSha: isRealFile ? gitBlobSha(mdxSource) : `virtual:${slug}`,
       headings: processed.headings,
       frontmatter: processed.frontmatter,
       ...(processed.hasTocPanel && { hasTocPanel: true as const }),
@@ -1006,8 +844,8 @@ export async function processDeferredProviders({
     }
   }
 
-  const mdxCachePath = path.join(distDir, MDX_CACHE_FILENAME)
-  const diskCache = readMdxCache(mdxCachePath)
+  const iconCachePath = path.join(distDir, ICON_CACHE_FILENAME)
+  const diskCache = readIconCache(iconCachePath)
   const allMdxIconRefs = Object.values(syncResult.pageIconRefs).flat()
   const allIconRefs = dedupeIconRefs([
     ...collectIconRefs({ config: clonedConfig, navigation, mdxIconRefs: allMdxIconRefs }),
@@ -1020,9 +858,7 @@ export async function processDeferredProviders({
   })
   syncResult.icons = iconResolveResult.atlas
   syncResult.brokenIconCount = iconResolveResult.unresolvedRefs.length
-  writeMdxCache(mdxCachePath, {
-    ...diskCache,
-    pageIconRefs: { ...diskCache.pageIconRefs, ...syncResult.pageIconRefs },
+  writeIconCache(iconCachePath, {
     icons: { icons: { ...diskCache.icons.icons, ...iconResolveResult.atlas.icons } },
     unresolvedIconRefs: mergeUnresolvedIconRefs({
       previous: diskCache.unresolvedIconRefs,
@@ -1188,14 +1024,6 @@ function validateAndReportMdx({ markdown, mdast, modules, baseUrl, source }: {
   })
   visitor.run()
   return visitor.errors
-}
-
-function filterErroredMdxContent({ content, mdxContentErrors }: { content: Record<string, string>; mdxContentErrors: Set<string> }) {
-  if (mdxContentErrors.size === 0) return content
-
-  return Object.fromEntries(
-    Object.entries(content).filter(([slug]) => !mdxContentErrors.has(slug)),
-  )
 }
 
 /* ── Internal link validation ────────────────────────────────────────── */
@@ -1729,51 +1557,38 @@ function quickMdxParse(content: string): Root | undefined {
   return mdast instanceof Error ? undefined : mdast
 }
 
-/* ── Cache I/O ──────────────────────────────────────────────────────── */
+/* ── Icon cache I/O ─────────────────────────────────────────────────── */
 
-type NavCacheEnvelope = {
-  version: string
-  navigation: Navigation
-}
-
-type MdxCacheEnvelope = {
-  version: string
-  content: Record<string, string>
-  pageIconRefs: Record<string, IconRef[]>
-  /** Raw import source strings from MDX (e.g. '/snippets/greeting', '../components/badge').
-   *  Cached so we can re-resolve them on every sync without re-parsing MDX. */
-  pageImportSources: Record<string, string[]>
-  /** Internal links per page for broken-link validation. Cached so we can
-   *  validate links on cache hits without re-parsing MDX. */
-  pageInternalLinks: Record<string, InternalLink[]>
-  /** Local asset refs per page for broken-asset validation. Cached so we can
-   *  validate asset paths on cache hits without re-parsing MDX. */
-  pageAssetRefs: Record<string, AssetRef[]>
+type IconCacheData = {
   /** Resolved SVG bodies for icon refs this site has used. */
   icons: IconAtlas
   /** Icon refs that failed to resolve. Skipped on later syncs so we do not
    *  reload Iconify just to warn again. */
   unresolvedIconRefs: string[]
+}
+
+type IconCacheEnvelope = IconCacheData & {
+  version: string
   /** Installed @iconify-json package versions. Drop icon bodies when this changes. */
   iconPacksRevision: string
 }
 
-function readCache(cachePath: string): Navigation | null {
-  if (!fs.existsSync(cachePath)) {
-    return null
-  }
+function readIconCache(cachePath: string): IconCacheData {
+  const empty: IconCacheData = { icons: { icons: {} }, unresolvedIconRefs: [] }
+  if (!fs.existsSync(cachePath)) return empty
   try {
-    const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
-    // Package-version envelope — reject caches from older versions so new
-    // fields (e.g. page `icon`) aren't silently missing from cached NavPage
-    // objects. Every publish naturally invalidates stale caches.
-    if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
-      return raw.navigation as Navigation
-    }
-    return null
+    const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as Partial<IconCacheEnvelope> | null
+    if (raw?.version !== PACKAGE_VERSION || raw.iconPacksRevision !== ICON_PACKS_REVISION) return empty
+    return { icons: raw.icons ?? empty.icons, unresolvedIconRefs: raw.unresolvedIconRefs ?? [] }
   } catch {
-    return null
+    return empty
   }
+}
+
+function writeIconCache(cachePath: string, data: IconCacheData): void {
+  fs.mkdirSync(path.dirname(cachePath), { recursive: true })
+  const envelope: IconCacheEnvelope = { ...data, version: PACKAGE_VERSION, iconPacksRevision: ICON_PACKS_REVISION }
+  fs.writeFileSync(cachePath, JSON.stringify(envelope))
 }
 
 /** Reuse cached SVG bodies. Load Iconify only for refs that are still missing. */
@@ -1839,86 +1654,6 @@ function mergeUnresolvedIconRefs({
   return [...next]
 }
 
-function writeCache(cachePath: string, nav: Navigation): void {
-  const dir = path.dirname(cachePath)
-  fs.mkdirSync(dir, { recursive: true })
-  const envelope: NavCacheEnvelope = { version: PACKAGE_VERSION, navigation: nav }
-  fs.writeFileSync(cachePath, JSON.stringify(envelope, null, 2))
-}
-
-type MdxCacheData = {
-  content: Record<string, string>
-  pageIconRefs: Record<string, IconRef[]>
-  pageImportSources: Record<string, string[]>
-  pageInternalLinks: Record<string, InternalLink[]>
-  pageAssetRefs: Record<string, AssetRef[]>
-  icons: IconAtlas
-  unresolvedIconRefs: string[]
-}
-
-const EMPTY_ICON_ATLAS: IconAtlas = { icons: {} }
-
-function emptyMdxCache(): MdxCacheData {
-  return {
-    content: {},
-    pageIconRefs: {},
-    pageImportSources: {},
-    pageInternalLinks: {},
-    pageAssetRefs: {},
-    icons: EMPTY_ICON_ATLAS,
-    unresolvedIconRefs: [],
-  }
-}
-
-function readMdxCache(cachePath: string): MdxCacheData {
-  const empty = emptyMdxCache()
-  if (!fs.existsSync(cachePath)) return empty
-  try {
-    const raw = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
-    if (raw && typeof raw === 'object' && raw.version === PACKAGE_VERSION) {
-      const envelope = raw as MdxCacheEnvelope
-      const iconCacheValid = envelope.iconPacksRevision === ICON_PACKS_REVISION
-      return {
-        content: envelope.content,
-        pageIconRefs: envelope.pageIconRefs ?? {},
-        pageImportSources: envelope.pageImportSources ?? {},
-        pageInternalLinks: envelope.pageInternalLinks ?? {},
-        pageAssetRefs: envelope.pageAssetRefs ?? {},
-        icons: iconCacheValid ? envelope.icons ?? EMPTY_ICON_ATLAS : EMPTY_ICON_ATLAS,
-        unresolvedIconRefs: iconCacheValid ? envelope.unresolvedIconRefs ?? [] : [],
-      }
-    }
-    return empty
-  } catch {
-    return empty
-  }
-}
-
-function writeMdxCache(
-  cachePath: string,
-  data: MdxCacheData,
-): void {
-  const dir = path.dirname(cachePath)
-  fs.mkdirSync(dir, { recursive: true })
-  const envelope: MdxCacheEnvelope = {
-    version: PACKAGE_VERSION,
-    content: data.content,
-    pageIconRefs: data.pageIconRefs,
-    pageImportSources: data.pageImportSources,
-    pageInternalLinks: data.pageInternalLinks,
-    pageAssetRefs: data.pageAssetRefs,
-    icons: data.icons,
-    unresolvedIconRefs: data.unresolvedIconRefs,
-    iconPacksRevision: ICON_PACKS_REVISION,
-  }
-  fs.writeFileSync(cachePath, JSON.stringify(envelope))
-}
-
-/**
- * Patch the MDX cache on disk with updated content for specific slugs.
- * Called after background image processing completes so that subsequent
- * syncs see cache hits with correct image dimensions/placeholders.
- */
 /* ── Helpers ─────────────────────────────────────────────────────────── */
 
 function resolveMdxPath(pagesDir: string, slug: string): string | undefined {

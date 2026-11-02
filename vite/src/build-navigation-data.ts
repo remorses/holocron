@@ -35,7 +35,6 @@ function navPageFromProcessed({
     href: slugToHref(slug),
     title: processed.title,
     description: processed.description,
-    gitSha: '',
     headings: processed.headings,
     ...(processed.icon && { icon: processed.icon }),
     frontmatter: processed.frontmatter,

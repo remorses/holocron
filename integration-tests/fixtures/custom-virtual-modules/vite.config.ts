@@ -134,7 +134,6 @@ export async function getNavigationData() {
 export default defineConfig(createE2EViteConfig({
   plugins: [
     holocron({
-      pageCache: false,
       virtualModules: {
         config: configVirtualModule,
         mdx: mdxVirtualModule,

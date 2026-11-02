@@ -11,7 +11,7 @@ cleanupFixtureRunPaths(resolveFixtureRunPaths())
 
 export default defineConfig(createE2EViteConfig({
   plugins: [
-    holocron({ entry: './server.tsx', pageCache: false }),
+    holocron({ entry: './server.tsx' }),
     !process.env.E2E_START && cloudflare({
       viteEnvironment: {
         name: 'rsc',

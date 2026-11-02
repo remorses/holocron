@@ -76,13 +76,6 @@ export type HolocronPluginOptions = {
    */
   tailwindSources?: string[]
   /**
-   * Reuse processed navigation and MDX from the cache (dist/ for builds,
-   * node_modules/.vite/holocron for dev and tests). Default true.
-   * Image metadata still caches. Set false while developing Holocron itself
-   * so processor changes are not hidden by a stale page cache.
-   */
-  pageCache?: boolean
-  /**
    * Public origin (e.g. `https://example.com`) that `rendering: static` pages
    * see as the request URL while prerendering, so og:url and other absolute
    * URLs are correct. On Cloudflare it defaults to the single host in the
@@ -582,7 +575,6 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         logParseErrors: true,
         deferProviders: false,
         customProviders,
-        pageCache: options.pageCache,
       })
 
       // In production builds, fail after ALL errors have been logged so
@@ -622,7 +614,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
 
       logger.info(
         formatHolocronSuccess(
-          `synced ${syncResult.parsedCount} pages (${syncResult.cachedCount} cached)`,
+          `synced ${syncResult.parsedCount} pages`,
         ),
       )
       if (userCssPath) {
@@ -1078,8 +1070,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             distDir: cacheDirPath,
             deferProviders: true,
             customProviders: freshCustomProviders,
-            pageCache: options.pageCache,
-          })
+              })
           if (syncResult.providerWatchPaths.length === 0) {
             syncResult.providerWatchPaths = prevProviderWatchPaths
           }

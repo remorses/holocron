@@ -25,7 +25,6 @@ function makePage(slug: string, overrides?: Partial<NavPage>): NavPage {
     slug,
     href: `/${slug}`,
     title: slug.charAt(0).toUpperCase() + slug.slice(1),
-    gitSha: 'abc123',
     headings: [],
     frontmatter: {},
     ...overrides,
@@ -325,7 +324,7 @@ async function findPageBySlug({ nav, slug, getMdxSource }: { nav: Navigation; sl
   if (!mdx) return undefined
   const frontmatter = parsePageFrontmatter(mdx)
   const headingMatch = mdx.match(/^#\s+(.+)/m)
-  return { slug, href: slugToHref(slug), title: frontmatter.title ?? headingMatch?.[1]?.trim() ?? 'Untitled', description: frontmatter.description, gitSha: '', headings: [], icon: frontmatter.icon, frontmatter }
+  return { slug, href: slugToHref(slug), title: frontmatter.title ?? headingMatch?.[1]?.trim() ?? 'Untitled', description: frontmatter.description, headings: [], icon: frontmatter.icon, frontmatter }
 }
 
 describe('findPageBySlug fallback', () => {

@@ -79,14 +79,20 @@ are fine. Verified with `processMdx` + `rewriteMdxImages` on a 4-line page.
 
 ## Task 5: Delete the page cache (after Tasks 3, 4)
 
-- [ ] Every sync processes every page. Delete `holocron-cache.json`, the per-page fields of
+- [x] Every sync processes every page. Delete `holocron-cache.json`, the per-page fields of
   `holocron-mdx.json`, `NavPage.gitSha`, `computeSha`, `assetFileSha`, the frontmatter
   image SHA deps, the cache-hit branch, `cachedCount`, and the `pageCache` option plus its
   uses in every `vite.config.ts`. The icon atlas moves to `holocron-icons.json`.
-- [ ] Pass when polar full sync is under ~100 ms, a polar dev HMR save is measured (file
+  Evidence: vite tests 869 passed; disk caches 906 KiB → 126 KiB on polar.
+- [x] Pass when polar full sync is under ~100 ms, a polar dev HMR save is measured (file
   write to `rsc:update`) and recorded here, vite tests and `basic`, `mdx-imports`,
-  `realworld-polar` e2e pass. If HMR is over ~150 ms, stop and ask before adding any
-  in-memory reuse.
+  `realworld-polar` e2e pass. Evidence: polar sync 98.8 ms offline / 106 ms online,
+  website 49 / 46 ms; e2e 99 passed. Polar HMR medians: 196 and 244 ms cacheless vs 160
+  and 122 ms with the page cache (same machine, `8939a61a` in a worktree).
+- [ ] HMR is over ~150 ms: user decides whether to accept it or re-process only the edited
+  page on a plain MDX save.
+
+Progress: Task 5 committed. Waiting on the HMR decision before Task 6.
 
 ## Task 6: One page processing function (after Task 5)
 

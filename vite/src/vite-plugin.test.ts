@@ -36,9 +36,8 @@ test('vitest server keeps holocron caches in the Vite cache dir', async () => {
       [
         "docs.json",
         "index.mdx",
-        "node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/holocron/holocron-cache.json",
+        "node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/holocron/holocron-icons.json",
         "node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/holocron/holocron-images.json",
-        "node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/holocron/holocron-mdx.json",
         "package.json",
       ]
     `)

@@ -100,7 +100,6 @@ More text.
     })
 
     expect(result.parsedCount).toBe(1)
-    expect(result.cachedCount).toBe(0)
 
     const pages = collectAllPages(result.navigation)
     expect(pages.length).toBe(1)
@@ -257,53 +256,6 @@ import Alert from '../snippets/alert'
     `)
   })
 
-  test('caches importSources and re-resolves fresh on each sync', async () => {
-    const project = tracked(createProject(
-      {
-        navigation: [
-          { group: 'Guide', pages: ['index'] },
-        ],
-      },
-      {
-        index: `---
-title: Home
----
-
-import { Greeting } from '/snippets/greeting'
-
-# Home
-`,
-      },
-    ))
-
-    const snippetsDir = path.join(project.pagesDir, 'snippets')
-    fs.mkdirSync(snippetsDir, { recursive: true })
-    fs.writeFileSync(path.join(snippetsDir, 'greeting.tsx'), 'export const Greeting = () => <div>hi</div>')
-
-    const config = readConfig({ root: project.root })
-    const first = await syncNavigation({
-      config,
-      pagesDir: project.pagesDir,
-      publicDir: project.publicDir,
-      projectRoot: project.root,
-      distDir: project.distDir,
-    })
-    expect(first.parsedCount).toBe(1)
-    expect(first.pageImports['index']?.map((i) => i.moduleKey)).toEqual(['./snippets/greeting.tsx'])
-
-    // Second sync — cached MDX, but imports still re-resolved
-    const second = await syncNavigation({
-      config,
-      pagesDir: project.pagesDir,
-      publicDir: project.publicDir,
-      projectRoot: project.root,
-      distDir: project.distDir,
-    })
-    expect(second.parsedCount).toBe(0)
-    expect(second.cachedCount).toBe(1)
-    expect(second.pageImports['index']?.map((i) => i.moduleKey)).toEqual(['./snippets/greeting.tsx'])
-  })
-
   test('picks up newly-created import targets without MDX change', async () => {
     const project = tracked(createProject(
       {
@@ -333,16 +285,14 @@ import { Widget } from '/components/widget'
       projectRoot: project.root,
       distDir: project.distDir,
     })
-    expect(first.parsedCount).toBe(1)
     expect(first.pageImports['index']).toEqual([])
 
-    // Create the file — MDX stays the same. The first run had a safe-mdx
-    // unresolved-import error, so that MDX was intentionally not cached.
+    // Create the file — MDX stays the same.
     const componentsDir = path.join(project.pagesDir, 'components')
     fs.mkdirSync(componentsDir, { recursive: true })
     fs.writeFileSync(path.join(componentsDir, 'widget.tsx'), 'export const Widget = () => <div>w</div>')
 
-    // Second sync — reprocesses MDX and picks up the newly-created import.
+    // Second sync picks up the newly-created import.
     const second = await syncNavigation({
       config,
       pagesDir: project.pagesDir,
@@ -350,12 +300,10 @@ import { Widget } from '/components/widget'
       projectRoot: project.root,
       distDir: project.distDir,
     })
-    expect(second.parsedCount).toBe(1)
-    expect(second.cachedCount).toBe(0)
     expect(second.pageImports['index']?.map((i) => i.moduleKey)).toEqual(['./components/widget.tsx'])
   })
 
-  test('does not cache MDX pages with safe-mdx render errors', async () => {
+  test('logs safe-mdx render errors and keeps the page content', async () => {
     const project = tracked(createProject(
       {
         navigation: [
@@ -385,10 +333,6 @@ title: Home
     })
 
     expect(result.mdxContent.index).toContain('<Caption>Missing component</Caption>')
-    const mdxCache = JSON.parse(fs.readFileSync(path.join(project.distDir, 'holocron-mdx.json'), 'utf-8'))
-    expect(mdxCache.content).toEqual({})
-    expect(mdxCache.pageIconRefs).toMatchObject({ index: [] })
-    expect(mdxCache.pageImportSources).toMatchObject({ index: [] })
     expect(warn.mock.calls.map(([message]) => String(message).replace(/\x1b\[[0-9;]*m/g, ''))).toMatchInlineSnapshot(`
       [
         "▲ holocron config issue at "name": Invalid input: expected string, received undefined",
@@ -527,132 +471,6 @@ Content here.`,
     expect(Object.hasOwn(page, 'mdx')).toBe(false)
   })
 
-  test('cache reuse on second sync with unchanged files', async () => {
-    const project = tracked(createProject(
-      {
-        navigation: [{ group: 'Docs', pages: ['page'] }],
-      },
-      {
-        page: `---
-title: Cached Page
----
-
-## Heading`,
-      },
-    ))
-    const config = readConfig({ root: project.root })
-
-    // First sync
-    const first = await syncNavigation({
-      config,
-      pagesDir: project.pagesDir,
-      publicDir: project.publicDir,
-      projectRoot: project.root,
-      distDir: project.distDir,
-    })
-    expect(first.parsedCount).toBe(1)
-    expect(first.cachedCount).toBe(0)
-
-    // Second sync (same files, cache should hit)
-    const second = await syncNavigation({
-      config,
-      pagesDir: project.pagesDir,
-      publicDir: project.publicDir,
-      projectRoot: project.root,
-      distDir: project.distDir,
-    })
-    expect(second.parsedCount).toBe(0)
-    expect(second.cachedCount).toBe(1)
-
-    // Results should be identical
-    const page1 = findPage(first.navigation, 'page')!
-    const page2 = findPage(second.navigation, 'page')!
-    expect(page2.title).toBe(page1.title)
-    expect(page2.gitSha).toBe(page1.gitSha)
-    expect(page2.headings).toEqual(page1.headings)
-  })
-
-  test('pageCache: false re-parses pages even when files are unchanged', async () => {
-    const project = tracked(createProject(
-      {
-        navigation: [{ group: 'Docs', pages: ['page'] }],
-      },
-      {
-        page: `---
-title: Fresh Page
----
-
-## Heading`,
-      },
-    ))
-    const config = readConfig({ root: project.root })
-    const args = {
-      config,
-      pagesDir: project.pagesDir,
-      publicDir: project.publicDir,
-      projectRoot: project.root,
-      distDir: project.distDir,
-      pageCache: false as const,
-    }
-
-    const first = await syncNavigation(args)
-    const second = await syncNavigation(args)
-
-    expect(first.parsedCount).toBe(1)
-    expect(first.cachedCount).toBe(0)
-    expect(second.parsedCount).toBe(1)
-    expect(second.cachedCount).toBe(0)
-  })
-
-  test('reprocesses MDX after the Holocron package version changes', async () => {
-    const project = tracked(createProject(
-      {
-        navigation: [{ group: 'Docs', pages: ['page'] }],
-      },
-      {
-        page: `---
-title: Versioned Cache
----
-
-## Heading`,
-      },
-    ))
-    const config = readConfig({ root: project.root })
-    const sync = () => syncNavigation({
-      config,
-      pagesDir: project.pagesDir,
-      publicDir: project.publicDir,
-      projectRoot: project.root,
-      distDir: project.distDir,
-    })
-
-    await sync()
-
-    for (const filename of ['holocron-cache.json', 'holocron-mdx.json']) {
-      const cachePath = path.join(project.distDir, filename)
-      const cache = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
-      fs.writeFileSync(cachePath, JSON.stringify({ ...cache, version: '0.0.0-previous' }))
-    }
-
-    const result = await sync()
-    const navCache = JSON.parse(fs.readFileSync(path.join(project.distDir, 'holocron-cache.json'), 'utf-8'))
-    const mdxCache = JSON.parse(fs.readFileSync(path.join(project.distDir, 'holocron-mdx.json'), 'utf-8'))
-
-    expect({
-      parsedCount: result.parsedCount,
-      cachedCount: result.cachedCount,
-      navCacheVersion: navCache.version,
-      mdxCacheVersion: mdxCache.version,
-    }).toMatchInlineSnapshot(`
-      {
-        "cachedCount": 0,
-        "mdxCacheVersion": "${PACKAGE_VERSION}",
-        "navCacheVersion": "${PACKAGE_VERSION}",
-        "parsedCount": 1,
-      }
-    `)
-  })
-
   test('generates placeholders for remote root-level JSX img urls', async () => {
     const sharp = (await import('sharp')).default
     const png = await sharp({
@@ -709,64 +527,7 @@ title: Remote image
     expect(result.mdxContent.page).toContain(`<Image src="${imageUrl}" alt="" intrinsicWidth="1" intrinsicHeight="1" placeholder="data:image/webp;base64,`)
   })
 
-  test('cache invalidation when MDX file changes', async () => {
-    const project = tracked(createProject(
-      {
-        navigation: [{ group: 'Docs', pages: ['page'] }],
-      },
-      {
-        page: `---
-title: Original Title
----
-
-## Original Heading`,
-      },
-    ))
-    const config = readConfig({ root: project.root })
-
-    // First sync
-    const first = await syncNavigation({
-      config,
-      pagesDir: project.pagesDir,
-      publicDir: project.publicDir,
-      projectRoot: project.root,
-      distDir: project.distDir,
-    })
-    expect(first.parsedCount).toBe(1)
-
-    // Modify the MDX file
-    const mdxPath = path.join(project.pagesDir, 'page.mdx')
-    fs.writeFileSync(mdxPath, `---
-title: Updated Title
----
-
-## New Heading
-
-## Another Heading`)
-
-    // Second sync — should detect change and re-parse
-    const second = await syncNavigation({
-      config,
-      pagesDir: project.pagesDir,
-      publicDir: project.publicDir,
-      projectRoot: project.root,
-      distDir: project.distDir,
-    })
-    expect(second.parsedCount).toBe(1)
-    expect(second.cachedCount).toBe(0)
-
-    const page = findPage(second.navigation, 'page')!
-    expect(page.title).toBe('Updated Title')
-    expect(page.headings.length).toBe(2)
-    expect(page.headings.map((h) => h.text)).toMatchInlineSnapshot(`
-      [
-        "New Heading",
-        "Another Heading",
-      ]
-    `)
-  })
-
-  test('cache invalidation when image moves from project root to publicDir', async () => {
+  test('serves the public path after an image moves from project root to publicDir', async () => {
     const project = tracked(createProject(
       {
         navigation: [{ group: 'Docs', pages: ['page'] }],
@@ -794,7 +555,6 @@ title: Image Page
       projectRoot: project.root,
       distDir: project.distDir,
     })
-    expect(first.parsedCount).toBe(1)
     expect(first.mdxContent.page).toMatch(/src="\/_holocron\/images\/[0-9a-f]{8}-dot\.svg"/)
 
     // Move the image into publicDir — same MDX content, different resolution
@@ -802,7 +562,7 @@ title: Image Page
     fs.mkdirSync(publicImagesDir, { recursive: true })
     fs.renameSync(path.join(rootImagesDir, 'dot.svg'), path.join(publicImagesDir, 'dot.svg'))
 
-    // Second sync — cache must invalidate and serve the unhashed public path
+    // Second sync serves the unhashed public path
     const second = await syncNavigation({
       config,
       pagesDir: project.pagesDir,
@@ -810,25 +570,10 @@ title: Image Page
       projectRoot: project.root,
       distDir: project.distDir,
     })
-    expect(second.parsedCount).toBe(1)
-    expect(second.cachedCount).toBe(0)
     expect(second.mdxContent.page).toContain('src="/images/dot.svg"')
-
-    // Third sync — nothing changed, the stored gitSha (computed from fresh
-    // asset refs) must match the new candidate so the cache hits again.
-    const third = await syncNavigation({
-      config,
-      pagesDir: project.pagesDir,
-      publicDir: project.publicDir,
-      projectRoot: project.root,
-      distDir: project.distDir,
-    })
-    expect(third.parsedCount).toBe(0)
-    expect(third.cachedCount).toBe(1)
-    expect(third.mdxContent.page).toContain('src="/images/dot.svg"')
   })
 
-  test('cache invalidation when image content changes in place', async () => {
+  test('refreshes image dimensions when the file changes in place', async () => {
     const project = tracked(createProject(
       {
         navigation: [{ group: 'Docs', pages: ['page'] }],
@@ -855,7 +600,6 @@ title: Image Page
       projectRoot: project.root,
       distDir: project.distDir,
     })
-    expect(first.parsedCount).toBe(1)
     const firstSrc = first.mdxContent.page!.match(/src="([^"]+)"/)?.[1]
     expect(firstSrc).toMatch(/^\/_holocron\/images\/[0-9a-f]{8}-art\.svg$/)
 
@@ -873,26 +617,13 @@ title: Image Page
       projectRoot: project.root,
       distDir: project.distDir,
     })
-    expect(second.parsedCount).toBe(1)
-    expect(second.cachedCount).toBe(0)
     const secondSrc = second.mdxContent.page!.match(/src="([^"]+)"/)?.[1]
     expect(secondSrc).toMatch(/^\/_holocron\/images\/[0-9a-f]{8}-art\.svg$/)
     expect(secondSrc).not.toBe(firstSrc)
     expect(second.mdxContent.page).toContain('intrinsicWidth="16"')
-
-    // Unchanged third sync hits the cache
-    const third = await syncNavigation({
-      config,
-      pagesDir: project.pagesDir,
-      publicDir: project.publicDir,
-      projectRoot: project.root,
-      distDir: project.distDir,
-    })
-    expect(third.parsedCount).toBe(0)
-    expect(third.cachedCount).toBe(1)
   })
 
-  test('cache invalidation when image cache version is stale', async () => {
+  test('ignores a stale image cache version', async () => {
     const project = tracked(createProject(
       {
         navigation: [{ group: 'Docs', pages: ['page'] }],
@@ -988,7 +719,6 @@ title: Image Page
         "frontmatter": {
           "title": "Acceptable Use",
         },
-        "gitSha": "redirect:merchant-of-record/acceptable-use",
         "headings": [],
         "href": "/merchant-of-record/acceptable-use",
         "slug": "merchant-of-record/acceptable-use",
@@ -1976,7 +1706,7 @@ Hello.
     expect(second.icons.icons['/icons/mark.svg']?.body).toContain('currentColor')
   })
 
-  test('writes resolved icon bodies into holocron-mdx.json', async () => {
+  test('writes resolved icon bodies into holocron-icons.json', async () => {
     const project = tracked(createProject(
       {
         icons: { library: 'lucide' },
@@ -2001,7 +1731,7 @@ Hello.
       distDir: project.distDir,
     })
 
-    const mdxCache = JSON.parse(fs.readFileSync(path.join(project.distDir, 'holocron-mdx.json'), 'utf-8'))
+    const mdxCache = JSON.parse(fs.readFileSync(path.join(project.distDir, 'holocron-icons.json'), 'utf-8'))
     expect(mdxCache.icons.icons['lucide:rocket'].body).toContain('<')
     expect(mdxCache.unresolvedIconRefs).toEqual([])
   })
@@ -2031,7 +1761,7 @@ Hello.
       distDir: project.distDir,
     })
 
-    const cachePath = path.join(project.distDir, 'holocron-mdx.json')
+    const cachePath = path.join(project.distDir, 'holocron-icons.json')
     const cached = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
     cached.icons.icons['lucide:rocket'].body = 'CACHED_ROCKET_BODY'
     fs.writeFileSync(cachePath, JSON.stringify(cached))
@@ -2117,7 +1847,7 @@ Hello.
       distDir: project.distDir,
     })
 
-    const cachePath = path.join(project.distDir, 'holocron-mdx.json')
+    const cachePath = path.join(project.distDir, 'holocron-icons.json')
     const cached = JSON.parse(fs.readFileSync(cachePath, 'utf-8'))
     cached.icons.icons['lucide:rocket'].body = 'STALE_ROCKET_BODY'
     cached.iconPacksRevision = 'stale-revision'
@@ -2258,7 +1988,6 @@ Some content here.`,
     // Bad page should still be in the navigation tree (so sidebar shows it)
     const badPage = findPage(result.navigation, 'bad-page')
     expect(badPage).toBeTruthy()
-    expect(badPage!.gitSha).toBe('error')
 
     // But its MDX content should not be in mdxContent
     expect(result.mdxContent['bad-page']).toBeUndefined()

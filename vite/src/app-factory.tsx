@@ -133,7 +133,6 @@ async function findPageBySlug({
     href: slugToHref(slug),
     title: extractTitleFromMdx(mdx),
     description: frontmatter.description,
-    gitSha: '',
     headings: [],
     icon: frontmatter.icon,
     frontmatter,
@@ -993,7 +992,6 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
         slug,
         href: slugToHref(slug),
         title: meta?.title ?? titleFromSlug(slug),
-        gitSha: '',
         headings: [],
         ...(meta?.icon && { icon: meta.icon }),
         frontmatter: {

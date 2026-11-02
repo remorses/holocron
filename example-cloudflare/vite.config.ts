@@ -9,7 +9,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   clearScreen: false,
   plugins: [
-    holocron({ pagesDir: './src', pageCache: false }),
+    holocron({ pagesDir: './src' }),
     cloudflare({
       viteEnvironment: {
         name: 'rsc',

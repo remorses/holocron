@@ -18,7 +18,6 @@ export default defineConfig({
   plugins: [
     holocron({
       pagesDir: './src',
-      pageCache: false,
       tailwindSources: [
         // .ts only: skips snapshots and multi-MB recordMap JSON assets
         path.join(notakuRepo, 'notion-mdx/src/**/*.ts'),

@@ -3,7 +3,7 @@
  *
  * The enriched tree has the same shape as the normalized config, but page
  * slug strings are replaced with NavPage objects containing parsed metadata
- * (title, headings, gitSha for cache invalidation).
+ * (title, headings, frontmatter).
  *
  * Navigation is always NavTab[] — normalization happens in readConfig(),
  * so these functions never deal with union discrimination.
@@ -45,7 +45,7 @@ export type NavGroup = Omit<ConfigNavGroup, 'pages'> & {
 /** Either an enriched page or a nested group */
 export type NavPageEntry = NavPage | NavGroup
 
-/** A fully enriched page with parsed metadata + cache SHA.
+/** A fully enriched page with parsed metadata.
  *  `icon` is extracted from MDX frontmatter (Mintlify convention:
  *  `icon: rocket` in YAML front matter). */
 export type NavPage = {
@@ -53,7 +53,6 @@ export type NavPage = {
   href: string
   title: string
   description?: string
-  gitSha: string
   headings: NavHeading[]
   icon?: NavIcon
   frontmatter: PageFrontmatter
