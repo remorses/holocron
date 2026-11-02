@@ -89,10 +89,8 @@ are fine. Verified with `processMdx` + `rewriteMdxImages` on a 4-line page.
   `realworld-polar` e2e pass. Evidence: polar sync 98.8 ms offline / 106 ms online,
   website 49 / 46 ms; e2e 99 passed. Polar HMR medians: 196 and 244 ms cacheless vs 160
   and 122 ms with the page cache (same machine, `8939a61a` in a worktree).
-- [ ] HMR is over ~150 ms: user decides whether to accept it or re-process only the edited
-  page on a plain MDX save.
-
-Progress: Task 5 committed. Waiting on the HMR decision before Task 6.
+- [x] HMR is over ~150 ms: user accepted it, no single-page reprocess path. See
+  `plans/decisions/no-page-cache.md`.
 
 ## Task 6: One page processing function (after Task 5)
 
@@ -137,4 +135,4 @@ Progress: Task 5 committed. Waiting on the HMR decision before Task 6.
 - [ ] `vite build` of realworld-polar and website succeed from a clean `dist/`, all e2e
   fixtures pass, and the baseline script shows no regression in request parse time.
 
-Decisions: `plans/decisions/request-mdx-memoize.md`
+Decisions: `plans/decisions/request-mdx-memoize.md`, `plans/decisions/no-page-cache.md`
