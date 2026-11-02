@@ -2,8 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { afterEach, describe, expect, test } from 'vitest'
-import { loadImageCache, processImage, saveImageCache } from './image-processor.ts'
-import { PACKAGE_VERSION } from './package-version.ts'
+import { emptyImageCache, loadImageCache, processImage, saveImageCache } from './image-processor.ts'
 
 const roots: string[] = []
 
@@ -47,7 +46,7 @@ describe('processImage', () => {
     // sharp can process SVG content regardless of extension — it reads the buffer format
     fs.writeFileSync(filePath, svgContent)
 
-    const meta = await processImage({ filePath, cache: {} })
+    const meta = await processImage({ filePath, cache: emptyImageCache() })
 
     expect(meta).toBeDefined()
     expect(meta?.width).toBe(1200)
@@ -63,7 +62,7 @@ describe('processImage', () => {
       </svg>
     `)
 
-    const meta = await processImage({ filePath, cache: {} })
+    const meta = await processImage({ filePath, cache: emptyImageCache() })
 
     expect(meta).toBeDefined()
     expect(meta?.width).toBe(1200)
@@ -72,23 +71,25 @@ describe('processImage', () => {
     expect(meta?.placeholder).toBe('')
   })
 
-  test('saveImageCache writes the current package version envelope', () => {
+  test('reuses cached meta for unchanged files across syncs without reading them', async () => {
     const distDir = createTempDir()
-    const cache = {
-      abc123: {
-        width: 12,
-        height: 34,
-        placeholder: 'data:image/webp;base64,abc',
-      },
-    }
+    const square = (size: number) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"></svg>`
+    const filePath = createTempImage(square(10))
+    const mtimeSeconds = 1_700_000_000
+    fs.utimesSync(filePath, mtimeSeconds, mtimeSeconds)
 
+    const cache = emptyImageCache()
+    const first = await processImage({ filePath, cache })
     saveImageCache({ distDir, cache })
 
-    const raw = JSON.parse(fs.readFileSync(path.join(distDir, 'holocron-images.json'), 'utf-8'))
-    expect(raw).toEqual({
-      version: PACKAGE_VERSION,
-      images: cache,
-    })
+    // Same size and mtime: the file must not be read again, so the edit is not seen.
+    fs.writeFileSync(filePath, square(20))
+    fs.utimesSync(filePath, mtimeSeconds, mtimeSeconds)
+    expect(await processImage({ filePath, cache: loadImageCache({ distDir }) })).toEqual(first)
+
+    // A new mtime invalidates the entry.
+    fs.utimesSync(filePath, mtimeSeconds + 5, mtimeSeconds + 5)
+    expect(await processImage({ filePath, cache: loadImageCache({ distDir }) })).toMatchObject({ width: 20, height: 20 })
   })
 
   test('loadImageCache ignores stale package versions', () => {
@@ -107,6 +108,6 @@ describe('processImage', () => {
       }),
     )
 
-    expect(loadImageCache({ distDir })).toEqual({})
+    expect(loadImageCache({ distDir })).toEqual(emptyImageCache())
   })
 })

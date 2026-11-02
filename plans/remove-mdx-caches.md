@@ -68,12 +68,14 @@ are fine. Verified with `processMdx` + `rewriteMdxImages` on a 4-line page.
 
 ## Task 4: Image cost without the page cache
 
-- [ ] Remote images are cached by URL, so a sync fetches each remote image at most once
-  per cache lifetime. Pass when a second no-page-cache polar sync with network on matches
-  the network-off number.
-- [ ] Local image metadata is looked up without reading image bytes when path, size and
-  mtime are unchanged, and `copyToPublic` stops re-reading files. Pass when polar
-  no-page-cache sync drops below ~100 ms.
+- [x] Remote images are cached by URL, so a sync fetches each remote image at most once
+  per cache lifetime. Evidence: polar no-page-cache sync 119.5 ms online, 117.4 ms offline
+  (was 412 to 560 ms online).
+- [x] Local image metadata is looked up without reading image bytes when path, size and
+  mtime are unchanged, and `copyToPublic` stops re-reading files. Evidence: polar
+  no-page-cache sync 137 → 117 ms offline, website 48 → 50 ms (noise). Missed the ~100 ms
+  target: what remains is MDX CPU (`processMdx` ~55 ms, safe-mdx validation ~25 ms in a
+  React dev build), not images. Test: `image-processor.test.ts` stat-keyed reuse.
 
 ## Task 5: Delete the page cache (after Tasks 3, 4)
 

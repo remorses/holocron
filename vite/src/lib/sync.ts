@@ -22,7 +22,7 @@ import { processMdx, rewriteMdxImages, isNonLocalAssetSrc, type ResolvedImage, t
 import { remarkInlineImports, buildSplicedNodes, type InlineImportEntry } from './remark-inline-imports.ts'
 import { parse, visit, type Root, type RootContent } from 'mdastic'
 import { MDX_SYNTAX } from './normalize-mdx.ts'
-import { loadImageCache, saveImageCache, processImage, processImageBuffer } from './image-processor.ts'
+import { loadImageCache, saveImageCache, processImage, processRemoteImage, localFileSha, type ImageCache } from './image-processor.ts'
 import { PACKAGE_VERSION } from './package-version.ts'
 import lucidePkg from '@iconify-json/lucide/package.json' with { type: 'json' }
 import faBrandsPkg from '@iconify-json/fa6-brands/package.json' with { type: 'json' }
@@ -471,7 +471,7 @@ export async function syncNavigation({
       }
       const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
       if (resolved?.needsCopy) {
-        processed.frontmatter[fmKey] = `/_holocron/images/${copyToPublic({ filePath: resolved.filePath, imageOutputDir })}`
+        processed.frontmatter[fmKey] = `/_holocron/images/${copyToPublic({ filePath: resolved.filePath, imageOutputDir, imageCache })}`
       }
     }
 
@@ -774,7 +774,7 @@ async function resolveAndProcessImages({
   mdxDir: string
   publicDir: string
   projectRoot: string
-  imageCache: ReturnType<typeof loadImageCache>
+  imageCache: ImageCache
   imageOutputDir: string
 }): Promise<Map<string, ResolvedImage>> {
   const resolvedImages = new Map<string, ResolvedImage>()
@@ -782,9 +782,7 @@ async function resolveAndProcessImages({
     let meta
     try {
       if (src.startsWith('http://') || src.startsWith('https://')) {
-        const remoteBuffer = await fetchRemoteImageBuffer(src)
-        if (!remoteBuffer) continue
-        meta = await processImageBuffer({ buffer: remoteBuffer, cache: imageCache })
+        meta = await processRemoteImage({ url: src, cache: imageCache })
         if (meta) resolvedImages.set(src, { publicSrc: src, meta })
         continue
       }
@@ -796,7 +794,7 @@ async function resolveAndProcessImages({
       if (!meta) continue
 
       const publicSrc = resolved.needsCopy
-        ? `/_holocron/images/${copyToPublic({ filePath: resolved.filePath, imageOutputDir })}`
+        ? `/_holocron/images/${copyToPublic({ filePath: resolved.filePath, imageOutputDir, imageCache })}`
         : src
 
       resolvedImages.set(src, { publicSrc, meta })
@@ -944,7 +942,7 @@ export async function processDeferredProviders({
         if (!src || typeof src !== 'string' || isNonLocalAssetSrc(src)) continue
         const resolved = resolveImagePath({ src, mdxDir, publicDir, projectRoot })
         if (resolved?.needsCopy) {
-          processed.frontmatter[fmKey] = `/_holocron/images/${copyToPublic({ filePath: resolved.filePath, imageOutputDir })}`
+          processed.frontmatter[fmKey] = `/_holocron/images/${copyToPublic({ filePath: resolved.filePath, imageOutputDir, imageCache })}`
         }
       }
     }
@@ -1096,32 +1094,15 @@ function resolveImagePath({
   return undefined
 }
 
-async function fetchRemoteImageBuffer(src: string): Promise<Buffer | undefined> {
-  const response = await fetch(src, { signal: AbortSignal.timeout(5_000) })
-  if (!response.ok) {
-    logger.warn(formatHolocronWarning(
-      `failed to fetch remote image ${src}: HTTP ${response.status}`,
-    ))
-    return undefined
-  }
-  const contentType = response.headers.get('content-type')
-  if (contentType && !contentType.startsWith('image/')) {
-    logger.warn(formatHolocronWarning(
-      `failed to fetch remote image ${src}: unexpected content-type "${contentType}"`,
-    ))
-    return undefined
-  }
-  return Buffer.from(await response.arrayBuffer())
-}
-
 function isImageFile(filePath: string): boolean {
   return IMAGE_EXTENSIONS.has(path.extname(filePath).toLowerCase())
 }
 
 /** Copy image to public/_holocron/images/<hash>-<name>.ext, returns dest filename */
-function copyToPublic({ filePath, imageOutputDir }: { filePath: string; imageOutputDir: string }): string {
-  const buf = fs.readFileSync(filePath)
-  const hash = crypto.createHash('sha1').update(buf).digest('hex').slice(0, 8)
+function copyToPublic({ filePath, imageOutputDir, imageCache }: { filePath: string; imageOutputDir: string; imageCache: ImageCache }): string {
+  const sha = localFileSha({ filePath, cache: imageCache })
+  if (!sha) throw new Error(`[holocron] cannot copy missing image ${filePath}`)
+  const hash = sha.slice(0, 8)
   const ext = path.extname(filePath)
   const basename = path.basename(filePath, ext)
   const destName = `${hash}-${basename}${ext}`
