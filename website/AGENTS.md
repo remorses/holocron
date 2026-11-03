@@ -35,3 +35,11 @@ Call `trackProduct` on the server at mutation success: project create/delete, or
 ## Documentation command examples
 
 Use `npx` for one-off command examples in MDX docs, like `npx vite` and `npx vite build`. It is more common and works regardless of whether the user installed dependencies with npm, pnpm, yarn, or bun.
+
+## Dashboard code splitting
+
+Dashboard JSX lives in `src/dashboard-views.tsx` and is loaded with `await import()` from the handlers in `src/dashboard.tsx`. plugin-rsc groups `"use client"` components by server chunk, so this keeps base-ui, better-auth and the dashboard chat out of docs and marketing pages (docs pages went from 296 KB to 189 KB gzip).
+
+- Keep routes and loaders in `dashboard.tsx`. Export loader data types (`type SettingsData = ...`) and import them in the views with `import type`.
+- Never import `dashboard-views.tsx`, `dashboard-components.tsx` or `components/dashboard-chat.tsx` statically from `server.tsx` or any module docs pages use. One static import puts the dashboard back into every page's client chunk.
+- Check with `ANALYZE_BUNDLE=1` builds: `worker-entry-*.js` in `dist/client/assets` must not contain `@base-ui` or `dashboard-components`.

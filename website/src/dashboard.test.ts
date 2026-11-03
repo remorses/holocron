@@ -12,6 +12,9 @@ import { describe, test, expect } from 'vitest'
 import { runAction } from 'spiceflow/testing'
 import * as schema from 'db/schema'
 import { app } from './server.tsx'
+// Pages load their views with `await import()`. Import them here so the slow
+// first transform runs during setup, not inside the first test's 5s timeout.
+import './dashboard-views.tsx'
 import { acceptInviteAction } from './dashboard-actions.ts'
 import { getDb } from './db.ts'
 import {

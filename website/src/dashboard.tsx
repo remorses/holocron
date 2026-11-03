@@ -13,137 +13,16 @@
 //   /dashboard/projects/:projectId/keys        → API keys table
 //   /dashboard/deploy                    → create project flow
 
+//
+// Route handlers stay here; their JSX lives in dashboard-views.tsx, loaded
+// with `await import()`. That gives the dashboard its own server chunk, so its
+// client components (base-ui, dashboard chat) stay out of docs pages.
+
 import { Spiceflow, redirect } from 'spiceflow'
-import { Link, ProgressBar, router } from 'spiceflow/react'
-import type * as React from 'react'
 import { getBaseUrl, getDb, getSession, getProjectSubscription, requireSession } from './db.ts'
 import { normalizeAuthRedirectPath } from './auth-redirect.ts'
-import { cn, timeAgo } from './lib/utils.ts'
-import { Button } from './components/ui/button.tsx'
-import { DeployPoller } from './components/deploy-poller.tsx'
-import { HolocronLogo } from './components/auth-page.tsx'
-import { Frame } from './components/ui/frame.tsx'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from './components/ui/table.tsx'
-import {
-  GridDot,
-  DashboardSidebar,
-  ProjectTabBar,
-  MembersTable,
-  ComingSoon,
-  AcceptInviteButton,
-  BillingPanel,
-  CreateApiKeyButton,
-  InviteButton,
-  UpgradeBanner,
-  SettingsForm,
-  DeleteProjectButton,
-  GrantOrgAccessButton,
-  ConnectGscButton,
-  CustomDomainsSection,
-  DASHBOARD_THEME_SCRIPT,
-} from './dashboard-components.tsx'
-import { DashboardChat } from './components/dashboard-chat.tsx'
 
-const TEMPLATE_REPO_URL = 'https://github.com/remorses/holocron-template'
-const CLI_CREATE_COMMAND = 'npx -y "@holocron.so/cli" create'
-const CLI_DEPLOY_COMMAND = 'npx -y "@holocron.so/cli" deploy'
-
-function GitHubIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
-    </svg>
-  )
-}
-
-function GitHubButton() {
-  return (
-    <Button asChild>
-      <a href={`${TEMPLATE_REPO_URL}/generate`} target="_blank" rel="noopener noreferrer">
-        <GitHubIcon data-icon="inline-start" />
-        Create from GitHub
-      </a>
-    </Button>
-  )
-}
-
-function CommandBlock({ command }: { command: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-muted/50 text-left">
-      <div className="overflow-x-auto px-4 py-3">
-        <pre className="whitespace-pre font-mono text-sm leading-relaxed">{command}</pre>
-      </div>
-    </div>
-  )
-}
-
-function SetupCard({ title, description, action }: {
-  title: string
-  description: React.ReactNode
-  action: React.ReactNode
-}) {
-  return (
-    <div className="flex h-full flex-col gap-4 rounded-xl border border-border bg-background p-5">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-sm font-semibold">{title}</h2>
-        <div className="text-sm text-muted-foreground">{description}</div>
-      </div>
-      <div className="mt-auto">{action}</div>
-    </div>
-  )
-}
-
-function DashboardSetupPanel({ mode }: { mode: 'create' | 'deploy' }) {
-  const isCreate = mode === 'create'
-  const cards = [
-    {
-      title: 'GitHub template',
-      description: isCreate
-        ? <>Create a repository from the template. When GitHub Actions deploys from your GitHub account or org, Holocron links the site automatically.</>
-        : <>Create a repository from the template. Its first GitHub Actions deploy from your GitHub account or org creates a separate linked site automatically.</>,
-      action: <GitHubButton />,
-    },
-    {
-      title: isCreate ? 'Local CLI' : 'Deploy this site',
-      description: isCreate
-        ? <>Run the create command. The CLI logs in, creates the site, and writes the deploy key for you.</>
-        : <>Create an API key from the <strong>Keys</strong> tab, set it as <code className="font-mono text-xs">HOLOCRON_KEY</code>, then deploy from your docs repo.</>,
-      action: <CommandBlock command={isCreate ? CLI_CREATE_COMMAND : CLI_DEPLOY_COMMAND} />,
-    },
-  ]
-
-  return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8 py-16">
-      <div className="flex flex-col gap-2 text-center text-balance">
-        <h1 className="text-2xl font-semibold">{isCreate ? 'Create a docs website' : 'Deploy your docs site'}</h1>
-        <div className="text-sm text-muted-foreground">
-          {isCreate ? (
-            <>Your site is created on the first deploy. Start from the GitHub template, or scaffold locally with the CLI.</>
-          ) : (
-            <>This site has no deployments yet. Deploy with an API key from the <strong>Keys</strong> tab, or create a separate GitHub-linked site.</>
-          )}
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        {cards.map((card) => <SetupCard key={card.title} {...card} />)}
-      </div>
-
-      {isCreate && (
-        <div className="text-center text-balance text-xs text-muted-foreground">
-          After the first deployment finishes, refresh the dashboard and your site will appear in the sidebar.
-        </div>
-      )}
-    </div>
-  )
-}
+const loadViews = () => import('./dashboard-views.tsx')
 
 /** Resolve project + verify the caller is a member of the project's org.
  *  All project page loaders must use this instead of looking up membership first. */
@@ -167,9 +46,142 @@ async function resolveProjectAccess<Project extends { orgId: string }>(
   return { session, db, project, membership, orgId: project.orgId }
 }
 
+
+// ── Project loaders ─────────────────────────────────────────────────
+
+async function loadProjectOverview({ request, params }: { request: Request; params: { projectId: string } }) {
+  const { project, db } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
+    where: { projectId: params.projectId },
+    with: {
+      deployments: {
+        orderBy: { createdAt: 'desc' },
+        limit: 20,
+        with: { triggeredByUser: true },
+      },
+    },
+  }))
+
+  const activeDomains = await db.query.domain.findMany({
+    where: { projectId: params.projectId, status: 'active' },
+    columns: { hostname: true },
+  })
+
+  return {
+    activeDomains: activeDomains.map((d) => d.hostname),
+    project: {
+      ...project,
+      deployments: project.deployments.map((d) => ({
+        id: d.id,
+        status: d.status,
+        branch: d.branch,
+        preview: d.preview,
+        subdomain: d.subdomain,
+        githubActor: d.githubActor,
+        createdAt: d.createdAt,
+        triggeredByUser: d.triggeredByUser ? {
+          name: d.triggeredByUser.name,
+          image: d.triggeredByUser.image,
+        } : null,
+      })),
+    },
+  }
+}
+
+async function loadMembers({ request, params }: { request: Request; params: { projectId: string } }) {
+  const { db, project, orgId } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
+    where: { projectId: params.projectId },
+  }))
+
+  const members = await db.query.orgMember.findMany({
+    where: { orgId },
+    with: { user: true },
+  })
+
+  return { project, members, orgId }
+}
+
+async function loadKeys({ request, params }: { request: Request; params: { projectId: string } }) {
+  const { project } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
+    where: { projectId: params.projectId },
+    with: { keys: true },
+  }))
+
+  return {
+    project,
+    keys: project.keys.map(({ id, name, prefix, projectId, createdAt }) => ({
+      id, name, prefix, projectId, createdAt,
+    })),
+  }
+}
+
+async function loadBilling({ request, params }: { request: Request; params: { projectId: string } }) {
+  const { project } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
+    where: { projectId: params.projectId },
+  }))
+  const subscription = await getProjectSubscription(project.projectId)
+  return {
+    project,
+    subscription: subscription
+      ? {
+          status: subscription.status,
+          interval: subscription.interval,
+          currentPeriodEnd: subscription.currentPeriodEnd,
+          cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+        }
+      : null,
+  }
+}
+
+async function loadSettings({ request, params }: { request: Request; params: { projectId: string } }) {
+  const { env } = await import('cloudflare:workers')
+  const { project, db } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
+    where: { projectId: params.projectId },
+  }))
+  const [gscConnection, domains, subscription] = await Promise.all([
+    db.query.gscConnection.findFirst({
+      where: { projectId: params.projectId },
+      columns: { siteUrl: true, googleEmail: true, oauthAppId: true },
+    }),
+    db.query.domain.findMany({
+      where: { projectId: params.projectId },
+      orderBy: { createdAt: 'desc' },
+    }),
+    getProjectSubscription(params.projectId),
+  ])
+  const { CNAME_TARGET } = await import('./lib/cloudflare.ts')
+  return {
+    project,
+    githubClientId: env.GITHUB_CLIENT_ID,
+    gscConnection: gscConnection || null,
+    domains: domains.map((d) => ({
+      id: d.id,
+      hostname: d.hostname,
+      status: d.status,
+      sslStatus: d.sslStatus ?? null,
+      cnameTarget: CNAME_TARGET,
+      createdAt: d.createdAt,
+    })),
+    hasSubscription: !!subscription,
+  }
+}
+
+async function loadProject({ request, params }: { request: Request; params: { projectId: string } }) {
+  const { project } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
+    where: { projectId: params.projectId },
+  }))
+  return { project }
+}
+
+export type ProjectOverviewData = Awaited<ReturnType<typeof loadProjectOverview>>
+export type MembersData = Awaited<ReturnType<typeof loadMembers>>
+export type KeysData = Awaited<ReturnType<typeof loadKeys>>
+export type BillingData = Awaited<ReturnType<typeof loadBilling>>
+export type SettingsData = Awaited<ReturnType<typeof loadSettings>>
+
 // ── Dashboard app ───────────────────────────────────────────────────
 
 export const dashboardApp = new Spiceflow()
+
 
   // Auth guard for all /dashboard/* pages
   .loader('/dashboard/*', async ({ request }) => {
@@ -225,55 +237,28 @@ export const dashboardApp = new Spiceflow()
 
   // Shell layout: navbar + sidebar + main content area
   .layout('/dashboard/*', async ({ children, request }) => {
+    const { DashboardLayout } = await loadViews()
     // Extract projectId from the URL path since layout runs before sub-loaders
-    const pathMatch = request.parsedUrl.pathname.match(/^\/dashboard\/projects\/([^/]+)/)
-    const projectId = pathMatch?.[1] ?? null
+    const projectId = request.parsedUrl.pathname.match(/^\/dashboard\/projects\/([^/]+)/)?.[1] ?? null
     return (
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <ProgressBar color="var(--primary)" />
-        <script dangerouslySetInnerHTML={{ __html: DASHBOARD_THEME_SCRIPT }} />
-        <UpgradeBanner projectId={projectId} isBillingPage={request.parsedUrl.pathname.endsWith('/billing')} />
-        {/* Navbar */}
-        <header className="border-b border-border bg-background relative z-10">
-          <div className="mx-auto flex max-w-(--content-max-width) items-center justify-between px-6 py-4 border-x border-border relative">
-            <GridDot position="bl" />
-            <GridDot position="br" />
-            <Link href={router.href('/dashboard')} className="no-underline flex items-center shrink-0">
-              <HolocronLogo />
-            </Link>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <a href="/" className="hover:text-foreground no-underline">Docs</a>
-              <a href="https://github.com/remorses/holocron" target="_blank" rel="noopener noreferrer" className="hover:text-foreground no-underline">GitHub</a>
-            </div>
-          </div>
-        </header>
-
-        {/* Content area with sidebar */}
-        <div className="isolate grow relative z-10 bg-background flex flex-col">
-        <div className="grow flex max-w-(--content-max-width) mx-auto w-full border-x border-border">
-          <GridDot position="tl" />
-          <GridDot position="tr" />
-          <DashboardSidebar currentProjectId={projectId} />
-          <div className="flex-1 flex flex-col min-w-0">
-            {children}
-          </div>
-        </div>
-        </div>
-        <DashboardChat domain={new URL(getBaseUrl()).host} />
-      </div>
+      <DashboardLayout
+        projectId={projectId}
+        isBillingPage={request.parsedUrl.pathname.endsWith('/billing')}
+        chatDomain={new URL(getBaseUrl()).host}
+      >
+        {children}
+      </DashboardLayout>
     )
   })
-
 
   // ── Dashboard index → redirect to first project ────────────────────
 
   .page('/dashboard', async ({ loaderData }) => {
-    const { projects } = loaderData
-    const firstProject = projects[0]
+    const firstProject = loaderData.projects[0]
     if (firstProject) {
       throw redirect(`/dashboard/projects/${firstProject.projectId}`)
     }
-
+    const { DashboardSetupPanel } = await loadViews()
     return (
       <div className="px-6">
         <DashboardSetupPanel mode="create" />
@@ -281,571 +266,63 @@ export const dashboardApp = new Spiceflow()
     )
   })
 
-  // ── Project overview tab ───────────────────────────────────────────
+  // ── Project tabs ───────────────────────────────────────────────────
 
-  .loader('/dashboard/projects/:projectId', async ({ request, params }) => {
-    const { project, db } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
-      where: { projectId: params.projectId },
-      with: {
-        deployments: {
-          orderBy: { createdAt: 'desc' },
-          limit: 20,
-          with: { triggeredByUser: true },
-        },
-      },
-    }))
-
-    const activeDomains = await db.query.domain.findMany({
-      where: { projectId: params.projectId, status: 'active' },
-      columns: { hostname: true },
-    })
-
-    return {
-      activeDomains: activeDomains.map((d) => d.hostname),
-      project: {
-        ...project,
-        deployments: project.deployments.map((d) => ({
-          id: d.id,
-          status: d.status,
-          branch: d.branch,
-          preview: d.preview,
-          subdomain: d.subdomain,
-          githubActor: d.githubActor,
-          createdAt: d.createdAt,
-          triggeredByUser: d.triggeredByUser ? {
-            name: d.triggeredByUser.name,
-            image: d.triggeredByUser.image,
-          } : null,
-        })),
-      },
-    }
-  })
-
+  .loader('/dashboard/projects/:projectId', loadProjectOverview)
   .page('/dashboard/projects/:projectId', async ({ loaderData }) => {
-    const { project } = loaderData
-    const hasDeployments = project.deployments.length > 0
-
-    const siteUrl = project.subdomain
-      ? `https://${project.subdomain}-site.holocron.so`
-      : null
-
-    return (
-      <>
-        <ProjectTabBar projectId={project.projectId} currentTab="overview" />
-        <div className="border-t border-border" />
-        <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto min-w-0">
-          {!hasDeployments ? (
-            // Setup UI: shown when the project has no deployments yet
-            <div className="flex flex-col items-center gap-10 py-16">
-              <DeployPoller />
-              <DashboardSetupPanel mode="deploy" />
-            </div>
-          ) : (
-            // Normal overview: project info + deployments table
-            <div className="flex flex-col gap-6">
-              {/* Header */}
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
-                {project.githubOwner && project.githubRepo && (
-                  <a
-                    href={`https://github.com/${project.githubOwner}/${project.githubRepo}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-1 text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
-                  >
-                    {project.githubOwner}/{project.githubRepo} ↗
-                  </a>
-                )}
-              </div>
-
-              {/* Project info */}
-              <section className="flex flex-col gap-3">
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Project Info</h2>
-                <Frame className="w-full">
-                  <div className="rounded-xl border bg-background p-4">
-                    <dl className="grid grid-cols-[auto_1fr] gap-x-8 gap-y-3 text-sm">
-                      {siteUrl && (
-                        <>
-                          <dt className="text-muted-foreground">Website</dt>
-                          <dd>
-                            <a href={siteUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                              {siteUrl} ↗
-                            </a>
-                          </dd>
-                        </>
-                      )}
-                      {project.githubOwner && project.githubRepo && (
-                        <>
-                          <dt className="text-muted-foreground">GitHub</dt>
-                          <dd>
-                            <a
-                              href={`https://github.com/${project.githubOwner}/${project.githubRepo}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline"
-                            >
-                              {project.githubOwner}/{project.githubRepo} ↗
-                            </a>
-                          </dd>
-                        </>
-                      )}
-                      {loaderData.activeDomains.length > 0 && (
-                        <>
-                          <dt className="text-muted-foreground">Custom Domains</dt>
-                          <dd className="flex flex-col gap-1">
-                            {loaderData.activeDomains.map((hostname: string) => (
-                              <a
-                                key={hostname}
-                                href={`https://${hostname}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary hover:underline text-sm"
-                              >
-                                {hostname} ↗
-                              </a>
-                            ))}
-                          </dd>
-                        </>
-                      )}
-                      <dt className="text-muted-foreground">Default Branch</dt>
-                      <dd className="font-mono text-xs">{project.defaultBranch || 'main'}</dd>
-                      <dt className="text-muted-foreground">Created</dt>
-                      <dd>{timeAgo(project.createdAt)}</dd>
-                    </dl>
-                  </div>
-                </Frame>
-              </section>
-
-              {/* Recent Deployments */}
-              <section className="flex flex-col gap-3">
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Recent Deployments</h2>
-                <Frame className="w-full">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead>URL</TableHead>
-                        <TableHead>Time</TableHead>
-                        <TableHead>User</TableHead>
-                        <TableHead>Branch</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {project.deployments.map((d) => {
-                        const deployUrl = d.subdomain
-                          ? `https://${d.subdomain}-site${d.preview ? '-preview' : ''}.holocron.so`
-                          : null
-                        // Resolve avatar: prefer triggeredByUser.image, then githubActor
-                        const avatarUrl = d.triggeredByUser?.image
-                          || (d.githubActor ? `https://github.com/${d.githubActor}.png?size=32` : null)
-                        const userName = d.triggeredByUser?.name || d.githubActor || '—'
-
-                        return (
-                          <TableRow key={d.id}>
-                            <TableCell>
-                              {deployUrl ? (
-                                <a
-                                  href={deployUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-primary hover:underline font-mono truncate max-w-80 block"
-                                >
-                                  {d.subdomain}
-                                </a>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">—</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <span className="text-xs text-muted-foreground tabular-nums">
-                                {timeAgo(d.createdAt)}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-1.5">
-                                {avatarUrl ? (
-                                  <img src={avatarUrl} alt="" className="size-5 rounded-full object-cover" />
-                                ) : null}
-                                <span className="text-xs">{userName}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <span className="font-mono text-xs text-muted-foreground">{d.branch || 'main'}</span>
-                            </TableCell>
-                            <TableCell>
-                              <span className={cn(
-                                'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium leading-none',
-                                d.status === 'active' && 'bg-green-500/10 text-green-600',
-                                d.status === 'uploading' && 'bg-yellow-500/10 text-yellow-600',
-                                d.status === 'superseded' && 'bg-muted text-muted-foreground',
-                              )}>
-                                {d.status}
-                              </span>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                </Frame>
-              </section>
-            </div>
-          )}
-        </main>
-      </>
-    )
+    const { ProjectOverviewView } = await loadViews()
+    return <ProjectOverviewView loaderData={loaderData} />
   })
 
-  // ── Members tab ────────────────────────────────────────────────────
-
-  .loader('/dashboard/projects/:projectId/members', async ({ request, params }) => {
-    const { db, project, orgId } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
-      where: { projectId: params.projectId },
-    }))
-
-    const members = await db.query.orgMember.findMany({
-      where: { orgId },
-      with: { user: true },
-    })
-
-    return { project, members, orgId }
-  })
-
+  .loader('/dashboard/projects/:projectId/members', loadMembers)
   .page('/dashboard/projects/:projectId/members', async ({ loaderData }) => {
-    const { project, members, orgId } = loaderData
-
-    return (
-      <>
-        <ProjectTabBar projectId={project.projectId} currentTab="members" />
-        <div className="border-t border-border" />
-        <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto min-w-0">
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
-              <InviteButton orgId={orgId} />
-            </div>
-            <MembersTable />
-          </div>
-        </main>
-      </>
-    )
+    const { MembersView } = await loadViews()
+    return <MembersView loaderData={loaderData} />
   })
 
-  // ── API Keys tab ────────────────────────────────────────────────────
-
-  .loader('/dashboard/projects/:projectId/keys', async ({ request, params }) => {
-    const { project } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
-      where: { projectId: params.projectId },
-      with: { keys: true },
-    }))
-
-    return {
-      project,
-      keys: project.keys.map(({ id, name, prefix, projectId, createdAt }) => ({
-        id, name, prefix, projectId, createdAt,
-      })),
-    }
-  })
-
+  .loader('/dashboard/projects/:projectId/keys', loadKeys)
   .page('/dashboard/projects/:projectId/keys', async ({ loaderData }) => {
-    const { project, keys } = loaderData
-    return (
-      <>
-        <ProjectTabBar projectId={project.projectId} currentTab="keys" />
-        <div className="border-t border-border" />
-        <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto min-w-0">
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
-              <CreateApiKeyButton projectId={project.projectId} />
-            </div>
-            {keys.length === 0 ? (
-              <div className="text-sm text-muted-foreground">
-                No API keys yet. Create one to deploy from CI or the CLI.
-              </div>
-            ) : (
-              <Frame className="w-full">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead>Name</TableHead>
-                      <TableHead>Key</TableHead>
-                      <TableHead>Created</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {keys.map((key: { id: string; name: string; prefix: string; projectId: string | null; createdAt: number }) => (
-                      <TableRow key={key.id}>
-                        <TableCell>
-                          <span className="text-sm font-medium">{key.name}</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-mono text-xs text-muted-foreground">holo_{key.prefix}...</span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(key.createdAt).toLocaleDateString()}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Frame>
-            )}
-          </div>
-        </main>
-      </>
-    )
+    const { KeysView } = await loadViews()
+    return <KeysView loaderData={loaderData} />
   })
 
-  // ── Billing tab ─────────────────────────────────────────────────────
-
-  .loader('/dashboard/projects/:projectId/billing', async ({ request, params }) => {
-    const { project } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
-      where: { projectId: params.projectId },
-    }))
-    const subscription = await getProjectSubscription(project.projectId)
-    return {
-      project,
-      subscription: subscription
-        ? {
-            status: subscription.status,
-            interval: subscription.interval,
-            currentPeriodEnd: subscription.currentPeriodEnd,
-            cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
-          }
-        : null,
-    }
-  })
-
+  .loader('/dashboard/projects/:projectId/billing', loadBilling)
   .page('/dashboard/projects/:projectId/billing', async ({ loaderData }) => {
-    const { project, subscription } = loaderData
-    return (
-      <>
-        <ProjectTabBar projectId={project.projectId} currentTab="billing" />
-        <div className="border-t border-border" />
-        <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto min-w-0">
-          <div className="flex flex-col gap-6">
-            <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
-            <BillingPanel projectId={project.projectId} subscription={subscription} />
-          </div>
-        </main>
-      </>
-    )
+    const { BillingView } = await loadViews()
+    return <BillingView loaderData={loaderData} />
   })
 
-  // ── Settings tab ────────────────────────────────────────────────────
-
-  .loader('/dashboard/projects/:projectId/settings', async ({ request, params }) => {
-    const { env } = await import('cloudflare:workers')
-    const { project, db } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
-      where: { projectId: params.projectId },
-    }))
-    const [gscConnection, domains, subscription] = await Promise.all([
-      db.query.gscConnection.findFirst({
-        where: { projectId: params.projectId },
-        columns: { siteUrl: true, googleEmail: true, oauthAppId: true },
-      }),
-      db.query.domain.findMany({
-        where: { projectId: params.projectId },
-        orderBy: { createdAt: 'desc' },
-      }),
-      getProjectSubscription(params.projectId),
-    ])
-    const { CNAME_TARGET } = await import('./lib/cloudflare.ts')
-    return {
-      project,
-      githubClientId: env.GITHUB_CLIENT_ID,
-      gscConnection: gscConnection || null,
-      domains: domains.map((d) => ({
-        id: d.id,
-        hostname: d.hostname,
-        status: d.status,
-        sslStatus: d.sslStatus ?? null,
-        cnameTarget: CNAME_TARGET,
-        createdAt: d.createdAt,
-      })),
-      hasSubscription: !!subscription,
-    }
-  })
-
+  .loader('/dashboard/projects/:projectId/settings', loadSettings)
   .page('/dashboard/projects/:projectId/settings', async ({ loaderData }) => {
-    const { project } = loaderData
-    const siteUrl = project.subdomain
-      ? `https://${project.subdomain}-site.holocron.so`
-      : null
-
-    return (
-      <>
-        <ProjectTabBar projectId={project.projectId} currentTab="settings" />
-        <div className="border-t border-border" />
-        <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto min-w-0">
-          <div className="flex flex-col gap-8">
-            <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
-
-            {/* Rename */}
-            <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">General</h2>
-              <Frame className="w-full">
-                <div className="rounded-xl border bg-background p-4">
-                  <SettingsForm projectId={project.projectId} initialName={project.name} />
-                </div>
-              </Frame>
-            </section>
-
-            {/* Read-only project info */}
-            <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Project Info</h2>
-              <Frame className="w-full">
-                <div className="rounded-xl border bg-background p-4">
-                  <dl className="grid grid-cols-[auto_1fr] gap-x-8 gap-y-3 text-sm">
-                    <dt className="text-muted-foreground">Project ID</dt>
-                    <dd className="font-mono text-xs">{project.projectId}</dd>
-                    {siteUrl && (
-                      <>
-                        <dt className="text-muted-foreground">Subdomain</dt>
-                        <dd className="font-mono text-xs">{project.subdomain}</dd>
-                      </>
-                    )}
-                    {project.githubOwner && project.githubRepo && (
-                      <>
-                        <dt className="text-muted-foreground">GitHub</dt>
-                        <dd>
-                          <a
-                            href={`https://github.com/${project.githubOwner}/${project.githubRepo}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary hover:underline text-sm"
-                          >
-                            {project.githubOwner}/{project.githubRepo} ↗
-                          </a>
-                        </dd>
-                      </>
-                    )}
-                    <dt className="text-muted-foreground">Default Branch</dt>
-                    <dd className="font-mono text-xs">{project.defaultBranch || 'main'}</dd>
-                  </dl>
-                  <div className="mt-3 text-xs text-muted-foreground">
-                    GitHub repository and subdomain are set automatically from verified GitHub Actions deployments and cannot be changed manually.
-                  </div>
-                </div>
-              </Frame>
-            </section>
-
-            {/* GitHub org access */}
-            <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">GitHub Organization Access</h2>
-              <Frame className="w-full">
-                <div className="rounded-xl border bg-background p-4 flex flex-col gap-3">
-                  <div className="text-sm text-muted-foreground">
-                    Deploying from a GitHub organization repo requires additional permissions. If your deploy fails with an org membership error, grant Holocron access to your GitHub organizations.
-                  </div>
-                  <GrantOrgAccessButton githubClientId={loaderData.githubClientId} />
-                </div>
-              </Frame>
-            </section>
-
-            {/* Google Search Console */}
-            <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Google Search Console</h2>
-              <Frame className="w-full">
-                <div className="rounded-xl border bg-background p-4 flex flex-col gap-3">
-                  <div className="text-sm text-muted-foreground">
-                    Connect Google Search Console to track search performance for your docs site.
-                  </div>
-                  <ConnectGscButton
-                    key={project.projectId}
-                    projectId={project.projectId}
-                    connection={loaderData.gscConnection}
-                  />
-                </div>
-              </Frame>
-            </section>
-
-            {/* Custom Domains */}
-            <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Custom Domains</h2>
-              <Frame className="w-full">
-                <div className="rounded-xl border bg-background p-4 flex flex-col gap-3">
-                  <CustomDomainsSection
-                    projectId={project.projectId}
-                    domains={loaderData.domains}
-                    hasSubscription={loaderData.hasSubscription}
-                  />
-                </div>
-              </Frame>
-            </section>
-
-            {/* Danger zone */}
-            <section className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-destructive uppercase tracking-wider">Danger Zone</h2>
-              <Frame className="w-full">
-                <div className="rounded-xl border border-destructive/20 bg-background p-4 flex flex-col gap-3">
-                  <div className="text-sm text-muted-foreground">
-                    Permanently delete this site and all its deployments, API keys, and subscription data. This action cannot be undone.
-                  </div>
-                  <DeleteProjectButton projectId={project.projectId} projectName={project.name} />
-                </div>
-              </Frame>
-            </section>
-          </div>
-        </main>
-      </>
-    )
+    const { SettingsView } = await loadViews()
+    return <SettingsView loaderData={loaderData} />
   })
 
   // ── Coming soon tabs ───────────────────────────────────────────────
 
-  .loader('/dashboard/projects/:projectId/assistant', async ({ request, params }) => {
-    const { project } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
-      where: { projectId: params.projectId },
-    }))
-    return { project }
-  })
-
+  .loader('/dashboard/projects/:projectId/assistant', loadProject)
   .page('/dashboard/projects/:projectId/assistant', async ({ loaderData }) => {
-    const { project } = loaderData
-    return (
-      <>
-        <ProjectTabBar projectId={project.projectId} currentTab="assistant" />
-        <div className="border-t border-border" />
-        <ComingSoon title="AI Assistant" />
-      </>
-    )
+    const { ComingSoonView } = await loadViews()
+    return <ComingSoonView projectId={loaderData.project.projectId} tab="assistant" title="AI Assistant" />
   })
 
-  .loader('/dashboard/projects/:projectId/analytics', async ({ request, params }) => {
-    const { project } = await resolveProjectAccess(request, (db) => db.query.project.findFirst({
-      where: { projectId: params.projectId },
-    }))
-    return { project }
-  })
-
+  .loader('/dashboard/projects/:projectId/analytics', loadProject)
   .page('/dashboard/projects/:projectId/analytics', async ({ loaderData }) => {
-    const { project } = loaderData
-    return (
-      <>
-        <ProjectTabBar projectId={project.projectId} currentTab="analytics" />
-        <div className="border-t border-border" />
-        <ComingSoon title="Analytics" />
-      </>
-    )
+    const { ComingSoonView } = await loadViews()
+    return <ComingSoonView projectId={loaderData.project.projectId} tab="analytics" title="Analytics" />
   })
 
   // ── Deploy flow ─────────────────────────────────────────────────────
 
   .page('/dashboard/deploy', async () => {
-    return (
-      <main className="flex-1 p-4 sm:p-6 overflow-x-hidden overflow-y-auto min-w-0">
-        <DashboardSetupPanel mode="create" />
-      </main>
-    )
+    const { DeployView } = await loadViews()
+    return <DeployView />
   })
 
   // ── Invite accept page (standalone, no dashboard layout) ──────────
 
   .page('/invite/:id', async ({ params, request }) => {
+    const { InvalidInviteView, InviteView } = await loadViews()
     const db = getDb()
     const invite = await db.query.orgInvitation.findFirst({
       where: { id: params.id },
@@ -853,14 +330,7 @@ export const dashboardApp = new Spiceflow()
     })
 
     if (!invite || invite.expiresAt < Date.now()) {
-      return (
-        <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-          <div className="text-center max-w-sm">
-            <h1 className="text-2xl font-bold tracking-tight mb-2">Invalid Invitation</h1>
-            <div className="text-muted-foreground text-sm">This invitation link is invalid or has expired.</div>
-          </div>
-        </div>
-      )
+      return <InvalidInviteView />
     }
 
     const session = await getSession(request)
@@ -875,18 +345,5 @@ export const dashboardApp = new Spiceflow()
     })
     if (existing) throw redirect('/dashboard')
 
-    return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <div className="text-center max-w-sm flex flex-col items-center gap-4">
-          <h1 className="text-2xl font-bold tracking-tight">Join {invite.org!.name}</h1>
-          <div className="text-muted-foreground text-sm">
-            <span className="font-medium text-foreground">{invite.creator!.name}</span> invited you to join this organization.
-          </div>
-          <div className="text-muted-foreground text-xs">
-            This will give you access to <strong>all projects</strong> in this organization.
-          </div>
-          <AcceptInviteButton invitationId={params.id} />
-        </div>
-      </div>
-    )
+    return <InviteView invitationId={params.id} orgName={invite.org!.name} creatorName={invite.creator!.name} />
   })
