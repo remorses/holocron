@@ -1900,7 +1900,7 @@ icon: rocket
     expect(result.pageIconRefs.page).toEqual(['lucide:rocket', 'lucide:github'])
   })
 
-  // Regression: image pages were serialized after markAndUnravel, which split
+  // Regression: image pages were serialized after unravel, which split
   // single-line JSX text elements into separate paragraphs.
   test('image pages keep single-line JSX children inline', async () => {
     const project = tracked(createProject(

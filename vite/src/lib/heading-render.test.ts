@@ -98,9 +98,7 @@ describe('heading rendering pipeline', () => {
     const { normalized, html } = renderMdx('## My Section {#custom-id}')
     // Only headings with {#custom-id} get converted to <Heading> JSX
     expect(normalized).toMatchInlineSnapshot(`
-      "<Heading level={2} id="custom-id">
-        My Section
-      </Heading>
+      "<Heading level={2} id="custom-id">My Section</Heading>
       "
     `)
     expect(html).toContain('id="custom-id"')

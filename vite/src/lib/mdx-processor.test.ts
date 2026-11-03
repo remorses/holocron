@@ -450,9 +450,9 @@ describe('rewriteMdxImages', () => {
   }
 
   test('converts standalone markdown image to Image JSX', () => {
-    const { normalizedContent } = processMdx(`![screenshot](./images/screenshot.png)`)
+    const { mdast } = processMdx(`![screenshot](./images/screenshot.png)`)
     const images = new Map([['./images/screenshot.png', testMeta]])
-    const result = rewriteMdxImages(normalizedContent, images)
+    const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
       "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="screenshot" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       "
@@ -460,9 +460,9 @@ describe('rewriteMdxImages', () => {
   })
 
   test('updates src for markdown image inside mixed paragraph', () => {
-    const { normalizedContent } = processMdx(`Some text before ![screenshot](./images/screenshot.png) and after.`)
+    const { mdast } = processMdx(`Some text before ![screenshot](./images/screenshot.png) and after.`)
     const images = new Map([['./images/screenshot.png', testMeta]])
-    const result = rewriteMdxImages(normalizedContent, images)
+    const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
       "Some text before ![screenshot](/_holocron/images/a1b2c3-screenshot.png) and after.
       "
@@ -470,9 +470,9 @@ describe('rewriteMdxImages', () => {
   })
 
   test('adds intrinsic dimensions and placeholder without author dimensions', () => {
-    const { normalizedContent } = processMdx(`<Image src="./screenshot.png" alt="test" />`)
+    const { mdast } = processMdx(`<Image src="./screenshot.png" alt="test" />`)
     const images = new Map([['./screenshot.png', testMeta]])
-    const result = rewriteMdxImages(normalizedContent, images)
+    const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
       "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="test" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       "
@@ -480,9 +480,9 @@ describe('rewriteMdxImages', () => {
   })
 
   test('preserves user-specified width/height on JSX Image', () => {
-    const { normalizedContent } = processMdx(`<Image src="./screenshot.png" alt="logo" width="92" height="31" />`)
+    const { mdast } = processMdx(`<Image src="./screenshot.png" alt="logo" width="92" height="31" />`)
     const images = new Map([['./screenshot.png', testMeta]])
-    const result = rewriteMdxImages(normalizedContent, images)
+    const result = rewriteMdxImages(mdast, images)
     // User specified 92x31 — should NOT be overridden with natural 1200x800
     expect(result).toMatchInlineSnapshot(`
       "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="logo" width="92" height="31" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
@@ -491,9 +491,9 @@ describe('rewriteMdxImages', () => {
   })
 
   test('keeps one author dimension separate from intrinsic dimensions', () => {
-    const { normalizedContent } = processMdx(`<Image src="./screenshot.png" alt="logo" width="92" />`)
+    const { mdast } = processMdx(`<Image src="./screenshot.png" alt="logo" width="92" />`)
     const images = new Map([['./screenshot.png', testMeta]])
-    const result = rewriteMdxImages(normalizedContent, images)
+    const result = rewriteMdxImages(mdast, images)
 
     expect(result).toContain('width="92"')
     expect(result).not.toContain('height="61"')
@@ -502,9 +502,9 @@ describe('rewriteMdxImages', () => {
   })
 
   test('preserves style dimensions without replacing them with natural dimensions', () => {
-    const { normalizedContent } = processMdx(`<img src="./screenshot.png" style={{ width: '20px' }} />`)
+    const { mdast } = processMdx(`<img src="./screenshot.png" style={{ width: '20px' }} />`)
     const images = new Map([['./screenshot.png', testMeta]])
-    const result = rewriteMdxImages(normalizedContent, images)
+    const result = rewriteMdxImages(mdast, images)
 
     expect(result).toContain('style={{ width: \'20px\' }}')
     expect(result).not.toContain('width="1200"')
@@ -514,9 +514,9 @@ describe('rewriteMdxImages', () => {
   })
 
   test('preserves a non-numeric author width', () => {
-    const { normalizedContent } = processMdx(`<img src="./screenshot.png" width="100%" />`)
+    const { mdast } = processMdx(`<img src="./screenshot.png" width="100%" />`)
     const images = new Map([['./screenshot.png', testMeta]])
-    const result = rewriteMdxImages(normalizedContent, images)
+    const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
       "<Image width="100%" src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       "
@@ -524,9 +524,9 @@ describe('rewriteMdxImages', () => {
   })
 
   test('converts root-level JSX img while preserving only the author height', () => {
-    const { normalizedContent } = processMdx(`<img className="hero" height="200" src="./screenshot.png" />`)
+    const { mdast } = processMdx(`<img className="hero" height="200" src="./screenshot.png" />`)
     const images = new Map([['./screenshot.png', testMeta]])
-    const result = rewriteMdxImages(normalizedContent, images)
+    const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
       "<Image className="hero" height="200" src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
       "
@@ -534,12 +534,12 @@ describe('rewriteMdxImages', () => {
   })
 
   test('converts nested flow JSX img to responsive Image while preserving user height', () => {
-    const { normalizedContent } = processMdx(`
+    const { mdast } = processMdx(`
 <Step title="Create account">
   <img className="hero" height="200" src="./screenshot.png" />
 </Step>`)
     const images = new Map([['./screenshot.png', testMeta]])
-    const result = rewriteMdxImages(normalizedContent, images)
+    const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
       "<Step title="Create account">
         <Image className="hero" height="200" src="/_holocron/images/a1b2c3-screenshot.png" alt="" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
@@ -549,9 +549,9 @@ describe('rewriteMdxImages', () => {
   })
 
   test('leaves unmatched images untouched', () => {
-    const { normalizedContent } = processMdx(`![unknown](./unknown.png)`)
+    const { mdast } = processMdx(`![unknown](./unknown.png)`)
     const images = new Map<string, ResolvedImage>()
-    const result = rewriteMdxImages(normalizedContent, images)
+    const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
       "![unknown](./unknown.png)
       "
@@ -559,14 +559,14 @@ describe('rewriteMdxImages', () => {
   })
 
   test('preserves frontmatter through serialization', () => {
-    const { normalizedContent } = processMdx(`---
+    const { mdast } = processMdx(`---
 title: My Page
 description: A description
 ---
 
 ![shot](./shot.png)`)
     const images = new Map([['./shot.png', testMeta]])
-    const result = rewriteMdxImages(normalizedContent, images)
+    const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
       "---
       title: My Page
@@ -579,7 +579,7 @@ description: A description
   })
 
   test('lazy loads every image after the first unless loading is set', () => {
-    const { normalizedContent } = processMdx(`
+    const { mdast } = processMdx(`
 ![hero](./screenshot.png)
 
 <Step title="Nested">
@@ -588,7 +588,7 @@ description: A description
 
 <Image src="./screenshot.png" alt="eager" loading="eager" />`)
     const images = new Map([['./screenshot.png', testMeta]])
-    const result = rewriteMdxImages(normalizedContent, images)
+    const result = rewriteMdxImages(mdast, images)
     expect(result).toMatchInlineSnapshot(`
       "<Image src="/_holocron/images/a1b2c3-screenshot.png" alt="hero" intrinsicWidth="1200" intrinsicHeight="800" placeholder="data:image/png;base64,abc123" />
 
@@ -602,13 +602,13 @@ description: A description
   })
 
   test('does not touch code blocks containing image-like text', () => {
-    const { normalizedContent } = processMdx(`
+    const { mdast } = processMdx(`
 \`\`\`markdown
 ![not an image](./screenshot.png)
 \`\`\`
 `)
     const images = new Map([['./screenshot.png', testMeta]])
-    const result = rewriteMdxImages(normalizedContent, images)
+    const result = rewriteMdxImages(mdast, images)
     // Code block content should be preserved verbatim
     expect(result).toMatchInlineSnapshot(`
       "\`\`\`markdown

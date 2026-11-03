@@ -254,7 +254,7 @@ export async function syncNavigation({
           imageOutputDir,
         })
         if (resolvedImages.size > 0) {
-          mdxContent[slug] = rewriteMdxImages(processed.normalizedContent, resolvedImages)
+          mdxContent[slug] = rewriteMdxImages(processed.mdast, resolvedImages)
         }
       }
       pageIconRefs[slug] = processed.iconRefs
@@ -343,7 +343,7 @@ export async function syncNavigation({
     })
 
     const finalMdx = resolvedImages.size > 0
-      ? rewriteMdxImages(processed.normalizedContent, resolvedImages)
+      ? rewriteMdxImages(processed.mdast, resolvedImages)
       : processed.normalizedContent
 
     pageIconRefs[slug] = processed.iconRefs
@@ -805,7 +805,7 @@ export async function processDeferredProviders({
         imageOutputDir,
       })
       if (resolvedImages.size > 0) {
-        finalMdx = rewriteMdxImages(processed.normalizedContent, resolvedImages)
+        finalMdx = rewriteMdxImages(processed.mdast, resolvedImages)
       }
     }
 

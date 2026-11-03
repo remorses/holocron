@@ -5,7 +5,7 @@
  * then serializes back to MDX string.
  */
 
-import { parse, stringify, type NodeOf, type Root, type PhrasingContent, type RootContent } from 'mdastic'
+import { stringify, type NodeOf, type Root, type PhrasingContent, type RootContent } from 'mdastic'
 import GithubSlugger from 'github-slugger'
 import type { NavHeading } from '../navigation.ts'
 import type { ImageMeta } from './image-processor.ts'
@@ -74,7 +74,7 @@ export type ProcessedMdx = {
    *  `<Aside full>`). The left sidebar skips the inline heading list for such
    *  pages since the TOC is already visible in the right sidebar. */
   hasTocPanel: boolean
-  /** Normalized, unraveled mdast for analysis. Never serialize it: use normalizedContent. */
+  /** The normalized mdast tree (reused for image rewriting without re-parsing) */
   mdast: Root
 }
 
@@ -481,18 +481,12 @@ export type ResolvedImage = {
 }
 
 /**
- * Rewrite images in normalized MDX and serialize it again:
+ * Mutate the mdast tree in place and serialize it back to MDX:
  * - Markdown images (![alt](src)) → converted to mdxJsxFlowElement Image
  * - Root-level JSX img → converted to Image while preserving author attributes
  * - Existing JSX Image → src updated, intrinsic dimensions and placeholder added
- *
- * Parses the string again instead of reusing ProcessedMdx.mdast: that tree is
- * unraveled, and serializing it splits single-line JSX text into paragraphs.
  */
-export function rewriteMdxImages(normalizedContent: string, images: Map<string, ResolvedImage>): string {
-  const mdast = parse(normalizedContent, { syntax: MDX_SYNTAX })
-  // normalizedContent came from stringify, so a parse error is a Holocron bug.
-  if (mdast instanceof Error) throw mdast
+export function rewriteMdxImages(mdast: Root, images: Map<string, ResolvedImage>): string {
   mdast.children = mdast.children.flatMap((node) => rewriteNode(node, images))
   lazyLoadImagesAfterFirst(mdast.children)
 

@@ -206,9 +206,7 @@ Body
       asideRowSpan: 2
 
       [CONTENT]
-      <Heading level="2">
-        Section
-      </Heading>
+      <Heading level="2">Section</Heading>
 
       Body
 
@@ -238,9 +236,7 @@ Body
       asideRowSpan: 2
 
       [CONTENT]
-      <h2>
-        Section
-      </h2>
+      <h2>Section</h2>
 
       Body
 

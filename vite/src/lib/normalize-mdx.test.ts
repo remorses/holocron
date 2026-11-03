@@ -82,7 +82,7 @@ More text after.`
     const input = `Before <!-- this is a comment --> after.`
     const result = expectSuccess(normalizeMdx(input))
     expect(result.content).toMatchInlineSnapshot(`
-      "Before                            after.
+      "Before  after.
       "
     `)
   })
@@ -246,9 +246,7 @@ More text after.`
     const { content: result } = expectSuccess(normalizeMdx('## My heading {#custom-id}'))
 
     expect(result).toMatchInlineSnapshot(`
-      "<Heading level={2} id="custom-id">
-        My heading
-      </Heading>
+      "<Heading level={2} id="custom-id">My heading</Heading>
       "
     `)
   })

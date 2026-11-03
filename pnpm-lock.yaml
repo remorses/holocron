@@ -429,8 +429,8 @@ importers:
         specifier: ^9.0.5
         version: 9.0.5
       mdastic:
-        specifier: ^0.3.4
-        version: 0.3.4
+        specifier: ^0.5.1
+        version: 0.5.1
       mermaid:
         specifier: ^11.12.0
         version: 11.14.0
@@ -450,8 +450,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       safe-mdx:
-        specifier: ^2.0.0
-        version: 2.0.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: ^2.1.0
+        version: 2.1.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       spiceflow:
         specifier: 1.26.0-rsc.22
         version: 1.26.0-rsc.22(@modelcontextprotocol/sdk@1.29.0(zod@4.6.7))(@types/react@19.3.0)(hono@4.12.23)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(vite@8.3.4(@types/node@25.9.5)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.48.0)(tsx@4.21.0)(yaml@2.9.0))(zod@4.6.7)
@@ -4233,9 +4233,6 @@ packages:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
 
-  collapse-white-space@2.1.0:
-    resolution: {integrity: sha512-loKTxY1zCOuG4j9f6EPnuyyYkf58RnhhWTvRoZEokgB+WbdXehfjFviyOVYkqzEWz1Q5kRiZdBYS5SwxbQYwzw==}
-
   comma-separated-tokens@2.0.3:
     resolution: {integrity: sha512-Fu4hJdvzeylCfQPp9SGWidpzrMs7tTrlu6Vb8XGaRGck8QSNZJJp538Wrb60Lax4fPwR64ViY468OIUTbRlGZg==}
 
@@ -5520,8 +5517,8 @@ packages:
   mdast-util-to-string@4.0.0:
     resolution: {integrity: sha512-0H44vDimn51F0YwvxSJSm0eCDOJTRlmN0R1yBh4HLj9wiV1Dn0QoXGbvFAWj2hSItVTlCmBF1hqKlIyUBVFLPg==}
 
-  mdastic@0.3.4:
-    resolution: {integrity: sha512-Ksgf4um8VdCeuqKhaQcGKacX51C87DeFfy5DvYak+H2OF4ZZy1EWDK6lpSEDou4fQKS3eJKqVhWxEdUxLUV+2g==}
+  mdastic@0.5.1:
+    resolution: {integrity: sha512-HU2i9BvQP9FsjBYqEX9SX5yGo8LDz9EMXic/UCGm/48sqkSjWIjTKhghh/8fhenRovP3T4Nw2sO1C4HItRrAoQ==}
 
   media-typer@1.1.0:
     resolution: {integrity: sha512-aisnrDP4GNe06UcKFnV5bfMNPBUw4jsLGaWwWfnH3v02GnBuXX2MCVn5RbrWo0j3pczUilYblq7fQ7Nw2t5XKw==}
@@ -6215,8 +6212,8 @@ packages:
   safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
 
-  safe-mdx@2.0.0:
-    resolution: {integrity: sha512-VKmQdBaIjOBFMDXTY6Yr1oQJdqWqBQzK1FIwr/On604gmNUcn+GIi+cesYyMmm1uz4LphP352U1dUJ29zimbnQ==}
+  safe-mdx@2.1.0:
+    resolution: {integrity: sha512-b4eOUCga4a0uWYOqE9pSps3DWhSwZRacRCC6s0sUM7Gw79BqMZuzX4CgaFyqCLMxsbNHi8f/M1VacOymUIoIhQ==}
     peerDependencies:
       react: '*'
       react-dom: '*'
@@ -10080,8 +10077,6 @@ snapshots:
 
   clsx@2.1.1: {}
 
-  collapse-white-space@2.1.0: {}
-
   comma-separated-tokens@2.0.3: {}
 
   commander@11.1.0: {}
@@ -11423,7 +11418,7 @@ snapshots:
     dependencies:
       '@types/mdast': 4.0.4
 
-  mdastic@0.3.4:
+  mdastic@0.5.1:
     dependencies:
       '@types/estree': 1.0.9
       acorn: 8.19.0
@@ -12441,16 +12436,15 @@ snapshots:
 
   safe-buffer@5.2.1: {}
 
-  safe-mdx@2.0.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
+  safe-mdx@2.1.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0):
     dependencies:
       '@babel/parser': 7.29.8
       '@babel/types': 7.29.8
       '@standard-schema/spec': 1.1.0
       '@types/estree-jsx': 1.0.5
-      collapse-white-space: 2.1.0
       eval-estree-expression: 3.0.1
       linkedom: 0.18.13
-      mdastic: 0.3.4
+      mdastic: 0.5.1
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
       style-to-object: 1.0.14

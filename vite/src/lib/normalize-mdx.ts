@@ -1,9 +1,8 @@
-import { parse, stringify, type Root, type RootContent, type Syntax } from 'mdastic'
+import { parse, stringify, visit, type Root, type RootContent, type Syntax } from 'mdastic'
 import { frontmatter } from 'mdastic/frontmatter'
 import { gfm } from 'mdastic/gfm'
 import { headingId } from 'mdastic/heading-id'
-import { mdx } from 'mdastic/mdx'
-import { markAndUnravel } from 'safe-mdx/parse'
+import { mdx, unravel } from 'mdastic/mdx'
 import { remarkCodeGroup } from './remark-code-group.ts'
 import { remarkDetailsToggle } from './remark-details-toggle.ts'
 import { remarkGithubCallouts } from './remark-github-callouts.ts'
@@ -14,8 +13,9 @@ import { remarkSingleAccordionItems } from './remark-single-accordion.ts'
 import { HolocronMdxParseError, extractParseErrorInfo } from './logger.ts'
 import { stripMdExtFromPath, isExternalUrl } from './link-utils.ts'
 
-/** Syntax for every Holocron MDX parse and stringify. Same order as safe-mdx. */
-export const MDX_SYNTAX: Syntax[] = [mdx(), frontmatter(['yaml']), gfm()]
+/** Syntax for every Holocron MDX parse and stringify. Same order as safe-mdx.
+ *  MDX has no `<!-- -->` comments, but Markdown authors write them: parse them as html nodes. */
+export const MDX_SYNTAX: Syntax[] = [mdx({ htmlComments: true }), frontmatter(['yaml']), gfm()]
 
 /** Pages also accept Mintlify `{#custom-id}` heading ids. remarkHeadings consumes them. */
 const PAGE_SYNTAX: Syntax[] = [...MDX_SYNTAX, headingId()]
@@ -45,10 +45,6 @@ export type NormalizeMdxOptions = {
  * @param source - optional file path or slug for error messages (e.g. "/getting-started")
  */
 export function normalizeMdx(content: string, source?: string, options?: NormalizeMdxOptions): HolocronMdxParseError | NormalizedMdx {
-  // MDX does not support HTML comments (<!-- -->), but many markdown authors
-  // use them. Strip them before parsing so they don't cause syntax errors.
-  content = stripHtmlComments(content)
-
   const mdast = parse(content, { syntax: PAGE_SYNTAX })
   if (mdast instanceof Error) return toParseError({ err: mdast, mdxSource: content, source })
 
@@ -62,6 +58,7 @@ export function normalizeMdx(content: string, source?: string, options?: Normali
   // code groups, callouts, etc.) process the combined tree.
   const transforms: MdastTransform[] = [
     ...(options?.prependTransforms ?? []),
+    removeHtmlComments,
     remarkRewriteLinks({ slugDir }),
     remarkHeadings,
     remarkCodeGroup,
@@ -70,6 +67,7 @@ export function normalizeMdx(content: string, source?: string, options?: Normali
     remarkMermaidCode,
     remarkSingleAccordionItems,
     remarkSidebarComponents,
+    unravel,
   ]
 
   // Transforms throw on invalid input (e.g. two {#id} in one heading).
@@ -80,17 +78,7 @@ export function normalizeMdx(content: string, source?: string, options?: Normali
     return toParseError({ err, mdxSource: content, source })
   }
 
-  // Serialize BEFORE unravel — mdxToMarkdown corrupts phrasing children
-  // of flow elements by inserting blank lines between them, which creates
-  // spurious paragraphs on re-parse. Keeping text elements inline in the
-  // serialized output preserves the original paragraph structure.
   const serialized = stringify(mdast, { syntax: MDX_SYNTAX })
-
-  // Apply unravel AFTER serialization — promotes lone text elements in
-  // paragraphs to flow elements so the mdast tree has the correct block
-  // structure for heading extraction, section splitting, etc.
-  markAndUnravel(mdast)
-
   return { content: serialized, mdast }
 }
 
@@ -191,193 +179,13 @@ function walkRewriteLinks(nodes: RootContent[], slugDir: string | undefined) {
   }
 }
 
-/**
- * Strip HTML comments (<!-- ... -->) from MDX content, replacing comment
- * characters with spaces to preserve source positions for error reporting.
- *
- * Preserves comments inside:
- * - Fenced code blocks (``` or ~~~), with proper fence matching (char + length)
- * - Inline code spans (`...`)
- * - JSX string attributes (quotes inside JSX tags)
- *
- * Replaces non-newline comment characters with spaces so line numbers in
- * parse errors still point to the correct location in the original source.
- */
-function stripHtmlComments(content: string): string {
-  if (!content.includes('<!--')) return content
-
-  const chars = [...content]
-  const len = chars.length
-  let i = 0
-
-  // Code fence state: when set, we're inside a fenced code block
-  let fence: { char: string; length: number } | null = null
-
-  while (i < len) {
-    // --- Fenced code block handling ---
-    if (fence) {
-      // Check for closing fence: must be at line start (after optional spaces),
-      // same char, at least same length, nothing else on the line
-      if (isLineStart(chars, i)) {
-        const fenceMatch = matchFence(chars, i, len)
-        if (fenceMatch && fenceMatch.char === fence.char && fenceMatch.length >= fence.length) {
-          // Check rest of line is blank (after the fence marker)
-          let afterFence = fenceMatch.markerEnd
-          while (afterFence < len && (chars[afterFence] === ' ' || chars[afterFence] === '\t')) afterFence++
-          if (afterFence >= len || chars[afterFence] === '\n') {
-            fence = null
-            i = afterFence
-            continue
-          }
-        }
-      }
-      i = skipToNextLine(chars, i, len)
-      continue
-    }
-
-    // --- Check for opening code fence at line start ---
-    if (isLineStart(chars, i)) {
-      const fenceMatch = matchFence(chars, i, len)
-      if (fenceMatch) {
-        fence = fenceMatch
-        i = skipToNextLine(chars, i, len)
-        continue
-      }
-    }
-
-    // --- Inline code span: skip past closing backtick(s) ---
-    if (chars[i] === '`') {
-      // Count opening backticks
-      let ticks = 0
-      const tickStart = i
-      while (i < len && chars[i] === '`') { ticks++; i++ }
-      // Find matching closing backticks (same count)
-      let found = false
-      for (let j = i; j <= len - ticks; j++) {
-        let match = true
-        for (let k = 0; k < ticks; k++) {
-          if (chars[j + k] !== '`') { match = false; break }
-        }
-        if (match) {
-          // Make sure it's exactly `ticks` backticks (not more)
-          if (j + ticks < len && chars[j + ticks] === '`') continue
-          i = j + ticks
-          found = true
-          break
-        }
-      }
-      if (!found) i = tickStart + 1 // unclosed, treat first backtick as literal
-      continue
-    }
-
-    // --- JSX/HTML tag: skip string attributes to avoid stripping comments in props ---
-    // Matches <Tag, <tag, </Tag, </tag but NOT <!, <?
-    if (chars[i] === '<') {
-      const afterTag = skipJsxTag(chars, i, len)
-      if (afterTag != null) {
-        i = afterTag
-        continue
-      }
-    }
-
-    // --- HTML comment: blank it out ---
-    if (chars[i] === '<' && chars[i + 1] === '!' && chars[i + 2] === '-' && chars[i + 3] === '-') {
-      const commentStart = i
-      i += 4 // skip <!--
-      // Find -->
-      while (i < len) {
-        if (chars[i] === '-' && chars[i + 1] === '-' && chars[i + 2] === '>') {
-          i += 3 // skip -->
-          break
-        }
-        i++
-      }
-      // Blank out the comment, preserving newlines
-      for (let j = commentStart; j < i; j++) {
-        if (chars[j] !== '\n') chars[j] = ' '
-      }
-      continue
-    }
-
-    i++
-  }
-
-  return chars.join('')
-}
-
-/** Check if position i is at the start of a line (or start of string). */
-function isLineStart(chars: string[], i: number): boolean {
-  return i === 0 || chars[i - 1] === '\n'
-}
-
-/** Try to match a code fence at position i. Returns fence info or null. */
-function matchFence(chars: string[], i: number, len: number): { char: string; length: number; markerEnd: number } | null {
-  // Skip leading spaces (up to 3)
-  let pos = i
-  let spaces = 0
-  while (pos < len && chars[pos] === ' ' && spaces < 3) { pos++; spaces++ }
-  const char = chars[pos]
-  if (char !== '`' && char !== '~') return null
-  let count = 0
-  while (pos < len && chars[pos] === char) { count++; pos++ }
-  if (count < 3) return null
-  return { char, length: count, markerEnd: pos }
-}
-
-/** Advance past the current line (skip to char after next \n, or end). */
-function skipToNextLine(chars: string[], i: number, len: number): number {
-  while (i < len && chars[i] !== '\n') i++
-  return i < len ? i + 1 : i
-}
-
-/**
- * Try to skip past a JSX/HTML tag starting at position i.
- * Handles both uppercase and lowercase tags, closing tags (</tag>),
- * quoted string attributes, and brace-delimited JSX expressions
- * (so `>` inside `{a > b}` doesn't end the tag prematurely).
- * Returns position after the closing `>`, or null if not a tag.
- */
-function skipJsxTag(chars: string[], i: number, len: number): number | null {
-  if (chars[i] !== '<' || i + 1 >= len) return null
-  const next = chars[i + 1]!
-  // Must be <letter or </letter, not <! (comment/doctype) or <? (processing)
-  const isTag = /[A-Za-z]/.test(next) || (next === '/' && i + 2 < len && /[A-Za-z]/.test(chars[i + 2]!))
-  if (!isTag) return null
-
-  let pos = i + 1
-  let braceDepth = 0
-
-  while (pos < len) {
-    const ch = chars[pos]!
-
-    // Inside a JSX expression: track brace depth
-    if (ch === '{') {
-      braceDepth++
-      pos++
-      continue
-    }
-    if (ch === '}' && braceDepth > 0) {
-      braceDepth--
-      pos++
-      continue
-    }
-
-    // Skip quoted strings (both in attributes and inside expressions)
-    if (ch === '"' || ch === "'") {
-      const quote = ch
-      pos++ // skip opening quote
-      while (pos < len && chars[pos] !== quote) pos++
-      if (pos < len) pos++ // skip closing quote
-      continue
-    }
-
-    // Only close tag at `>` when not inside an expression
-    if (ch === '>' && braceDepth === 0) return pos + 1
-
-    pos++
-  }
-
-  return null // unclosed tag, don't skip
+/** Comments parse as html nodes. safe-mdx renders nothing for them, so keep them out of served MDX. */
+function removeHtmlComments(tree: Root): void {
+  visit(tree, 'html', (_, index, parent) => {
+    if (!parent || index === undefined) return
+    parent.children.splice(index, 1)
+    return index
+  })
 }
 
 /** mdast nodes whose children are blocks, not inline text. */

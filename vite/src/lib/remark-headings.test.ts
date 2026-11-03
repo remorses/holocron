@@ -39,9 +39,7 @@ describe('remarkHeadings', () => {
     const result = runRemarkPlugin('## My heading {#custom-id}', remarkHeadings)
 
     expect(result.markdown).toMatchInlineSnapshot(`
-      "<Heading level={2} id="custom-id">
-        My heading
-      </Heading>
+      "<Heading level={2} id="custom-id">My heading</Heading>
       "
     `)
   })
