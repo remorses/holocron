@@ -76,6 +76,13 @@ Use a session or API key to authenticate API requests.
 
 The **Holocron skill adds this field by default** when an AI coding agent creates a new MDX page. It records the real sources used to produce the page, so future agents can reproduce and update the content instead of guessing its intent. See [skill discovery](../docs/ai/skill-discovery.mdx) for agent setup.
 
+**When migrating an existing docs site**, write each `prompt` as if the page was authored from scratch. Keep it **a short summary** of what the page documents. Do not mention migration or the old docs URL, and do not add `@https://old-site/...` references — the source site is going away.
+
+```yaml
+prompt: |
+  Document connecting the first integration, role access, and chat validation.
+```
+
 ## Parent agent flow
 
 Run Maintain from a **parent agent** that already owns git and GitHub. The command only updates selected MDX files. It does not create a branch, commit, or pull request. The parent agent reviews the working tree and opens a PR with whatever process that repo already uses.
