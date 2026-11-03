@@ -2,15 +2,15 @@
 
 /**
  * Chat message UI components — user bubbles, assistant parts, tool call
- * indicators with animated PieLoader, error previews, and loading dots.
+ * indicators with a braille Spinner, error previews, and loading dots.
  *
  * Text parts carry server-rendered JSX (no client markdown rendering).
  * Tool parts carry plain data — rendered here with animated indicators.
  *
  * Follows fumabase / Claude Code tool-call chrome:
- * - PieLoader (◔◑◕●) for pending tool calls
+ * - Spinner (⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏) for pending tool calls
  * - └ for completed tool calls (summary label only, no raw output)
- * - └ gutter for tool errors
+ * - ✗ gutter for tool errors
  * - font-mono ToolPreviewContainer wrapper
  *
  * Tool call labels prefer the model-provided `description` input field
@@ -384,7 +384,7 @@ function ChatNotice({ part }: { part: Extract<ChatPart, { type: 'notice' }> }) {
   )
 }
 
-// ── Tool call started — animated PieLoader or static └ ──────────────
+// ── Tool call started — animated Spinner or static └ ──────────────
 
 /** Pick the primary argument to display for a tool call: the command for
  *  bash, path/selector for browser tools, first string value otherwise. */
@@ -445,9 +445,7 @@ function ToolCallStarted({
       data-tool-state={hasResult ? 'completed' : 'running'}
     >
       <ToolPreviewContainer>
-        <span className='shrink-0 whitespace-pre'>
-          {hasResult ? '└ ' : <PieLoader />}
-        </span>
+        <MarkSlot>{hasResult ? '└' : <Spinner />}</MarkSlot>
         <span className='truncate'>{label}</span>
       </ToolPreviewContainer>
     </div>
@@ -492,31 +490,39 @@ function ErrorPreview({ error }: { error: string }) {
   const truncated = error.length > 600 ? error.slice(0, 600) + '…' : error
   return (
     <ToolPreviewContainer>
-      <div className='flex min-w-0 flex-row gap-2'>
-        <div className='shrink-0'>└</div>
-        <span>
-          Error:{' '}
-          <span className='text-orange-500/80 dark:text-orange-300/80 whitespace-pre-line'>
-            {truncated}
-          </span>
+      <div className='flex min-w-0 flex-row items-start'>
+        <MarkSlot>✗</MarkSlot>
+        <span className='text-orange-700 dark:text-orange-300 whitespace-pre-line'>
+          {truncated}
         </span>
       </div>
     </ToolPreviewContainer>
   )
 }
 
-/** Animated pie loader: ◔ → ◑ → ◕ → ● cycling every 160ms.
- *  Matches fumabase's PieLoader in chat-tool-previews.tsx. */
-function PieLoader() {
-  const pies = ['◔', '◑', '◕', '●']
+const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
+const SPINNER_FRAME_MS = 80
+
+/** Braille spinner, one monospace cell per frame so the line never shifts. */
+function Spinner() {
   const [index, setIndex] = useState(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIndex((i) => (i + 1) % pies.length)
-    }, 160)
+      setIndex((i) => (i + 1) % SPINNER_FRAMES.length)
+    }, SPINNER_FRAME_MS)
     return () => clearInterval(interval)
   }, [])
 
-  return <span className='inline-block'>{pies[index]} </span>
+  return <>{SPINNER_FRAMES[index]}</>
+}
+
+/** Fixed box for `└`, `✗` and spinner frames: they come from different fonts
+ *  (braille is missing in most mono fonts), so the label must not depend on their size. */
+function MarkSlot({ children }: { children: React.ReactNode }) {
+  return (
+    <span aria-hidden className='inline-flex h-[1lh] w-[2ch] shrink-0 items-center overflow-hidden'>
+      {children}
+    </span>
+  )
 }
