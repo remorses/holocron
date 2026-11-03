@@ -1,12 +1,12 @@
-// Tests Maintain --model parsing for Holocron-hosted vs OpenCode BYOK ids.
+// Tests Maintain --model parsing and real OpenCode V2 sessions against a scripted provider.
 
-import { describe, expect, test } from 'vitest'
-import { Agent, type RequestInit as UndiciRequestInit } from 'undici'
-import { createMaintainClient, parseMaintainModel, resolveOpencodeBinary, startOpencodeServer } from './maintain.ts'
+import { afterAll, describe, expect, test } from 'vitest'
+import { parseMaintainModel, resolveOpencodeBinary, runOpencodeSession, startOpencodeServer } from './maintain.ts'
 import fs from 'node:fs'
 import http from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
+import { stripVTControlCharacters } from 'node:util'
 
 describe('parseMaintainModel', () => {
   test('defaults to a Holocron-hosted model', () => {
@@ -89,90 +89,175 @@ describe('parseMaintainModel', () => {
   })
 })
 
+// A private OpenCode home: the developer's global config, credentials, and session
+// database stay out of the spawned servers.
+const opencodeHome = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-opencode-')))
+const isolatedEnv = {
+  XDG_CONFIG_HOME: path.join(opencodeHome, 'config'),
+  XDG_DATA_HOME: path.join(opencodeHome, 'data'),
+  XDG_STATE_HOME: path.join(opencodeHome, 'state'),
+  XDG_CACHE_HOME: path.join(opencodeHome, 'cache'),
+  OPENCODE_DISABLE_MODELS_FETCH: '1',
+}
+
+afterAll(() => fs.rmSync(opencodeHome, { recursive: true, force: true }))
+
 describe('startOpencodeServer', () => {
-  test('resolves the pinned opencode-ai binary', () => {
+  test('resolves the pinned @opencode/cli binary', () => {
     const binary = resolveOpencodeBinary()
     expect(fs.existsSync(binary)).toBe(true)
-    expect(binary.replaceAll('\\', '/')).toMatch(/opencode-ai\/bin\/opencode\.exe$/)
+    expect(binary.replaceAll('\\', '/')).toMatch(/@opencode\/cli\/bin\/opencode\.exe$/)
   })
 
-  test('close() kills the server process and does not leave an orphan', async () => {
-    const server = await startOpencodeServer({ config: {} })
+  test('the client authenticates, and close() kills the server without an orphan', async () => {
+    const server = await startOpencodeServer({ config: {}, env: isolatedEnv })
     if (server instanceof Error) throw server
-    expect(server.url).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/)
     expect(isProcessAlive(server.pid)).toBe(true)
+    expect((await server.client.server.info()).pid).toBe(server.pid)
     await server.close()
     expect(isProcessAlive(server.pid)).toBe(false)
   }, 30_000)
 })
 
-describe('createMaintainClient', () => {
-  test('Node fetch honours an external undici dispatcher (the headers timeout we disable)', async () => {
-    // The fix relies on Node's built-in fetch accepting an Agent from the
-    // `undici` package. Prove it with a short timeout against a slow server.
-    const slow = http.createServer((_req, res) => {
-      setTimeout(() => res.end('late'), 1_500)
-    })
-    await new Promise<void>((resolve) => slow.listen(0, '127.0.0.1', resolve))
-    const address = slow.address()
-    if (!address || typeof address === 'string') throw new Error('expected a TCP address')
-    try {
-      const init: RequestInit & Pick<UndiciRequestInit, 'dispatcher'> = {
-        dispatcher: new Agent({ headersTimeout: 300 }),
+describe('runOpencodeSession', () => {
+  test('waits for a background task and returns the answer the root gives after it', async () => {
+    const rootRequests: string[] = []
+    // Hold the task reply until the root ended its first turn, so the root goes idle while the task runs.
+    const rootIdle = Promise.withResolvers<void>()
+    const provider = await startFakeProvider(async (body): Promise<FakeReply> => {
+      const messages = JSON.stringify(body.messages)
+      if (messages.includes('You are a subagent spawned')) {
+        await rootIdle.promise
+        return { type: 'text', text: 'Page updated.' }
       }
-      await expect(fetch(`http://127.0.0.1:${address.port}/`, init)).rejects.toMatchObject({
-        message: 'fetch failed',
-        cause: { code: 'UND_ERR_HEADERS_TIMEOUT' },
-      })
-    } finally {
-      slow.closeAllConnections()
-      slow.close()
-    }
-  })
-
-  test('blocking session.prompt works through the custom fetch and surfaces provider errors', async () => {
-    // Provider endpoint that always fails: exercises the SDK through our
-    // dispatcher-backed fetch without a real model, and proves the error
-    // lands on info.error. 401 and not 500: OpenCode retries 5xx for minutes.
-    const provider = http.createServer((_req, res) => {
-      res.writeHead(401, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({ error: { message: 'bad key' } }))
+      rootRequests.push(messages)
+      if (messages.includes('Page updated.')) return { type: 'text', text: 'Updated docs/index.mdx.' }
+      const toolResults = body.messages.filter((message) => message.role === 'tool').length
+      if (toolResults === 0) {
+        return {
+          type: 'tool',
+          name: 'subagent',
+          arguments: { agent: 'general', description: 'Update index.mdx', prompt: 'Update docs/index.mdx.', background: true },
+        }
+      }
+      if (toolResults === 1) return { type: 'tool', name: 'shell', arguments: { command: 'git push origin main' } }
+      rootIdle.resolve()
+      return { type: 'text', text: 'Waiting for the task.' }
     })
-    await new Promise<void>((resolve) => provider.listen(0, '127.0.0.1', resolve))
-    const address = provider.address()
-    if (!address || typeof address === 'string') throw new Error('expected a TCP address')
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-maintain-'))
-
-    const server = await startOpencodeServer({
-      config: {
-        model: 'fake/fake-model',
-        provider: {
-          fake: {
-            npm: '@ai-sdk/openai-compatible',
-            options: { apiKey: 'x', baseURL: `http://127.0.0.1:${address.port}/v1` },
-            models: { 'fake-model': { name: 'fake-model' } },
-          },
-        },
-      },
-    })
-    if (server instanceof Error) throw server
+    const lines: string[] = []
     try {
-      const client = createMaintainClient({ baseUrl: server.url, directory })
-      const session = await client.session.create({ title: 'test' }, { throwOnError: true })
-      const result = await client.session.prompt({
-        sessionID: session.data.id,
-        model: { providerID: 'fake', modelID: 'fake-model' },
-        parts: [{ type: 'text', text: 'hello' }],
-      }, { throwOnError: true })
-      expect(result.data.info.role).toBe('assistant')
-      expect(result.data.info.error?.name).toBeTypeOf('string')
+      const result = await runOpencodeSession({
+        directory,
+        env: isolatedEnv,
+        log: (line) => lines.push(stripVTControlCharacters(line).replace(/ \d+(\.\d+)?m?s\b/, ' <duration>')),
+        model: { providerID: 'fake', id: 'fake-model' },
+        providers: provider.config,
+        system: 'You update docs.',
+        prompt: 'Update the selected pages.',
+      })
+      expect(result).toMatchInlineSnapshot(`
+        {
+          "finalText": "Updated docs/index.mdx.",
+        }
+      `)
+      expect('\n' + lines.join('\n')).toMatchInlineSnapshot(`
+        "
+          ◆ task 1 Update index.mdx
+          └ subagent Update index.mdx <duration>
+          ✗ shell git push origin main <duration> → Permission denied: shell
+          │ Waiting for the task.
+          [task 1] │ Page updated.
+          │ Updated docs/index.mdx."
+      `)
+      // The instruction entry is the system prompt of every root request.
+      expect(rootRequests.length).toBe(4)
+      for (const request of rootRequests) expect(request).toContain('You update docs.')
     } finally {
-      await server.close()
-      provider.close()
+      await provider.close()
       fs.rmSync(directory, { recursive: true, force: true })
     }
-  }, 90_000)
+  }, 60_000)
+
+  test('returns provider errors as values', async () => {
+    const provider = await startFakeProvider(() => ({ type: 'error', status: 401, error: 'bad key' }))
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'holocron-maintain-'))
+    try {
+      const result = await runOpencodeSession({
+        directory,
+        env: isolatedEnv,
+        log: () => {},
+        model: { providerID: 'fake', id: 'fake-model' },
+        providers: provider.config,
+        system: 'You update docs.',
+        prompt: 'hello',
+      })
+      expect(result instanceof Error ? result.message : result).toMatchInlineSnapshot(`"provider.auth: bad key"`)
+    } finally {
+      await provider.close()
+      fs.rmSync(directory, { recursive: true, force: true })
+    }
+  }, 60_000)
 })
+
+type FakeReply =
+  | { type: 'text'; text: string }
+  | { type: 'tool'; name: string; arguments: Record<string, string | boolean> }
+  | { type: 'error'; status: number; error: string }
+
+// OpenAI-compatible chat completions endpoint that streams a scripted reply per request.
+async function startFakeProvider(reply: (body: { messages: Array<{ role: string }> }) => FakeReply | Promise<FakeReply>) {
+  const server = http.createServer(async (req, res) => {
+    let raw = ''
+    for await (const chunk of req) raw += chunk
+    const result = await reply(JSON.parse(raw))
+    if (result.type === 'error') {
+      res.writeHead(result.status, { 'content-type': 'application/json' })
+      res.end(JSON.stringify({ error: { message: result.error } }))
+      return
+    }
+    const chunk = (delta: object, finishReason: string | null) => `data: ${JSON.stringify({
+      id: 'chatcmpl-1',
+      object: 'chat.completion.chunk',
+      created: 0,
+      model: 'fake-model',
+      choices: [{ index: 0, delta, finish_reason: finishReason }],
+    })}\n\n`
+    res.writeHead(200, { 'content-type': 'text/event-stream' })
+    if (result.type === 'text') {
+      res.write(chunk({ role: 'assistant', content: result.text }, null))
+      res.write(chunk({}, 'stop'))
+    } else {
+      res.write(chunk({
+        role: 'assistant',
+        tool_calls: [{
+          index: 0,
+          id: 'call_1',
+          type: 'function',
+          function: { name: result.name, arguments: JSON.stringify(result.arguments) },
+        }],
+      }, null))
+      res.write(chunk({}, 'tool_calls'))
+    }
+    res.end('data: [DONE]\n\n')
+  })
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+  const address = server.address()
+  if (!address || typeof address === 'string') throw new Error('expected a TCP address')
+  return {
+    config: {
+      fake: {
+        package: '@opencode/ai/providers/openai-compatible',
+        settings: { apiKey: 'x', baseURL: `http://127.0.0.1:${address.port}/v1` },
+        models: { 'fake-model': { name: 'fake-model' } },
+      },
+    },
+    close: () => new Promise<void>((resolve) => {
+      server.closeAllConnections()
+      server.close(() => resolve())
+    }),
+  }
+}
 
 function isProcessAlive(pid: number) {
   try {

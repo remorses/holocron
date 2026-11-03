@@ -1,20 +1,27 @@
-// Streams OpenCode server events during `holocron maintain` and prints tool calls,
-// assistant text, task sessions, and errors, so CI logs show what the model did.
+// Watches OpenCode V2 server events during `holocron maintain`: prints tool calls,
+// assistant text, task sessions, and errors, so CI logs show what the model did,
+// and decides when the run is finished from the same ordered event stream.
 
 import path from 'node:path'
-import type { Event, Part, ToolPart } from '@opencode-ai/sdk/v2/types'
-import type { OpencodeClient } from '@opencode-ai/sdk/v2/client'
+import type { OpenCodeClient, OpenCodeEvent, SessionStructuredError, SessionToolCalled } from '@opencode/client'
 import { colors as c } from './logger.ts'
 
 const MAX_SUMMARY = 100
 const MAX_TEXT_LINES = 12
 
-type Printer = {
-  handle: (event: Event) => void
+type ToolInput = SessionToolCalled['data']['input']
+
+export type SessionOutcome =
+  | { type: 'succeeded'; finalText: string }
+  | { type: 'failed'; error: SessionStructuredError }
+  | { type: 'interrupted'; reason: string }
+
+type Monitor = {
+  /** Prints the event. Returns the outcome once the root session and every task are idle. */
+  handle: (event: OpenCodeEvent) => SessionOutcome | undefined
 }
 
-// Pure event → lines formatter. Keeps only "print once" bookkeeping, no I/O.
-export function createEventPrinter({
+export function createSessionMonitor({
   repoRoot,
   rootSessionID,
   write,
@@ -22,83 +29,166 @@ export function createEventPrinter({
   repoRoot: string
   rootSessionID: string
   write: (line: string) => void
-}): Printer {
-  const printed = new Set<string>()
+}): Monitor {
   const taskLabels = new Map<string, string>()
+  // Tool name and start time arrive on input.started, the input on called, the result on success/failed.
+  const tools = new Map<string, { name: string; started: number; input: ToolInput }>()
+  const running = new Set<string>()
+  let rootText = ''
+  let rootOutcome: SessionOutcome | undefined
 
   const prefix = (sessionID: string) => {
     if (sessionID === rootSessionID) return '  '
     return `  ${c.magenta(`[${taskLabels.get(sessionID) ?? 'task'}]`)} `
   }
-
-  const printPart = (part: Part) => {
-    if (part.type === 'tool') {
-      if (part.state.status !== 'completed' && part.state.status !== 'error') return
-      const key = `${part.id}:${part.state.status}`
-      if (printed.has(key)) return
-      printed.add(key)
-      write(prefix(part.sessionID) + formatToolPart(part, repoRoot))
-      return
-    }
-    if (part.type === 'text') {
-      if (part.synthetic || !part.time?.end || !part.text.trim()) return
-      if (printed.has(part.id)) return
-      printed.add(part.id)
-      for (const line of truncateLines(part.text.trim(), MAX_TEXT_LINES)) {
-        write(prefix(part.sessionID) + c.dim(`│ ${line}`))
-      }
-    }
-  }
+  // A background task keeps running after the root turn ends, so wait until nothing runs.
+  const settled = () => running.size === 0 ? rootOutcome : undefined
 
   return {
     handle(event) {
-      if (event.type === 'session.created') {
-        const { info } = event.properties
-        if (!info.parentID) return
-        const label = `task ${taskLabels.size + 1}`
-        taskLabels.set(info.id, label)
-        write(`  ${c.magenta(`◆ ${label}`)}${c.dim(` ${info.title}`)}`)
-        return
-      }
-      if (event.type === 'message.part.updated') {
-        printPart(event.properties.part)
-        return
-      }
-      if (event.type === 'session.error') {
-        const { error, sessionID } = event.properties
-        if (!error) return
-        const message = 'message' in error.data && typeof error.data.message === 'string' ? error.data.message : ''
-        write(prefix(sessionID ?? rootSessionID) + c.red(`✗ ${error.name}${message ? `: ${message}` : ''}`))
+      switch (event.type) {
+        case 'session.created': {
+          const { data } = event
+          if (!data.parentID) return
+          const label = `task ${taskLabels.size + 1}`
+          taskLabels.set(data.sessionID, label)
+          write(`  ${c.magenta(`◆ ${label}`)}${c.dim(data.title ? ` ${data.title}` : '')}`)
+          return
+        }
+        case 'session.execution.started': {
+          running.add(event.data.sessionID)
+          if (event.data.sessionID === rootSessionID) {
+            rootOutcome = undefined
+            rootText = ''
+          }
+          return
+        }
+        case 'session.tool.input.started': {
+          const { data } = event
+          tools.set(`${data.assistantMessageID}:${data.id}`, { name: data.name, started: event.created, input: {} })
+          return
+        }
+        case 'session.tool.called': {
+          const tool = tools.get(`${event.data.assistantMessageID}:${event.data.id}`)
+          if (tool) tool.input = event.data.input
+          return
+        }
+        case 'session.tool.success':
+        case 'session.tool.failed': {
+          const { data } = event
+          const key = `${data.assistantMessageID}:${data.id}`
+          const tool = tools.get(key)
+          tools.delete(key)
+          write(prefix(data.sessionID) + formatToolCall({
+            name: tool?.name ?? 'tool',
+            input: tool?.input ?? {},
+            durationMs: tool ? event.created - tool.started : undefined,
+            error: event.type === 'session.tool.failed' ? event.data.error.message : undefined,
+            repoRoot,
+          }))
+          return
+        }
+        case 'session.text.ended': {
+          const { data } = event
+          const text = data.text.trim()
+          if (!text) return
+          if (data.sessionID === rootSessionID) rootText = text
+          for (const line of truncateLines(text, MAX_TEXT_LINES)) {
+            write(prefix(data.sessionID) + c.dim(`│ ${line}`))
+          }
+          return
+        }
+        case 'session.retry.scheduled': {
+          const { data } = event
+          write(prefix(data.sessionID) + c.yellow(`↻ retry ${data.attempt} after ${data.error.type}: ${firstLine(data.error.message)}`))
+          return
+        }
+        case 'session.execution.succeeded':
+        case 'session.execution.failed':
+        case 'session.execution.interrupted': {
+          const { sessionID } = event.data
+          running.delete(sessionID)
+          if (event.type === 'session.execution.failed') {
+            write(prefix(sessionID) + c.red(`✗ ${event.data.error.type}: ${firstLine(event.data.error.message)}`))
+          }
+          // A finished background task restarts the root with its result, so only the root decides.
+          if (sessionID !== rootSessionID) return
+          rootOutcome = event.type === 'session.execution.succeeded'
+            ? { type: 'succeeded', finalText: rootText }
+            : event.type === 'session.execution.failed'
+              ? { type: 'failed', error: event.data.error }
+              : { type: 'interrupted', reason: event.data.reason }
+          return settled()
+        }
       }
     },
   }
 }
 
-export function formatToolPart(part: ToolPart, repoRoot: string) {
-  const { state } = part
-  const summary = summarizeToolInput({ tool: part.tool, input: state.input, repoRoot })
-  const duration = state.status === 'completed' || state.status === 'error'
-    ? c.dim(` ${formatDuration(state.time.end - state.time.start)}`)
-    : ''
-  if (state.status === 'error') {
-    const error = firstLine(state.error)
-    return `${c.red('✗')} ${c.bold(part.tool)} ${summary}${duration}${c.red(` → ${error}`)}`
+// Subscribes, calls `start` once the subscription is live so no event is missed,
+// and resolves with the outcome. Errors when the stream ends first.
+export async function watchSession({
+  client,
+  monitor,
+  start,
+  signal,
+}: {
+  client: OpenCodeClient
+  monitor: Monitor
+  start: () => Promise<void>
+  signal: AbortSignal
+}): Promise<SessionOutcome | Error> {
+  let started = false
+  try {
+    for await (const event of client.event.subscribe({ signal })) {
+      if (event.type === 'server.connected') {
+        if (started) continue
+        started = true
+        await start()
+        continue
+      }
+      const outcome = monitor.handle(event)
+      if (outcome) return outcome
+    }
+  } catch (error) {
+    return error instanceof Error ? error : new Error(String(error))
   }
-  return `${c.green('└')} ${c.bold(part.tool)} ${summary}${duration}`
+  return new Error('OpenCode event stream ended before the session finished.')
 }
 
-export function summarizeToolInput({ tool, input, repoRoot }: { tool: string; input: ToolPart['state']['input']; repoRoot: string }) {
+export function formatToolCall({
+  name,
+  input,
+  durationMs,
+  error,
+  repoRoot,
+}: {
+  name: string
+  input: ToolInput
+  durationMs?: number
+  error?: string
+  repoRoot: string
+}) {
+  const summary = summarizeToolInput({ tool: name, input, repoRoot })
+  const duration = durationMs === undefined ? '' : c.dim(` ${formatDuration(durationMs)}`)
+  if (error !== undefined) {
+    return `${c.red('✗')} ${c.bold(name)} ${summary}${duration}${c.red(` → ${firstLine(error)}`)}`
+  }
+  return `${c.green('└')} ${c.bold(name)} ${summary}${duration}`
+}
+
+export function summarizeToolInput({ tool, input, repoRoot }: { tool: string; input: ToolInput; repoRoot: string }) {
   const str = (key: string) => typeof input[key] === 'string' ? input[key] : undefined
   const rel = (file: string | undefined) => file && path.isAbsolute(file) ? path.relative(repoRoot, file) || '.' : file
   const value = (() => {
     switch (tool) {
-      case 'bash': return str('command')
+      case 'shell': return str('command')
       case 'read':
       case 'edit':
-      case 'write': return rel(str('filePath'))
-      case 'glob': return [str('pattern'), rel(str('path'))].filter(Boolean).join(' in ')
+      case 'write': return rel(str('path'))
+      case 'glob':
       case 'grep': return [str('pattern'), rel(str('path'))].filter(Boolean).join(' in ')
-      case 'task': return str('description')
+      case 'subagent': return str('description')
       case 'webfetch': return str('url')
       case 'todowrite': return Array.isArray(input.todos) ? `${input.todos.length} todos` : undefined
       default: return JSON.stringify(input)
@@ -106,26 +196,6 @@ export function summarizeToolInput({ tool, input, repoRoot }: { tool: string; in
   })()
   const line = firstLine(value ?? '')
   return line.length > MAX_SUMMARY ? `${line.slice(0, MAX_SUMMARY - 1)}…` : line
-}
-
-// Subscribes before the prompt starts and prints until `signal` aborts.
-export async function streamOpencodeEvents({
-  client,
-  directory,
-  printer,
-  signal,
-}: {
-  client: OpencodeClient
-  directory: string
-  printer: Printer
-  signal: AbortSignal
-}) {
-  const { stream } = await client.event.subscribe({ directory }, { signal, sseMaxRetryAttempts: 0 })
-  try {
-    for await (const event of stream) printer.handle(event)
-  } catch (error) {
-    if (!signal.aborted) throw error
-  }
 }
 
 function formatDuration(ms: number) {
@@ -145,15 +215,16 @@ function truncateLines(text: string, max: number) {
   return [...lines.slice(0, max), `… ${lines.length - max} more lines`]
 }
 
-// Fields that repeat on every line or are already shown by holocron (model, session ids).
-const HIDDEN_LOG_FIELDS = new Set(['timestamp', 'run', 'level', 'message', 'session.id', 'providerID', 'modelID', 'small', 'mode'])
+// Fields that repeat on every line or are already shown by holocron (session ids, run ids).
+const HIDDEN_LOG_FIELDS = new Set(['timestamp', 'run', 'level', 'message', 'role', 'sessionID'])
 
 // OpenCode server logs are logfmt: `timestamp=… level=WARN run=… message="…" key=value`.
-// Drops timestamp and run id, colors the level, and keeps the remaining fields.
+// Drops timestamp and run id, colors the level, and keeps the first line of the remaining fields.
+// Quoted values escape newlines as `\n`, so a `cause` stack trace is cut to its message.
 export function formatServerLog(line: string) {
   const fields = [...line.matchAll(/(\S+?)=("(?:[^"\\]|\\.)*"|\S*)/g)].map(([, key, raw]) => ({
     key: key!,
-    value: raw!.startsWith('"') ? raw!.slice(1, -1).replaceAll('\\"', '"') : raw!,
+    value: (raw!.startsWith('"') ? raw!.slice(1, -1) : raw!).split('\\n')[0]!.replaceAll('\\"', '"').trim(),
   }))
   if (fields.length === 0) return c.dim(`  opencode ${line}`)
   const get = (key: string) => fields.find((field) => field.key === key)?.value

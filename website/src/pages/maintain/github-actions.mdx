@@ -171,7 +171,7 @@ A run that changes no MDX files creates no branch and no pull request.
 
 The workflows above use the **Holocron-hosted model** and bill the project's Pro subscription. OIDC is enough. No provider API key.
 
-To run **Anthropic, OpenAI, or any other OpenCode provider**, pass `--model provider/model` and set that provider's env var. Holocron auth is not used. See the OpenCode **[providers](https://opencode.ai/docs/providers/)** page for the supported keys.
+To run **Anthropic, OpenAI, or any other OpenCode provider**, pass `--model provider/model` and set that provider's env var. Holocron auth is not used. See the OpenCode **[providers](https://opencode.ai/v2/docs/providers)** page for the supported keys.
 
 Use a **dedicated provider key**. The OpenCode session can run any shell command and can read the environment, including the provider key. Maintain removes `GITHUB_TOKEN`, `GH_TOKEN`, `HOLOCRON_KEY`, and the GitHub OIDC request token from that environment, and it rejects the run if files outside the selected pages change.
 

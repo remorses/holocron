@@ -2,9 +2,8 @@
 // Set HOLOCRON_TEST_MAINTAIN_OPENCODE=1. Uses holocron login / HOLOCRON_KEY.
 // Optional: HOLOCRON_PROJECT when session auth has more than one project.
 
-import { createOpencodeClient } from '@opencode-ai/sdk/v2/client'
 import { getDeployClient } from '../src/api-client.ts'
-import { startOpencodeServer } from '../src/maintain.ts'
+import { runOpencodeSession } from '../src/maintain.ts'
 
 const enabled = process.env.HOLOCRON_TEST_MAINTAIN_OPENCODE === '1'
 const projectId = process.env.HOLOCRON_PROJECT ?? ''
@@ -34,54 +33,32 @@ if (!created.apiKey.startsWith('mnt_')) {
   process.exit(1)
 }
 
-console.log('Starting OpenCode against the Holocron OpenAI-compatible endpoint')
-const server = await startOpencodeServer({
-  config: {
-    provider: {
+console.log('Running an OpenCode session against the Holocron OpenAI-compatible endpoint')
+try {
+  const result = await runOpencodeSession({
+    directory: process.cwd(),
+    log: (line) => console.log(line),
+    model: { providerID: created.providerId, id: created.modelId },
+    providers: {
       [created.providerId]: {
-        npm: '@ai-sdk/openai-compatible',
-        options: { apiKey: created.apiKey, baseURL: created.baseUrl },
+        package: '@opencode/ai/providers/openai-compatible',
+        settings: { apiKey: created.apiKey, baseURL: created.baseUrl },
         models: { [created.modelId]: { name: created.modelId } },
       },
     },
-  },
-})
-if (server instanceof Error) {
-  console.error(server.message, server.cause)
-  process.exit(1)
-}
-try {
-  const oc = createOpencodeClient({ baseUrl: server.url })
-  console.log(`OpenCode listening on ${server.url}`)
-  const session = await oc.session.create({
-    title: 'Maintain OpenCode route check',
-    model: { id: created.modelId, providerID: created.providerId },
+    system: 'Answer without using tools.',
+    prompt: 'Reply with exactly the word pong and nothing else.',
   })
-  if (session.error || !session.data) {
-    console.error('OpenCode could not create a session', session.error)
-    process.exit(1)
+  if (result instanceof Error) {
+    console.error('OpenCode session failed', result.message)
+    process.exitCode = 1
+  } else if (!/pong/i.test(result.finalText)) {
+    console.error(`Expected the model to say pong, got: ${result.finalText}`)
+    process.exitCode = 1
+  } else {
+    console.log('Maintain OpenCode route check passed')
   }
-  console.log(`session=${session.data.id}`)
-  const result = await oc.session.prompt({
-    sessionID: session.data.id,
-    model: { providerID: created.providerId, modelID: created.modelId },
-    agent: 'build',
-    tools: { bash: false, websearch: false, edit: false, write: false },
-    parts: [{ type: 'text', text: 'Reply with exactly the word pong and nothing else.' }],
-  })
-  if (result.error || !result.data) {
-    console.error('OpenCode prompt failed', result.error)
-    process.exit(1)
-  }
-  const raw = JSON.stringify(result.data)
-  console.log(`OpenCode result: ${raw.slice(0, 2000)}`)
-  if (!/pong/i.test(raw)) {
-    console.error('Expected the model to say pong.')
-    process.exit(1)
-  }
-  console.log('Maintain OpenCode route check passed')
 } finally {
-  await server.close()
   await client.safeFetch('/api/v0/maintain/runs/:runId/complete', {
     method: 'POST',
     params: { runId: created.runId },

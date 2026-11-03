@@ -3,19 +3,18 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import crypto from 'node:crypto'
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import * as clack from '@clack/prompts'
-import { createOpencodeClient } from '@opencode-ai/sdk/v2/client'
-import type { Config as OpencodeConfig } from '@opencode-ai/sdk/v2/types'
+import { OpenCode, type OpenCodeClient, type PermissionRuleset } from '@opencode/client'
 import { createRequire } from 'node:module'
 import { goke, isAgent } from 'goke'
 import dedent from 'string-dedent'
-import { Agent, type RequestInit as UndiciRequestInit } from 'undici'
 import { remark } from 'remark'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkMdx from 'remark-mdx'
 import { getDeployClient } from './api-client.ts'
-import { createEventPrinter, formatServerLog, streamOpencodeEvents } from './maintain-events.ts'
+import { createSessionMonitor, formatServerLog, watchSession } from './maintain-events.ts'
 import { logger, colors as c, actionableDetailFromFetchError, printActionableError } from './logger.ts'
 import {
   didGenerationPromptChange,
@@ -375,58 +374,24 @@ async function runOpenCode({
     }
     | Extract<MaintainModelChoice, { kind: 'byok' }>
 }) {
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), RUN_TIMEOUT_MS)
-  // Relaxed on purpose: allow-lists were not inherited by task subagents anyway. Only deny rules
-  // reach subagents, so the hard limits are denies. The CLI checks the changed files after the run.
-  const permission = [
-    { permission: '*', pattern: '*', action: 'allow' as const },
-    { permission: 'bash', pattern: 'git push *', action: 'deny' as const },
-    { permission: 'bash', pattern: 'gh *', action: 'deny' as const },
-  ]
-
-  const providerId = model.providerId
-  const modelId = model.modelId
-  const server = await startOpencodeServer({
-    signal: controller.signal,
+  const result = await runOpencodeSession({
+    directory: repoRoot,
     env: githubActions?.env,
-    onLog: (line) => log(formatServerLog(line)),
-    config: {
-      model: `${providerId}/${modelId}`,
-      provider: model.kind === 'hosted'
-        ? {
-          [providerId]: {
-            npm: '@ai-sdk/openai-compatible',
-            options: { apiKey: model.apiKey, baseURL: model.baseUrl, timeout: RUN_TIMEOUT_MS },
-            models: Object.fromEntries(
-              (model.models.length > 0 ? model.models : [modelId]).map((id) => [id, { name: id }]),
-            ),
-          },
-        }
-        : undefined,
-    },
-  })
-  if (server instanceof Error) {
-    clearTimeout(timeout)
-    return server
-  }
-  const events = new AbortController()
-  try {
-    const client = createMaintainClient({ baseUrl: server.url, directory: repoRoot })
-    const session = await client.session.create({
-      title: 'Maintain Holocron documentation',
-      model: { id: modelId, providerID: providerId },
-      permission,
-    }, { throwOnError: true })
-    void streamOpencodeEvents({
-      client,
-      directory: repoRoot,
-      signal: events.signal,
-      printer: createEventPrinter({ repoRoot, rootSessionID: session.data.id, write: log }),
-    }).catch((error) => log(c.dim(`  opencode event stream stopped: ${error instanceof Error ? error.message : String(error)}`)))
-
-    const system = buildMaintainSystemPrompt({ gitDiffRange })
-    const prompt = buildMaintainUserPrompt({
+    log,
+    model: { providerID: model.providerId, id: model.modelId },
+    providers: model.kind === 'hosted'
+      ? {
+        [model.providerId]: {
+          package: '@opencode/ai/providers/openai-compatible',
+          settings: { apiKey: model.apiKey, baseURL: model.baseUrl, timeout: RUN_TIMEOUT_MS },
+          models: Object.fromEntries(
+            (model.models.length > 0 ? model.models : [model.modelId]).map((id) => [id, { name: id }]),
+          ),
+        },
+      }
+      : undefined,
+    system: buildMaintainSystemPrompt({ gitDiffRange }),
+    prompt: buildMaintainUserPrompt({
       pages,
       changedFiles,
       patches,
@@ -434,67 +399,109 @@ async function runOpenCode({
       runPromptFile,
       release,
       githubActions,
-    })
-    const result = await client.session.prompt({
-      sessionID: session.data.id,
-      model: { providerID: providerId, modelID: modelId },
+    }),
+  })
+  if (!(result instanceof Error)) return result
+  const hint = model.kind === 'byok'
+    ? ' Check the model id (`opencode models`) and the provider key: https://opencode.ai/v2/docs/providers'
+    : ''
+  return new Error(`OpenCode failed to maintain the selected pages. ${result.message}${hint}`, { cause: result })
+}
+
+// The subset of the OpenCode V2 config (opencode.json) that maintain writes.
+type OpencodeConfig = {
+  model?: string
+  providers?: Record<string, {
+    package: string
+    settings: Record<string, string | number>
+    models: Record<string, { name: string }>
+  }>
+}
+
+// Nobody answers permission prompts in a maintain run, so nothing may resolve to `ask`.
+// The last matching rule wins. The CLI checks the changed files after the run.
+const MAINTAIN_PERMISSIONS: PermissionRuleset = [
+  { action: '*', resource: '*', effect: 'allow' },
+  { action: 'shell', resource: 'git push *', effect: 'deny' },
+  { action: 'shell', resource: 'gh *', effect: 'deny' },
+  { action: 'websearch', resource: '*', effect: 'deny' },
+  { action: 'question', resource: '*', effect: 'deny' },
+]
+
+// Runs one prompt in a private OpenCode server and resolves when the session and its tasks are idle.
+export async function runOpencodeSession({
+  directory,
+  model,
+  providers,
+  system,
+  prompt,
+  env,
+  log,
+}: {
+  directory: string
+  model: { providerID: string; id: string }
+  providers?: OpencodeConfig['providers']
+  system: string
+  prompt: string
+  env?: Record<string, string>
+  log: (line: string) => void
+}): Promise<{ finalText: string } | Error> {
+  const controller = new AbortController()
+  const { signal } = controller
+  const timeout = setTimeout(() => controller.abort(), RUN_TIMEOUT_MS)
+  const timedOut = () => new Error(`OpenCode did not finish within ${RUN_TIMEOUT_MS / 60_000} minutes.`)
+  const server = await startOpencodeServer({
+    signal,
+    env,
+    onLog: (line) => log(formatServerLog(line)),
+    config: { model: `${model.providerID}/${model.id}`, providers },
+  })
+  if (server instanceof Error) {
+    clearTimeout(timeout)
+    return server
+  }
+  try {
+    const { client } = server
+    const session = await client.session.create({
+      title: 'Maintain Holocron documentation',
+      location: { directory },
       agent: 'build',
-      system,
-      tools: { bash: true, websearch: false, task: true, read: true, glob: true, grep: true, edit: true, webfetch: true },
-      parts: [{ type: 'text', text: prompt }],
-    }, { throwOnError: true })
-    // HTTP 200 does not mean the turn succeeded: provider failures land on info.error.
-    const failure = result.data.info.error
-    if (failure) {
-      const message = failure.name === 'MessageOutputLengthError' ? 'The model hit its output length limit.' : failure.data.message
-      return openCodeFailed({
-        kind: model.kind,
-        prefix: `OpenCode failed to maintain the selected pages (${failure.name}).`,
-        detail: message ? ` ${message}` : '',
-      })
-    }
-    return { finalText: result.data.parts.flatMap((part) => part.type === 'text' ? [part.text] : []).join('\n') }
-  } catch (error) {
-    if (controller.signal.aborted) {
-      return new Error(`OpenCode did not finish within ${RUN_TIMEOUT_MS / 60_000} minutes.`)
-    }
-    const message = error instanceof Error ? error.message : String(error)
-    return openCodeFailed({
-      kind: model.kind,
-      prefix: 'OpenCode failed to maintain the selected pages.',
-      detail: message ? ` ${message}` : '',
+      model,
+      // Session rules apply after agent rules (the build agent allows questions),
+      // and task sessions inherit them from this root session.
+      permissions: MAINTAIN_PERMISSIONS,
+    }, { signal })
+    // V2 has no per-prompt system field. An instruction entry stays stable for the whole session.
+    await client.session.instructions.entry.put({ sessionID: session.id, key: 'holocron-maintain', value: system }, { signal })
+    const outcome = await watchSession({
+      client,
+      monitor: createSessionMonitor({ repoRoot: directory, rootSessionID: session.id, write: log }),
+      signal,
+      start: async () => {
+        await client.session.prompt({ sessionID: session.id, text: prompt }, { signal })
+      },
     })
+    if (signal.aborted) return timedOut()
+    if (outcome instanceof Error) return outcome
+    if (outcome.type === 'failed') return new Error(`${outcome.error.type}: ${outcome.error.message}`)
+    if (outcome.type === 'interrupted') return new Error(`The session was interrupted (${outcome.reason}).`)
+    return { finalText: outcome.finalText }
+  } catch (error) {
+    if (signal.aborted) return timedOut()
+    return error instanceof Error ? error : new Error(String(error))
   } finally {
     clearTimeout(timeout)
-    events.abort()
     await server.close()
   }
 }
 
-// `session.prompt` blocks until the whole run finishes, and Node's fetch
-// (undici) aborts any request whose response headers take longer than
-// 5 minutes (`headersTimeout`) with a bare "fetch failed". Long maintain
-// runs died at exactly 5:00. The 25 minute budget is enforced by the caller.
-export function createMaintainClient({ baseUrl, directory }: { baseUrl: string; directory: string }) {
-  // Node's fetch accepts undici's `dispatcher` init; the DOM RequestInit type does not know it.
-  const init: RequestInit & Pick<UndiciRequestInit, 'dispatcher'> = {
-    dispatcher: new Agent({ headersTimeout: 0, bodyTimeout: 0 }),
-  }
-  return createOpencodeClient({
-    baseUrl,
-    directory,
-    fetch: (request) => fetch(request, init),
-  })
-}
-
 export function resolveOpencodeBinary() {
-  return require.resolve('opencode-ai/bin/opencode.exe')
+  return require.resolve('@opencode/cli/bin/opencode.exe')
 }
 
-// Spawns the pinned opencode binary by absolute path. The SDK's createOpencodeServer
-// resolves `opencode` on PATH, which hits pnpm's `node_modules/.bin/opencode` sh shim.
-// That shim runs the binary without `exec`, so killing the shim orphaned `opencode.exe`,
-// which kept the stdio pipes open and hung `holocron maintain` until the CI job timed out.
+// Spawns a private `opencode serve` from the pinned @opencode/cli by absolute path, so signals
+// reach the server and not a shell shim (an orphaned server kept the stdio pipes open and hung CI).
+// The server keeps reading the user's global config and credentials, which BYOK models need.
 export async function startOpencodeServer({
   config,
   signal,
@@ -505,15 +512,21 @@ export async function startOpencodeServer({
   config: OpencodeConfig
   signal?: AbortSignal
   env?: Record<string, string>
-  /** Receives server warnings and errors (`--print-logs --log-level WARN`) after startup. */
+  /** Receives server warnings and errors (`--print-logs --log-level warn`) after startup. */
   onLog?: (line: string) => void
   startTimeoutMs?: number
-}): Promise<{ url: string; pid: number; close: () => Promise<void> } | Error> {
-  const logArgs = onLog ? ['--print-logs', '--log-level=WARN'] : []
+}): Promise<{ client: OpenCodeClient; pid: number; close: () => Promise<void> } | Error> {
+  const logArgs = onLog ? ['--print-logs', '--log-level=warn'] : []
+  const password = crypto.randomBytes(32).toString('base64url')
   const proc = spawn(resolveOpencodeBinary(), ['serve', '--hostname=127.0.0.1', '--port=0', ...logArgs], {
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true,
-    env: { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !CREDENTIAL_ENV.includes(key))), ...env, OPENCODE_CONFIG_CONTENT: JSON.stringify(config) },
+    env: {
+      ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !CREDENTIAL_ENV.includes(key))),
+      ...env,
+      OPENCODE_SERVER_PASSWORD: password,
+      OPENCODE_CONFIG_CONTENT: JSON.stringify(config),
+    },
   })
   // Spawn failures emit 'error' and may never emit 'exit'.
   const exited = new Promise<void>((resolve) => {
@@ -540,7 +553,7 @@ export async function startOpencodeServer({
     }, startTimeoutMs)
     const onData = (chunk: Buffer) => {
       output += chunk.toString()
-      const match = output.match(/^opencode server listening on\s+(https?:\/\/\S+)/m)
+      const match = output.match(/^server listening on\s+(https?:\/\/\S+)/m)
       if (!match) return
       clearTimeout(timer)
       resolve(match[1]!)
@@ -571,7 +584,11 @@ export async function startOpencodeServer({
       for (const line of lines) if (line.trim()) onLog(line.trim())
     })
   }
-  return { url, pid: proc.pid!, close }
+  const client = OpenCode.make({
+    baseUrl: url,
+    headers: { authorization: `Basic ${Buffer.from(`opencode:${password}`).toString('base64')}` },
+  })
+  return { client, pid: proc.pid!, close }
 }
 
 // The model can run any shell command, so it must not see tokens that push code, open PRs,
@@ -585,21 +602,6 @@ function stopProcess(proc: ChildProcess) {
     if (!out.error && out.status === 0) return
   }
   proc.kill()
-}
-
-function openCodeFailed({
-  kind,
-  prefix,
-  detail,
-}: {
-  kind: 'hosted' | 'byok'
-  prefix: string
-  detail: string
-}) {
-  const hint = kind === 'byok'
-    ? ' Check the model id (`opencode models`) and the provider key: https://opencode.ai/docs/providers/'
-    : ''
-  return new Error(`${prefix}${detail}${hint}`)
 }
 
 function githubActionsPublishPrompt({
@@ -642,7 +644,7 @@ function buildMaintainSystemPrompt({ gitDiffRange }: { gitDiffRange?: string }) 
 
     Each selected page has a frontmatter prompt. Use that prompt to update the existing page. Keep the same @/ paths and @https:// URLs unless the sources or coverage actually changed. Leave a page unchanged when the source changes do not affect it.
 
-    Split the work with tasks. Each task owns exclusive pages. Never assign one page to two tasks. Tasks may read the repository. Tasks may only edit their assigned selected MDX pages. Tasks must not commit.
+    Split the work with tasks (the subagent tool). Run every task in the foreground, never with background. Each task owns exclusive pages. Never assign one page to two tasks. Tasks may read the repository. Tasks may only edit their assigned selected MDX pages. Tasks must not commit.
 
     Resolve @./ and @../ relative to that page. Resolve @/ from the repository root. Resolve @https:// and @http:// as remote sources. Bare URLs without @ are not references. In a run-instruction file, relative refs are relative to that file. @/ still means the repository root.
 
