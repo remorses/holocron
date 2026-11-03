@@ -30,7 +30,7 @@
     "@ai-sdk/gateway": "^4.0.14",
     "@base-ui/react": "^1.5.0",
     "@holocron.so/vite": "workspace:^",
-    "@strada.sh/sdk": "0.4.3",
+    "@strada.sh/sdk": "^0.10.0",
     "@tailwindcss/vite": "^4.2.2",
     "ai": "^7.0.18",
     "ai-fallback": "^3.0.0",
