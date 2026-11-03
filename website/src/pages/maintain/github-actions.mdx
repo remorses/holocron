@@ -7,7 +7,7 @@ prompt: |
   Explain that in GitHub Actions the CLI creates holocron/maintain-<timestamp> before OpenCode starts. When MDX pages change, OpenCode commits them and runs the hidden `holocron maintain-open-pr` command with a title and body. The CLI then pushes the branch and opens the PR with Octokit. Never update main or other existing branches.
   Contrast with the parent-agent flow on @/website/src/pages/maintain/index.mdx, where Maintain only edits MDX and the parent opens the PR.
   Cover the default Holocron-hosted model (Pro + OIDC) and `--model provider/model` BYOK with provider env vars from OpenCode providers docs.
-  Do not document --pull-request. Explain that pull_request events are rejected. Show persist-credentials: false in every workflow.
+  Do not document --pull-request. Explain that pull_request events are rejected. Cover the fail-fast checks that run before OpenCode starts (missing GITHUB_TOKEN, shallow clone, missing origin/<base> ref, a holocron/maintain-* checkout) and the deletion of the pushed branch when the pull request cannot be opened. Show persist-credentials: false in every workflow.
 title: Run documentation maintenance in GitHub Actions
 sidebarTitle: GitHub Actions
 description: No-args Maintain on a push diffs that push's before and after SHAs, then opens a pull request when MDX pages change.
@@ -39,7 +39,7 @@ On a GitHub Actions run, Maintain creates the branch first. OpenCode updates the
          Maintain pushes, opens the PR into main
 ```
 
-Keep **`GITHUB_TOKEN`** on the Maintain step. Maintain removes it from the OpenCode environment and uses it only after the run, to push the new branch and open the pull request. Set **`persist-credentials: false`** on `actions/checkout`, so the git config holds no credentials the model could push with.
+Keep **`GITHUB_TOKEN`** on the Maintain step. A missing token fails the job before OpenCode starts (see [Checks that fail before OpenCode starts](#checks-that-fail-before-opencode-starts)). Maintain removes it from the OpenCode environment and pushes with an explicit token URL after the run, so **`persist-credentials: false`** on `actions/checkout` leaves the git config with no credentials the model could push with.
 
 ## After every main-branch push
 
@@ -98,7 +98,7 @@ Protect `main` with a ruleset that requires a pull request and does not let GitH
 
 <Aside>
 <Warning>
-GitHub blocks pull requests from Actions until you enable **Allow GitHub Actions to create and approve pull requests** in Settings, Actions, General, Workflow permissions. See the [GitHub docs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#preventing-github-actions-from-creating-or-approving-pull-requests).
+GitHub blocks pull requests from Actions until you enable **Allow GitHub Actions to create and approve pull requests** in Settings, Actions, General, Workflow permissions. See the [GitHub docs](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#preventing-github-actions-from-creating-or-approving-pull-requests). If opening the pull request still fails, Maintain **deletes the pushed `holocron/maintain-*` branch** so no orphan branch remains and reports the missing permission, named in the same error: `pull-requests: write` in the job permissions, and this setting.
 </Warning>
 </Aside>
 
@@ -140,12 +140,12 @@ jobs:
 
 The pull request targets the **branch that is checked out**. There is no option for it. To target another branch, check it out.
 
-| Checkout                             | Pull request base                           |
-| ------------------------------------ | ------------------------------------------- |
-| a branch (push, `workflow_dispatch`) | that branch, also a feature or preview one  |
-| `actions/checkout` with `ref: docs`  | `docs`                                      |
-| detached HEAD on a `release` event   | `target_commitish`, if it is a branch name  |
-| any other detached HEAD (tag, SHA)   | the repository default                      |
+| Checkout                             | Pull request base                          |
+| ------------------------------------ | ------------------------------------------ |
+| a branch (push, `workflow_dispatch`) | that branch, also a feature or preview one |
+| `actions/checkout` with `ref: docs`  | `docs`                                     |
+| detached HEAD on a `release` event   | `target_commitish`, if it is a branch name |
+| any other detached HEAD (tag, SHA)   | the repository default                     |
 
 ```yaml
       - uses: actions/checkout@v4
@@ -157,15 +157,28 @@ The pull request targets the **branch that is checked out**. There is no option 
 
 Maintain branches off the **checked-out commit**, so that commit must already be on `origin/<base>`. Otherwise the pull request would carry unrelated commits, and Maintain fails before it starts OpenCode. The release target branch is only a guess, and this check catches a wrong guess.
 
-Maintain does not run on **`pull_request`** events. Their checkout is a merge commit that is on no branch. It also refuses to run when the checked-out branch is a `holocron/maintain-*` branch, so a workflow that runs on every branch never opens a pull request into its own maintain branch.
+Maintain does not run on **`pull_request`** or **`pull_request_target`** events. Their checkout is a merge commit that is on no branch. It also refuses to run when the checked-out branch is a `holocron/maintain-*` branch, so a workflow that runs on every branch never opens a pull request into its own maintain branch.
 
-The maintain branch is not rebased. It starts at the commit that triggered the run, and GitHub merges it like any other pull request. It only conflicts when someone else edits the same pages first.
+The maintain branch is not rebased. It starts at the commit that triggered the run, and GitHub merges it like any other pull request. It only conflicts when someone else edits the same pages first. Right before the push, Maintain re-validates the branch: it is still checked out, every changed page is committed, it still starts from the run's base commit (no rebase or reset), and it holds at least one commit.
 
 ## Do not cancel active runs
 
 Do not set **`cancel-in-progress: true`** for push maintenance. A later push compares only its own `before` and `after` states, so cancelling the preceding run can leave its source changes unreviewed.
 
 A run that changes no MDX files creates no branch and no pull request.
+
+## Checks that fail before OpenCode starts
+
+These checks all run **before the model starts**, so a misconfigured workflow costs nothing. Each one fails with a message that names the fix.
+
+- **Missing `GITHUB_TOKEN`** — the publish environment needs it before OpenCode starts. The message points at adding `env: { GITHUB_TOKEN: ${{ github.token }} }` to the maintain step.
+- **A missing `origin/<base>` ref** — the branch the pull request would target was not fetched. Use `fetch-depth: 0`.
+- **A shallow checkout** — detected with `git rev-parse --is-shallow-repository`. Use `fetch-depth: 0`.
+- **A `holocron/maintain-*` checkout** — refused, so a workflow that runs on every branch cannot open a pull request into its own maintain branch.
+- **A `pull_request` or `pull_request_target` event** — rejected at startup; the checkout is a merge commit that is on no branch.
+- **`HEAD` not on `origin/<base>`** — the pull request would carry unrelated commits. Check out the branch the pull request should target.
+
+The shallow-clone and missing-`origin/<base>` checks are exactly why every workflow in this file sets **`fetch-depth: 0`** on `actions/checkout`.
 
 ## Use your own model
 
