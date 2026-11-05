@@ -35,9 +35,10 @@ Holocron picks the place from the page layout. There is nothing to configure.
 | --------------------------------------------------------- | ------------------------------------------------------------ |
 | Has a right aside (default, center, OpenAPI and MCP tabs) | Ask AI widget at the top of the right aside                  |
 | No right aside ([compact](../customize/layout.mdx))       | Bottom-center textarea pill that morphs into the chat drawer |
-| Right aside holds `RequestExample` or `ResponseExample`   | Bottom-center pill, so the API playground keeps the aside    |
 
-On a **compact site**, OpenAPI and MCP tabs keep their right aside. Overview pages in those tabs show the widget there. Endpoint and tool pages show the pill, because their aside holds the request and response examples. Moving between pages swaps the trigger; the conversation stays.
+Endpoint and tool pages show the widget above the request and response examples.
+
+On a **compact site**, OpenAPI and MCP tabs keep their right aside. Overview pages in those tabs show the widget there. Endpoint and tool pages show the pill, so the request and response examples keep the full aside. Moving between pages swaps the trigger; the conversation stays.
 
 The pill is hidden on phones.
 

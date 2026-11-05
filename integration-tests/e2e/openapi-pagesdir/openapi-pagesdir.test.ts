@@ -16,6 +16,14 @@ test('API endpoint page loads when spec is inside pagesDir', async ({ request })
   expect(html).toContain('/users')
 })
 
+test('endpoint page shows the assistant above the API playground on non-compact sites', async ({ page }) => {
+  await page.setViewportSize({ width: 1400, height: 900 })
+  await page.goto('/api/get-users')
+  await expect(page.getByRole('tablist', { name: 'Request example' })).toBeVisible()
+  await expect(page.locator('.slot-aside [data-chat-shell="sidebar"]')).toBeVisible()
+  await expect(page.locator('.holocron-chat-pill')).toHaveCount(0)
+})
+
 test('docs tab still works alongside OpenAPI tab', async ({ request }) => {
   const res = await request.get('/')
   expect(res.ok()).toBe(true)

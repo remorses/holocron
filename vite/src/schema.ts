@@ -965,8 +965,9 @@ export const assistantSchema = z
         dedent`
           Whether to show the AI chat assistant. Pages with a right aside show
           it as a widget at the top of the aside. Pages without one (\`compact\`
-          mode) or whose aside holds the API playground (\`RequestExample\`,
-          \`ResponseExample\`) show a floating bottom pill instead. When \`false\`, the
+          mode) show a floating bottom pill instead. On a compact site, pages
+          whose aside holds the API playground (\`RequestExample\`,
+          \`ResponseExample\`) also show the pill. When \`false\`, the
           widget, pill, chat drawer, mobile "Ask AI" button, and the chat API
           endpoint are all disabled. Defaults to \`true\`
         `,

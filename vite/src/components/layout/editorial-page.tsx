@@ -120,7 +120,7 @@ export function EditorialPage({
   rightAside?: boolean
   /** Drop footer logo, socials and link columns. Used on API and MCP reference pages. */
   hideFooterLinks?: boolean
-  /** Show the floating pill even with a right aside. Used when the aside holds the API playground. */
+  /** Show the floating pill even with a right aside. Used on compact sites when the aside holds the API playground. */
   floatAssistant?: boolean
 }) {
   const { site, currentPageHref, activeTabHref, activeVersionHref, activeDropdownHref, githubStars } = useHolocronData()

@@ -407,8 +407,8 @@ function renderMdxPage({
   }
   const contentNodes = resolveAsideNodes({ rightAside, nodes: contentChildren })
   const contentMdast: Root = { type: 'root', children: contentNodes }
-  // The API playground fills the right aside, so the assistant floats there instead.
-  const floatAssistant = hasApiPlayground(contentNodes)
+  // Compact sites leave the API playground alone in the aside, so the assistant floats there instead.
+  const floatAssistant = site.config.layout.mode === 'compact' && hasApiPlayground(contentNodes)
   const mdastSections = buildSections(contentMdast, {
     // Pages without a right aside get no chrome; EditorialPage shows the floating pill instead.
     enableAssistant: site.config.assistant.enabled && !floatAssistant,

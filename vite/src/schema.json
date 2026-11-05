@@ -1656,7 +1656,7 @@
       "type": "object",
       "properties": {
         "enabled": {
-          "description": "Whether to show the AI chat assistant. Pages with a right aside show\nit as a widget at the top of the aside. Pages without one (`compact`\nmode) or whose aside holds the API playground (`RequestExample`,\n`ResponseExample`) show a floating bottom pill instead. When `false`, the\nwidget, pill, chat drawer, mobile \"Ask AI\" button, and the chat API\nendpoint are all disabled. Defaults to `true`",
+          "description": "Whether to show the AI chat assistant. Pages with a right aside show\nit as a widget at the top of the aside. Pages without one (`compact`\nmode) show a floating bottom pill instead. On a compact site, pages\nwhose aside holds the API playground (`RequestExample`,\n`ResponseExample`) also show the pill. When `false`, the\nwidget, pill, chat drawer, mobile \"Ask AI\" button, and the chat API\nendpoint are all disabled. Defaults to `true`",
           "type": "boolean"
         },
         "suggestions": {
