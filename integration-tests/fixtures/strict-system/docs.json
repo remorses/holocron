@@ -1,0 +1,10 @@
+{
+  // Fixture: appearance.strict with default "system". No theme picker; the
+  // page must follow the OS color scheme, including live changes.
+  "name": "Strict System",
+  "icons": { "library": "lucide" },
+  "appearance": { "default": "system", "strict": true },
+  "navigation": {
+    "pages": ["index"]
+  }
+}

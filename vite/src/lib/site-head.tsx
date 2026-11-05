@@ -21,8 +21,10 @@ import { withBasePath } from './holocron-url.ts'
 
 /* Blocking script that runs before paint. Sets `.dark` class on <html> from
    the `color-theme` cookie (light | dark | system) or the config default.
-   When data-strict-theme is set, ignores the cookie. Must be synchronous and in <head>. */
-export const THEME_SCRIPT = `(function(){var d=document.documentElement;var strict=d.hasAttribute("data-strict-theme");var m=strict?null:document.cookie.match(/color-theme=(light|dark|system)/);var t=m?m[1]:(d.getAttribute("data-default-theme")||"system");if(t==="system")t=window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light";if(t==="dark")d.classList.add("dark");else d.classList.remove("dark")})()`
+   When data-strict-theme is set, ignores the cookie. Must be synchronous and in <head>.
+   It also re-applies on OS color scheme changes, so "system" stays live even when
+   no theme picker is mounted (appearance.strict). */
+export const THEME_SCRIPT = `(function(){var d=document.documentElement;var q=window.matchMedia("(prefers-color-scheme:dark)");function apply(){var strict=d.hasAttribute("data-strict-theme");var m=strict?null:document.cookie.match(/(?:^|;\\s*)color-theme=(light|dark|system)/);var t=m?m[1]:(d.getAttribute("data-default-theme")||"system");if(t==="system")t=q.matches?"dark":"light";d.classList.toggle("dark",t==="dark")}apply();q.addEventListener("change",apply)})()`
 
 /** Build Google Fonts URL for a family. Returns undefined if the family
  *  looks like a self-hosted font (has a source URL). */
