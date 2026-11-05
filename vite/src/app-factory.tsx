@@ -803,7 +803,7 @@ export async function createHolocronApp(providers: HolocronProviders): Promise<A
     }
     // Footer socials
     const socialLabels: Record<string, string> = {
-      x: 'X', github: 'GitHub', discord: 'Discord', twitter: 'Twitter',
+      x: 'X', github: 'GitHub', discord: 'Discord', twitter: 'X',
       'x-twitter': 'X', linkedin: 'LinkedIn', youtube: 'YouTube',
       slack: 'Slack', facebook: 'Facebook', instagram: 'Instagram',
       'hacker-news': 'Hacker News', medium: 'Medium', telegram: 'Telegram',

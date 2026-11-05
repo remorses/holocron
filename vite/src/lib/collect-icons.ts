@@ -18,14 +18,17 @@ export const FA_STYLES = new Set([
   'regular', 'solid', 'light', 'thin', 'sharp-solid', 'duotone', 'brands',
 ])
 
+// Lucide has no X logo (its `twitter` is the old bird), so X always uses the Font Awesome brand glyph.
+const X_LOGO_ICON = 'fontawesome:brands:x-twitter'
+
 const TYPE_ICONS_BY_LIBRARY: Record<IconLibrary, Record<string, string>> = {
   lucide: {
     github: 'github',
     slack: 'slack',
     discord: 'message-circle',
-    twitter: 'twitter',
-    'x-twitter': 'twitter',
-    x: 'twitter',
+    twitter: X_LOGO_ICON,
+    'x-twitter': X_LOGO_ICON,
+    x: X_LOGO_ICON,
     linkedin: 'linkedin',
     youtube: 'youtube',
     facebook: 'facebook',
@@ -46,9 +49,9 @@ const TYPE_ICONS_BY_LIBRARY: Record<IconLibrary, Record<string, string>> = {
     github: 'github',
     slack: 'slack',
     discord: 'discord',
-    twitter: 'twitter',
-    'x-twitter': 'x-twitter',
-    x: 'x-twitter',
+    twitter: X_LOGO_ICON,
+    'x-twitter': X_LOGO_ICON,
+    x: X_LOGO_ICON,
     linkedin: 'linkedin',
     youtube: 'youtube',
     facebook: 'facebook',
@@ -75,7 +78,8 @@ export function getDefaultTypeIcon(type: string, library: IconLibrary): string |
 const SOCIAL_LABELS: Record<string, string> = {
   github: 'GitHub',
   x: 'X',
-  twitter: 'Twitter',
+  twitter: 'X',
+  'x-twitter': 'X',
   discord: 'Discord',
   slack: 'Slack',
   linkedin: 'LinkedIn',
