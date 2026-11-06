@@ -1,5 +1,84 @@
 # @holocron.so/vite
 
+## 0.39.0
+
+1. **Mermaid diagrams now render with [pele](https://pele.run) instead of the `mermaid` package.** Pages load far less JavaScript: each diagram type is a small chunk loaded only where it is used, instead of a multi-megabyte renderer.
+
+   Diagrams follow the site theme. Node, edge and text colors come from `--foreground`, `--background`, `--primary` and the semantic colors, so they match your docs and switch with dark mode without re-rendering. On narrow screens diagrams re-layout to fit the column.
+
+   Nodes and subgraphs get category colors with no `classDef`:
+
+   ```mermaid
+   flowchart LR
+     ui[Browser]:::green --> api[API]:::blue --> db[(Postgres)]:::amber
+   ```
+
+   Available colors are `blue`, `green`, `purple`, `pink`, `red`, `amber`, `orange` and `teal`. A new `--teal` semantic color token is available for your own CSS too. The Mintlify `actions` and `placement` fence options control the zoom controls.
+
+2. **Compact sites use one frame for every page, so navigating never shifts the layout.** Before, `mode: center` and `mode: default` replaced the site-wide `compact`, so blog posts, changelogs and opt-out pages jumped to the wide 1200px frame.
+
+   Now `layout.mode: "compact"` puts every page in the narrow frame (930px by default). The frame holds two columns, and the page mode picks which:
+
+   ```diagram
+     ┌──────────┬──────────────────────┐     ┌──────────────────────┬──────────┐
+     │ sidebar  │ content              │     │ content              │ aside    │
+     └──────────┴──────────────────────┘     └──────────────────────┴──────────┘
+     compact, default, wide, frame           center (blog posts, changelog tabs)
+   ```
+
+   - **`center`** pages keep the right aside and the Ask AI widget, inside the narrow frame.
+   - **`default`**, `wide` and `frame` behave like `compact` on a compact site. Three columns do not fit in 930px, so their asides render inline.
+   - The content column is 660px in both shapes.
+   - OpenAPI and MCP tabs keep the wide frame for request examples. `custom` pages are unchanged.
+
+   ```json
+   { "layout": { "mode": "compact" } }
+   ```
+
+   The compact sidebar font size now keys on a new `data-compact` attribute on `.slot-page`, so it applies to every page in the compact frame.
+
+3. **MDX pages now parse and serialize with [mdastic](https://github.com/remorses/mdastic) instead of remark.** Pages render the same, parsing is much faster, and remark, unified, micromark and the `mdast-util-*` packages are gone from the dependencies. safe-mdx is updated to 2.1. Single-line components like `<Note>Use `x` here.</Note>` are now kept on one line in the served `.md` export, and `<!-- -->` comments are still removed.
+
+   If you call `processMdx` directly, two things change:
+
+   - `normalizeMdxOptions.prependPlugins` is now `normalizeMdxOptions.prependTransforms`. It takes plain `(tree) => void` functions instead of remark plugins.
+   - `ProcessedMdx['mdast']` is typed with mdastic node types. Import node types from `mdastic` instead of `mdast`.
+
+   ```ts
+   import { visit, type Root } from 'mdastic'
+   import { processMdx } from '@holocron.so/vite'
+
+   const result = processMdx(source, 'fontawesome', '/page', {
+     normalizeMdxOptions: {
+       prependTransforms: [
+         (tree: Root) => visit(tree, 'text', (node) => { node.value = node.value.trim() }),
+       ],
+     },
+   })
+   ```
+
+   Tree-only remark plugins still work through `remarkTransform(plugin)` from `mdastic/remark`.
+
+4. **Every build and dev sync now processes every page, and the page cache is gone.** MDX parsing got fast enough (about 0.2 ms per page) that reusing processed pages from `dist/` was no longer worth its complexity and stale-cache bugs. A 258-page site syncs in about 100 ms.
+
+   - The `pageCache` plugin option is removed. Delete it from your `vite.config.ts`.
+   - `dist/holocron-cache.json` and `dist/holocron-mdx.json` are no longer written. Icon SVGs are cached in `dist/holocron-icons.json` and image sizes in `dist/holocron-images.json`.
+   - `NavPage.gitSha` is removed from the navigation data.
+
+5. **Faster image processing on rebuilds and dev saves.** Remote images are downloaded once and their size and placeholder are kept in `dist/holocron-images.json`, so a sync no longer waits on the network for images it already knows. Local images that did not change (same size and modification time) are not read again.
+
+6. **Pages with images load faster.** Images show as soon as their bytes arrive instead of staying transparent until JavaScript hydrates, so the largest image no longer waits for hydration. Every image after the first one on a page gets `loading="lazy"`, so below-the-fold screenshots no longer get `<link rel="preload">` tags that compete with fonts and scripts. Set `loading="eager"` on an `<Image>` to opt out.
+
+7. **Smaller pages: Motion is gone.** The Ask AI pill and sidebar widget now open into the chat drawer with native view transitions. This removes `motion` from the dependencies and about 140KB of JavaScript from every docs page. The morph also works in the standalone `ChatWidget` inside its Shadow DOM. Browsers without view transitions, or with reduced motion enabled, open and close the drawer instantly.
+
+8. **Ask AI is back in the right aside on API endpoint and MCP tool pages**, above the request and response examples. Only compact sites keep the floating Ask AI pill on those pages.
+
+9. **X accounts now render the current X logo instead of the old Twitter bird.** Footer socials and navbar links with type `x`, `x-twitter` or `twitter` use the X glyph in both icon libraries. `twitter` still works as a key alias and is now labeled "X".
+
+10. **Sites with `appearance.strict` now follow OS light/dark changes while the page is open.** Before, the page kept the theme it loaded with until a reload.
+
+11. **Fixed dark mode switching back to light** when navigating client-side to a prerendered page like `/`.
+
 ## 0.38.0
 
 1. **New `prerenderOrigin` option for `rendering: static` pages.** Absolute URLs in a prerendered page (`og:url`, the OG image label) come from the single host in the Worker `routes`. When routes list several hosts, like the apex and `www`, the build used the local preview origin and shipped `og:url` as `http://localhost:…`. Pass the public origin instead:

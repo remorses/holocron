@@ -1,4 +1,8 @@
-## 0.22.7
+# @holocron.so/cli
+
+## 0.23.0
+
+1. **`holocron maintain` now runs on OpenCode V2** (`@opencode/cli` 2.1). It no longer crashes on machines whose global `~/.config/opencode/opencode.json` uses the V2 config format. BYOK models (`--model provider/model`) read providers and credentials from your OpenCode V2 setup (`opencode auth`, `/connect`, or provider env vars). Tasks now run as V2 subagents, and the run ends only after every task is idle. Permission prompts and questions are denied, so a run never waits for input.
 
 1. **Same spiceflow as `@holocron.so/vite`.** The CLI now uses spiceflow `1.26.0-rsc.22`, so installing both packages no longer pulls two spiceflow versions. `zod` is pinned to `^4.6.7` instead of `latest`.
 
