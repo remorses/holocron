@@ -31,36 +31,34 @@
 :root {
   --radius: 0.625rem;
 
-  /* shadcn/ui standard colors. Surfaces and borders (card, muted, border, input,
-     sidebar...) mix --foreground into --background, so a site that only sets
-     --background gets matching neutrals instead of zinc grays. */
+  /* shadcn/ui standard colors */
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
-  --card: var(--background);
+  --card: oklch(1 0 0);
   --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: var(--background);
+  --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.141 0.005 285.823);
   --primary: var(--color-sky-600);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: color-mix(in oklab, var(--foreground) 4%, var(--background));
+  --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: color-mix(in oklab, var(--foreground) 4%, var(--background));
+  --muted: oklch(0.967 0.001 286.375);
   --muted-foreground: rgba(0, 0, 0, 0.4);
   --accent: rgba(0, 0, 0, 0.08);
   --accent-foreground: oklch(0.21 0.006 285.885);
   --destructive: oklch(0.637 0.237 25.331);
-  --border: color-mix(in oklab, var(--foreground) 7%, var(--background));
-  --input: color-mix(in oklab, var(--foreground) 15%, var(--background));
-  --ring: color-mix(in oklab, var(--foreground) 15%, var(--background));
+  --border: oklch(0.94 0.004 286.32);
+  --input: oklch(0.871 0.006 286.286);
+  --ring: oklch(0.871 0.006 286.286);
 
   /* shadcn/ui sidebar tokens */
-  --sidebar: color-mix(in oklab, var(--foreground) 2%, var(--background));
+  --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: rgba(0, 0, 0, 0.65);
   --sidebar-primary: rgba(0, 0, 0, 0.9);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: color-mix(in oklab, var(--foreground) 3.5%, var(--background));
+  --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: color-mix(in oklab, var(--foreground) 9%, var(--background));
+  --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 
   /* ===== Holocron extras (shadcn superset) ===== */
@@ -239,28 +237,28 @@
   @variant dark {
     --background: oklch(0.16 0.006 285.885);
     --foreground: oklch(0.985 0 0);
-    --card: color-mix(in oklab, var(--foreground) 4%, var(--background));
+    --card: oklch(0.19 0.006 285.885);
     --card-foreground: oklch(0.985 0 0);
-    --popover: color-mix(in oklab, var(--foreground) 6%, var(--background));
+    --popover: oklch(0.21 0.006 285.885);
     --popover-foreground: oklch(0.985 0 0);
     --primary: var(--color-sky-200);
     --primary-foreground: oklch(0.21 0.006 285.885);
-    --secondary: color-mix(in oklab, var(--foreground) 14%, var(--background));
+    --secondary: oklch(0.274 0.006 286.033);
     --secondary-foreground: oklch(0.985 0 0);
-    --muted: color-mix(in oklab, var(--foreground) 14%, var(--background));
+    --muted: oklch(0.274 0.006 286.033);
     --muted-foreground: rgba(255, 255, 255, 0.45);
     --accent: rgba(255, 255, 255, 0.1);
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.637 0.237 25.331);
-    --border: color-mix(in oklab, var(--foreground) 19%, var(--background));
-    --input: color-mix(in oklab, var(--foreground) 14%, var(--background));
-    --ring: color-mix(in oklab, var(--foreground) 34%, var(--background));
+    --border: oklch(0.32 0.006 286.033);
+    --input: oklch(0.274 0.006 286.033);
+    --ring: oklch(0.442 0.017 285.786);
 
-    --sidebar: color-mix(in oklab, var(--foreground) 5.5%, var(--background));
+    --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: rgba(255, 255, 255, 0.65);
     --sidebar-primary: rgba(255, 255, 255, 0.9);
     --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: color-mix(in oklab, var(--foreground) 13%, var(--background));
+    --sidebar-accent: oklch(0.269 0 0);
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);

@@ -49,17 +49,11 @@ function setPreference(preference: ThemePreference) {
   for (const listener of listeners) listener()
 }
 
-function onSystemChange() {
-  if (getPreference() === 'system') applyResolvedTheme('system')
-}
-
+// OS color scheme changes are handled by THEME_SCRIPT, which re-reads the cookie.
 function subscribe(cb: () => void) {
   listeners.add(cb)
-  const media = window.matchMedia('(prefers-color-scheme: dark)')
-  media.addEventListener('change', onSystemChange)
   return () => {
     listeners.delete(cb)
-    media.removeEventListener('change', onSystemChange)
   }
 }
 
