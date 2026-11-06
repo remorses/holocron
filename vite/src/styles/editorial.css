@@ -252,3 +252,91 @@ mark.search-match {
     background: rgba(255, 255, 255, 0.1);
   }
 }
+
+/* ========================================================================
+   Mermaid diagrams — pele (https://pele.run) draws every color from these
+   variables, so diagrams follow the site theme and dark mode with no
+   re-render. Set on the mount container: pele reads --pele-font from it to
+   measure labels before the SVG exists. Series colors (pie slices, git
+   branches) are softened toward the background so charts stay calm.
+   ======================================================================== */
+
+.mermaid-diagram {
+  --pele-bg: var(--card);
+  --pele-fg: var(--foreground);
+  --pele-muted: var(--muted-foreground);
+  --pele-line: color-mix(in oklab, var(--foreground) 45%, var(--background));
+  --pele-surface: color-mix(in oklab, var(--foreground) 2.5%, var(--background));
+  --pele-surface-alt: color-mix(in oklab, var(--foreground) 5%, var(--background));
+  --pele-border: color-mix(in oklab, var(--foreground) 18%, var(--background));
+  --pele-accent: var(--primary);
+  --pele-critical: var(--pink);
+  --pele-error: var(--red);
+  --pele-font: var(--font-sans);
+  --pele-font-mono: var(--font-code);
+  --pele-radius: calc(var(--radius) * 0.8);
+  --pele-title-weight: var(--weight-heading);
+  --pele-heading-weight: var(--weight-heading);
+  --pele-bold-weight: var(--weight-heading);
+  --pele-series-1: color-mix(in oklab, var(--blue) 80%, var(--background));
+  --pele-series-2: color-mix(in oklab, var(--yellow) 80%, var(--background));
+  --pele-series-3: color-mix(in oklab, var(--green) 80%, var(--background));
+  --pele-series-4: color-mix(in oklab, var(--pink) 80%, var(--background));
+  --pele-series-5: color-mix(in oklab, var(--purple) 80%, var(--background));
+  --pele-series-6: color-mix(in oklab, var(--primary) 80%, var(--background));
+  --pele-series-7: color-mix(in oklab, var(--red) 80%, var(--background));
+  --pele-series-8: color-mix(in oklab, var(--teal) 80%, var(--background));
+
+  /* Category tint strength. Dark tokens are pastel, so they need more hue. */
+  --diagram-fill-mix: 14%;
+  --diagram-stroke-mix: 60%;
+
+  @variant dark {
+    --diagram-fill-mix: 24%;
+    --diagram-stroke-mix: 70%;
+  }
+
+  /* Zoom controls, moved by Mintlify's `placement` fence option. */
+  --pele-zoom-top: auto;
+  --pele-zoom-right: 8px;
+  --pele-zoom-bottom: 8px;
+  --pele-zoom-left: auto;
+
+  &[data-placement^='top'] {
+    --pele-zoom-top: 8px;
+    --pele-zoom-bottom: auto;
+  }
+
+  &[data-placement$='left'] {
+    --pele-zoom-left: 8px;
+    --pele-zoom-right: auto;
+  }
+
+  > .pele {
+    display: block;
+    margin-inline: auto;
+  }
+}
+
+/* Category colors: `A:::blue` or `class sub green`, no classDef needed. Fill
+   and border are mixed from the semantic tokens, so they adapt to dark mode.
+   A classDef with the same name still wins: pele writes it as inline style. */
+.mermaid-diagram :is(.pele-node, .pele-cluster) {
+  &.blue { --diagram-hue: var(--blue); }
+  &.green { --diagram-hue: var(--green); }
+  &.purple { --diagram-hue: var(--purple); }
+  &.pink { --diagram-hue: var(--pink); }
+  &.red { --diagram-hue: var(--red); }
+  &:is(.amber, .yellow) { --diagram-hue: var(--yellow); }
+  &.orange { --diagram-hue: var(--orange); }
+  &.teal { --diagram-hue: var(--teal); }
+
+  &:is(.blue, .green, .purple, .pink, .red, .amber, .yellow, .orange, .teal)
+    > :is(rect, polygon, circle, ellipse, path, line, polyline) {
+    stroke: color-mix(in oklab, var(--diagram-hue) var(--diagram-stroke-mix), var(--background));
+
+    &:not([fill='none']) {
+      fill: color-mix(in oklab, var(--diagram-hue) var(--diagram-fill-mix), var(--background));
+    }
+  }
+}

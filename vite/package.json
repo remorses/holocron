@@ -55,11 +55,11 @@
     "./dist/*": "./dist/*"
   },
   "imports": {
-    "#mermaid": {
-      "types": "./dist/lib/mermaid-browser.d.ts",
-      "ssr": "./dist/lib/empty-mermaid.js",
-      "browser": "./dist/lib/mermaid-browser.js",
-      "default": "./dist/lib/mermaid-browser.js"
+    "#pele": {
+      "types": "./dist/lib/pele-browser.d.ts",
+      "ssr": "./dist/lib/empty-pele.js",
+      "browser": "./dist/lib/pele-browser.js",
+      "default": "./dist/lib/pele-browser.js"
     },
     "#memoize": {
       "types": "./dist/lib/memoize-node.d.ts",
@@ -105,8 +105,8 @@
     "github-slugger": "^2.0.0",
     "hast-util-to-html": "^9.0.5",
     "mdastic": "^0.5.1",
-    "mermaid": "^11.12.0",
     "openapi-types": "^12.1.3",
+    "pele": "^1.13.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-medium-image-zoom": "^5.4.3",

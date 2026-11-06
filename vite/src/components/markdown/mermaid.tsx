@@ -1,101 +1,80 @@
 'use client'
 
-import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { CodeBlock } from './code-block.tsx'
 
 /**
- * Mermaid diagram renderer — detects dark mode from <html class="dark">
- * and re-renders when the theme toggles. The mermaid library is re-initialized
- * on every theme change because it bakes the theme into the rendered SVG.
- *
- * Theme detection uses useSyncExternalStore with module-level stable callbacks
- * to avoid hydration mismatches and re-subscription loops (see AGENTS.md
- * useSyncExternalStore rules).
+ * Mermaid diagram rendered in the browser by pele (https://pele.run).
+ * pele measures labels with canvas, re-lays out on resize and draws with CSS
+ * variables, so the `.mermaid-diagram` theme in editorial.css follows dark mode
+ * without re-rendering. Only the diagram types a page uses are loaded.
  */
 
-// Module-level stable callbacks for useSyncExternalStore
-function getIsDark(): boolean {
-  return document.documentElement.classList.contains('dark')
+type MermaidProps = {
+  chart: string
+  /** Zoom controls position: top-left, top-right, bottom-left or bottom-right (default). */
+  placement?: string
+  actions?: boolean
 }
 
-const getServerIsDark = () => false
-
-function subscribeTheme(cb: () => void) {
-  const observer = new MutationObserver(cb)
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-  return () => observer.disconnect()
+export function Mermaid({ chart, placement, actions }: MermaidProps) {
+  // Keyed so an edited chart (HMR) starts with a clean pele mount and error state.
+  return <MermaidDiagram key={chart} chart={chart} placement={placement} actions={actions} />
 }
 
-export function Mermaid({ chart }: { chart: string; placement?: string; actions?: boolean }) {
-  const [svg, setSvg] = useState<string | null>(null)
+function MermaidDiagram({ chart, placement, actions }: MermaidProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const [failed, setFailed] = useState(false)
-  const renderIdRef = useRef<string | null>(null)
-  const isDark = useSyncExternalStore(subscribeTheme, getIsDark, getServerIsDark)
-
-  if (!renderIdRef.current) {
-    renderIdRef.current = `mermaid-${Math.random().toString(36).slice(2, 10)}`
-  }
 
   useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
     let cancelled = false
-    const renderId = renderIdRef.current!
+    let mounted: { destroy(): void } | undefined
 
-    async function renderDiagram() {
-      try {
-        const { default: mermaid } = await import('#mermaid')
-        // Re-initialize every time because theme is baked into the SVG output
-        mermaid.initialize({
-          startOnLoad: false,
-          securityLevel: 'strict',
-          theme: isDark ? 'dark' : 'neutral',
-        })
-
-        const { svg } = await mermaid.render(renderId, chart)
-        if (!cancelled) {
-          setSvg(svg)
-          setFailed(false)
-        }
-      } catch {
-        if (!cancelled) {
-          setFailed(true)
-        }
-      }
-    }
-
-    setSvg(null)
-    setFailed(false)
-    void renderDiagram()
+    import('#pele')
+      .then(({ mountAsync }) =>
+        mountAsync(container, chart, {
+          fontSize: 14,
+          links: false,
+          // The content column is ~520px; pele's 640px default would turn every
+          // LR flowchart vertical on desktop. Only phones get the vertical layout.
+          directionBreakpoint: 420,
+          // Mintlify `actions`: true always shows zoom controls, false hides them,
+          // unset shows them only when the diagram is shrunk to fit.
+          zoom: actions === undefined ? 'auto' : actions && { always: true },
+          onError: () => setFailed(true),
+        }),
+      )
+      .then((result) => {
+        if (cancelled) result.destroy()
+        else mounted = result
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true)
+      })
 
     return () => {
       cancelled = true
+      mounted?.destroy()
     }
-  }, [chart, isDark])
+  }, [chart, actions])
 
-  if (!svg) {
-    if (failed) {
-      return (
-        <div className='no-bleed'>
-          <CodeBlock lang='diagram' lineHeight='1.5' showLineNumbers={false}>
-            {chart}
-          </CodeBlock>
-        </div>
-      )
-    }
-
+  if (failed) {
     return (
-      <div className='no-bleed rounded-lg border border-border-subtle bg-card px-4 py-3 text-sm text-muted-foreground'>
-        Rendering diagram...
+      <div className='no-bleed'>
+        <CodeBlock lang='mermaid' lineHeight='1.5' showLineNumbers={false}>
+          {chart}
+        </CodeBlock>
       </div>
     )
   }
 
+  // pele owns the inner div's children, so React must never render any there.
+  // data-placement positions the zoom controls (Mintlify `placement`), see editorial.css.
   return (
     <div className='no-bleed rounded-lg border border-border-subtle bg-card p-3'>
-      <div
-        data-mermaid-diagram
-        className='overflow-x-auto [&_svg]:h-auto [&_svg]:max-w-full'
-        dangerouslySetInnerHTML={{ __html: svg }}
-      />
+      <div ref={containerRef} data-mermaid-diagram data-placement={placement} className='mermaid-diagram' />
     </div>
   )
 }

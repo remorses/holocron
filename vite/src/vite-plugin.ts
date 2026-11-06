@@ -1204,7 +1204,7 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
             '@holocron.so/vite > @orama/orama',
             '@holocron.so/vite > spiceflow > @vitejs/plugin-rsc/vendor/react-server-dom/client.browser',
             '@holocron.so/vite > cookie',
-            '@holocron.so/vite > mermaid',
+            '@holocron.so/vite > pele/lazy',
             '@holocron.so/vite > clsx',
             '@holocron.so/vite > react-medium-image-zoom',
             '@holocron.so/vite > zustand',
@@ -1218,15 +1218,10 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
         )
       }
 
-      // NOTE: MERMAID_GROUP was removed from client/ssr. Forcing mermaid + d3 +
-      // lodash-es + katex into one chunk backfires: if ANY of those packages
-      // share modules with non-mermaid code, the bundler creates a static
-      // import edge from the editorial-page chunk to the mermaid chunk. This
-      // makes the RSC plugin add <link rel="modulepreload"> for the 3.3MB
-      // mermaid chunk on every page, even pages without mermaid diagrams.
-      // The dynamic `import('#mermaid')` in mermaid.tsx already creates a
-      // natural code-splitting boundary; the bundler handles this correctly
-      // without forced grouping.
+      // Never force the diagram renderer into a manual chunk group: shared
+      // modules create a static import edge from the editorial-page chunk, and
+      // the RSC plugin then modulepreloads it on every page. The dynamic
+      // `import('#pele')` in mermaid.tsx is already a code-splitting boundary.
 
       // Split stable deps (framework + node_modules) into their own chunk
       // so the RSC entry only contains virtual modules (~20KB). Maximizes
