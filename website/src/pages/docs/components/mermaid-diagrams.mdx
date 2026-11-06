@@ -1,21 +1,64 @@
 ---
 $schema: https://holocron.so/frontmatter.json
 prompt: |
-  Write the Mermaid docs from @/vite/src/components/markdown/mermaid.tsx and @/vite/src/lib/remark-mermaid.ts.
+  Write the Mermaid docs from @/vite/src/components/markdown/mermaid.tsx, @/vite/src/lib/remark-mermaid.ts
+  and the `.mermaid-diagram` theme in @/vite/src/styles/editorial.css.
 title: Mermaid Diagrams
-description: Use mermaid code fences for diagrams in docs.
+description: Use mermaid code fences for flowcharts, sequence diagrams, state machines and charts that follow your site theme.
 icon: workflow
 ---
 
 # Mermaid Diagrams
 
-Holocron supports fenced `mermaid` blocks, which makes them easy to write in plain MDX.
+Write a fenced **`mermaid`** block and Holocron renders it as an SVG diagram. Colors come from your site theme, so diagrams switch with **dark mode** and follow any CSS variables you override.
 
 ```mermaid
-flowchart LR
-  A[MDX source] --> B[Holocron parser]
-  B --> C[Rendered editorial page]
+flowchart TB
+  subgraph source[Your repo]
+    mdx[MDX pages]:::blue
+    config[docs.json]:::blue
+  end
+  plugin[Holocron Vite plugin]:::purple
+  site[Docs site]:::green
+  cache[(holocron-cache.json)]:::amber
+  mdx --> plugin
+  config --> plugin
+  plugin -->|build| site
+  plugin -.-> cache
 ```
+
+````mdx
+```mermaid
+flowchart TB
+  subgraph source[Your repo]
+    mdx[MDX pages]:::blue
+    config[docs.json]:::blue
+  end
+  plugin[Holocron Vite plugin]:::purple
+  site[Docs site]:::green
+  cache[(holocron-cache.json)]:::amber
+  mdx --> plugin
+  config --> plugin
+  plugin -->|build| site
+  plugin -.-> cache
+```
+````
+
+## Color classes
+
+Add **`:::blue`**, `:::green`, `:::purple`, `:::pink`, `:::red`, `:::amber`, `:::orange` or `:::teal` to a node to give it a category color. Use `class <subgraph> green` for subgraphs. No `classDef` is needed, and the colors adapt to dark mode.
+
+<Aside>
+<Tip>
+A **`classDef`** with the same name wins over the built-in color, so existing diagrams keep their own styles.
+</Tip>
+</Aside>
+
+Pick one color per kind of thing: for example clients green, your services blue, third parties purple and storage amber.
+
+## Diagram types
+
+Flowcharts, **sequence diagrams**, state diagrams, class and ER diagrams, Gantt charts, pie charts, git graphs, mindmaps and more are supported. Each type loads only on the pages that use it.
 
 ```mermaid
 sequenceDiagram
@@ -27,7 +70,33 @@ sequenceDiagram
   Browser-->>Author: interactive docs UI
 ```
 
-## Holocron differences
+```mermaid
+stateDiagram-v2
+  [*] --> Draft
+  Draft --> Review: open PR
+  Review --> Draft: changes requested
+  Review --> Published: merge
+  Published --> [*]
+```
 
-- Holocron supports the core authoring flow: fenced mermaid blocks rendered inline on the page.
-- Mintlify documents control placement and larger diagram ergonomics more explicitly. Those remain good parity targets if we extend the renderer later.
+## Zoom controls
+
+Diagrams wider than the content column shrink to fit and show **zoom controls**. Set **`actions`** to always show or always hide them, and **`placement`** to move them: `top-left`, `top-right`, `bottom-left` or `bottom-right` (the default).
+
+````mdx
+```mermaid actions={true} placement="top-right"
+flowchart LR
+  A --> B
+```
+````
+
+## Theming
+
+Diagrams read Holocron theme variables like **`--foreground`**, `--background`, `--primary` and the semantic colors `--blue`, `--green`, and so on. Override them in your CSS and diagrams follow. To change only diagrams, set [pele variables](https://pele.run/theming) on `.mermaid-diagram`:
+
+```css
+.mermaid-diagram {
+  --pele-line: var(--primary);
+  --pele-radius: 4px;
+}
+```
