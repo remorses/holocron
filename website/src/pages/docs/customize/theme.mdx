@@ -58,6 +58,8 @@ Control the default color mode and whether users can toggle:
 | `"dark"`       | Force dark mode                        |
 | `strict: true` | Hide the mode toggle                   |
 
+Native controls follow the theme too. Holocron sets `color-scheme: light` or `color-scheme: dark` alongside the active mode, so **form fields, scrollbars, and the theme picker / version dropdown popups** render in the matching scheme. Without it, Windows and Linux browsers show light popups inside a dark site.
+
 ## CSS variable overrides
 
 Holocron's tokens follow the shadcn naming convention. Override them in your own CSS file:

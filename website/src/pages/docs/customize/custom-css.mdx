@@ -56,6 +56,20 @@ Use `@variant dark` inside your CSS instead of Tailwind's `dark:` utility classe
 
 This keeps dark mode values colocated with their light mode counterparts in CSS variables. Holocron toggles dark mode with the `.dark` class on `<html>`, so any CSS file using `@variant dark` must define the same `@custom-variant dark` directive.
 
+Holocron's own dark overrides include a `color-scheme` flip for the same reason. `:root` sets `color-scheme: light`, and the `@variant dark` block sets `color-scheme: dark`:
+
+```css
+:root {
+  color-scheme: light;
+
+  @variant dark {
+    color-scheme: dark;
+  }
+}
+```
+
+Native controls read this value, so form fields, scrollbars, and popups — the theme picker and version dropdown included — follow the site theme instead of the OS. A dark site shows dark popups and scrollbars even when your OS is set to light mode.
+
 ## Responsive overrides
 
 You can also change variables by breakpoint:
