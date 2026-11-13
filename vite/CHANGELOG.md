@@ -1,5 +1,9 @@
 # @holocron.so/vite
 
+## 0.39.2
+
+1. **Native controls now follow the site theme.** Holocron sets `color-scheme: dark` on dark pages and `color-scheme: light` otherwise. On dark sites the theme picker and version dropdown popups, form fields and scrollbars now render dark. Before, they used the browser default and showed light popups with almost invisible text on Windows and Linux. The standalone chat widget does the same.
+
 ## 0.39.1
 
 1. **Fixed `holocron deploy` failing with `Failed to prerender /__spiceflow/prerender-routes: 404 Not Found`** on projects without a wrangler config, like a fresh template. The deploy build now gives the Cloudflare plugin a Worker entry, so the prerender step runs the real Worker instead of an assets-only one.
