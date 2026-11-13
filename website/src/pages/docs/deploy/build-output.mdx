@@ -27,6 +27,10 @@ dist/
 
 `dist/holocron-cache.json` contains the enriched navigation tree with git SHA hashes for each page. On subsequent builds, pages with unchanged SHAs are reused without re-parsing. Caching `dist/` between CI runs gives near-instant rebuilds.
 
+<Note>
+The cache location depends on how you run Vite. Production builds write the holocron cache files (`holocron-cache.json`, `holocron-mdx.json`, `holocron-images.json`) to `dist/`, so caching `dist/` between CI runs gives near-instant rebuilds. In serve mode (dev server, preview, vitest) they are written to `<vite cacheDir>/holocron`, typically `node_modules/.vite/holocron`, instead of `dist/`.
+</Note>
+
 ## Static assets
 
 Fonts, processed images, and bundled JavaScript are placed in the client output. These are fingerprinted with content hashes for long-term caching.

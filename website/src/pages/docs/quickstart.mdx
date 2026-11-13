@@ -10,6 +10,24 @@ icon: zap
 
 # Quickstart
 
+## Scaffold with the CLI
+
+The fastest way to get started is the **Holocron CLI**:
+
+```bash
+npx -y "@holocron.so/cli" create
+```
+
+It prompts for a project name, then scaffolds a working docs site into a new project folder (default `<name>-docs`): a `docs.jsonc` config, sample MDX pages under `src/`, and a `vite.config.ts` pointing the plugin at `./src`. It writes a `package.json` pinned to **React 19.3 and Vite 8.3** (`react@^19.3.0`, `react-dom@^19.3.0`, `vite@^8.3.4`) and installs dependencies with your package manager.
+
+Pass a `--name` to skip the prompt and `--skip-auth` for a fully local project without the holocron.so account setup:
+
+```bash
+npx -y "@holocron.so/cli" create --name "My Docs" --skip-auth
+```
+
+When the scaffold finishes, the CLI offers to start the dev server for you. The rest of this page is the **manual setup** path — use it to add Holocron to an existing project instead.
+
 ## Install
 
 ```bash

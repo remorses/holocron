@@ -74,7 +74,7 @@ Some Mintlify docs describe behaviors that are broader than Holocron's current i
 
 ## Video background shader
 
-`VideoBackgroundShader` is a **Holocron-only** WebGL video background. Video luminance drives a dot grid. The pointer carries a hover lens that magnifies the video and sends rings outward. Set **`hoverRadius`** (CSS pixels, default 160) to change its size, or `0` to turn it off.
+`VideoBackgroundShader` is a **Holocron-only** WebGL video background. Video luminance drives a dot grid. The pointer carries a hover lens that magnifies the video and sends rings outward. The lens trails the pointer with a ~200ms follow, so it sways behind fast movement instead of snapping. Set **`hoverRadius`** (CSS pixels, default 160) to change its size, or `0` to turn it off.
 
 To wash the **dots** out, set **`dotAlphaMultiplier`** (0-1, default 1). That multiplies painted-dot alpha in the shader.
 
