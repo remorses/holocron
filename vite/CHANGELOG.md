@@ -1,5 +1,10 @@
 # @holocron.so/vite
 
+## 0.39.1
+
+1. **Fixed `holocron deploy` failing with `Failed to prerender /__spiceflow/prerender-routes: 404 Not Found`** on projects without a wrangler config, like a fresh template. The deploy build now gives the Cloudflare plugin a Worker entry, so the prerender step runs the real Worker instead of an assets-only one.
+2. **Fixed the footer layout on mobile.** The logo, social icons and link columns now line up with the page content instead of getting double side padding, and the color mode select moves to its own line so the bottom row no longer overflows the screen. Desktop is unchanged.
+
 ## 0.39.0
 
 1. **Mermaid diagrams now render with [pele](https://pele.run) instead of the `mermaid` package.** Pages load far less JavaScript: each diagram type is a small chunk loaded only where it is used, instead of a multi-megabyte renderer.
