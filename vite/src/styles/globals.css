@@ -29,6 +29,9 @@
 
 @layer theme {
 :root {
+  /* Native controls (select popups, scrollbars, form fields) follow the
+     .dark class, not the OS. Without it a dark site shows light popups. */
+  color-scheme: light;
   --radius: 0.625rem;
 
   /* shadcn/ui standard colors */
@@ -235,6 +238,7 @@
 
   /* Dark mode overrides */
   @variant dark {
+    color-scheme: dark;
     --background: oklch(0.16 0.006 285.885);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.19 0.006 285.885);

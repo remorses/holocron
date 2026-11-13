@@ -140,6 +140,7 @@
  * host/user overrides always win. */
 :host,
 :where(.holocron-chat) {
+  color-scheme: light;
   color: var(--foreground);
   background-color: var(--background);
   --background: #ffffff;
@@ -170,6 +171,7 @@
  * 'light' → never. */
 :host(.dark),
 :where(.holocron-chat.dark) {
+  color-scheme: dark;
   --background: #0a0a0a;
   --foreground: #fafafa;
   --primary: #bae6fd;
