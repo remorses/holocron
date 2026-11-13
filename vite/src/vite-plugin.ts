@@ -1415,10 +1415,22 @@ export function holocron(options: HolocronPluginOptions = {}): PluginOption {
   // Auto-inject the Cloudflare plugin for deploy builds. Added before
   // spiceflow so hasPluginNamed() sees it in config() and sets
   // noExternal=true for rsc/ssr.
+  //
+  // The config needs a `main`: without one the Cloudflare plugin builds an
+  // assets-only Worker, and spiceflow's prerender step (which runs the built
+  // Worker with `vite preview`) gets 404 for every route. A user wrangler file
+  // with its own `main` still wins. The compatibility date is fixed because
+  // the plugin defaults to today, which older workerd binaries refuse to run;
+  // the hosted Dynamic Worker sets its own date anyway.
   if (process.env.HOLOCRON_DEPLOY === '1' && !hasUserCloudflarePlugin) {
     pluginsToReturn.push(
       cloudflarePlugin({
         viteEnvironment: { name: 'rsc', childEnvironments: ['ssr'] },
+        config: (workerConfig) => ({
+          main: workerConfig.main || 'spiceflow/cloudflare-entrypoint',
+          compatibility_date: '2026-04-01',
+          compatibility_flags: [...new Set([...(workerConfig.compatibility_flags ?? []), 'nodejs_compat'])],
+        }),
       }),
     )
   }
