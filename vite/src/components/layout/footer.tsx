@@ -132,7 +132,8 @@ export function Footer({ hideLinks = false }: { hideLinks?: boolean }) {
 
   return (
     <footer className='bg-background'>
-      <div className='mx-auto w-full max-w-full px-(--mobile-padding) py-10 lg:max-w-(--grid-max-width) lg:px-0'>
+      {/* No horizontal padding: every parent container already applies --mobile-padding. */}
+      <div className='mx-auto w-full max-w-full py-10 lg:max-w-(--grid-max-width)'>
         {fewColumns && hasLinks ? (
           /* ≤2 columns: logo on left, link columns on right, single row */
           <>
@@ -253,7 +254,7 @@ export function PoweredBy() {
     ? site.config.poweredBy
     : [{ name: 'Holocron', url: holocronUrl('/?utm_source=powered-by') }]
   return (
-    <div className='flex items-center w-full py-6'>
+    <div className='flex flex-wrap items-center gap-y-2 w-full py-6'>
       <div className='flex items-baseline gap-1 text-xs opacity-40 hover:opacity-70 transition-opacity duration-150 shrink-0'>
         <span>Powered by</span>
         {links.map((link, index) => {
@@ -273,10 +274,13 @@ export function PoweredBy() {
         })}
       </div>
       <div className='grow' />
-      <div className='flex items-center gap-1.5 shrink-0'>
-        {!site.config.appearance.strict && <ThemeSelect />}
-        <PagePrevNext />
-      </div>
+      {/* On mobile the theme select gets its own last line; -ml-2 aligns its icon with the text edge. */}
+      {!site.config.appearance.strict && (
+        <div className='order-last w-full sm:order-none sm:mr-1.5 sm:w-auto'>
+          <ThemeSelect className='-ml-2 sm:ml-0' />
+        </div>
+      )}
+      <PagePrevNext />
     </div>
   )
 }
